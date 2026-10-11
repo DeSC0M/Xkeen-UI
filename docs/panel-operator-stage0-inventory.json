@@ -14,7 +14,7 @@
     "operator_stylesheet_owns_presentation_only": true,
     "legacy_panel_rule_guard": {
       "frozen_rule_block_count": 727,
-      "frozen_rule_blocks_sha256": "d9710416b785fd853c997ec733364071f64cf73db8bea224f3c3f10fa1e38304",
+      "frozen_rule_blocks_sha256": "7e1f460733ac5230c5a7d93e4aa1f54a93d39e739a3e2b879ad536c11a0352db",
       "policy": "Existing legacy blocks are frozen; do not add or edit panel redesign rules here."
     }
   },
@@ -11757,14 +11757,10 @@
         "xkeen-ui/static/js/features/backups.js",
         "xkeen-ui/static/js/features/inbounds.js",
         "xkeen-ui/static/js/features/outbounds.js",
-        "xkeen-ui/static/js/features/routing.js",
-        "xkeen-ui/static/js/pages/backups.init.js",
-        "xkeen-ui/static/js/pages/top_level_backups_screen.js"
+        "xkeen-ui/static/js/features/routing.js"
       ],
       "backups-table": [
-        "xkeen-ui/static/js/features/backups.js",
-        "xkeen-ui/static/js/pages/backups.init.js",
-        "xkeen-ui/static/js/pages/top_level_backups_screen.js"
+        "xkeen-ui/static/js/features/backups.js"
       ],
       "commands-status-row": [
         "xkeen-ui/static/js/features/cores_status.js"

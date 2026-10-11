@@ -36,8 +36,8 @@
         "flask"
       ],
       "removable": false,
-      "unit_count": 539,
-      "size_bytes": 7211636,
+      "unit_count": 537,
+      "size_bytes": 7180251,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -46,8 +46,8 @@
         "configuration": 10,
         "frontend_bundle": 9,
         "frontend_entrypoint": 3,
-        "frontend_feature": 31,
-        "frontend_javascript": 38,
+        "frontend_feature": 30,
+        "frontend_javascript": 37,
         "frontend_runtime": 2,
         "frontend_test": 49,
         "frontend_ui": 17,
@@ -130,7 +130,7 @@
       ],
       "removable": true,
       "unit_count": 128,
-      "size_bytes": 3070349,
+      "size_bytes": 3070215,
       "kind_counts": {
         "app_runtime": 4,
         "backend_route": 2,
@@ -286,28 +286,22 @@
       ],
       "system_requirements": [],
       "removable": true,
-      "unit_count": 12,
-      "size_bytes": 114965,
+      "unit_count": 8,
+      "size_bytes": 102055,
       "kind_counts": {
         "backend_route": 1,
         "backend_service": 2,
-        "frontend_entrypoint": 1,
         "frontend_feature": 1,
-        "frontend_javascript": 2,
-        "template": 5
+        "template": 4
       },
-      "route_count": 17,
+      "route_count": 14,
       "background_task_count": 0,
-      "ui_surface_count": 1,
+      "ui_surface_count": 0,
       "representative_paths": [
         "xkeen-ui/routes/backups.py",
         "xkeen-ui/services/mihomo_backups.py",
         "xkeen-ui/services/xray_backups.py",
-        "xkeen-ui/static/js/pages/backups.entry.js",
         "xkeen-ui/static/js/features/backups.js",
-        "xkeen-ui/static/js/pages/backups.init.js",
-        "xkeen-ui/static/js/pages/backups.screen.bootstrap.js",
-        "xkeen-ui/templates/backups.html",
         "xkeen-ui/templates/panel/slots/backups_inbounds_actions.html",
         "xkeen-ui/templates/panel/slots/backups_outbounds_actions.html",
         "xkeen-ui/templates/panel/slots/backups_routing_actions.html",
@@ -1121,7 +1115,7 @@
       "module_id": "core",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/ui_assets.py",
-      "size_bytes": 40010,
+      "size_bytes": 39966,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -2140,7 +2134,7 @@
       "module_id": "core",
       "kind": "backend_service",
       "path": "xkeen-ui/services/module_registry.py",
-      "size_bytes": 63915,
+      "size_bytes": 63885,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -3037,7 +3031,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_backup_path_hardening.py",
-      "size_bytes": 7428,
+      "size_bytes": 6630,
       "depends_on": [
         "tool.backups"
       ],
@@ -3741,7 +3735,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_frontend_build_fallback.py",
-      "size_bytes": 17454,
+      "size_bytes": 17403,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -3815,7 +3809,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_frontend_migration_guardrails.py",
-      "size_bytes": 73427,
+      "size_bytes": 73039,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -3856,7 +3850,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_frontend_page_inventory.py",
-      "size_bytes": 13217,
+      "size_bytes": 12082,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -3874,7 +3868,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_frontend_runtime_hotfixes.py",
-      "size_bytes": 144041,
+      "size_bytes": 141825,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -4398,7 +4392,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_installer_profiles.py",
-      "size_bytes": 17014,
+      "size_bytes": 17017,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -4747,7 +4741,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_modular_panel_stage0_inventory.py",
-      "size_bytes": 6910,
+      "size_bytes": 6886,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -5010,7 +5004,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_modular_panel_standalone_pages.py",
-      "size_bytes": 6541,
+      "size_bytes": 6550,
       "depends_on": [
         "tool.backups"
       ],
@@ -7780,7 +7774,7 @@
       "module_id": "core",
       "kind": "configuration",
       "path": "vite.config.mjs",
-      "size_bytes": 1892,
+      "size_bytes": 1838,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -7865,7 +7859,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -7892,7 +7885,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -7920,7 +7912,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -7948,7 +7939,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -7976,7 +7966,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8004,7 +7993,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8032,7 +8020,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8060,7 +8047,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8089,7 +8075,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8182,7 +8167,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8209,34 +8193,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
-        "devtools-page",
-        "mihomo-generator-page",
-        "modules-page",
-        "panel-core",
-        "xkeen-page"
-      ],
-      "system_requirements": [
-        "python3",
-        "flask"
-      ],
-      "environment_variables": [],
-      "removable": false
-    },
-    {
-      "module_id": "core",
-      "kind": "frontend_feature",
-      "path": "xkeen-ui/static/js/features/compat/backups.js",
-      "size_bytes": 356,
-      "depends_on": [
-        "tool.backups"
-      ],
-      "starts_background_task": false,
-      "background_markers": [],
-      "registers_routes": false,
-      "routes": [],
-      "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8263,7 +8219,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8288,7 +8243,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8315,7 +8269,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8342,7 +8295,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8371,7 +8323,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8400,7 +8351,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8429,7 +8379,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8458,7 +8407,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8485,7 +8433,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8513,7 +8460,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8538,7 +8484,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8566,7 +8511,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8594,7 +8538,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8621,7 +8564,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8648,7 +8590,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8699,7 +8640,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8726,7 +8666,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8753,7 +8692,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8778,7 +8716,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8803,7 +8740,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8828,7 +8764,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8855,7 +8790,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8883,7 +8817,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8908,7 +8841,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8933,7 +8865,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -8958,7 +8889,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -8987,7 +8917,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9012,7 +8941,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9037,7 +8965,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9062,7 +8989,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9087,7 +9013,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9112,7 +9037,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9137,7 +9061,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9165,7 +9088,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9194,7 +9116,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9221,7 +9142,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9246,7 +9166,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9271,7 +9190,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9296,7 +9214,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9326,7 +9243,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9355,7 +9271,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9383,7 +9298,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9408,7 +9322,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9435,7 +9348,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9460,34 +9372,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
-        "devtools-page",
-        "mihomo-generator-page",
-        "modules-page",
-        "panel-core",
-        "xkeen-page"
-      ],
-      "system_requirements": [
-        "python3",
-        "flask"
-      ],
-      "environment_variables": [],
-      "removable": false
-    },
-    {
-      "module_id": "core",
-      "kind": "frontend_javascript",
-      "path": "xkeen-ui/static/js/pages/top_level_backups_screen.js",
-      "size_bytes": 5481,
-      "depends_on": [
-        "tool.backups"
-      ],
-      "starts_background_task": false,
-      "background_markers": [],
-      "registers_routes": false,
-      "routes": [],
-      "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9514,7 +9398,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9539,7 +9422,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9564,7 +9446,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9589,7 +9470,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9614,7 +9494,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9639,7 +9518,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9657,14 +9535,13 @@
       "module_id": "core",
       "kind": "frontend_javascript",
       "path": "xkeen-ui/static/js/pages/top_level_screen_registry.js",
-      "size_bytes": 4111,
+      "size_bytes": 4088,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9689,7 +9566,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9714,7 +9590,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9739,7 +9614,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9766,7 +9640,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9809,7 +9682,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9834,7 +9706,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9859,7 +9730,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9884,7 +9754,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9911,7 +9780,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9938,7 +9806,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9966,7 +9833,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -9997,7 +9863,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -10022,7 +9887,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -10783,7 +10647,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/smoke.spec.mjs",
-      "size_bytes": 22891,
+      "size_bytes": 22868,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -10801,7 +10665,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/standalone_pages_lazy_monaco.spec.mjs",
-      "size_bytes": 4083,
+      "size_bytes": 2991,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -10893,7 +10757,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/top_level_back_before_bundle_screens.spec.mjs",
-      "size_bytes": 6385,
+      "size_bytes": 6169,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -10972,7 +10836,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -11017,7 +10880,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -11042,7 +10904,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -11071,7 +10932,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -11102,7 +10962,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -11129,7 +10988,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -11157,7 +11015,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -11182,7 +11039,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -11207,7 +11063,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -11234,7 +11089,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -11259,7 +11113,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -11284,7 +11137,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -11309,7 +11161,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -11352,7 +11203,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -11460,7 +11310,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/styles.css",
-      "size_bytes": 915652,
+      "size_bytes": 896186,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -14401,7 +14251,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14454,7 +14303,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14482,7 +14330,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14512,7 +14359,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14540,7 +14386,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14568,7 +14413,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14596,7 +14440,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14624,7 +14467,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14654,7 +14496,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14682,7 +14523,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14710,7 +14550,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14738,7 +14577,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14766,7 +14604,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14794,7 +14631,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14822,7 +14658,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14850,7 +14685,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14878,7 +14712,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14908,7 +14741,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14937,7 +14769,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14965,7 +14796,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -14995,7 +14825,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -15023,7 +14852,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -15053,7 +14881,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -15083,7 +14910,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -15111,7 +14937,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -15139,7 +14964,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -15167,7 +14991,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -15185,7 +15008,7 @@
       "module_id": "engine.mihomo",
       "kind": "frontend_javascript",
       "path": "xkeen-ui/static/js/pages/top_level_panel_mihomo.shared.js",
-      "size_bytes": 1631,
+      "size_bytes": 1497,
       "depends_on": [
         "core",
         "tool.editor"
@@ -15195,7 +15018,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -17803,7 +17625,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -17834,7 +17655,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -17864,7 +17684,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -17894,7 +17713,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -17924,7 +17742,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -17954,7 +17771,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -17984,7 +17800,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18014,7 +17829,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18044,7 +17858,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18074,7 +17887,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18104,7 +17916,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18134,7 +17945,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18164,7 +17974,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18194,7 +18003,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18224,7 +18032,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18254,7 +18061,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18284,7 +18090,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18314,7 +18119,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18344,7 +18148,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18374,7 +18177,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18404,7 +18206,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18434,7 +18235,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18464,7 +18264,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18494,7 +18293,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18524,7 +18322,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18554,7 +18351,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18584,7 +18380,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18614,7 +18409,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18644,7 +18438,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18674,7 +18467,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18704,7 +18496,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18734,7 +18525,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18762,7 +18552,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18792,7 +18581,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -18823,7 +18611,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -19044,7 +18831,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -19524,7 +19310,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -19551,7 +19336,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -19580,7 +19364,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -19647,7 +19430,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -20084,7 +19866,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -20110,7 +19891,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -20276,7 +20056,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -20302,7 +20081,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -20328,7 +20106,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -20354,7 +20131,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -20380,7 +20156,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -20406,7 +20181,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -20433,7 +20207,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -20461,7 +20234,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -20499,7 +20271,7 @@
       "module_id": "tool.backups",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/backups.py",
-      "size_bytes": 30621,
+      "size_bytes": 27474,
       "depends_on": [
         "core",
         "engine.xray"
@@ -20521,11 +20293,6 @@
         {
           "method": "GET",
           "path": "/api/xray/snapshots/read",
-          "decorator": "bp.get"
-        },
-        {
-          "method": "GET",
-          "path": "/backups",
           "decorator": "bp.get"
         },
         {
@@ -20582,16 +20349,6 @@
           "method": "POST",
           "path": "/api/xray/snapshots/restore",
           "decorator": "bp.post"
-        },
-        {
-          "method": "POST",
-          "path": "/delete-backup",
-          "decorator": "bp.post"
-        },
-        {
-          "method": "POST",
-          "path": "/restore",
-          "decorator": "bp.post"
         }
       ],
       "frontend_bundle": [],
@@ -20636,29 +20393,9 @@
     },
     {
       "module_id": "tool.backups",
-      "kind": "frontend_entrypoint",
-      "path": "xkeen-ui/static/js/pages/backups.entry.js",
-      "size_bytes": 534,
-      "depends_on": [
-        "core",
-        "engine.mihomo"
-      ],
-      "starts_background_task": false,
-      "background_markers": [],
-      "registers_routes": false,
-      "routes": [],
-      "frontend_bundle": [
-        "backups-page"
-      ],
-      "system_requirements": [],
-      "environment_variables": [],
-      "removable": true
-    },
-    {
-      "module_id": "tool.backups",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/backups.js",
-      "size_bytes": 58663,
+      "size_bytes": 58647,
       "depends_on": [
         "core",
         "engine.xray"
@@ -20668,7 +20405,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -20677,72 +20413,6 @@
         "terminal-lazy",
         "xkeen-page"
       ],
-      "system_requirements": [],
-      "environment_variables": [],
-      "removable": true
-    },
-    {
-      "module_id": "tool.backups",
-      "kind": "frontend_javascript",
-      "path": "xkeen-ui/static/js/pages/backups.init.js",
-      "size_bytes": 866,
-      "depends_on": [
-        "core"
-      ],
-      "starts_background_task": false,
-      "background_markers": [],
-      "registers_routes": false,
-      "routes": [],
-      "frontend_bundle": [
-        "backups-page",
-        "devtools-page",
-        "mihomo-generator-page",
-        "modules-page",
-        "panel-core",
-        "xkeen-page"
-      ],
-      "system_requirements": [],
-      "environment_variables": [],
-      "removable": true
-    },
-    {
-      "module_id": "tool.backups",
-      "kind": "frontend_javascript",
-      "path": "xkeen-ui/static/js/pages/backups.screen.bootstrap.js",
-      "size_bytes": 2921,
-      "depends_on": [
-        "core",
-        "tool.editor"
-      ],
-      "starts_background_task": false,
-      "background_markers": [],
-      "registers_routes": false,
-      "routes": [],
-      "frontend_bundle": [
-        "backups-page",
-        "devtools-page",
-        "mihomo-generator-page",
-        "modules-page",
-        "panel-core",
-        "xkeen-page"
-      ],
-      "system_requirements": [],
-      "environment_variables": [],
-      "removable": true
-    },
-    {
-      "module_id": "tool.backups",
-      "kind": "template",
-      "path": "xkeen-ui/templates/backups.html",
-      "size_bytes": 5426,
-      "depends_on": [
-        "core"
-      ],
-      "starts_background_task": false,
-      "background_markers": [],
-      "registers_routes": false,
-      "routes": [],
-      "frontend_bundle": [],
       "system_requirements": [],
       "environment_variables": [],
       "removable": true
@@ -20828,7 +20498,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -20855,7 +20524,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -20882,7 +20550,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -20909,7 +20576,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -20936,7 +20602,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -20964,7 +20629,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -20992,7 +20656,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -21019,7 +20682,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -21045,7 +20707,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -21072,7 +20733,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -21099,7 +20759,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -21126,7 +20785,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -21153,7 +20811,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -21180,7 +20837,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -21209,7 +20865,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -21240,7 +20895,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -21270,7 +20924,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -21296,7 +20949,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -21323,7 +20975,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -21350,7 +21001,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -21379,7 +21029,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -21406,7 +21055,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -21435,7 +21083,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -21464,7 +21111,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -21493,7 +21139,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -22869,7 +22514,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -22898,7 +22542,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -22929,7 +22572,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -22958,7 +22600,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -22987,7 +22628,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23016,7 +22656,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23045,7 +22684,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23074,7 +22712,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23103,7 +22740,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23132,7 +22768,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23161,7 +22796,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23190,7 +22824,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23219,7 +22852,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23248,7 +22880,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23277,7 +22908,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23306,7 +22936,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23337,7 +22966,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23366,7 +22994,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23395,7 +23022,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23424,7 +23050,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23453,7 +23078,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23482,7 +23106,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23511,7 +23134,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23540,7 +23162,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23569,7 +23190,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23598,7 +23218,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23627,7 +23246,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23656,7 +23274,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23685,7 +23302,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23714,7 +23330,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23743,7 +23358,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "file-manager-lazy",
         "mihomo-generator-page",
@@ -23907,7 +23521,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -23936,7 +23549,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -23964,7 +23576,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -23993,7 +23604,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24022,7 +23632,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24053,7 +23662,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24082,7 +23690,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24111,7 +23718,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24140,7 +23746,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24169,7 +23774,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24198,7 +23802,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24227,7 +23830,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24256,7 +23858,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24285,7 +23886,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24314,7 +23914,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24343,7 +23942,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24372,7 +23970,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24401,7 +23998,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24430,7 +24026,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24459,7 +24054,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24488,7 +24082,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24517,7 +24110,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24546,7 +24138,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24575,7 +24166,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24604,7 +24194,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24633,7 +24222,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24662,7 +24250,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24691,7 +24278,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24720,7 +24306,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24749,7 +24334,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24778,7 +24362,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24807,7 +24390,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24836,7 +24418,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24867,7 +24448,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24896,7 +24476,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24925,7 +24504,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24956,7 +24534,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -24985,7 +24562,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -25014,7 +24590,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -25043,7 +24618,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -25072,7 +24646,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -25101,7 +24674,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -25130,7 +24702,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -25159,7 +24730,6 @@
       "registers_routes": false,
       "routes": [],
       "frontend_bundle": [
-        "backups-page",
         "devtools-page",
         "mihomo-generator-page",
         "modules-page",
@@ -25177,7 +24747,7 @@
     }
   ],
   "routes": {
-    "endpoint_count": 317,
+    "endpoint_count": 314,
     "files_with_routes": 51,
     "endpoint_files": [
       {
@@ -26673,11 +26243,6 @@
             "decorator": "bp.get"
           },
           {
-            "method": "GET",
-            "path": "/backups",
-            "decorator": "bp.get"
-          },
-          {
             "method": "POST",
             "path": "/api/backup",
             "decorator": "bp.post"
@@ -26730,16 +26295,6 @@
           {
             "method": "POST",
             "path": "/api/xray/snapshots/restore",
-            "decorator": "bp.post"
-          },
-          {
-            "method": "POST",
-            "path": "/delete-backup",
-            "decorator": "bp.post"
-          },
-          {
-            "method": "POST",
-            "path": "/restore",
             "decorator": "bp.post"
           }
         ]
@@ -27359,7 +26914,7 @@
     {
       "id": "panel-core",
       "root": "xkeen-ui/static/js/pages/panel.entry.js",
-      "file_count": 282,
+      "file_count": 278,
       "module_ids": [
         "core",
         "engine.mihomo",
@@ -27382,7 +26937,6 @@
         "xkeen-ui/static/js/features/backups.js",
         "xkeen-ui/static/js/features/branding_prefs.js",
         "xkeen-ui/static/js/features/commands_list.js",
-        "xkeen-ui/static/js/features/compat/backups.js",
         "xkeen-ui/static/js/features/compat/devtools.js",
         "xkeen-ui/static/js/features/compat/github.js",
         "xkeen-ui/static/js/features/compat/inbounds.js",
@@ -27509,8 +27063,6 @@
         "xkeen-ui/static/js/features/xray_log_domain_hints.js",
         "xkeen-ui/static/js/features/xray_log_line_class.js",
         "xkeen-ui/static/js/features/xray_logs.js",
-        "xkeen-ui/static/js/pages/backups.init.js",
-        "xkeen-ui/static/js/pages/backups.screen.bootstrap.js",
         "xkeen-ui/static/js/pages/codemirror6.shared.js",
         "xkeen-ui/static/js/pages/config_shell.shared.js",
         "xkeen-ui/static/js/pages/devtools.init.js",
@@ -27544,7 +27096,6 @@
         "xkeen-ui/static/js/pages/panel_shell.shared.js",
         "xkeen-ui/static/js/pages/shell.shared.js",
         "xkeen-ui/static/js/pages/terminal.lazy.entry.js",
-        "xkeen-ui/static/js/pages/top_level_backups_screen.js",
         "xkeen-ui/static/js/pages/top_level_devtools_screen.js",
         "xkeen-ui/static/js/pages/top_level_mihomo_generator_screen.js",
         "xkeen-ui/static/js/pages/top_level_modules_screen.js",
@@ -28014,309 +27565,9 @@
       ]
     },
     {
-      "id": "backups-page",
-      "root": "xkeen-ui/static/js/pages/backups.entry.js",
-      "file_count": 282,
-      "module_ids": [
-        "core",
-        "engine.mihomo",
-        "engine.xray",
-        "integration.happ",
-        "tool.advanced-diagnostics",
-        "tool.backups",
-        "tool.editor",
-        "tool.files",
-        "tool.terminal"
-      ],
-      "files": [
-        "xkeen-ui/static/js/00_state.js",
-        "xkeen-ui/static/js/01_bootstrap.js",
-        "xkeen-ui/static/js/core/xk_dom.js",
-        "xkeen-ui/static/js/core/xk_http.js",
-        "xkeen-ui/static/js/core/xk_storage.js",
-        "xkeen-ui/static/js/core/xk_store.js",
-        "xkeen-ui/static/js/features/backup_actions_loader.js",
-        "xkeen-ui/static/js/features/backups.js",
-        "xkeen-ui/static/js/features/branding_prefs.js",
-        "xkeen-ui/static/js/features/commands_list.js",
-        "xkeen-ui/static/js/features/compat/backups.js",
-        "xkeen-ui/static/js/features/compat/devtools.js",
-        "xkeen-ui/static/js/features/compat/github.js",
-        "xkeen-ui/static/js/features/compat/inbounds.js",
-        "xkeen-ui/static/js/features/compat/local_io.js",
-        "xkeen-ui/static/js/features/compat/mihomo_hwid_sub.js",
-        "xkeen-ui/static/js/features/compat/mihomo_import.js",
-        "xkeen-ui/static/js/features/compat/mihomo_panel.js",
-        "xkeen-ui/static/js/features/compat/mihomo_proxy_tools.js",
-        "xkeen-ui/static/js/features/compat/outbounds.js",
-        "xkeen-ui/static/js/features/compat/routing.js",
-        "xkeen-ui/static/js/features/compat/routing_cards.js",
-        "xkeen-ui/static/js/features/compat/routing_shell.js",
-        "xkeen-ui/static/js/features/core_source.js",
-        "xkeen-ui/static/js/features/cores_status.js",
-        "xkeen-ui/static/js/features/devtools.js",
-        "xkeen-ui/static/js/features/devtools/env.js",
-        "xkeen-ui/static/js/features/devtools/happ_decryptor.js",
-        "xkeen-ui/static/js/features/devtools/logs.js",
-        "xkeen-ui/static/js/features/devtools/service.js",
-        "xkeen-ui/static/js/features/devtools/shared.js",
-        "xkeen-ui/static/js/features/devtools/update.js",
-        "xkeen-ui/static/js/features/devtools_namespace.js",
-        "xkeen-ui/static/js/features/dns_guard_text.js",
-        "xkeen-ui/static/js/features/dns_operation_recovery.js",
-        "xkeen-ui/static/js/features/donate.js",
-        "xkeen-ui/static/js/features/feature_access.js",
-        "xkeen-ui/static/js/features/file_manager.js",
-        "xkeen-ui/static/js/features/file_manager/actions.js",
-        "xkeen-ui/static/js/features/file_manager/actions_modals.js",
-        "xkeen-ui/static/js/features/file_manager/api.js",
-        "xkeen-ui/static/js/features/file_manager/bookmarks.js",
-        "xkeen-ui/static/js/features/file_manager/chrome.js",
-        "xkeen-ui/static/js/features/file_manager/common.js",
-        "xkeen-ui/static/js/features/file_manager/context_menu.js",
-        "xkeen-ui/static/js/features/file_manager/dragdrop.js",
-        "xkeen-ui/static/js/features/file_manager/editor.js",
-        "xkeen-ui/static/js/features/file_manager/errors.js",
-        "xkeen-ui/static/js/features/file_manager/hash.js",
-        "xkeen-ui/static/js/features/file_manager/init.js",
-        "xkeen-ui/static/js/features/file_manager/list_model.js",
-        "xkeen-ui/static/js/features/file_manager/listing.js",
-        "xkeen-ui/static/js/features/file_manager/navigation.js",
-        "xkeen-ui/static/js/features/file_manager/ops.js",
-        "xkeen-ui/static/js/features/file_manager/prefs.js",
-        "xkeen-ui/static/js/features/file_manager/progress.js",
-        "xkeen-ui/static/js/features/file_manager/props.js",
-        "xkeen-ui/static/js/features/file_manager/remote.js",
-        "xkeen-ui/static/js/features/file_manager/render.js",
-        "xkeen-ui/static/js/features/file_manager/selection.js",
-        "xkeen-ui/static/js/features/file_manager/state.js",
-        "xkeen-ui/static/js/features/file_manager/status.js",
-        "xkeen-ui/static/js/features/file_manager/storage.js",
-        "xkeen-ui/static/js/features/file_manager/terminal.js",
-        "xkeen-ui/static/js/features/file_manager/transfers.js",
-        "xkeen-ui/static/js/features/file_manager/wire.js",
-        "xkeen-ui/static/js/features/file_manager_namespace.js",
-        "xkeen-ui/static/js/features/github.js",
-        "xkeen-ui/static/js/features/inbounds.js",
-        "xkeen-ui/static/js/features/layout_prefs.js",
-        "xkeen-ui/static/js/features/local_io.js",
-        "xkeen-ui/static/js/features/mihomo_clash/client.js",
-        "xkeen-ui/static/js/features/mihomo_clash/connections.js",
-        "xkeen-ui/static/js/features/mihomo_clash/diagnostics.js",
-        "xkeen-ui/static/js/features/mihomo_clash/dns.js",
-        "xkeen-ui/static/js/features/mihomo_clash/egress.js",
-        "xkeen-ui/static/js/features/mihomo_clash/groups.js",
-        "xkeen-ui/static/js/features/mihomo_clash/index.js",
-        "xkeen-ui/static/js/features/mihomo_clash/logs.js",
-        "xkeen-ui/static/js/features/mihomo_clash/rules.js",
-        "xkeen-ui/static/js/features/mihomo_clash/state.js",
-        "xkeen-ui/static/js/features/mihomo_clash/telemetry.js",
-        "xkeen-ui/static/js/features/mihomo_clash/visuals.js",
-        "xkeen-ui/static/js/features/mihomo_dns.js",
-        "xkeen-ui/static/js/features/mihomo_generator.js",
-        "xkeen-ui/static/js/features/mihomo_hwid_sub.js",
-        "xkeen-ui/static/js/features/mihomo_import.js",
-        "xkeen-ui/static/js/features/mihomo_panel.js",
-        "xkeen-ui/static/js/features/mihomo_proxy_tools.js",
-        "xkeen-ui/static/js/features/mihomo_runtime.js",
-        "xkeen-ui/static/js/features/mihomo_yaml_patch.js",
-        "xkeen-ui/static/js/features/module_manager/api.js",
-        "xkeen-ui/static/js/features/module_manager/badge.js",
-        "xkeen-ui/static/js/features/module_manager/controller.js",
-        "xkeen-ui/static/js/features/module_manager/render.js",
-        "xkeen-ui/static/js/features/outbounds.js",
-        "xkeen-ui/static/js/features/resource_monitor.js",
-        "xkeen-ui/static/js/features/restart_log.js",
-        "xkeen-ui/static/js/features/routing.js",
-        "xkeen-ui/static/js/features/routing_cards.js",
-        "xkeen-ui/static/js/features/routing_cards/collapse.js",
-        "xkeen-ui/static/js/features/routing_cards/common.js",
-        "xkeen-ui/static/js/features/routing_cards/dat/api.js",
-        "xkeen-ui/static/js/features/routing_cards/dat/card.js",
-        "xkeen-ui/static/js/features/routing_cards/dat/combo.js",
-        "xkeen-ui/static/js/features/routing_cards/dat/prefs.js",
-        "xkeen-ui/static/js/features/routing_cards/help_docs.js",
-        "xkeen-ui/static/js/features/routing_cards/help_modal.js",
-        "xkeen-ui/static/js/features/routing_cards/ids.js",
-        "xkeen-ui/static/js/features/routing_cards/ns.js",
-        "xkeen-ui/static/js/features/routing_cards/rules/apply.js",
-        "xkeen-ui/static/js/features/routing_cards/rules/balancer_help.js",
-        "xkeen-ui/static/js/features/routing_cards/rules/controls.js",
-        "xkeen-ui/static/js/features/routing_cards/rules/dat_bridge.js",
-        "xkeen-ui/static/js/features/routing_cards/rules/detect.js",
-        "xkeen-ui/static/js/features/routing_cards/rules/dnd_pointer.js",
-        "xkeen-ui/static/js/features/routing_cards/rules/dns_over_vless.js",
-        "xkeen-ui/static/js/features/routing_cards/rules/fields.js",
-        "xkeen-ui/static/js/features/routing_cards/rules/forced_rules_wizard.js",
-        "xkeen-ui/static/js/features/routing_cards/rules/json_modal.js",
-        "xkeen-ui/static/js/features/routing_cards/rules/model.js",
-        "xkeen-ui/static/js/features/routing_cards/rules/quick_balancer.js",
-        "xkeen-ui/static/js/features/routing_cards/rules/render.js",
-        "xkeen-ui/static/js/features/routing_cards/rules/state.js",
-        "xkeen-ui/static/js/features/routing_cards_namespace.js",
-        "xkeen-ui/static/js/features/routing_jsonc_preserve.js",
-        "xkeen-ui/static/js/features/routing_shell.js",
-        "xkeen-ui/static/js/features/routing_templates.js",
-        "xkeen-ui/static/js/features/service_status.js",
-        "xkeen-ui/static/js/features/terminal_debug.js",
-        "xkeen-ui/static/js/features/typography.js",
-        "xkeen-ui/static/js/features/ui_prefs_io.js",
-        "xkeen-ui/static/js/features/xkeen_runtime.js",
-        "xkeen-ui/static/js/features/xkeen_texts.js",
-        "xkeen-ui/static/js/features/xray_log_domain_hints.js",
-        "xkeen-ui/static/js/features/xray_log_line_class.js",
-        "xkeen-ui/static/js/features/xray_logs.js",
-        "xkeen-ui/static/js/pages/backups.entry.js",
-        "xkeen-ui/static/js/pages/backups.init.js",
-        "xkeen-ui/static/js/pages/backups.screen.bootstrap.js",
-        "xkeen-ui/static/js/pages/codemirror6.shared.js",
-        "xkeen-ui/static/js/pages/config_shell.shared.js",
-        "xkeen-ui/static/js/pages/devtools.init.js",
-        "xkeen-ui/static/js/pages/devtools.screen.bootstrap.js",
-        "xkeen-ui/static/js/pages/editor.shared.js",
-        "xkeen-ui/static/js/pages/editor_monaco.shared.js",
-        "xkeen-ui/static/js/pages/file_manager.lazy.entry.js",
-        "xkeen-ui/static/js/pages/logs_shell.shared.js",
-        "xkeen-ui/static/js/pages/mihomo_generator.init.js",
-        "xkeen-ui/static/js/pages/mihomo_generator.screen.bootstrap.js",
-        "xkeen-ui/static/js/pages/modules.init.js",
-        "xkeen-ui/static/js/pages/modules.screen.bootstrap.js",
-        "xkeen-ui/static/js/pages/panel.bootstrap_tail.bundle.js",
-        "xkeen-ui/static/js/pages/panel.core_ui_watch.runtime.js",
-        "xkeen-ui/static/js/pages/panel.diagnostics.bundle.js",
-        "xkeen-ui/static/js/pages/panel.editor.bundle.js",
-        "xkeen-ui/static/js/pages/panel.editor.codemirror.bundle.js",
-        "xkeen-ui/static/js/pages/panel.editor.diff.bundle.js",
-        "xkeen-ui/static/js/pages/panel.editor.enhancements.bundle.js",
-        "xkeen-ui/static/js/pages/panel.editor.monaco.bundle.js",
-        "xkeen-ui/static/js/pages/panel.init.js",
-        "xkeen-ui/static/js/pages/panel.lazy_bindings.runtime.js",
-        "xkeen-ui/static/js/pages/panel.mihomo.bundle.js",
-        "xkeen-ui/static/js/pages/panel.mihomo_header.js",
-        "xkeen-ui/static/js/pages/panel.module_loader.js",
-        "xkeen-ui/static/js/pages/panel.routing.bundle.js",
-        "xkeen-ui/static/js/pages/panel.screen.bootstrap.js",
-        "xkeen-ui/static/js/pages/panel.shared_compat.bundle.js",
-        "xkeen-ui/static/js/pages/panel.view_runtime.js",
-        "xkeen-ui/static/js/pages/panel_shell.shared.js",
-        "xkeen-ui/static/js/pages/shell.shared.js",
-        "xkeen-ui/static/js/pages/terminal.lazy.entry.js",
-        "xkeen-ui/static/js/pages/top_level_backups_screen.js",
-        "xkeen-ui/static/js/pages/top_level_devtools_screen.js",
-        "xkeen-ui/static/js/pages/top_level_mihomo_generator_screen.js",
-        "xkeen-ui/static/js/pages/top_level_modules_screen.js",
-        "xkeen-ui/static/js/pages/top_level_nav.shared.js",
-        "xkeen-ui/static/js/pages/top_level_panel_mihomo.shared.js",
-        "xkeen-ui/static/js/pages/top_level_panel_screen.js",
-        "xkeen-ui/static/js/pages/top_level_router.js",
-        "xkeen-ui/static/js/pages/top_level_screen_host.shared.js",
-        "xkeen-ui/static/js/pages/top_level_screen_registry.js",
-        "xkeen-ui/static/js/pages/top_level_shell.shared.js",
-        "xkeen-ui/static/js/pages/top_level_xkeen_screen.js",
-        "xkeen-ui/static/js/pages/xkeen.init.js",
-        "xkeen-ui/static/js/pages/xkeen.screen.bootstrap.js",
-        "xkeen-ui/static/js/runtime/lazy_runtime.js",
-        "xkeen-ui/static/js/runtime/standalone_lazy.js",
-        "xkeen-ui/static/js/terminal/_core.js",
-        "xkeen-ui/static/js/terminal/capabilities.js",
-        "xkeen-ui/static/js/terminal/chrome.js",
-        "xkeen-ui/static/js/terminal/commands/builtins/sysmon.js",
-        "xkeen-ui/static/js/terminal/commands/builtins/xkeen_restart.js",
-        "xkeen-ui/static/js/terminal/commands/registry.js",
-        "xkeen-ui/static/js/terminal/commands/router.js",
-        "xkeen-ui/static/js/terminal/core/api.js",
-        "xkeen-ui/static/js/terminal/core/config.js",
-        "xkeen-ui/static/js/terminal/core/context.js",
-        "xkeen-ui/static/js/terminal/core/events.js",
-        "xkeen-ui/static/js/terminal/core/input_controller.js",
-        "xkeen-ui/static/js/terminal/core/logger.js",
-        "xkeen-ui/static/js/terminal/core/output_controller.js",
-        "xkeen-ui/static/js/terminal/core/public_api.js",
-        "xkeen-ui/static/js/terminal/core/registry.js",
-        "xkeen-ui/static/js/terminal/core/session_controller.js",
-        "xkeen-ui/static/js/terminal/core/state.js",
-        "xkeen-ui/static/js/terminal/core/ui.js",
-        "xkeen-ui/static/js/terminal/core/xterm_manager.js",
-        "xkeen-ui/static/js/terminal/history.js",
-        "xkeen-ui/static/js/terminal/lite_runner.js",
-        "xkeen-ui/static/js/terminal/modules/buffer_actions.js",
-        "xkeen-ui/static/js/terminal/modules/confirm_prompt.js",
-        "xkeen-ui/static/js/terminal/modules/output_prefs.js",
-        "xkeen-ui/static/js/terminal/modules/overlay_controller.js",
-        "xkeen-ui/static/js/terminal/modules/reconnect_controller.js",
-        "xkeen-ui/static/js/terminal/modules/ssh_profiles.js",
-        "xkeen-ui/static/js/terminal/modules/status_controller.js",
-        "xkeen-ui/static/js/terminal/modules/terminal_controller.js",
-        "xkeen-ui/static/js/terminal/modules/ui_controller.js",
-        "xkeen-ui/static/js/terminal/pty.js",
-        "xkeen-ui/static/js/terminal/quick_commands.js",
-        "xkeen-ui/static/js/terminal/runtime.js",
-        "xkeen-ui/static/js/terminal/search.js",
-        "xkeen-ui/static/js/terminal/terminal.js",
-        "xkeen-ui/static/js/terminal/transport/index.js",
-        "xkeen-ui/static/js/terminal/transport/lite_transport.js",
-        "xkeen-ui/static/js/terminal/transport/pty_transport.js",
-        "xkeen-ui/static/js/terminal/vendors/xterm_import_adapter.js",
-        "xkeen-ui/static/js/terminal/xray_tail.js",
-        "xkeen-ui/static/js/ui/codemirror6_boot.js",
-        "xkeen-ui/static/js/ui/config_dirty_state.js",
-        "xkeen-ui/static/js/ui/config_shell.js",
-        "xkeen-ui/static/js/ui/confirm_modal.js",
-        "xkeen-ui/static/js/ui/dat_contents_modal.js",
-        "xkeen-ui/static/js/ui/diff_engine.js",
-        "xkeen-ui/static/js/ui/diff_modal.js",
-        "xkeen-ui/static/js/ui/editor_actions.js",
-        "xkeen-ui/static/js/ui/editor_engine.js",
-        "xkeen-ui/static/js/ui/editor_links.js",
-        "xkeen-ui/static/js/ui/editor_schema.js",
-        "xkeen-ui/static/js/ui/editor_toolbar.js",
-        "xkeen-ui/static/js/ui/formatters.js",
-        "xkeen-ui/static/js/ui/happ_decryptor_link.js",
-        "xkeen-ui/static/js/ui/json_editor_modal.js",
-        "xkeen-ui/static/js/ui/last_activity.js",
-        "xkeen-ui/static/js/ui/modal.js",
-        "xkeen-ui/static/js/ui/monaco_loader.js",
-        "xkeen-ui/static/js/ui/monaco_shared.js",
-        "xkeen-ui/static/js/ui/operator_icons.js",
-        "xkeen-ui/static/js/ui/operator_icons_manifest.js",
-        "xkeen-ui/static/js/ui/prettier_loader.js",
-        "xkeen-ui/static/js/ui/routing_scenarios.js",
-        "xkeen-ui/static/js/ui/schema_diagnostic_format.js",
-        "xkeen-ui/static/js/ui/schema_quickfixes.js",
-        "xkeen-ui/static/js/ui/schema_semantic_validation.js",
-        "xkeen-ui/static/js/ui/schema_snippets.js",
-        "xkeen-ui/static/js/ui/sections.js",
-        "xkeen-ui/static/js/ui/settings.js",
-        "xkeen-ui/static/js/ui/settings_panel.js",
-        "xkeen-ui/static/js/ui/shared_primitives.js",
-        "xkeen-ui/static/js/ui/spinner_fetch.js",
-        "xkeen-ui/static/js/ui/theme.js",
-        "xkeen-ui/static/js/ui/toast.js",
-        "xkeen-ui/static/js/ui/tooltips_auto.js",
-        "xkeen-ui/static/js/ui/xk_brand.js",
-        "xkeen-ui/static/js/ui/xray_preflight_modal.js",
-        "xkeen-ui/static/js/ui/yaml_schema.js",
-        "xkeen-ui/static/js/util/ansi.js",
-        "xkeen-ui/static/js/util/command_job.js",
-        "xkeen-ui/static/js/util/helpers.js",
-        "xkeen-ui/static/js/util/strip_json_comments.js",
-        "xkeen-ui/static/js/util/tab_id.js",
-        "xkeen-ui/static/js/vendor/codemirror_json_schema.js",
-        "xkeen-ui/static/js/vendor/monaco_github_themes.js",
-        "xkeen-ui/static/xterm/xterm-addon-clipboard.js",
-        "xkeen-ui/static/xterm/xterm-addon-fit.js",
-        "xkeen-ui/static/xterm/xterm-addon-search.js",
-        "xkeen-ui/static/xterm/xterm-addon-serialize.js",
-        "xkeen-ui/static/xterm/xterm-addon-unicode11.js",
-        "xkeen-ui/static/xterm/xterm-addon-web-links.js",
-        "xkeen-ui/static/xterm/xterm-addon-webgl.js",
-        "xkeen-ui/static/xterm/xterm.js"
-      ]
-    },
-    {
       "id": "devtools-page",
       "root": "xkeen-ui/static/js/pages/devtools.entry.js",
-      "file_count": 282,
+      "file_count": 278,
       "module_ids": [
         "core",
         "engine.mihomo",
@@ -28339,7 +27590,6 @@
         "xkeen-ui/static/js/features/backups.js",
         "xkeen-ui/static/js/features/branding_prefs.js",
         "xkeen-ui/static/js/features/commands_list.js",
-        "xkeen-ui/static/js/features/compat/backups.js",
         "xkeen-ui/static/js/features/compat/devtools.js",
         "xkeen-ui/static/js/features/compat/github.js",
         "xkeen-ui/static/js/features/compat/inbounds.js",
@@ -28466,8 +27716,6 @@
         "xkeen-ui/static/js/features/xray_log_domain_hints.js",
         "xkeen-ui/static/js/features/xray_log_line_class.js",
         "xkeen-ui/static/js/features/xray_logs.js",
-        "xkeen-ui/static/js/pages/backups.init.js",
-        "xkeen-ui/static/js/pages/backups.screen.bootstrap.js",
         "xkeen-ui/static/js/pages/codemirror6.shared.js",
         "xkeen-ui/static/js/pages/config_shell.shared.js",
         "xkeen-ui/static/js/pages/devtools.entry.js",
@@ -28501,7 +27749,6 @@
         "xkeen-ui/static/js/pages/panel_shell.shared.js",
         "xkeen-ui/static/js/pages/shell.shared.js",
         "xkeen-ui/static/js/pages/terminal.lazy.entry.js",
-        "xkeen-ui/static/js/pages/top_level_backups_screen.js",
         "xkeen-ui/static/js/pages/top_level_devtools_screen.js",
         "xkeen-ui/static/js/pages/top_level_mihomo_generator_screen.js",
         "xkeen-ui/static/js/pages/top_level_modules_screen.js",
@@ -28616,7 +27863,7 @@
     {
       "id": "xkeen-page",
       "root": "xkeen-ui/static/js/pages/xkeen.entry.js",
-      "file_count": 282,
+      "file_count": 278,
       "module_ids": [
         "core",
         "engine.mihomo",
@@ -28639,7 +27886,6 @@
         "xkeen-ui/static/js/features/backups.js",
         "xkeen-ui/static/js/features/branding_prefs.js",
         "xkeen-ui/static/js/features/commands_list.js",
-        "xkeen-ui/static/js/features/compat/backups.js",
         "xkeen-ui/static/js/features/compat/devtools.js",
         "xkeen-ui/static/js/features/compat/github.js",
         "xkeen-ui/static/js/features/compat/inbounds.js",
@@ -28766,8 +28012,6 @@
         "xkeen-ui/static/js/features/xray_log_domain_hints.js",
         "xkeen-ui/static/js/features/xray_log_line_class.js",
         "xkeen-ui/static/js/features/xray_logs.js",
-        "xkeen-ui/static/js/pages/backups.init.js",
-        "xkeen-ui/static/js/pages/backups.screen.bootstrap.js",
         "xkeen-ui/static/js/pages/codemirror6.shared.js",
         "xkeen-ui/static/js/pages/config_shell.shared.js",
         "xkeen-ui/static/js/pages/devtools.init.js",
@@ -28800,7 +28044,6 @@
         "xkeen-ui/static/js/pages/panel_shell.shared.js",
         "xkeen-ui/static/js/pages/shell.shared.js",
         "xkeen-ui/static/js/pages/terminal.lazy.entry.js",
-        "xkeen-ui/static/js/pages/top_level_backups_screen.js",
         "xkeen-ui/static/js/pages/top_level_devtools_screen.js",
         "xkeen-ui/static/js/pages/top_level_mihomo_generator_screen.js",
         "xkeen-ui/static/js/pages/top_level_modules_screen.js",
@@ -28916,7 +28159,7 @@
     {
       "id": "mihomo-generator-page",
       "root": "xkeen-ui/static/js/pages/mihomo_generator.entry.js",
-      "file_count": 282,
+      "file_count": 278,
       "module_ids": [
         "core",
         "engine.mihomo",
@@ -28939,7 +28182,6 @@
         "xkeen-ui/static/js/features/backups.js",
         "xkeen-ui/static/js/features/branding_prefs.js",
         "xkeen-ui/static/js/features/commands_list.js",
-        "xkeen-ui/static/js/features/compat/backups.js",
         "xkeen-ui/static/js/features/compat/devtools.js",
         "xkeen-ui/static/js/features/compat/github.js",
         "xkeen-ui/static/js/features/compat/inbounds.js",
@@ -29066,8 +28308,6 @@
         "xkeen-ui/static/js/features/xray_log_domain_hints.js",
         "xkeen-ui/static/js/features/xray_log_line_class.js",
         "xkeen-ui/static/js/features/xray_logs.js",
-        "xkeen-ui/static/js/pages/backups.init.js",
-        "xkeen-ui/static/js/pages/backups.screen.bootstrap.js",
         "xkeen-ui/static/js/pages/codemirror6.shared.js",
         "xkeen-ui/static/js/pages/config_shell.shared.js",
         "xkeen-ui/static/js/pages/devtools.init.js",
@@ -29101,7 +28341,6 @@
         "xkeen-ui/static/js/pages/panel_shell.shared.js",
         "xkeen-ui/static/js/pages/shell.shared.js",
         "xkeen-ui/static/js/pages/terminal.lazy.entry.js",
-        "xkeen-ui/static/js/pages/top_level_backups_screen.js",
         "xkeen-ui/static/js/pages/top_level_devtools_screen.js",
         "xkeen-ui/static/js/pages/top_level_mihomo_generator_screen.js",
         "xkeen-ui/static/js/pages/top_level_modules_screen.js",
@@ -29216,7 +28455,7 @@
     {
       "id": "modules-page",
       "root": "xkeen-ui/static/js/pages/modules.entry.js",
-      "file_count": 282,
+      "file_count": 278,
       "module_ids": [
         "core",
         "engine.mihomo",
@@ -29239,7 +28478,6 @@
         "xkeen-ui/static/js/features/backups.js",
         "xkeen-ui/static/js/features/branding_prefs.js",
         "xkeen-ui/static/js/features/commands_list.js",
-        "xkeen-ui/static/js/features/compat/backups.js",
         "xkeen-ui/static/js/features/compat/devtools.js",
         "xkeen-ui/static/js/features/compat/github.js",
         "xkeen-ui/static/js/features/compat/inbounds.js",
@@ -29366,8 +28604,6 @@
         "xkeen-ui/static/js/features/xray_log_domain_hints.js",
         "xkeen-ui/static/js/features/xray_log_line_class.js",
         "xkeen-ui/static/js/features/xray_logs.js",
-        "xkeen-ui/static/js/pages/backups.init.js",
-        "xkeen-ui/static/js/pages/backups.screen.bootstrap.js",
         "xkeen-ui/static/js/pages/codemirror6.shared.js",
         "xkeen-ui/static/js/pages/config_shell.shared.js",
         "xkeen-ui/static/js/pages/devtools.init.js",
@@ -29401,7 +28637,6 @@
         "xkeen-ui/static/js/pages/panel_shell.shared.js",
         "xkeen-ui/static/js/pages/shell.shared.js",
         "xkeen-ui/static/js/pages/terminal.lazy.entry.js",
-        "xkeen-ui/static/js/pages/top_level_backups_screen.js",
         "xkeen-ui/static/js/pages/top_level_devtools_screen.js",
         "xkeen-ui/static/js/pages/top_level_mihomo_generator_screen.js",
         "xkeen-ui/static/js/pages/top_level_modules_screen.js",
@@ -29522,13 +28757,6 @@
         "module_id": "core",
         "template": "xkeen-ui/templates/panel.html",
         "entry": "xkeen-ui/static/js/pages/panel.entry.js"
-      },
-      {
-        "id": "backups",
-        "route": "/backups",
-        "module_id": "tool.backups",
-        "template": "xkeen-ui/templates/backups.html",
-        "entry": "xkeen-ui/static/js/pages/backups.entry.js"
       },
       {
         "id": "modules",
@@ -29923,7 +29151,7 @@
       {
         "from": "core",
         "to": "tool.backups",
-        "unit_count": 10,
+        "unit_count": 8,
         "examples": [
           "xkeen-ui/app_factory.py",
           "xkeen-ui/routes/__init__.py",
@@ -29931,8 +29159,8 @@
           "tests/test_modular_panel_standalone_pages.py",
           "tests/test_module_backend_gates.py",
           "xkeen-ui/static/js/features/backup_actions_loader.js",
-          "xkeen-ui/static/js/features/compat/backups.js",
-          "xkeen-ui/static/js/features/index.js"
+          "xkeen-ui/static/js/features/index.js",
+          "xkeen-ui/static/js/runtime/lazy_runtime.js"
         ]
       },
       {
@@ -30236,25 +29464,24 @@
       {
         "from": "tool.backups",
         "to": "core",
-        "unit_count": 12,
+        "unit_count": 8,
         "examples": [
           "xkeen-ui/routes/backups.py",
           "xkeen-ui/services/mihomo_backups.py",
           "xkeen-ui/services/xray_backups.py",
-          "xkeen-ui/static/js/pages/backups.entry.js",
           "xkeen-ui/static/js/features/backups.js",
-          "xkeen-ui/static/js/pages/backups.init.js",
-          "xkeen-ui/static/js/pages/backups.screen.bootstrap.js",
-          "xkeen-ui/templates/backups.html"
+          "xkeen-ui/templates/panel/slots/backups_inbounds_actions.html",
+          "xkeen-ui/templates/panel/slots/backups_outbounds_actions.html",
+          "xkeen-ui/templates/panel/slots/backups_routing_actions.html",
+          "xkeen-ui/templates/panel/slots/backups_xray_card.html"
         ]
       },
       {
         "from": "tool.backups",
         "to": "engine.mihomo",
-        "unit_count": 2,
+        "unit_count": 1,
         "examples": [
-          "xkeen-ui/services/mihomo_backups.py",
-          "xkeen-ui/static/js/pages/backups.entry.js"
+          "xkeen-ui/services/mihomo_backups.py"
         ]
       },
       {
@@ -30264,14 +29491,6 @@
         "examples": [
           "xkeen-ui/routes/backups.py",
           "xkeen-ui/static/js/features/backups.js"
-        ]
-      },
-      {
-        "from": "tool.backups",
-        "to": "tool.editor",
-        "unit_count": 1,
-        "examples": [
-          "xkeen-ui/static/js/pages/backups.screen.bootstrap.js"
         ]
       },
       {
@@ -30404,14 +29623,12 @@
       {
         "from": "core",
         "to": "tool.backups",
-        "unit_count": 7,
+        "unit_count": 5,
         "examples": [
           "xkeen-ui/app_factory.py",
           "xkeen-ui/routes/__init__.py",
           "xkeen-ui/static/js/features/backup_actions_loader.js",
-          "xkeen-ui/static/js/features/compat/backups.js",
           "xkeen-ui/static/js/features/index.js",
-          "xkeen-ui/static/js/pages/top_level_backups_screen.js",
           "xkeen-ui/static/js/runtime/lazy_runtime.js"
         ]
       },
@@ -30711,25 +29928,24 @@
       {
         "from": "tool.backups",
         "to": "core",
-        "unit_count": 12,
+        "unit_count": 8,
         "examples": [
           "xkeen-ui/routes/backups.py",
           "xkeen-ui/services/mihomo_backups.py",
           "xkeen-ui/services/xray_backups.py",
-          "xkeen-ui/static/js/pages/backups.entry.js",
           "xkeen-ui/static/js/features/backups.js",
-          "xkeen-ui/static/js/pages/backups.init.js",
-          "xkeen-ui/static/js/pages/backups.screen.bootstrap.js",
-          "xkeen-ui/templates/backups.html"
+          "xkeen-ui/templates/panel/slots/backups_inbounds_actions.html",
+          "xkeen-ui/templates/panel/slots/backups_outbounds_actions.html",
+          "xkeen-ui/templates/panel/slots/backups_routing_actions.html",
+          "xkeen-ui/templates/panel/slots/backups_xray_card.html"
         ]
       },
       {
         "from": "tool.backups",
         "to": "engine.mihomo",
-        "unit_count": 2,
+        "unit_count": 1,
         "examples": [
-          "xkeen-ui/services/mihomo_backups.py",
-          "xkeen-ui/static/js/pages/backups.entry.js"
+          "xkeen-ui/services/mihomo_backups.py"
         ]
       },
       {
@@ -30739,14 +29955,6 @@
         "examples": [
           "xkeen-ui/routes/backups.py",
           "xkeen-ui/static/js/features/backups.js"
-        ]
-      },
-      {
-        "from": "tool.backups",
-        "to": "tool.editor",
-        "unit_count": 1,
-        "examples": [
-          "xkeen-ui/static/js/pages/backups.screen.bootstrap.js"
         ]
       },
       {
@@ -30879,14 +30087,12 @@
       {
         "from": "core",
         "to": "tool.backups",
-        "unit_count": 7,
+        "unit_count": 5,
         "examples": [
           "xkeen-ui/app_factory.py",
           "xkeen-ui/routes/__init__.py",
           "xkeen-ui/static/js/features/backup_actions_loader.js",
-          "xkeen-ui/static/js/features/compat/backups.js",
           "xkeen-ui/static/js/features/index.js",
-          "xkeen-ui/static/js/pages/top_level_backups_screen.js",
           "xkeen-ui/static/js/runtime/lazy_runtime.js"
         ]
       },
@@ -30996,7 +30202,7 @@
       {
         "from": "core",
         "to": "tool.backups",
-        "unit_count": 10,
+        "unit_count": 8,
         "examples": [
           "xkeen-ui/app_factory.py",
           "xkeen-ui/routes/__init__.py",
@@ -31004,8 +30210,8 @@
           "tests/test_modular_panel_standalone_pages.py",
           "tests/test_module_backend_gates.py",
           "xkeen-ui/static/js/features/backup_actions_loader.js",
-          "xkeen-ui/static/js/features/compat/backups.js",
-          "xkeen-ui/static/js/features/index.js"
+          "xkeen-ui/static/js/features/index.js",
+          "xkeen-ui/static/js/runtime/lazy_runtime.js"
         ]
       },
       {
@@ -31175,14 +30381,12 @@
         {
           "from": "core",
           "to": "tool.backups",
-          "unit_count": 7,
+          "unit_count": 5,
           "examples": [
             "xkeen-ui/app_factory.py",
             "xkeen-ui/routes/__init__.py",
             "xkeen-ui/static/js/features/backup_actions_loader.js",
-            "xkeen-ui/static/js/features/compat/backups.js",
             "xkeen-ui/static/js/features/index.js",
-            "xkeen-ui/static/js/pages/top_level_backups_screen.js",
             "xkeen-ui/static/js/runtime/lazy_runtime.js"
           ]
         },
@@ -31241,7 +30445,6 @@
         "panel-mihomo",
         "terminal-lazy",
         "file-manager-lazy",
-        "backups-page",
         "devtools-page",
         "xkeen-page",
         "mihomo-generator-page",
