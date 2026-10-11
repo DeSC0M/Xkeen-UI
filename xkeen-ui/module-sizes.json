@@ -3,13 +3,13 @@
   "generated_from": "docs/modular-panel-stage0-inventory.json",
   "modules": {
     "core": 7211636,
-    "engine.xray": 3811517,
+    "engine.xray": 3816383,
     "engine.mihomo": 3070349,
     "tool.editor": 833048,
     "tool.terminal": 506192,
     "tool.files": 999414,
     "tool.backups": 114965,
     "integration.happ": 316003,
-    "tool.advanced-diagnostics": 499799
+    "tool.advanced-diagnostics": 499864
   }
 }

@@ -85,12 +85,12 @@
         "xray"
       ],
       "removable": true,
-      "unit_count": 135,
-      "size_bytes": 3811517,
+      "unit_count": 136,
+      "size_bytes": 3816383,
       "kind_counts": {
         "backend_route": 13,
         "backend_service": 20,
-        "backend_test": 45,
+        "backend_test": 46,
         "configuration": 4,
         "editor_schema": 4,
         "frontend_feature": 35,
@@ -365,7 +365,7 @@
       ],
       "removable": true,
       "unit_count": 23,
-      "size_bytes": 499799,
+      "size_bytes": 499864,
       "kind_counts": {
         "backend_route": 1,
         "backend_service": 7,
@@ -16530,7 +16530,7 @@
       "module_id": "engine.xray",
       "kind": "backend_service",
       "path": "xkeen-ui/services/xray_subscriptions.py",
-      "size_bytes": 328080,
+      "size_bytes": 329220,
       "depends_on": [
         "core",
         "tool.editor",
@@ -17379,6 +17379,27 @@
     {
       "module_id": "engine.xray",
       "kind": "backend_test",
+      "path": "tests/test_xray_subscription_panel_owned_balancers.py",
+      "size_bytes": 2285,
+      "depends_on": [
+        "core",
+        "tool.editor"
+      ],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "xkeen",
+        "xray"
+      ],
+      "environment_variables": [],
+      "removable": true
+    },
+    {
+      "module_id": "engine.xray",
+      "kind": "backend_test",
       "path": "tests/test_xray_subscription_request_profiles.py",
       "size_bytes": 4539,
       "depends_on": [
@@ -17401,7 +17422,7 @@
       "module_id": "engine.xray",
       "kind": "backend_test",
       "path": "tests/test_xray_subscriptions.py",
-      "size_bytes": 253251,
+      "size_bytes": 254692,
       "depends_on": [
         "core",
         "tool.editor"
@@ -20057,7 +20078,7 @@
       "module_id": "tool.advanced-diagnostics",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/devtools/env.js",
-      "size_bytes": 79703,
+      "size_bytes": 79768,
       "depends_on": [
         "core"
       ],
@@ -30018,7 +30039,7 @@
       {
         "from": "engine.xray",
         "to": "core",
-        "unit_count": 135,
+        "unit_count": 136,
         "examples": [
           "xkeen-ui/routes/routing/__init__.py",
           "xkeen-ui/routes/routing/blueprint.py",
@@ -30059,7 +30080,7 @@
       {
         "from": "engine.xray",
         "to": "tool.editor",
-        "unit_count": 135,
+        "unit_count": 136,
         "examples": [
           "xkeen-ui/routes/routing/__init__.py",
           "xkeen-ui/routes/routing/blueprint.py",
@@ -31224,7 +31245,7 @@
         },
         "tool.advanced-diagnostics": {
           "unit_count": 23,
-          "size_bytes": 499799
+          "size_bytes": 499864
         }
       },
       "next_stage": "Этапы 4, 5 и 6."
