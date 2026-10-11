@@ -87,8 +87,8 @@ module-owned shell surfaces; Full сохранил diagnostics modal перед 
 Аудит 5 октября добавил три guardrail: backup-surfaces следуют за
 `tool.backups`, сервер показывает первый доступный screen, а
 `tests/test_modular_panel_standalone_pages.py` проверяет, что `/`, `/xkeen`,
-`/mihomo_generator`, `/devtools` и `/backups` не отвечают `500` ни в одном
-наборе модулей (ссылка на DevTools рендерится только при зарегистрированном
+`/mihomo_generator` и `/devtools` не отвечают `500` ни в одном наборе
+модулей, а снятая 12.10.2026 страница `/backups` отвечает `404` (ссылка на DevTools рендерится только при зарегистрированном
 маршруте — `ui_endpoint_available`).
 
 ## Вне границ 4.5

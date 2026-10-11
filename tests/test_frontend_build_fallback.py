@@ -16,7 +16,6 @@ MANIFEST_PATH = BUILD_DIR / ".vite" / "manifest.json"
 EXPECTED_BUILD_ENTRIES = {
     "panel": "static/js/pages/panel.entry.js",
     "xkeen": "static/js/pages/xkeen.entry.js",
-    "backups": "static/js/pages/backups.entry.js",
     "modules": "static/js/pages/modules.entry.js",
     "devtools": "static/js/pages/devtools.entry.js",
     "mihomo_generator": "static/js/pages/mihomo_generator.entry.js",
@@ -180,7 +179,7 @@ def test_frontend_build_wrapper_sync_script_exists_and_passes_check_on_current_r
     )
 
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "Synced 6 wrapper file(s)." in result.stdout
+    assert "Synced 5 wrapper file(s)." in result.stdout
 
 
 

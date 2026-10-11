@@ -19,15 +19,9 @@ const GENERATOR = {
   ready: '#mihomo-preview-engine-select',
 };
 
-// Копии и XKeen открываются отдельной загрузкой страницы: ссылок «на месте»
-// на них в панели нет.
+// XKeen открывается отдельной загрузкой страницы: ссылки «на месте»
+// на него в панели нет.
 const DIRECT = [
-  {
-    name: 'backups',
-    path: '/backups',
-    back: 'a.xk-header-btn-ui[data-xk-top-nav="1"]',
-    scripts: /\/static\/js\/(?:pages\/backups\.(?:init|screen\.bootstrap)|features\/backups)\.js/,
-  },
   {
     name: 'xkeen',
     path: '/xkeen',

@@ -35,7 +35,7 @@ def _source(root: Path) -> Path:
         "routes/mihomo.py": "# mihomo route",
         "static/js/pages/terminal.lazy.entry.js": "terminal",
         "static/js/pages/file_manager.lazy.entry.js": "files",
-        "templates/backups.html": "backups",
+        "routes/backups.py": "# backups route",
         "routes/happ_decryptor.py": "# happ route",
         "services/happ_decryptor/__init__.py": "# happ service",
         "routes/devtools.py": "# devtools route",

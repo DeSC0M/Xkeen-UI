@@ -19,12 +19,6 @@ PAGE_SPECS = {
         "entry": "static/js/pages/panel.entry.js",
         "init": "static/js/pages/panel.init.js",
     },
-    "backups": {
-        "route": "/backups",
-        "template": "templates/backups.html",
-        "entry": "static/js/pages/backups.entry.js",
-        "init": "static/js/pages/backups.init.js",
-    },
     "modules": {
         "route": "/modules",
         "template": "templates/modules.html",

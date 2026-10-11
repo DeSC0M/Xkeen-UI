@@ -162,22 +162,6 @@ def test_api_snapshot_delete_all_requires_confirm_flag(tmp_path: Path):
     assert snapshot.exists()
 
 
-def test_html_legacy_backup_routes_ignore_traversal_names(tmp_path: Path):
-    client, paths = _build_client(tmp_path)
-    outside_backup = tmp_path / "escape.json"
-    _write_json(outside_backup, {"routing": "outside"})
-
-    restore_response = client.post("/restore", data={"filename": "../escape.json"}, follow_redirects=False)
-    delete_response = client.post("/delete-backup", data={"filename": "../escape.json"}, follow_redirects=False)
-
-    assert restore_response.status_code == 302
-    assert delete_response.status_code == 302
-    assert restore_response.headers.get("Location", "").endswith("/backups")
-    assert delete_response.headers.get("Location", "").endswith("/backups")
-    assert _read_json(paths["routing_file"]) == {"routing": "current"}
-    assert outside_backup.exists()
-
-
 def test_legacy_history_backup_restore_and_delete_still_work(tmp_path: Path):
     client, paths = _build_client(tmp_path)
     history_backup = paths["backup_dir"] / "05_routing-20260408-223000.json"

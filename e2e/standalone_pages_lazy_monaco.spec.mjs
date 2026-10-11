@@ -51,31 +51,6 @@ test('Mihomo Generator loads Monaco only after it is chosen', async ({ page }) =
 });
 
 
-test('Backups page loads Monaco only when an editor asks for it', async ({ page }) => {
-  const urls = recordRequests(page);
-  const pageErrors = [];
-  page.on('pageerror', (error) => pageErrors.push(String(error)));
-
-  await page.goto('/backups');
-  await expect(page.locator('body')).toBeVisible();
-  await page.waitForLoadState('networkidle');
-  await expect.poll(() => page.evaluate(() => !!(window.XKeen && window.XKeen.ui && window.XKeen.ui.editorEngine))).toBe(true);
-
-  expect(urls.filter((url) => MONACO_REQUEST.test(url)), 'Monaco files requested on open').toEqual([]);
-  expect(await monacoState(page)).toEqual({ loader: false, shared: false, api: false, lazy: true });
-
-  const runtime = await page.evaluate(async () => {
-    const result = await window.XKeen.ui.editorEngine.ensureRuntime('monaco');
-    return { ok: !!result, engine: result ? result.engine : null };
-  });
-
-  expect(runtime).toEqual({ ok: true, engine: 'monaco' });
-  const after = await monacoState(page);
-  expect(after.loader && after.shared && after.api).toBe(true);
-  expect(pageErrors).toEqual([]);
-});
-
-
 test('standalone pages keep CodeMirror working without touching Monaco', async ({ page }) => {
   const urls = recordRequests(page);
 

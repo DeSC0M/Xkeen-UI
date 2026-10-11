@@ -49,7 +49,7 @@
 - `modular-panel-stage6-editor-separation.md` — закрытый Этап 6: варианты editor `light/full/advanced`, persisted capability state, editor bundle allow-list и graceful fallback.
 - `modular-panel-stage4.3-tool-screens.md` — экраны команд (`tool.terminal`) и файлов (`tool.files`) вынесены в partials; итоги browser smoke minimal-профилей и оставшиеся frontend-вызовы API выключенных модулей.
 - `devtools-operator-theme.md` — закрытый перевод DevTools со старой blue-glass темы на общие с основной панелью Operator tokens, flat shell/data rows/log canvas/modals и responsive dark/light contract.
-- `top-level-navigation-plan.md` — история закрытого перевода пяти исходных entrypoints и текущее расширение до шести маршрутов с `/modules`.
+- `top-level-navigation-plan.md` — история закрытого перевода пяти исходных entrypoints и текущий набор из пяти маршрутов: `/backups` снят, `/modules` добавлен.
 - `modular-panel-stage8-manager-ui.md` — операторский контракт core-owned менеджера модулей: план, применение, отмена, восстановление и границы доверия.
 - `panel-operator-stage0-contract.md` — закрытый Этап 0 редизайна Operator Console: presentation ownership, матрица views/accordions/editors/modals, DOM freeze и dark/light visual baseline.
 - `panel-operator-stage1-primitives.md` — закрытый Этап 1 редизайна Operator Console: канонические слои scoped CSS, mapping примитивов, legacy boundary, геометрия controls/surfaces и dark/light Chromium-contract.

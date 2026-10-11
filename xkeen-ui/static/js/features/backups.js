@@ -16,7 +16,7 @@ let backupsModuleApi = null;
 (() => {
   // Backups feature module.
   // Supports two modes depending on the page:
-  //  - history: /backups page (old timestamped backups)  -> /api/backups, /api/restore, /api/delete-backup
+  //  - history: old timestamped backups  -> /api/backups, /api/restore, /api/delete-backup
   //  - snapshots: panel card (rollback snapshots per file) -> /api/xray/snapshots, /api/xray/snapshots/read, /api/xray/snapshots/restore
 
   const UI = getXkeenSharedPrimitivesApi();

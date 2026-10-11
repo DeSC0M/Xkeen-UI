@@ -1,4 +1,4 @@
-# Итог: top-level navigation между `/`, `/backups`, `/modules`, `/devtools`, `/xkeen` и `/mihomo_generator`
+# Итог: top-level navigation между `/`, `/modules`, `/devtools`, `/xkeen` и `/mihomo_generator`
 
 ## Статус
 
@@ -12,7 +12,7 @@
 - `backups` и `xkeen` доведены до того же keep-alive screen lifecycle, что уже был у `panel`, `devtools` и `mihomo_generator`;
 - guardrails, inventory updates, verification и архитектурная документация синхронизированы под final five-route contract.
 
-На 08.10.2026 core-owned `/modules` расширяет текущий canonical registry до шести маршрутов. Он использует тот же shell, direct URL entry и keep-alive screen lifecycle; исторические пункты P0–P10 ниже описывают исходный five-route rollout.
+На 08.10.2026 core-owned `/modules` вошёл в canonical registry: он использует тот же shell, direct URL entry и keep-alive screen lifecycle. На 12.10.2026 отдельная страница `/backups` снята: её работу давно выполняет карточка «Бэкапы Xray» в роутинге главной панели, модуль `tool.backups` и API копий остались. В registry снова пять маршрутов; исторические пункты P0–P10 ниже описывают исходный five-route rollout, в который `/backups` ещё входил.
 
 ## Что было закрыто
 
@@ -35,10 +35,10 @@
 Под "задача закрыта" теперь понимается следующее:
 
 - normal-path переходы между зарегистрированными top-level маршрутами не меняют HTML-документ;
-- top-level router работает через фиксированный six-route registry и `pushState`/`popstate`;
+- top-level router работает через фиксированный five-route registry и `pushState`/`popstate`;
 - hard navigation остаётся только fallback-only path для direct URL entry, missing screen и transition failure.
 - direct entrypoint каждого маршрута остаётся canonical source entry и продолжает работать без already-bootstrapped shell;
-- `backups` и `xkeen` сохраняют локальное runtime-состояние достаточно, чтобы возврат на экран не вёл к лишней переинициализации, duplicate polling или сбросу базового view/editor state.
+- `xkeen` сохраняет локальное runtime-состояние достаточно, чтобы возврат на экран не вёл к лишней переинициализации, duplicate polling или сбросу базового view/editor state.
 
 ## Что закрепил `P10`
 
@@ -51,10 +51,10 @@
 
 ## Как использовать этот файл дальше
 
-Исторический five-route rollout завершён; текущий runtime contract охватывает шесть маршрутов, включая `/modules`.
+Исторический five-route rollout завершён; текущий runtime contract охватывает пять маршрутов: `/backups` снят, `/modules` добавлен.
 
 Он полезен как краткая фиксация того, что именно уже считается обязательным контрактом:
 
-- есть один top-level shell/runtime path для всех шести canonical entrypoints;
-- keep-alive screen lifecycle и screen registry распространяются на `/backups` и `/xkeen` так же, как на остальные top-level экраны;
+- есть один top-level shell/runtime path для всех пяти canonical entrypoints;
+- keep-alive screen lifecycle и screen registry распространяются на `/xkeen` и `/modules` так же, как на остальные top-level экраны;
 - изменения в router, page templates, inventory и runtime guardrails не должны откатывать normal-path переходы обратно к full document reload.

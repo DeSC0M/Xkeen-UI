@@ -67,7 +67,8 @@ def test_standalone_pages_never_fail_for_a_module_set(name, tmp_path):
         "/xkeen": 200,
         "/mihomo_generator": 200 if _has(module_ids, "engine.mihomo") else 404,
         "/devtools": 200 if _has(module_ids, "tool.advanced-diagnostics") else 404,
-        "/backups": 200 if _has(module_ids, "tool.backups") else 404,
+        # The standalone backups page is retired; its card lives in routing.
+        "/backups": 404,
     }
     assert {path: client.get(path).status_code for path in expected} == expected
 
@@ -78,7 +79,7 @@ def test_standalone_pages_link_to_devtools_only_when_it_is_registered(name, tmp_
     client = _app(module_ids, tmp_path).test_client()
     has_devtools = _has(module_ids, "tool.advanced-diagnostics")
 
-    for path in ("/xkeen", "/mihomo_generator", "/backups"):
+    for path in ("/xkeen", "/mihomo_generator"):
         response = client.get(path)
         if response.status_code != 200:
             continue
@@ -126,7 +127,7 @@ def test_pages_with_an_editor_know_what_the_editor_variant_offers(name, tmp_path
     full = module_ids is None or {"engine.xray", "engine.mihomo"} <= set(module_ids)
 
     seen = 0
-    for path in ("/backups", "/mihomo_generator"):
+    for path in ("/mihomo_generator",):
         response = client.get(path)
         if response.status_code != 200:
             continue
@@ -140,7 +141,7 @@ def test_pages_with_an_editor_know_what_the_editor_variant_offers(name, tmp_path
         if module_ids is not None:
             assert modules["activeModuleIds"] == sorted(module_ids), f"{name}: {path}"
     if name in ("legacy", "full"):
-        assert seen == 2
+        assert seen == 1
 
 
 def test_standalone_pages_lock_the_engine_their_editor_variant_lacks():

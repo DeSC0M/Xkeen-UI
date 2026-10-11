@@ -307,7 +307,6 @@ def test_top_level_navigation_controls_use_shared_helper_contract():
     registry = Path('xkeen-ui/static/js/pages/top_level_screen_registry.js').read_text(encoding='utf-8')
     host = Path('xkeen-ui/static/js/pages/top_level_screen_host.shared.js').read_text(encoding='utf-8')
     panel_screen = Path('xkeen-ui/static/js/pages/top_level_panel_screen.js').read_text(encoding='utf-8')
-    backups_screen = Path('xkeen-ui/static/js/pages/top_level_backups_screen.js').read_text(encoding='utf-8')
     modules_screen = Path('xkeen-ui/static/js/pages/top_level_modules_screen.js').read_text(encoding='utf-8')
     mihomo_screen = Path('xkeen-ui/static/js/pages/top_level_mihomo_generator_screen.js').read_text(encoding='utf-8')
     devtools_screen = Path('xkeen-ui/static/js/pages/top_level_devtools_screen.js').read_text(encoding='utf-8')
@@ -315,20 +314,16 @@ def test_top_level_navigation_controls_use_shared_helper_contract():
     panel_mihomo_shared = Path('xkeen-ui/static/js/pages/top_level_panel_mihomo.shared.js').read_text(encoding='utf-8')
     panel_shell = Path('xkeen-ui/static/js/pages/panel_shell.shared.js').read_text(encoding='utf-8')
     panel_entry = Path('xkeen-ui/static/js/pages/panel.entry.js').read_text(encoding='utf-8')
-    backups_entry = Path('xkeen-ui/static/js/pages/backups.entry.js').read_text(encoding='utf-8')
     modules_entry = Path('xkeen-ui/static/js/pages/modules.entry.js').read_text(encoding='utf-8')
     devtools_entry = Path('xkeen-ui/static/js/pages/devtools.entry.js').read_text(encoding='utf-8')
     xkeen_entry = Path('xkeen-ui/static/js/pages/xkeen.entry.js').read_text(encoding='utf-8')
     mihomo_entry = Path('xkeen-ui/static/js/pages/mihomo_generator.entry.js').read_text(encoding='utf-8')
-    backups_bootstrap = Path('xkeen-ui/static/js/pages/backups.screen.bootstrap.js').read_text(encoding='utf-8')
     devtools_bootstrap = Path('xkeen-ui/static/js/pages/devtools.screen.bootstrap.js').read_text(encoding='utf-8')
     xkeen_bootstrap = Path('xkeen-ui/static/js/pages/xkeen.screen.bootstrap.js').read_text(encoding='utf-8')
-    backups_init = Path('xkeen-ui/static/js/pages/backups.init.js').read_text(encoding='utf-8')
     devtools_init = Path('xkeen-ui/static/js/pages/devtools.init.js').read_text(encoding='utf-8')
     xkeen_init = Path('xkeen-ui/static/js/pages/xkeen.init.js').read_text(encoding='utf-8')
     mihomo_init = Path('xkeen-ui/static/js/pages/mihomo_generator.init.js').read_text(encoding='utf-8')
     panel_template = compose_panel_template(Path('.'))
-    backups_template = Path('xkeen-ui/templates/backups.html').read_text(encoding='utf-8')
     devtools_template = Path('xkeen-ui/templates/devtools.html').read_text(encoding='utf-8')
     xkeen_template = Path('xkeen-ui/templates/xkeen.html').read_text(encoding='utf-8')
     mihomo_template = Path('xkeen-ui/templates/mihomo_generator.html').read_text(encoding='utf-8')
@@ -346,7 +341,6 @@ def test_top_level_navigation_controls_use_shared_helper_contract():
     assert "xk.topLevel = xk.topLevel && typeof xk.topLevel === 'object' ? xk.topLevel : {};" in router
     assert 'export function getTopLevelScreenRegistryApi()' in registry
     assert "panel: '/'" in registry
-    assert "backups: '/backups'" in registry
     assert "modules: '/modules'" in registry
     assert "devtools: '/devtools'" in registry
     assert "xkeen: '/xkeen'" in registry
@@ -357,8 +351,6 @@ def test_top_level_navigation_controls_use_shared_helper_contract():
     assert 'if (key) hostState.styleKeys.add(key);' in host
     assert 'export function registerPanelTopLevelScreen()' in panel_screen
     assert "fetchTopLevelScreenSnapshot('panel', '/')" in panel_screen
-    assert 'export function registerBackupsTopLevelScreen()' in backups_screen
-    assert "fetchTopLevelScreenSnapshot('backups', '/backups')" in backups_screen
     assert 'export function registerModulesTopLevelScreen()' in modules_screen
     assert "fetchTopLevelScreenSnapshot('modules', '/modules')" in modules_screen
     assert 'export function registerMihomoGeneratorTopLevelScreen()' in mihomo_screen
@@ -372,11 +364,9 @@ def test_top_level_navigation_controls_use_shared_helper_contract():
     assert "const GLOBAL_BODY_NODE_IDS = new Set(['xk-tooltip-portal']);" in host
     assert 'function shouldKeepBodyNodeGlobal(node) {' in host
     assert 'if (shouldKeepBodyNodeGlobal(node)) return false;' in host
-    assert "import { registerBackupsTopLevelScreen } from './top_level_backups_screen.js';" in panel_mihomo_shared
     assert "import { registerModulesTopLevelScreen } from './top_level_modules_screen.js';" in panel_mihomo_shared
     assert "import { registerDevtoolsTopLevelScreen } from './top_level_devtools_screen.js';" in panel_mihomo_shared
     assert "import { registerXkeenTopLevelScreen } from './top_level_xkeen_screen.js';" in panel_mihomo_shared
-    assert "'backups'," in panel_mihomo_shared
     assert "'modules'," in panel_mihomo_shared
     assert "'xkeen'," in panel_mihomo_shared
     assert "import { wireTopLevelNavigation } from './top_level_nav.shared.js';" in panel_shell
@@ -384,10 +374,6 @@ def test_top_level_navigation_controls_use_shared_helper_contract():
     assert "import { bootPanelScreen } from './panel.screen.bootstrap.js';" in panel_entry
     assert "import { registerPanelMihomoTopLevelScreens } from './top_level_panel_mihomo.shared.js';" in panel_entry
     assert "initialScreen: 'panel'" in panel_entry
-    assert "import { bootTopLevelShell } from './top_level_shell.shared.js';" in backups_entry
-    assert "import { bootBackupsScreen } from './backups.screen.bootstrap.js';" in backups_entry
-    assert "import { registerPanelMihomoTopLevelScreens } from './top_level_panel_mihomo.shared.js';" in backups_entry
-    assert "initialScreen: 'backups'" in backups_entry
     assert "import { bootTopLevelShell } from './top_level_shell.shared.js';" in modules_entry
     assert "import { bootModulesScreen } from './modules.screen.bootstrap.js';" in modules_entry
     assert "import { registerPanelMihomoTopLevelScreens } from './top_level_panel_mihomo.shared.js';" in modules_entry
@@ -404,15 +390,12 @@ def test_top_level_navigation_controls_use_shared_helper_contract():
     assert "import { bootMihomoGeneratorScreen } from './mihomo_generator.screen.bootstrap.js';" in mihomo_entry
     assert "import { registerPanelMihomoTopLevelScreens } from './top_level_panel_mihomo.shared.js';" in mihomo_entry
     assert "initialScreen: 'mihomo_generator'" in mihomo_entry
-    assert 'export async function bootBackupsScreen()' in backups_bootstrap
     assert 'export async function bootDevtoolsScreen()' in devtools_bootstrap
     assert 'export async function bootXkeenScreen()' in xkeen_bootstrap
-    assert "import { wireTopLevelNavigation } from './top_level_nav.shared.js';" in backups_init
     assert "import { wireTopLevelNavigation } from './top_level_nav.shared.js';" in devtools_init
     assert "import { wireTopLevelNavigation } from './top_level_nav.shared.js';" in xkeen_init
     assert "import { wireTopLevelNavigation } from './top_level_nav.shared.js';" in mihomo_init
     assert panel_template.count('data-xk-top-nav="1"') >= 3
-    assert backups_template.count('data-xk-top-nav="1"') >= 3
     assert 'data-xk-top-nav="1"' in devtools_template
     assert xkeen_template.count('data-xk-top-nav="1"') >= 3
     assert mihomo_template.count('data-xk-top-nav="1"') >= 3
@@ -1218,7 +1201,7 @@ def test_source_mode_templates_include_codemirror6_importmap_before_entry_module
     )
     assert 'xkeen-ui/templates/panel.html' in templates
     assert 'xkeen-ui/templates/modules.html' in templates
-    assert len(templates) >= 6, templates
+    assert len(templates) >= 5, templates
 
     for rel in templates:
         if rel == 'xkeen-ui/templates/panel.html':
@@ -1269,11 +1252,6 @@ def test_p4_top_level_templates_share_host_partials_without_forcing_single_templ
             "{% include '_top_level_host_theme_bootstrap.html' %}",
             "{% include '_top_level_global_spinner.html' %}",
         ],
-        'xkeen-ui/templates/backups.html': [
-            "{% include '_top_level_host_head_assets.html' %}",
-            "{% include '_top_level_host_theme_bootstrap.html' %}",
-            "{% include '_top_level_global_spinner.html' %}",
-        ],
         'xkeen-ui/templates/xkeen.html': [
             "{% include '_top_level_host_head_assets.html' %}",
             "{% include '_top_level_host_theme_bootstrap.html' %}",
@@ -1305,7 +1283,6 @@ def test_p5_top_level_router_prefers_history_navigation_and_keeps_hard_navigatio
 
     assert 'const TOP_LEVEL_SCREEN_ROUTES = Object.freeze({' in registry
     assert "panel: '/'" in registry
-    assert "backups: '/backups'" in registry
     assert "modules: '/modules'" in registry
     assert "devtools: '/devtools'" in registry
     assert "xkeen: '/xkeen'" in registry
@@ -1371,11 +1348,10 @@ def test_p5_top_level_router_prefers_history_navigation_and_keeps_hard_navigatio
     assert "router.bootstrapCurrentScreen({" in shell
 
 
-def test_p9_backups_and_xkeen_screen_modules_keep_runtime_reactivation_safe():
+def test_p9_backups_feature_and_xkeen_screen_keep_runtime_reactivation_safe():
     backups = Path('xkeen-ui/static/js/features/backups.js').read_text(encoding='utf-8')
     service_status = Path('xkeen-ui/static/js/features/service_status.js').read_text(encoding='utf-8')
     xkeen_texts = Path('xkeen-ui/static/js/features/xkeen_texts.js').read_text(encoding='utf-8')
-    backups_bootstrap = Path('xkeen-ui/static/js/pages/backups.screen.bootstrap.js').read_text(encoding='utf-8')
     xkeen_bootstrap = Path('xkeen-ui/static/js/pages/xkeen.screen.bootstrap.js').read_text(encoding='utf-8')
 
     assert 'function getMode() {' in backups
@@ -1410,10 +1386,6 @@ def test_p9_backups_and_xkeen_screen_modules_keep_runtime_reactivation_safe():
     assert 'function deactivate() {' in xkeen_texts
     assert 'isInitialized() {' in xkeen_texts
 
-    assert 'function readScrollState() {' in backups_bootstrap
-    assert 'function applyScrollState(state) {' in backups_bootstrap
-    assert "if (backupsApi && typeof backupsApi.isInitialized === 'function' && !backupsApi.isInitialized()) {" in backups_bootstrap
-    assert 'return applyScrollState(state);' in backups_bootstrap
 
     assert 'function readScrollState() {' in xkeen_bootstrap
     assert 'function applyScrollState(state) {' in xkeen_bootstrap

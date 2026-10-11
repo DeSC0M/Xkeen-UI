@@ -132,7 +132,6 @@ def test_stage0_inventory_generator_runs_and_covers_required_contract(tmp_path):
         "panel-mihomo",
         "terminal-lazy",
         "file-manager-lazy",
-        "backups-page",
         "modules-page",
         "devtools-page",
         "xkeen-page",

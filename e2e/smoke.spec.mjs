@@ -127,12 +127,12 @@ test('devtools page renders update and env sections', async ({ page }) => {
 });
 
 
-test('backups history page renders table', async ({ page }) => {
-  await page.goto('/backups');
+test('the retired backups page is gone and its card lives in routing', async ({ page }) => {
+  const response = await page.goto('/backups');
+  expect(response.status()).toBe(404);
 
-  await expect(page).toHaveTitle(/Бэкапы/i);
-  await expect(page.locator('#backups-table')).toBeVisible();
-  await expect(page.locator('body')).toContainText('Бэкапы Xray конфигов');
+  await page.goto('/');
+  await expect(page.locator('#routing-backups-header')).toBeAttached();
 });
 
 

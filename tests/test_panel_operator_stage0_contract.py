@@ -183,7 +183,7 @@ def test_operator_stylesheet_is_last_owned_and_fully_scoped():
             legacy_blocks.append(f"{prelude}{{{declarations}}}")
     legacy_digest = hashlib.sha256(("\n".join(legacy_blocks) + "\n").encode("utf-8")).hexdigest()
     assert len(legacy_blocks) == 727
-    assert legacy_digest == "d9710416b785fd853c997ec733364071f64cf73db8bea224f3c3f10fa1e38304"
+    assert legacy_digest == "7e1f460733ac5230c5a7d93e4aa1f54a93d39e739a3e2b879ad536c11a0352db"
 
     without_comments = re.sub(r"/\*.*?\*/", "", operator_css, flags=re.DOTALL)
     # Animation steps are not selectors. Scope is enforced on the rule that

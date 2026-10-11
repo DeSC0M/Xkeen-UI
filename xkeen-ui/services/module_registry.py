@@ -100,7 +100,7 @@ _MODULE_INSTALL_MARKERS: dict[str, tuple[str, ...]] = {
     "tool.editor": ("xkeen-ui/static/js/pages/codemirror6.shared.js",),
     "tool.terminal": ("xkeen-ui/static/js/pages/terminal.lazy.entry.js",),
     "tool.files": ("xkeen-ui/static/js/pages/file_manager.lazy.entry.js",),
-    "tool.backups": ("xkeen-ui/templates/backups.html",),
+    "tool.backups": ("xkeen-ui/routes/backups.py",),
     # happ_links/happ_payloads are core-owned shared helpers; only the
     # module's own route and service package prove that it is installed.
     "integration.happ": (
@@ -274,7 +274,7 @@ MODULE_DEFINITIONS: tuple[ModuleDefinition, ...] = (
     ModuleDefinition(
         id="tool.backups",
         name="Резервные копии",
-        description="Страница и API резервных копий конфигураций Xray/Mihomo.",
+        description="Карточка и API резервных копий конфигураций Xray/Mihomo.",
         version=REGISTRY_VERSION,
         dependencies=("core",),
         conflicts=(),
@@ -283,8 +283,8 @@ MODULE_DEFINITIONS: tuple[ModuleDefinition, ...] = (
         removable=True,
         can_disable=True,
         requires_restart=True,
-        frontend_bundles=("backups-page",),
-        navigation_views=("backups",),
+        frontend_bundles=(),
+        navigation_views=(),
     ),
     ModuleDefinition(
         id="integration.happ",

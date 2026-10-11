@@ -44,7 +44,7 @@ INSTALL_MARKERS = {
     "tool.editor": ("static/js/pages/codemirror6.shared.js",),
     "tool.terminal": ("static/js/pages/terminal.lazy.entry.js",),
     "tool.files": ("static/js/pages/file_manager.lazy.entry.js",),
-    "tool.backups": ("templates/backups.html",),
+    "tool.backups": ("routes/backups.py",),
     "integration.happ": ("routes/happ_decryptor.py", "services/happ_decryptor/__init__.py"),
     "tool.advanced-diagnostics": ("routes/devtools.py", "templates/devtools.html"),
 }

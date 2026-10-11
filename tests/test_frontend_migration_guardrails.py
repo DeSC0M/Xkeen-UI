@@ -19,12 +19,6 @@ def test_source_entrypoints_bootstrap_pages_without_legacy_loader():
             "import { bootPanelScreen } from './panel.screen.bootstrap.js';",
             "initialScreen: 'panel'",
         ],
-        "backups.entry.js": [
-            "import { bootTopLevelShell } from './top_level_shell.shared.js';",
-            "import { registerPanelMihomoTopLevelScreens } from './top_level_panel_mihomo.shared.js';",
-            "import { bootBackupsScreen } from './backups.screen.bootstrap.js';",
-            "initialScreen: 'backups'",
-        ],
         "modules.entry.js": [
             "import { bootTopLevelShell } from './top_level_shell.shared.js';",
             "import { bootModulesScreen } from './modules.screen.bootstrap.js';",
@@ -51,8 +45,6 @@ def test_source_entrypoints_bootstrap_pages_without_legacy_loader():
     }
     forbidden_fragments = {
         "panel.entry.js": [],
-        "backups.entry.js": [
-        ],
         "modules.entry.js": ["../features/devtools"],
         "devtools.entry.js": [
             "../features/typography.js?v=",

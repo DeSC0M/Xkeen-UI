@@ -91,7 +91,6 @@ FRONTEND_ROOTS: dict[str, str] = {
     "panel-mihomo": "static/js/pages/panel.mihomo.bundle.js",
     "terminal-lazy": "static/js/pages/terminal.lazy.entry.js",
     "file-manager-lazy": "static/js/pages/file_manager.lazy.entry.js",
-    "backups-page": "static/js/pages/backups.entry.js",
     "devtools-page": "static/js/pages/devtools.entry.js",
     "xkeen-page": "static/js/pages/xkeen.entry.js",
     "mihomo-generator-page": "static/js/pages/mihomo_generator.entry.js",
@@ -420,9 +419,7 @@ class ModularPanelInventoryGenerator:
         elif (
             name == "backups.py"
             or "/features/backups" in p
-            or "/templates/backups.html" in p
             or "/templates/panel/slots/backups_" in p
-            or "/pages/backups." in p
             or "xray_backups.py" in p
             or "mihomo_backups.py" in p
         ):
@@ -961,13 +958,6 @@ class ModularPanelInventoryGenerator:
                 "module_id": "core",
                 "template": "xkeen-ui/templates/panel.html",
                 "entry": "xkeen-ui/static/js/pages/panel.entry.js",
-            },
-            {
-                "id": "backups",
-                "route": "/backups",
-                "module_id": "tool.backups",
-                "template": "xkeen-ui/templates/backups.html",
-                "entry": "xkeen-ui/static/js/pages/backups.entry.js",
             },
             {
                 "id": "modules",

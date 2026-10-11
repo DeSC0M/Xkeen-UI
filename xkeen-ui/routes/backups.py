@@ -1,4 +1,4 @@
-"""Backup-related page and API routes as a Flask Blueprint.
+"""Backup API routes as a Flask Blueprint.
 
 This module is a blueprint *factory* so the main app can inject paths and helpers.
 
@@ -15,7 +15,7 @@ import os
 import time
 from typing import Any, Callable, Dict, Optional
 
-from flask import Blueprint, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, jsonify, request
 
 from routes.common.errors import error_response
 
@@ -243,39 +243,6 @@ def create_backups_blueprint(
             )
         items.sort(key=lambda x: x.get("mtime") or "", reverse=True)
         return items
-
-    # ---- pages ----
-
-    @bp.get("/backups")
-    def backups_page() -> Any:
-        # UI hint: show which fragment names are active (classic vs *_hys2.json).
-        try:
-            xray_profile = "hys2" if "_hys2" in os.path.basename(ROUTING_FILE) else "classic"
-        except Exception:
-            xray_profile = "classic"
-
-        return render_template(
-            "backups.html",
-            backups=list_backups(),
-            backup_dir=BACKUP_DIR,
-            xray_profile=xray_profile,
-            routing_file=os.path.basename(ROUTING_FILE),
-            inbounds_file=os.path.basename(INBOUNDS_FILE),
-            outbounds_file=os.path.basename(OUTBOUNDS_FILE),
-        )
-
-    @bp.post("/delete-backup")
-    def delete_backup_from_backups_page() -> Any:
-        """Legacy HTML form action: delete a backup and redirect to /backups."""
-        filename = request.form.get("filename")
-        path = _history_backup_realpath(filename)
-        if path and os.path.isfile(path):
-            try:
-                os.remove(path)
-            except OSError:
-                # Ignore deletion error and just return to the backups page
-                pass
-        return redirect(url_for("backups.backups_page"))
 
     # ---- API: Xray snapshots (rollback) ----
 
@@ -790,48 +757,5 @@ def create_backups_blueprint(
         )
 
         return jsonify({"ok": True, "filename": filename, "file": os.path.basename(config_path)}), 200
-
-    # ---- HTML restore (Backups page) ----
-
-    @bp.post("/restore")
-    def restore_from_backups_page() -> Any:
-        filename = request.form.get("filename")
-        if not filename:
-            return redirect(url_for(".backups_page"))
-
-        path = _history_backup_realpath(filename)
-        if path and os.path.isfile(path):
-            data = load_json(path, default=None)
-            if data is not None:
-                safe_filename = os.path.basename(path)
-                target_file = _extract_target_file_from_backup(data) or _detect_backup_target_file(safe_filename)
-                if not target_file:
-                    return redirect(url_for(".backups_page"))
-
-                if isinstance(data, dict) and "__xkeen_raw_jsonc__" in data:
-                    raw = data.get("__xkeen_raw_jsonc__") or ""
-                    try:
-                        ensure_xray_jsonc_dir()
-                        raw_path = jsonc_path_for(target_file)
-                        with open(raw_path, "w", encoding="utf-8") as f:
-                            f.write(raw)
-
-                        cleaned = strip_json_comments_text(raw)
-                        if cleaned.strip():
-                            obj = json.loads(cleaned)
-                            save_json(target_file, obj)
-                    except Exception:
-                        cleaned_obj = data.get("__xkeen_data__")
-                        if cleaned_obj is not None:
-                            save_json(target_file, cleaned_obj)
-                else:
-                    if isinstance(data, dict) and "__xkeen_data__" in data:
-                        save_json(target_file, data.get("__xkeen_data__"))
-                    else:
-                        save_json(target_file, data)
-
-                restart_xkeen(source="backups-page")
-
-        return redirect(url_for(".backups_page"))
 
     return bp

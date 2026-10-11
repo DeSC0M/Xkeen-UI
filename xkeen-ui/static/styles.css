@@ -6801,467 +6801,6 @@ button.backup-icon-btn.backup-delete-btn {
   border-color: #b91c1c;
 }
 
-/* Backups history page: premium shell + panel-style header actions */
-body.xk-backups-page {
-  position: relative;
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(96, 165, 250, 0.16), transparent 28%),
-    radial-gradient(circle at top right, rgba(209, 177, 122, 0.12), transparent 24%),
-    linear-gradient(180deg, #07101f 0%, #08111e 52%, #040913 100%);
-}
-
-body.xk-backups-page::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 82% 14%, rgba(255, 255, 255, 0.08), transparent 18%),
-    linear-gradient(125deg, transparent 0 38%, rgba(255, 255, 255, 0.03) 50%, transparent 62%);
-  opacity: 0.72;
-  mix-blend-mode: screen;
-  z-index: 0;
-}
-
-body.xk-backups-page .container-wide {
-  position: relative;
-  z-index: 1;
-  max-width: min(1520px, 95vw);
-  padding: 28px 24px 40px;
-}
-
-body.xk-backups-page a {
-  color: #e7cf9a;
-}
-
-body.xk-backups-page .panel-header {
-  position: relative;
-  margin-bottom: 28px;
-  padding: 22px 24px;
-  border-radius: 30px;
-  border: 1px solid rgba(209, 177, 122, 0.14);
-  background:
-    radial-gradient(circle at top right, rgba(209, 177, 122, 0.14), transparent 30%),
-    radial-gradient(circle at left center, rgba(59, 130, 246, 0.10), transparent 26%),
-    linear-gradient(135deg, rgba(18, 28, 45, 0.94), rgba(7, 12, 22, 0.92));
-  box-shadow:
-    0 32px 80px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  overflow: hidden;
-  backdrop-filter: blur(24px) saturate(155%);
-  -webkit-backdrop-filter: blur(24px) saturate(155%);
-}
-
-body.xk-backups-page .panel-header::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 36%),
-    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
-}
-
-body.xk-backups-page .panel-header > * {
-  position: relative;
-  z-index: 1;
-}
-
-body.xk-backups-page .xk-backups-header-main {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  flex-wrap: wrap;
-}
-
-body.xk-backups-page .xk-backups-header-title {
-  min-width: 0;
-  flex: 1 1 auto;
-}
-
-body.xk-backups-page .panel-header h1 {
-  margin: 0;
-  font-size: clamp(1.55rem, 1.6vw, 2.1rem);
-  font-weight: 700;
-  letter-spacing: -0.045em;
-  color: #f9f1e3;
-  text-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
-}
-
-body.xk-backups-page .header-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-body.xk-backups-page .xk-header-btn,
-body.xk-backups-page .theme-toggle-btn.xk-header-btn-theme {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  min-height: 38px;
-  padding: 0 13px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 197, 255, 0.18);
-  background:
-    linear-gradient(180deg, rgba(18, 28, 48, 0.78), rgba(8, 14, 28, 0.72)),
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.12), transparent 46%);
-  color: #eaf2ff;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -10px 18px rgba(2, 8, 23, 0.24),
-    0 10px 24px rgba(2, 8, 23, 0.26);
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-  text-decoration: none;
-  font-size: calc(11px * var(--xk-font-scale));
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-}
-
-body.xk-backups-page .xk-header-btn::before,
-body.xk-backups-page .theme-toggle-btn.xk-header-btn-theme::before {
-  content: "";
-  position: absolute;
-  inset: 1px;
-  border-radius: inherit;
-  pointer-events: none;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 34%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 58%);
-  opacity: 0.9;
-  z-index: -1;
-}
-
-body.xk-backups-page .xk-header-btn:hover,
-body.xk-backups-page .theme-toggle-btn.xk-header-btn-theme:hover {
-  text-decoration: none;
-  transform: translateY(-1px);
-  border-color: rgba(186, 221, 255, 0.34);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -12px 22px rgba(2, 8, 23, 0.26),
-    0 16px 30px rgba(2, 8, 23, 0.32);
-}
-
-body.xk-backups-page .theme-toggle-btn.xk-header-btn-theme {
-  min-width: 60px;
-  padding: 0 14px;
-  background:
-    linear-gradient(180deg, rgba(24, 51, 104, 0.82), rgba(10, 23, 52, 0.78)),
-    radial-gradient(circle at 30% 28%, rgba(147, 197, 253, 0.4), transparent 34%);
-  border-color: rgba(96, 165, 250, 0.28);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 0 0 1px rgba(96, 165, 250, 0.12),
-    0 14px 28px rgba(8, 47, 107, 0.3);
-}
-
-body.xk-backups-page .xk-header-btn-ui {
-  background:
-    linear-gradient(180deg, rgba(26, 44, 82, 0.82), rgba(11, 23, 48, 0.78)),
-    radial-gradient(circle at 24% 24%, rgba(125, 211, 252, 0.24), transparent 38%);
-  border-color: rgba(103, 232, 249, 0.18);
-}
-
-body.xk-backups-page .xk-header-btn-devtools {
-  background:
-    linear-gradient(180deg, rgba(37, 35, 84, 0.84), rgba(17, 18, 48, 0.8)),
-    radial-gradient(circle at 28% 24%, rgba(167, 139, 250, 0.22), transparent 36%);
-  border-color: rgba(167, 139, 250, 0.2);
-}
-
-body.xk-backups-page .xk-header-btn-logout {
-  background:
-    linear-gradient(180deg, rgba(76, 22, 31, 0.82), rgba(41, 10, 17, 0.8)),
-    radial-gradient(circle at 28% 22%, rgba(251, 113, 133, 0.18), transparent 36%);
-  border-color: rgba(251, 113, 133, 0.18);
-}
-
-body.xk-backups-page .xk-backups-table-card {
-  position: relative;
-  padding: 14px;
-  border-radius: 28px;
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  background:
-    linear-gradient(180deg, rgba(10, 18, 34, 0.92), rgba(6, 12, 24, 0.88)),
-    radial-gradient(circle at top right, rgba(96, 165, 250, 0.08), transparent 32%);
-  box-shadow:
-    0 28px 60px rgba(2, 8, 23, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  overflow: hidden;
-}
-
-body.xk-backups-page .xk-backups-table-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 18%);
-}
-
-body.xk-backups-page #backups-table {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: transparent;
-}
-
-body.xk-backups-page #backups-table thead {
-  background: transparent;
-}
-
-body.xk-backups-page #backups-table th,
-body.xk-backups-page #backups-table td {
-  padding: 14px 16px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-  text-align: left;
-}
-
-body.xk-backups-page #backups-table th {
-  font-size: calc(11px * var(--xk-font-scale));
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(191, 219, 254, 0.72);
-}
-
-body.xk-backups-page #backups-table td {
-  color: color-mix(in srgb, var(--text, #e5e7eb) 94%, white 6%);
-  background: transparent;
-}
-
-body.xk-backups-page #backups-table tbody tr {
-  transition: background 0.16s ease, transform 0.16s ease;
-}
-
-body.xk-backups-page #backups-table tbody tr:hover {
-  background: rgba(15, 23, 42, 0.44);
-}
-
-body.xk-backups-page #backups-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-body.xk-backups-page #backups-table td code {
-  display: inline-flex;
-  align-items: center;
-  max-width: 100%;
-  padding: 6px 10px;
-  border-radius: 12px;
-  border: 1px solid rgba(96, 165, 250, 0.16);
-  background: rgba(8, 15, 29, 0.72);
-  color: #dbeafe;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-
-body.xk-backups-page .backup-actions {
-  gap: 8px;
-}
-
-body.xk-backups-page button.backup-icon-btn {
-  min-width: 38px;
-  min-height: 38px;
-  padding: 0 11px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background:
-    linear-gradient(180deg, rgba(16, 31, 55, 0.88), rgba(8, 18, 34, 0.82)),
-    radial-gradient(circle at 28% 24%, rgba(96, 165, 250, 0.12), transparent 36%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    0 10px 20px rgba(2, 8, 23, 0.20);
-  transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, background 0.14s ease;
-}
-
-body.xk-backups-page button.backup-icon-btn:hover {
-  transform: translateY(-1px);
-  border-color: rgba(147, 197, 253, 0.30);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    0 14px 24px rgba(2, 8, 23, 0.24);
-}
-
-body.xk-backups-page button.backup-icon-btn .backup-icon,
-body.xk-backups-page .backup-icon-btn .backup-icon {
-  filter: brightness(1.08);
-}
-
-body.xk-backups-page button.backup-icon-btn.backup-delete-btn {
-  border-color: rgba(248, 113, 113, 0.30);
-  background:
-    linear-gradient(180deg, rgba(116, 22, 36, 0.90), rgba(63, 12, 22, 0.86)),
-    radial-gradient(circle at 28% 24%, rgba(251, 113, 133, 0.18), transparent 36%);
-}
-
-body.xk-backups-page #backups-status {
-  margin-top: 14px;
-}
-
-body.xk-backups-page footer {
-  margin-top: 18px;
-  text-align: left;
-  color: rgba(148, 163, 184, 0.78);
-}
-
-html[data-theme="light"] body.xk-backups-page {
-  background:
-    radial-gradient(circle at top left, rgba(96, 165, 250, 0.12), transparent 30%),
-    radial-gradient(circle at top right, rgba(245, 158, 11, 0.09), transparent 24%),
-    linear-gradient(180deg, #f4f8ff 0%, #eef4fb 48%, #f8fafc 100%);
-}
-
-html[data-theme="light"] body.xk-backups-page::before {
-  opacity: 0.42;
-}
-
-html[data-theme="light"] body.xk-backups-page a {
-  color: #8f5d21;
-}
-
-html[data-theme="light"] body.xk-backups-page .panel-header {
-  border-color: rgba(96, 165, 250, 0.18);
-  background:
-    linear-gradient(90deg, rgba(244, 249, 255, 0.98) 0%, rgba(235, 244, 255, 0.96) 50%, rgba(242, 247, 255, 0.94) 100%),
-    radial-gradient(circle at 18% 16%, rgba(96, 165, 250, 0.12), transparent 34%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    0 20px 44px rgba(47, 79, 140, 0.10);
-}
-
-html[data-theme="light"] body.xk-backups-page .panel-header h1 {
-  color: #0f172a;
-  text-shadow: none;
-}
-
-html[data-theme="light"] body.xk-backups-page .xk-header-btn,
-html[data-theme="light"] body.xk-backups-page .theme-toggle-btn.xk-header-btn-theme {
-  border-color: rgba(96, 165, 250, 0.16);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(240, 247, 255, 0.82)),
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.56), transparent 44%);
-  color: #162033;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.84),
-    inset 0 -10px 18px rgba(191, 219, 254, 0.16),
-    0 12px 24px rgba(47, 79, 140, 0.10);
-}
-
-html[data-theme="light"] body.xk-backups-page .xk-header-btn-theme {
-  background:
-    linear-gradient(180deg, rgba(236, 245, 255, 0.98), rgba(221, 235, 255, 0.9)),
-    radial-gradient(circle at 30% 28%, rgba(96, 165, 250, 0.2), transparent 36%);
-}
-
-html[data-theme="light"] body.xk-backups-page .xk-header-btn-ui {
-  background:
-    linear-gradient(180deg, rgba(240, 251, 255, 0.98), rgba(225, 243, 255, 0.9)),
-    radial-gradient(circle at 24% 24%, rgba(103, 232, 249, 0.18), transparent 38%);
-}
-
-html[data-theme="light"] body.xk-backups-page .xk-header-btn-devtools {
-  background:
-    linear-gradient(180deg, rgba(245, 241, 255, 0.98), rgba(234, 228, 255, 0.9)),
-    radial-gradient(circle at 24% 24%, rgba(167, 139, 250, 0.16), transparent 38%);
-}
-
-html[data-theme="light"] body.xk-backups-page .xk-header-btn-logout {
-  background:
-    linear-gradient(180deg, rgba(255, 243, 245, 0.98), rgba(255, 228, 233, 0.9)),
-    radial-gradient(circle at 24% 24%, rgba(251, 113, 133, 0.14), transparent 38%);
-}
-
-html[data-theme="light"] body.xk-backups-page .xk-backups-table-card {
-  border-color: rgba(96, 165, 250, 0.12);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 248, 255, 0.92)),
-    radial-gradient(circle at top right, rgba(96, 165, 250, 0.08), transparent 34%);
-  box-shadow:
-    0 22px 42px rgba(47, 79, 140, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.86);
-}
-
-html[data-theme="light"] body.xk-backups-page #backups-table th,
-html[data-theme="light"] body.xk-backups-page #backups-table td {
-  border-bottom-color: rgba(148, 163, 184, 0.16);
-}
-
-html[data-theme="light"] body.xk-backups-page #backups-table th {
-  color: #64748b;
-}
-
-html[data-theme="light"] body.xk-backups-page #backups-table td {
-  color: #0f172a;
-}
-
-html[data-theme="light"] body.xk-backups-page #backups-table tbody tr:hover {
-  background: rgba(219, 234, 254, 0.46);
-}
-
-html[data-theme="light"] body.xk-backups-page #backups-table td code {
-  border-color: rgba(96, 165, 250, 0.16);
-  background: rgba(241, 245, 249, 0.92);
-  color: #1d4ed8;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88);
-}
-
-html[data-theme="light"] body.xk-backups-page button.backup-icon-btn {
-  border-color: rgba(96, 165, 250, 0.18);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(236, 245, 255, 0.88)),
-    radial-gradient(circle at 28% 24%, rgba(96, 165, 250, 0.12), transparent 36%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.86),
-    0 10px 20px rgba(47, 79, 140, 0.10);
-}
-
-html[data-theme="light"] body.xk-backups-page button.backup-icon-btn.backup-delete-btn {
-  border-color: rgba(251, 113, 133, 0.24);
-  background:
-    linear-gradient(180deg, rgba(255, 241, 242, 0.98), rgba(255, 228, 230, 0.92)),
-    radial-gradient(circle at 28% 24%, rgba(251, 113, 133, 0.12), transparent 36%);
-}
-
-html[data-theme="light"] body.xk-backups-page footer {
-  color: rgba(71, 85, 105, 0.78);
-}
-
-@media (max-width: 900px) {
-  body.xk-backups-page .container-wide {
-    padding: 20px 14px 32px;
-  }
-
-  body.xk-backups-page .panel-header {
-    padding: 18px 16px;
-    border-radius: 24px;
-  }
-
-  body.xk-backups-page .xk-backups-header-main {
-    align-items: flex-start;
-  }
-
-  body.xk-backups-page .header-actions {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  body.xk-backups-page #backups-table th,
-  body.xk-backups-page #backups-table td {
-    padding: 12px;
-  }
-}
-
 @keyframes xray-log-blink {
   0%,
   49% {
@@ -14692,7 +14231,6 @@ body.panel-page .panel-shell-summary .xk-global-header-activity {
 }
 
 .mihomo-generator-page .generator-header-actions-row .header-actions,
-.xk-backups-page .header-actions,
 body.devtools-page .header-actions,
 body:not(.panel-page) > .container .header-actions {
   align-items: center;
@@ -14940,14 +14478,12 @@ html[data-theme="light"] .theme-toggle-btn {
 }
 
 body.panel-page .theme-toggle-btn.xk-header-btn-theme,
-body.xk-backups-page .theme-toggle-btn.xk-header-btn-theme,
 .mihomo-generator-page .theme-toggle-btn.xk-header-btn-theme,
 body.devtools-page .theme-toggle-btn.dt-header-btn-theme {
   gap: 8px;
 }
 
 body.panel-page .theme-toggle-btn.xk-header-btn-theme .theme-toggle-icon,
-body.xk-backups-page .theme-toggle-btn.xk-header-btn-theme .theme-toggle-icon,
 .mihomo-generator-page .theme-toggle-btn.xk-header-btn-theme .theme-toggle-icon,
 body.devtools-page .theme-toggle-btn.dt-header-btn-theme .theme-toggle-icon {
   display: inline-flex;
@@ -28569,9 +28105,7 @@ body.panel-page .CodeMirror.xk-cm-lite .CodeMirror-lines {
 
 /* Theme bridge: late overrides so DevTools global theme variables affect the new premium panel surfaces. */
 body.panel-page header .header-actions .xk-header-btn,
-body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme,
-body.xk-backups-page header .header-actions .xk-header-btn,
-body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme {
+body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme {
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -28593,9 +28127,7 @@ body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-them
 }
 
 body.panel-page header .header-actions .xk-header-btn::before,
-body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme::before,
-body.xk-backups-page header .header-actions .xk-header-btn::before,
-body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme::before {
+body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme::before {
   content: "";
   position: absolute;
   inset: 1px;
@@ -28611,9 +28143,7 @@ body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-them
 }
 
 body.panel-page header .header-actions .xk-header-btn:hover,
-body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme:hover,
-body.xk-backups-page header .header-actions .xk-header-btn:hover,
-body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme:hover {
+body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme:hover {
   border-color: var(--header-btn-hover-border, #baddff57) !important;
   background:
     linear-gradient(
@@ -28630,9 +28160,7 @@ body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-them
 }
 
 body.panel-page header .header-actions .xk-header-btn:hover::before,
-body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme:hover::before,
-body.xk-backups-page header .header-actions .xk-header-btn:hover::before,
-body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme:hover::before {
+body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme:hover::before {
   opacity: 1;
   background:
     radial-gradient(circle at 24% 0%, rgba(255, 255, 255, 0.24), transparent 44%),
@@ -28640,8 +28168,7 @@ body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-them
     linear-gradient(120deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05) 22%, transparent 48%);
 }
 
-body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme,
-body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme {
+body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme {
   --xk-header-accent-border: color-mix(in srgb, var(--accent, #60a5fa) 52%, var(--header-btn-border, #94c5ff2e) 48%);
   --xk-header-accent-top: color-mix(in srgb, rgba(24, 51, 104, 0.82) 76%, var(--accent, #60a5fa) 24%);
   --xk-header-accent-bottom: color-mix(in srgb, rgba(10, 23, 52, 0.78) 68%, var(--header-btn-hover-bg, #142038f5) 32%);
@@ -28652,8 +28179,7 @@ body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-them
   padding: 0 16px;
 }
 
-body.panel-page header .header-actions .xk-header-btn.xk-header-btn-ui,
-body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-ui {
+body.panel-page header .header-actions .xk-header-btn.xk-header-btn-ui {
   --xk-header-accent-border: color-mix(in srgb, var(--sem-info, #93c5fd) 46%, var(--header-btn-border, #94c5ff2e) 54%);
   --xk-header-accent-top: color-mix(in srgb, rgba(26, 44, 82, 0.82) 72%, var(--sem-info, #93c5fd) 28%);
   --xk-header-accent-bottom: color-mix(in srgb, rgba(11, 23, 48, 0.78) 60%, var(--sem-info, #93c5fd) 40%);
@@ -28662,8 +28188,7 @@ body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-ui {
   --xk-header-accent-shadow: rgba(8, 47, 107, 0.26);
 }
 
-body.panel-page header .header-actions .xk-header-btn.xk-header-btn-devtools,
-body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-devtools {
+body.panel-page header .header-actions .xk-header-btn.xk-header-btn-devtools {
   --xk-header-accent-border: color-mix(in srgb, #a78bfa 48%, var(--header-btn-border, #94c5ff2e) 52%);
   --xk-header-accent-top: color-mix(in srgb, rgba(37, 35, 84, 0.84) 74%, #a78bfa 26%);
   --xk-header-accent-bottom: color-mix(in srgb, rgba(17, 18, 48, 0.8) 60%, #a78bfa 40%);
@@ -28672,8 +28197,7 @@ body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-devtool
   --xk-header-accent-shadow: rgba(23, 23, 58, 0.28);
 }
 
-body.panel-page header .header-actions .xk-header-btn.xk-header-btn-logout,
-body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-logout {
+body.panel-page header .header-actions .xk-header-btn.xk-header-btn-logout {
   --xk-header-accent-border: color-mix(in srgb, var(--sem-error, #f87171) 46%, var(--header-btn-border, #94c5ff2e) 54%);
   --xk-header-accent-top: color-mix(in srgb, rgba(76, 22, 31, 0.82) 74%, var(--sem-error, #f87171) 26%);
   --xk-header-accent-bottom: color-mix(in srgb, rgba(41, 10, 17, 0.8) 60%, var(--sem-error, #f87171) 40%);
@@ -28683,13 +28207,9 @@ body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-logout 
 }
 
 body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme,
-body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme,
 body.panel-page header .header-actions .xk-header-btn.xk-header-btn-ui,
-body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-ui,
 body.panel-page header .header-actions .xk-header-btn.xk-header-btn-devtools,
-body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-devtools,
-body.panel-page header .header-actions .xk-header-btn.xk-header-btn-logout,
-body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-logout {
+body.panel-page header .header-actions .xk-header-btn.xk-header-btn-logout {
   border-color: var(--xk-header-accent-border) !important;
   background:
     linear-gradient(180deg, var(--xk-header-accent-top), var(--xk-header-accent-bottom)),
@@ -28701,13 +28221,9 @@ body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-logout 
 }
 
 body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme:hover,
-body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme:hover,
 body.panel-page header .header-actions .xk-header-btn.xk-header-btn-ui:hover,
-body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-ui:hover,
 body.panel-page header .header-actions .xk-header-btn.xk-header-btn-devtools:hover,
-body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-devtools:hover,
-body.panel-page header .header-actions .xk-header-btn.xk-header-btn-logout:hover,
-body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-logout:hover {
+body.panel-page header .header-actions .xk-header-btn.xk-header-btn-logout:hover {
   border-color: color-mix(in srgb, var(--xk-header-accent-border) 72%, white 28%) !important;
   background:
     linear-gradient(
@@ -28723,18 +28239,14 @@ body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-logout:
 }
 
 html[data-theme="light"] body.panel-page header .header-actions .xk-header-btn,
-html[data-theme="light"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme,
-html[data-theme="light"] body.xk-backups-page header .header-actions .xk-header-btn,
-html[data-theme="light"] body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme {
+html[data-theme="light"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme {
   color: #1a2740 !important;
   backdrop-filter: blur(14px) saturate(132%);
   -webkit-backdrop-filter: blur(14px) saturate(132%);
 }
 
 html[data-theme="light"] body.panel-page header .header-actions .xk-header-btn::before,
-html[data-theme="light"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme::before,
-html[data-theme="light"] body.xk-backups-page header .header-actions .xk-header-btn::before,
-html[data-theme="light"] body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme::before {
+html[data-theme="light"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme::before {
   opacity: 0.78;
   mix-blend-mode: normal;
   background:
@@ -28742,8 +28254,7 @@ html[data-theme="light"] body.xk-backups-page header .header-actions .theme-togg
     linear-gradient(135deg, rgba(255, 255, 255, 0.42), transparent 38%);
 }
 
-html[data-theme="light"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme,
-html[data-theme="light"] body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme {
+html[data-theme="light"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme {
   --xk-header-accent-border: rgba(63, 111, 203, 0.26);
   --xk-header-accent-top: rgba(236, 245, 255, 0.98);
   --xk-header-accent-bottom: rgba(221, 235, 255, 0.94);
@@ -28752,8 +28263,7 @@ html[data-theme="light"] body.xk-backups-page header .header-actions .theme-togg
   --xk-header-accent-shadow: rgba(76, 112, 177, 0.22);
 }
 
-html[data-theme="light"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-ui,
-html[data-theme="light"] body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-ui {
+html[data-theme="light"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-ui {
   --xk-header-accent-border: rgba(89, 130, 205, 0.22);
   --xk-header-accent-top: rgba(244, 248, 255, 0.98);
   --xk-header-accent-bottom: rgba(229, 237, 252, 0.94);
@@ -28762,8 +28272,7 @@ html[data-theme="light"] body.xk-backups-page header .header-actions .xk-header-
   --xk-header-accent-shadow: rgba(93, 125, 176, 0.18);
 }
 
-html[data-theme="light"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-devtools,
-html[data-theme="light"] body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-devtools {
+html[data-theme="light"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-devtools {
   --xk-header-accent-border: rgba(140, 116, 224, 0.24);
   --xk-header-accent-top: rgba(248, 244, 255, 0.98);
   --xk-header-accent-bottom: rgba(236, 229, 255, 0.94);
@@ -28772,8 +28281,7 @@ html[data-theme="light"] body.xk-backups-page header .header-actions .xk-header-
   --xk-header-accent-shadow: rgba(126, 102, 194, 0.20);
 }
 
-html[data-theme="light"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-logout,
-html[data-theme="light"] body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-logout {
+html[data-theme="light"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-logout {
   --xk-header-accent-border: rgba(225, 103, 132, 0.24);
   --xk-header-accent-top: rgba(255, 246, 248, 0.98);
   --xk-header-accent-bottom: rgba(255, 229, 235, 0.94);
@@ -28783,13 +28291,9 @@ html[data-theme="light"] body.xk-backups-page header .header-actions .xk-header-
 }
 
 html[data-theme="light"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme,
-html[data-theme="light"] body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme,
 html[data-theme="light"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-ui,
-html[data-theme="light"] body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-ui,
 html[data-theme="light"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-devtools,
-html[data-theme="light"] body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-devtools,
-html[data-theme="light"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-logout,
-html[data-theme="light"] body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-logout {
+html[data-theme="light"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-logout {
   border-color: var(--xk-header-accent-border) !important;
   background:
     linear-gradient(
@@ -28806,13 +28310,9 @@ html[data-theme="light"] body.xk-backups-page header .header-actions .xk-header-
 }
 
 html[data-theme="light"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme:hover,
-html[data-theme="light"] body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme:hover,
 html[data-theme="light"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-ui:hover,
-html[data-theme="light"] body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-ui:hover,
 html[data-theme="light"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-devtools:hover,
-html[data-theme="light"] body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-devtools:hover,
-html[data-theme="light"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-logout:hover,
-html[data-theme="light"] body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-logout:hover {
+html[data-theme="light"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-logout:hover {
   border-color: color-mix(in srgb, var(--xk-header-accent-border) 78%, white 22%) !important;
   background:
     linear-gradient(
@@ -28829,9 +28329,7 @@ html[data-theme="light"] body.xk-backups-page header .header-actions .xk-header-
 }
 
 html[data-theme="dark"] body.panel-page header .header-actions .xk-header-btn,
-html[data-theme="dark"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme,
-html[data-theme="dark"] body.xk-backups-page header .header-actions .xk-header-btn,
-html[data-theme="dark"] body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme {
+html[data-theme="dark"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme {
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -28850,9 +28348,7 @@ html[data-theme="dark"] body.xk-backups-page header .header-actions .theme-toggl
 }
 
 html[data-theme="dark"] body.panel-page header .header-actions .xk-header-btn::before,
-html[data-theme="dark"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme::before,
-html[data-theme="dark"] body.xk-backups-page header .header-actions .xk-header-btn::before,
-html[data-theme="dark"] body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme::before {
+html[data-theme="dark"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme::before {
   content: "";
   position: absolute;
   inset: 1px;
@@ -28867,9 +28363,7 @@ html[data-theme="dark"] body.xk-backups-page header .header-actions .theme-toggl
 }
 
 html[data-theme="dark"] body.panel-page header .header-actions .xk-header-btn:hover,
-html[data-theme="dark"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme:hover,
-html[data-theme="dark"] body.xk-backups-page header .header-actions .xk-header-btn:hover,
-html[data-theme="dark"] body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme:hover {
+html[data-theme="dark"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme:hover {
   transform: translateY(-1px);
   border-color: rgba(186, 221, 255, 0.34) !important;
   background:
@@ -28883,17 +28377,14 @@ html[data-theme="dark"] body.xk-backups-page header .header-actions .theme-toggl
 }
 
 html[data-theme="dark"] body.panel-page header .header-actions .xk-header-btn:hover::before,
-html[data-theme="dark"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme:hover::before,
-html[data-theme="dark"] body.xk-backups-page header .header-actions .xk-header-btn:hover::before,
-html[data-theme="dark"] body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme:hover::before {
+html[data-theme="dark"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme:hover::before {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 34%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 58%);
   opacity: 0.9;
 }
 
-html[data-theme="dark"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme,
-html[data-theme="dark"] body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme {
+html[data-theme="dark"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme {
   min-width: 64px;
   padding: 0 16px;
   border-color: rgba(96, 165, 250, 0.28) !important;
@@ -28906,8 +28397,7 @@ html[data-theme="dark"] body.xk-backups-page header .header-actions .theme-toggl
     0 14px 28px rgba(8, 47, 107, 0.3) !important;
 }
 
-html[data-theme="dark"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-ui,
-html[data-theme="dark"] body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-ui {
+html[data-theme="dark"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-ui {
   border-color: rgba(103, 232, 249, 0.18) !important;
   background:
     linear-gradient(180deg, rgba(26, 44, 82, 0.82), rgba(11, 23, 48, 0.78)),
@@ -28918,8 +28408,7 @@ html[data-theme="dark"] body.xk-backups-page header .header-actions .xk-header-b
     0 10px 24px rgba(2, 8, 23, 0.26) !important;
 }
 
-html[data-theme="dark"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-devtools,
-html[data-theme="dark"] body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-devtools {
+html[data-theme="dark"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-devtools {
   border-color: rgba(167, 139, 250, 0.2) !important;
   background:
     linear-gradient(180deg, rgba(37, 35, 84, 0.84), rgba(17, 18, 48, 0.8)),
@@ -28930,8 +28419,7 @@ html[data-theme="dark"] body.xk-backups-page header .header-actions .xk-header-b
     0 10px 24px rgba(2, 8, 23, 0.26) !important;
 }
 
-html[data-theme="dark"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-logout,
-html[data-theme="dark"] body.xk-backups-page header .header-actions .xk-header-btn.xk-header-btn-logout {
+html[data-theme="dark"] body.panel-page header .header-actions .xk-header-btn.xk-header-btn-logout {
   border-color: rgba(251, 113, 133, 0.18) !important;
   background:
     linear-gradient(180deg, rgba(76, 22, 31, 0.82), rgba(41, 10, 17, 0.8)),
@@ -31221,8 +30709,6 @@ html[data-theme="light"] #ui-settings-modal .xk-ui-settings-status.error {
 /* Header premium glass refresh (late override after migration hotfixes). */
 body.panel-page header .header-actions .xk-header-btn,
 body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme,
-body.xk-backups-page header .header-actions .xk-header-btn,
-body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme,
 .mihomo-generator-page .header-actions .xk-header-btn,
 .mihomo-generator-page .header-actions .theme-toggle-btn.xk-header-btn-theme,
 body.devtools-page header .header-actions .dt-header-btn,
@@ -31247,8 +30733,6 @@ body.devtools-page header .header-actions .theme-toggle-btn.dt-header-btn-theme 
 
 body.panel-page header .header-actions .xk-header-btn::after,
 body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme::after,
-body.xk-backups-page header .header-actions .xk-header-btn::after,
-body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme::after,
 .mihomo-generator-page .header-actions .xk-header-btn::after,
 .mihomo-generator-page .header-actions .theme-toggle-btn.xk-header-btn-theme::after,
 body.devtools-page header .header-actions .dt-header-btn::after,
@@ -31267,8 +30751,6 @@ body.devtools-page header .header-actions .theme-toggle-btn.dt-header-btn-theme:
 
 body.panel-page header .header-actions .xk-header-btn:hover,
 body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme:hover,
-body.xk-backups-page header .header-actions .xk-header-btn:hover,
-body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme:hover,
 .mihomo-generator-page .header-actions .xk-header-btn:hover,
 .mihomo-generator-page .header-actions .theme-toggle-btn.xk-header-btn-theme:hover,
 body.devtools-page header .header-actions .dt-header-btn:hover,
@@ -31282,7 +30764,6 @@ body.devtools-page header .header-actions .theme-toggle-btn.dt-header-btn-theme:
 }
 
 body.panel-page header .header-actions .theme-toggle-btn .theme-toggle-icon,
-body.xk-backups-page header .header-actions .theme-toggle-btn .theme-toggle-icon,
 .mihomo-generator-page .header-actions .theme-toggle-btn .theme-toggle-icon,
 body.devtools-page header .header-actions .theme-toggle-btn .theme-toggle-icon {
   width: 22px;
@@ -31298,8 +30779,6 @@ body.devtools-page header .header-actions .theme-toggle-btn .theme-toggle-icon {
 
 html[data-theme="light"] body.panel-page header .header-actions .xk-header-btn,
 html[data-theme="light"] body.panel-page header .header-actions .theme-toggle-btn.xk-header-btn-theme,
-html[data-theme="light"] body.xk-backups-page header .header-actions .xk-header-btn,
-html[data-theme="light"] body.xk-backups-page header .header-actions .theme-toggle-btn.xk-header-btn-theme,
 html[data-theme="light"] .mihomo-generator-page .header-actions .xk-header-btn,
 html[data-theme="light"] .mihomo-generator-page .header-actions .theme-toggle-btn.xk-header-btn-theme,
 html[data-theme="light"] body.devtools-page header .header-actions .dt-header-btn,
@@ -31312,7 +30791,6 @@ html[data-theme="light"] body.devtools-page header .header-actions .theme-toggle
 }
 
 html[data-theme="light"] body.panel-page header .header-actions .theme-toggle-btn .theme-toggle-icon,
-html[data-theme="light"] body.xk-backups-page header .header-actions .theme-toggle-btn .theme-toggle-icon,
 html[data-theme="light"] .mihomo-generator-page .header-actions .theme-toggle-btn .theme-toggle-icon,
 html[data-theme="light"] body.devtools-page header .header-actions .theme-toggle-btn .theme-toggle-icon {
   box-shadow:
