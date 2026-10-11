@@ -90,6 +90,11 @@ older callers, but the new UI must not use it for lifecycle operations.
 > accepted as intended: a `main` build has no update controls in the UI and
 > is updated with the installer; only the `development_only` API remains.
 > Statements below about a development `main` UI in DevTools are superseded.
+>
+> Amendment, 11 October 2026: the `development_only` API is removed as well.
+> `/api/devtools/update/*`, the `main` branch updater, `update_xkeen_ui.sh`
+> and the legacy header indicator no longer exist; the DevTools card reads
+> `/api/modules/installed` and `/api/modules/panel/update-check` only.
 
 ## Screen Loading And Data Ownership
 

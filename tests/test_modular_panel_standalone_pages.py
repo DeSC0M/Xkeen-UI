@@ -85,12 +85,9 @@ def test_standalone_pages_link_to_devtools_only_when_it_is_registered(name, tmp_
         html = response.get_data(as_text=True)
         links = re.findall(r'href="/devtools[^"]*"', html)
         assert bool(links) == has_devtools, f"{name}: {path}"
-        # DevTools is now itself an informational panel summary. Its header has
-        # a single direct link to the Modules manager rather than a second
-        # legacy update indicator. Other DevTools-capable screens retain the
-        # global indicator.
-        expect_update_indicator = has_devtools and path != "/devtools"
-        assert ('id="xk-update-link"' in html) == expect_update_indicator, f"{name}: {path}"
+        # The legacy update indicator is gone from every header: updates are
+        # announced by the badge of the Modules manager item.
+        assert 'id="xk-update-link"' not in html, f"{name}: {path}"
 
 
 @pytest.mark.parametrize("name", sorted(MODULE_SETS))

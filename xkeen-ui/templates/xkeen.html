@@ -32,7 +32,6 @@
 
   {% include '_top_level_host_theme_bootstrap.html' %}
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css', v='20260907a') }}">
-  <link rel="stylesheet" id="xk-terminal-theme-link" href="{{ url_for('terminal_theme_css', v=terminal_theme_v) }}">
 </head>
 <body class="xkeen-page" data-xk-top-level-screen="xkeen">
   {% set top_level_spinner_text = 'Применяем изменения и перезапускаем xkeen…' %}
@@ -68,16 +67,6 @@
           <a href="{{ url_for('modules_page') }}" class="btn-link" data-xk-top-nav="1">Модули и обновления<span data-xk-modules-update-badge hidden></span></a>
           {% if ui_endpoint_available('devtools_page') %}
           <a href="{{ url_for('devtools_page') }}" class="btn-link" data-xk-top-nav="1" title="DevTools">DevTools</a>
-          <a
-            href="{{ url_for('devtools_page') }}#dt-update-card"
-            id="xk-update-link"
-            class="service-core-text hidden"
-            data-xk-top-nav="1"
-            title="Обновление"
-          >
-            <span class="xk-update-dot" aria-hidden="true"></span>
-            <span data-xk-update-label>Обновление</span>
-          </a>
           {% endif %}
           {% set logout_button_class = 'btn-link' %}
           {% include '_logout_button.html' %}

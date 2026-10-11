@@ -52,20 +52,16 @@ def test_source_entrypoints_bootstrap_pages_without_legacy_loader():
     forbidden_fragments = {
         "panel.entry.js": [],
         "backups.entry.js": [
-            "../features/update_notifier.js?v=",
         ],
         "modules.entry.js": ["../features/devtools"],
         "devtools.entry.js": [
-            "../features/update_notifier.js?v=",
             "../features/typography.js?v=",
             "../features/layout_prefs.js?v=",
             "../features/branding_prefs.js?v=",
         ],
         "xkeen.entry.js": [
-            "../features/update_notifier.js?v=",
         ],
         "mihomo_generator.entry.js": [
-            "../features/update_notifier.js?v=",
         ],
     }
 

@@ -5,7 +5,7 @@ import json
 import sys
 from pathlib import Path
 
-from flask import Flask, Response
+from flask import Flask
 from werkzeug.security import generate_password_hash
 
 
@@ -50,10 +50,6 @@ def _build_client(tmp_path: Path, monkeypatch, *, install_size_guard: bool = Fal
 
     app = Flask("mobile-routing-validate-test")
     app.config["TESTING"] = True
-
-    @app.get("/ui/terminal-theme.css")
-    def terminal_theme_css():
-        return Response("", mimetype="text/css")
 
     if install_size_guard:
         request_limits.install_request_size_guards(app)

@@ -2,7 +2,6 @@ from pathlib import Path
 
 
 INSTALLER = Path("xkeen-ui/install.sh")
-UPDATER = Path("xkeen-ui/scripts/update_xkeen_ui.sh")
 
 
 def test_installer_isolates_python_cache_before_first_python_process():
@@ -23,16 +22,6 @@ def test_generated_init_script_isolates_panel_runtime_python_cache():
     assert "export PYTHONPYCACHEPREFIX" in init_script
     assert 'mkdir -p "$PYTHONPYCACHEPREFIX" 2>/dev/null || true' in init_script
     assert init_script.index("export PYTHONPYCACHEPREFIX") < init_script.index('nohup "$PYTHON_BIN" "$TARGET"')
-
-
-def test_self_update_isolates_cache_before_first_python_helper():
-    text = UPDATER.read_text(encoding="utf-8")
-
-    prefix = 'PYTHONPYCACHEPREFIX="${XKEEN_UI_PYTHONPYCACHEPREFIX:-/tmp/xkeen-ui-pycache}"'
-    first_helper = '"$PY" - "$STATUS_FILE"'
-    assert prefix in text
-    assert text.index(prefix) < text.index(first_helper)
-    assert "export PYTHONPYCACHEPREFIX" in text
 
 
 def test_frontend_cleanup_failure_is_non_fatal_under_set_e():

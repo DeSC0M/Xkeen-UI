@@ -224,46 +224,6 @@ time.sleep(0.25)
             self.assertEqual(status["step"], "restart")
             self.assertIsNone(status["error"])
 
-    def test_devtools_status_endpoint_returns_reconciled_stale_status(self):
-        state = _reload("services.self_update.state")
-        devtools = _reload("routes.devtools")
-
-        with tempfile.TemporaryDirectory() as tmp:
-            status_file = Path(tmp) / "status.json"
-
-            state.write_status(
-                str(status_file),
-                {
-                    "state": "running",
-                    "step": "backup",
-                    "progress": None,
-                    "created_ts": time.time() - 10,
-                    "started_ts": time.time() - 9,
-                    "finished_ts": None,
-                    "error": None,
-                    "pid": -1,
-                    "op": "update",
-                    "message": "Creating backup",
-                    "updated_ts": time.time() - 5,
-                },
-            )
-
-            app = Flask("self-update-status-recovery")
-            with patch.dict(os.environ, {"XKEEN_UI_UPDATE_DIR": tmp}, clear=False):
-                app.register_blueprint(devtools.create_devtools_blueprint(tmp))
-                client = app.test_client()
-                response = client.get("/api/devtools/update/status?tail=0")
-
-            self.assertEqual(response.status_code, 200)
-            payload = response.get_json()
-            self.assertTrue(payload["ok"])
-            self.assertTrue(payload["reconciled"])
-            self.assertEqual(payload["status"]["state"], "failed")
-            self.assertEqual(payload["status"]["step"], "backup")
-            self.assertEqual(payload["status"]["error"], "runner_stale")
-            self.assertTrue(payload["status"]["stale"])
-            self.assertFalse(payload["lock"]["exists"])
-
 
 if __name__ == "__main__":
     unittest.main()

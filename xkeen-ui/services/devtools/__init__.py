@@ -52,17 +52,6 @@ from .logs import (  # noqa: F401
 
 from .ui_service import ui_status, ui_action  # noqa: F401
 
-# ---------------------------------------------------------------------------
-# Themes
-# ---------------------------------------------------------------------------
-
-
-from .theme_terminal import (  # noqa: F401,E402
-    terminal_theme_get,
-    terminal_theme_set,
-    terminal_theme_reset,
-)
-
 
 # ---------------------------------------------------------------------------
 # Public contract
@@ -87,7 +76,4 @@ __all__ = [
     "_decode_cursor",
     "ui_status",
     "ui_action",
-    "terminal_theme_get",
-    "terminal_theme_set",
-    "terminal_theme_reset",
 ]

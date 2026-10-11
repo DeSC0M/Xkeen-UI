@@ -43,7 +43,6 @@ CARD_IDS = (
     "dt-branding-card",
     "dt-ui-prefs-io-card",
     "dt-layout-card",
-    "dt-terminal-theme-card",
 )
 
 
@@ -77,8 +76,7 @@ def test_top_row_keeps_only_service_and_update():
     assert 'id="dt-service-card"' in left
     assert 'id="dt-update-card"' in left
     for moved in ("dt-happ-decryptor-card", "dt-logging-card", "dt-ui-prefs-card",
-                  "dt-branding-card", "dt-ui-prefs-io-card", "dt-layout-card",
-                  "dt-terminal-theme-card"):
+                  "dt-branding-card", "dt-ui-prefs-io-card", "dt-layout-card"):
         assert moved not in left, moved
 
 
@@ -93,8 +91,11 @@ def test_cards_are_distributed_over_three_named_zones():
     assert 'aria-hidden="true">Вид интерфейса<' in tools
 
     system = _zone(template, "Система")
-    for card_id in ("dt-happ-decryptor-card", "dt-logging-card", "dt-terminal-theme-card"):
+    for card_id in ("dt-happ-decryptor-card", "dt-logging-card"):
         assert 'id="%s"' % card_id in system, card_id
+    # Отдельной темы терминала больше нет: он берёт цвета общей темы.
+    assert "dt-terminal-theme-card" not in template
+    assert "xk-terminal-theme-link" not in template
 
     view = _zone(template, "Вид интерфейса")
     for card_id in ("dt-branding-card", "dt-ui-prefs-card", "dt-ui-prefs-io-card", "dt-layout-card"):
@@ -104,7 +105,7 @@ def test_cards_are_distributed_over_three_named_zones():
 def test_wide_cards_span_both_columns():
     template = TEMPLATE.read_text(encoding="utf-8")
 
-    for card_id in ("dt-terminal-theme-card", "dt-branding-card", "dt-layout-card"):
+    for card_id in ("dt-branding-card", "dt-layout-card"):
         opening = template[template.index('id="%s"' % card_id) - 200: template.index('id="%s"' % card_id)]
         assert "dt-card-wide" in opening, card_id
 
@@ -121,12 +122,8 @@ def test_both_themes_style_zone_cards():
     assert "body.devtools-page .dt-zone > .card" in operator
 
 
-def test_terminal_card_starts_collapsed_and_others_do_not():
+def test_zone_cards_start_open():
     template = TEMPLATE.read_text(encoding="utf-8")
-
-    terminal = template[template.index('id="dt-terminal-theme-card"'):]
-    terminal = terminal[: terminal.index(">")]
-    assert " open" not in terminal
 
     for card_id in ("dt-happ-decryptor-card", "dt-logging-card",
                     "dt-ui-prefs-card", "dt-branding-card", "dt-ui-prefs-io-card",
@@ -185,9 +182,7 @@ def test_wide_cards_use_multi_column_inner_grids():
     assert 'class="dt-io-split"' in io_card
     assert "dt-prefs-io-flex" in css
 
-    # Терминал стоит РАНЬШЕ Layout-карточки (зона «Система» перед «Вид
-    # интерфейса»), поэтому срез по dt-terminal-theme-card был бы пустым.
-    # Обрезаем по собственному закрывающему тегу карточки.
+    # Layout — последняя карточка вкладки: обрезаем по её закрывающему тегу.
     layout_card = template[template.index('id="dt-layout-card"'):]
     layout_card = layout_card[: layout_card.index("</details>")]
     assert 'class="dt-layout-split"' in layout_card
@@ -284,25 +279,41 @@ def test_update_card_is_reduced_to_panel_summary():
     card = card[: card.index('id="dt-env-card"')]
 
     assert "<pre" not in card
+    assert "<button" not in card
+    assert ">Сборка панели</h2>" in card
     assert 'class="dt-panel-summary-grid"' in card
-    assert 'id="dt-panel-modules"' in card
+    assert '<ul id="dt-panel-modules"' in card
     assert 'id="dt-panel-profile"' in card
-    for stale in (
-        "dt-update-log-box",
-        "dt-update-log-verdict",
-        "dt-update-check",
-        "dt-update-run",
-        "dt-update-rollback",
-        "dt-update-open-logs",
-    ):
-        assert stale not in card
+    assert 'id="dt-panel-update-note"' in card
+    # Версия печатается один раз, канал подписан своей строкой.
+    assert card.count('id="dt-panel-version"') == 1
+    assert "<dt>Канал</dt>" in card
+    # Плашка состояния появляется только при ошибке загрузки.
+    status = card[card.index('id="dt-panel-status"'):]
+    assert " hidden>" in status[: status.index(">") + 1]
+    assert "dt-update-" not in card.replace("dt-update-card", "").replace("dt-update-head", "").replace("dt-update-body", "")
 
-    assert "async function loadInstalledModuleSummary()" in script
-    assert "_renderInstalledModules(data)" in script
-    assert "'/api/modules/installed'" in script or '"/api/modules/installed"' in script
-    assert "loadInstalledModuleSummary().catch(() => {});" in script
-    assert "_setStatus('—', '');" in script
-    assert "function openModulesManager()" in script
+    # Карточка только читает: сведения о сборке и модулях и ответ каталога.
+    assert "api.loadInstalled()" in script
+    assert "api.checkPanelUpdate(false)" in script
+    assert "/api/devtools/update" not in script
+    assert "update_notifier" not in script
+    assert "setDevtoolsNamespaceApi('devtoolsUpdate', { init, activate, deactivate });" in script
+
+
+def test_module_rows_show_version_and_state():
+    script = (ROOT / "xkeen-ui/static/js/features/devtools/update.js").read_text(encoding="utf-8")
+    glass = GLASS_CSS.read_text(encoding="utf-8")
+
+    # Каждый модуль — своя строка: имя, версия, состояние словом.
+    for cls in ("dt-panel-module-name", "dt-panel-module-version", "dt-panel-module-state"):
+        assert "'%s'" % cls in script
+        assert "." + cls + " {" in glass
+    for label in ("включён", "выключен", "ошибка", "недоступен"):
+        assert "label: '%s'" % label in script
+
+    # Спрятанная строка об обновлении не должна проступать из-за display:flex.
+    assert ".dt-panel-update-note[hidden]," in glass
 
 
 def test_prefs_io_columns_are_built_the_same_way():
@@ -476,11 +487,6 @@ def test_button_rows_breathe_like_the_card_padding():
     assert ".dt-logging-actions" not in tight
     assert ".dt-update-actions" not in tight
 
-    # Ряд кнопок обновления и декриптора — тот же зазор, что у Save/Reset.
-    update_row = glass[glass.index(".dt-update-actions {"):]
-    update_row = update_row[: update_row.index("}")]
-    assert "gap: 12px;" in update_row
-
 
 def test_no_card_overrides_the_shared_button_row():
     base = BASE_CSS.read_text(encoding="utf-8")
@@ -489,68 +495,11 @@ def test_no_card_overrides_the_shared_button_row():
     assert ".dt-card-wide .dt-logging-actions" not in base
     assert 'class="dt-logging-actions" style="justify-content:flex-end;"' not in template
 
-    for card_id in ("dt-terminal-theme-card", "dt-branding-card", "dt-layout-card",
+    for card_id in ("dt-branding-card", "dt-layout-card",
                     "dt-logging-card", "dt-ui-prefs-card"):
         card = template[template.index('id="%s"' % card_id):]
         card = card[: card.index("</details>")] if "</details>" in card else card
         assert 'class="dt-logging-actions"' in card, card_id
-
-
-def test_check_result_stays_in_the_pill_next_to_latest():
-    script = (ROOT / "xkeen-ui/static/js/features/devtools/update.js").read_text(encoding="utf-8")
-
-    render_check = script[script.index("function _renderCheck("):]
-    render_check = render_check[: render_check.index("function _renderStatus(")]
-
-    # Плашка статуса принадлежит операции обновления: результат проверки версии
-    # пишется только в пилюлю рядом с «Latest» и в подсказку под ней.
-    assert "_setStatus(" not in render_check
-    assert "'⬆️ Доступно обновление: ' + verLabel" in render_check
-    assert "'✅ У вас актуальная версия'" in render_check
-
-    # Ход самой проверки — тоже в пилюле, а не поверх состояния операции.
-    check_fn = script[script.index("async function checkLatest("):]
-    check_fn = check_fn[: check_fn.index("async function loadStatus(")]
-    assert "_setStatus(" not in check_fn
-    assert "'Проверяем GitHub…'" in check_fn
-
-    # Состояние операции по-прежнему рисует только _renderStatus.
-    render_status = script[script.index("function _renderStatus("):]
-    render_status = render_status[: render_status.index("function _fmtBytes(")] if "function _fmtBytes(" in render_status else render_status
-    assert "'Ошибка обновления'" in render_status
-
-
-def test_update_substatus_speaks_russian():
-    script = (ROOT / "xkeen-ui/static/js/features/devtools/update.js").read_text(encoding="utf-8")
-
-    render_status = script[script.index("function _renderStatus("):]
-
-    # Строка под статусом собирается по-русски.
-    assert "'Шаг: ' + _ruStep(step)" in render_status
-    assert "const errRu = _ruText(err);" in render_status
-    assert "'Ошибка: ' + errRu" in render_status
-    # Сообщение панели не повторяет ту же ошибку второй строкой.
-    assert "msg.toLowerCase() !== errRu.toLowerCase()" in render_status
-    assert "'Резервных копий: '" in render_status
-    assert "'Процесс обновления: '" in render_status
-    assert "Step: " not in render_status
-    assert "Runner pid" not in render_status
-
-    # Коды и сообщения скрипта обновления переводятся по словарю,
-    # незнакомый текст остаётся как есть.
-    assert "'spawn_failed': 'не удалось запустить процесс обновления'," in script
-    assert "'sha256 mismatch': 'контрольная сумма не совпала'," in script
-    ru_fn = script[script.index("function _ruText("):]
-    ru_fn = ru_fn[: ru_fn.index("function _ruStep(")]
-    assert "return known || raw;" in ru_fn
-
-
-def test_update_actions_fill_the_card_width():
-    glass = GLASS_CSS.read_text(encoding="utf-8")
-
-    rule = glass[glass.index(".dt-update-actions > * {"):]
-    rule = rule[: rule.index("}")]
-    assert "flex: 1 1 auto;" in rule
 
 
 def test_prefs_io_buttons_are_labelled_in_russian():
@@ -571,15 +520,13 @@ def test_prefs_io_buttons_are_labelled_in_russian():
 
 
 def test_current_commit_is_printed_as_a_short_hash():
-    """Полные 40 символов рвали строку «Текущая версия:» надвое — печатаем короткий хэш."""
+    """Полные 40 символов рвали строку «Версия» надвое — печатаем короткий хэш."""
     script = (ROOT / "xkeen-ui/static/js/features/devtools/update.js").read_text(encoding="utf-8")
 
-    assert "function _shortCommit(" in script
-
-    fn = script[script.index("function _shortCommit("):]
+    fn = script[script.index("function shortCommit("):]
     fn = fn[: fn.index("\n  }")]
     assert "slice(0, 12)" in fn
 
-    printed = [ln for ln in script.splitlines() if "'dt-update-current-commit'" in ln]
+    printed = [ln for ln in script.splitlines() if "'dt-panel-commit'" in ln]
     assert printed, "строка с выводом коммита не найдена"
-    assert "_shortCommit(commit)" in printed[0]
+    assert "const commit = shortCommit(build.commit);" in script

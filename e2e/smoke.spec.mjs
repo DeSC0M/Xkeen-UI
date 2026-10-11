@@ -127,56 +127,6 @@ test('devtools page renders update and env sections', async ({ page }) => {
 });
 
 
-test('devtools information card renders the current build without manual update controls', async ({ page }) => {
-  let infoHits = 0;
-
-  await page.route('**/api/devtools/update/info', async (route) => {
-    infoHits += 1;
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        ok: true,
-        build: {
-          version: '1.6.0',
-          repo: 'umarcheh001/Xkeen-UI',
-          channel: 'main',
-          commit: 'abc1234',
-          built_utc: '2026-04-10T21:00:00Z',
-        },
-        capabilities: {
-          curl: true,
-          tar: true,
-          sha256sum: true,
-        },
-        settings: {
-          repo: 'umarcheh001/Xkeen-UI',
-          channel: 'main',
-          branch: 'main',
-        },
-        security: {
-          sha_strict: '1',
-          require_sha: '1',
-        },
-      }),
-    });
-  });
-
-  await page.goto('/devtools');
-
-  await expect(page).toHaveTitle(/DevTools/i);
-  await expect(page.locator('#dt-update-card')).toBeVisible();
-  await expect.poll(() => infoHits).toBeGreaterThan(0);
-
-  await expect(page.locator('#dt-update-repo')).toContainText('umarcheh001/Xkeen-UI');
-  await expect(page.locator('#dt-update-channel')).toContainText('main');
-  await expect(page.locator('#dt-update-branch')).toContainText('main');
-  await expect(page.locator('#dt-update-current-version')).toContainText('1.6.0');
-  await expect(page.locator('#dt-update-current-built')).not.toHaveText('—');
-  await expect(page.locator('#dt-update-check')).toHaveCount(0);
-});
-
-
 test('backups history page renders table', async ({ page }) => {
   await page.goto('/backups');
 

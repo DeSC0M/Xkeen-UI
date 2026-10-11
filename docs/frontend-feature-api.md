@@ -62,7 +62,6 @@
 - `serviceStatus`
 - `typography`
 - `uiPrefsIo`
-- `updateNotifier`
 - `xkeenTexts`
 - `xrayLogs`
 

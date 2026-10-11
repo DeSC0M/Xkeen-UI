@@ -34,7 +34,6 @@
   {% include '_top_level_host_theme_bootstrap.html' %}
 <link rel="stylesheet" href="{{ url_for('static', filename='styles.css', v='20260907a') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='devtools.css', v='20260517a') }}">
-  <link rel="stylesheet" id="xk-terminal-theme-link" href="{{ url_for('terminal_theme_css', v=terminal_theme_v) }}">
   {# Flat Operator Console presentation. Keep it last: DevTools still ships the
      legacy component layer above for runtime compatibility. #}
   <link rel="stylesheet" href="{{ url_for('static', filename='devtools-operator.css', v='20260907c') }}">
@@ -108,21 +107,25 @@
           </section>
 
           <section class="card" id="dt-update-card" data-xk-section="service update dt-update-card">
-            <h2 class="dt-update-head" style="margin:0;">Обновление панели</h2>
+            <h2 class="dt-update-head" style="margin:0;">Сборка панели</h2>
             <div class="dt-update-body">
               <p class="small dt-panel-summary-intro">Версия и состав установленной панели. Обновления и профиль управляются в разделе «Модули и обновления».</p>
               <dl class="dt-panel-summary-grid">
                 <div class="dt-panel-summary-row">
                   <dt>Версия</dt>
-                  <dd><span id="dt-update-current-version" class="dt-value dt-value-neutral">—</span> <span id="dt-update-current-commit" class="dt-sub"></span></dd>
+                  <dd><span id="dt-panel-version" class="dt-value dt-value-neutral">—</span> <span id="dt-panel-commit" class="dt-sub"></span></dd>
                 </div>
                 <div class="dt-panel-summary-row">
-                  <dt>Сборка</dt>
-                  <dd id="dt-update-current-built">—</dd>
+                  <dt>Собрана</dt>
+                  <dd id="dt-panel-built">—</dd>
                 </div>
                 <div class="dt-panel-summary-row">
                   <dt>Источник</dt>
-                  <dd><code id="dt-update-repo" class="dt-badge dt-badge-info">—</code> <code id="dt-update-channel" class="dt-badge dt-badge-muted">—</code> <code id="dt-update-branch" class="dt-badge dt-badge-muted">—</code></dd>
+                  <dd><code id="dt-panel-repo" class="dt-badge dt-badge-info">—</code></dd>
+                </div>
+                <div class="dt-panel-summary-row">
+                  <dt>Канал</dt>
+                  <dd><code id="dt-panel-channel" class="dt-badge dt-badge-muted">—</code></dd>
                 </div>
                 <div class="dt-panel-summary-row">
                   <dt>Профиль</dt>
@@ -131,10 +134,12 @@
               </dl>
               <section class="dt-panel-modules-summary" aria-labelledby="dt-panel-modules-title">
                 <h3 id="dt-panel-modules-title">Установленные модули</h3>
-                <div id="dt-panel-modules" class="small" aria-live="polite">Загрузка…</div>
+                <div id="dt-panel-update-note" class="dt-panel-update-note" role="status" aria-live="polite" hidden></div>
+                <ul id="dt-panel-modules" class="dt-panel-modules" aria-live="polite">
+                  <li class="dt-panel-modules-empty">Загрузка…</li>
+                </ul>
               </section>
-              <div id="dt-update-status" class="status" role="status" aria-live="polite" style="margin-top:12px;">—</div>
-
+              <div id="dt-panel-status" class="status" role="status" aria-live="polite" style="margin-top:12px;" hidden></div>
             </div>
           </section>
 
@@ -338,43 +343,6 @@
             <div class="small" style="margin-top:8px; opacity:0.85;">
               Файлы логов: core/ws. Смотреть можно в блоке «Логи панели».
             </div>
-            </div>
-          </details>
-
-          <details class="card dt-collapsible dt-card-wide" id="dt-terminal-theme-card" data-xk-section="theme terminal dt-terminal-theme-card">
-            <summary class="dt-collapsible-summary">
-              <h2 style="margin:0;">Терминал (xterm.js)</h2>
-              <span class="dt-collapsible-icon" aria-hidden="true">▾</span>
-            </summary>
-            <div class="dt-collapsible-body">
-              <div class="small" style="margin-bottom:10px; opacity:0.9;">
-                Отдельная (независимая) тема для встроенного терминала. Если выключено — терминал использует базовую тему интерфейса.
-              </div>
-
-              <div class="dt-theme-actions" aria-label="Terminal theme controls">
-                <label class="dt-switch" title="Включить независимую тему терминала.">
-                  <input id="dt-term-enabled" type="checkbox" aria-label="Terminal theme enabled">
-                  <span class="dt-switch-slider" aria-hidden="true"></span>
-                  <span class="dt-switch-label">Включена</span>
-                </label>
-
-                <div class="dt-theme-target" role="group" aria-label="Terminal target theme">
-                  <button type="button" id="dt-term-target-dark" class="dt-chip-btn active" aria-selected="true" title="Редактировать настройки для тёмной темы терминала.">Тёмная</button>
-                  <button type="button" id="dt-term-target-light" class="dt-chip-btn" aria-selected="false" title="Редактировать настройки для светлой темы терминала.">Светлая</button>
-                </div>
-              </div>
-
-              <div id="dt-term-fields"></div>
-
-              <div class="dt-term-state">
-                <div class="small" id="dt-term-meta"></div>
-                <div class="small" id="dt-term-status"></div>
-              </div>
-
-              <div class="dt-logging-actions" style="margin-top:12px; flex-wrap:wrap;">
-                <button type="button" id="dt-term-save" class="btn-secondary" title="Сохранить и применить тему терминала.">Сохранить</button>
-                <button type="button" id="dt-term-reset" class="btn-secondary" title="Удалить terminal_theme.* и вернуться к наследованию глобальной темы.">Сбросить</button>
-              </div>
             </div>
           </details>
 

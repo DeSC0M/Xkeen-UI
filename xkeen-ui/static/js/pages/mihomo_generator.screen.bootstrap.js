@@ -5,7 +5,6 @@ import './codemirror6.shared.js';
 import '../core/xk_dom.js';
 import '../core/xk_http.js';
 import '../core/xk_storage.js';
-import '../features/update_notifier.js';
 import '../ui/modal.js';
 import '../ui/confirm_modal.js';
 import '../ui/theme.js?v=20260324b';

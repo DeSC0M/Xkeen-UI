@@ -92,12 +92,12 @@ def test_update_card_messages_are_russian():
     update_js = (ROOT / "xkeen-ui/static/js/features/devtools/update.js").read_text(encoding="utf-8")
 
     for phrase in (
-        "'Запускаем обновление…'",
-        "'Запускаем откат…'",
-        "'Откатить'",
-        "'Не удалось получить статус: '",
+        "'Обновлений нет.'",
+        "'Не удалось проверить обновления.'",
+        "'Не удалось загрузить сведения о панели: '",
+        "'Нет данных об установленных модулях.'",
     ):
         assert phrase in update_js, phrase
 
-    for stale in ("'Starting update", "'Rollback failed", "'Status error", "'Run failed"):
-        assert stale not in update_js, stale
+    for stale in ("enabled'", "disabled'", "Update available", "No updates"):
+        assert ("label: '" + stale) not in update_js, stale

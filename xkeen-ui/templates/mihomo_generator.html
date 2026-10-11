@@ -40,7 +40,6 @@
 
   {% include '_top_level_host_theme_bootstrap.html' %}
 <link rel="stylesheet" href="{{ url_for('static', filename='styles.css', v='20260907a') }}">
-  <link rel="stylesheet" id="xk-terminal-theme-link" href="{{ url_for('terminal_theme_css', v=terminal_theme_v) }}">
 <style>
     body {
       background: #020617;
@@ -490,13 +489,6 @@
     .mihomo-generator-page .xk-mg-header-btn-core:hover,
     .mihomo-generator-page .xk-mg-header-btn-core.has-core:hover {
       text-decoration: none;
-    }
-    .mihomo-generator-page .xk-header-btn-devtools.xk-update-available {
-      border-color: rgba(196, 181, 253, 0.28);
-      box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.1),
-        0 0 0 1px rgba(167, 139, 250, 0.1),
-        0 14px 28px rgba(49, 46, 129, 0.24);
     }
 
     .subscriptions-list,
@@ -2007,18 +1999,6 @@
             style="cursor: default;"
             title="Активное ядро XKeen"
           >Ядро: …</span>
-          {% if ui_endpoint_available('devtools_page') %}
-          <a
-            href="{{ url_for('devtools_page') }}#dt-update-card"
-            id="xk-update-link"
-            class="service-core-text xk-header-btn xk-header-btn-devtools hidden"
-            data-xk-top-nav="1"
-            title="Обновление"
-          >
-            <span class="xk-update-dot" aria-hidden="true"></span>
-            <span data-xk-update-label>Обновление</span>
-          </a>
-          {% endif %}
           {% set logout_button_class = 'service-core-text xk-header-btn xk-header-btn-logout' %}
           {% include '_logout_button.html' %}
         </div>

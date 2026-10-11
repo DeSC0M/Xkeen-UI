@@ -23,7 +23,6 @@ export { routingTemplatesApi } from './routing_templates.js';
 export { serviceStatusApi } from './service_status.js';
 export { typographyApi } from './typography.js';
 export { uiPrefsIoApi } from './ui_prefs_io.js';
-export { updateNotifierApi } from './update_notifier.js';
 export { xkeenTextsApi } from './xkeen_texts.js';
 export { xrayLogsApi } from './xray_logs.js';
 export { featureAccessApi, featureAccessorRegistry, getFeatureAccessorRegistry, getFeatureApi, requireFeatureApi } from './feature_access.js';
@@ -53,7 +52,6 @@ import { routingTemplatesApi } from './routing_templates.js';
 import { serviceStatusApi } from './service_status.js';
 import { typographyApi } from './typography.js';
 import { uiPrefsIoApi } from './ui_prefs_io.js';
-import { updateNotifierApi } from './update_notifier.js';
 import { xkeenTextsApi } from './xkeen_texts.js';
 import { xrayLogsApi } from './xray_logs.js';
 
@@ -83,7 +81,6 @@ export const featureApiRegistry = Object.freeze({
   serviceStatus: serviceStatusApi,
   typography: typographyApi,
   uiPrefsIo: uiPrefsIoApi,
-  updateNotifier: updateNotifierApi,
   xkeenTexts: xkeenTextsApi,
   xrayLogs: xrayLogsApi,
 });

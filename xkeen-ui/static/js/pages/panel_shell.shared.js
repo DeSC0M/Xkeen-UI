@@ -119,20 +119,10 @@ import { wireTopLevelNavigation } from './top_level_nav.shared.js';
       return {
         serviceStatus: '',
         currentCore: '',
-        version: {
-          currentLabel: '',
-          currentCommit: '',
-          currentBuiltAt: '',
-          latestLabel: '',
-          latestPublishedAt: '',
-          channel: '',
-        },
         loading: {
           serviceStatus: false,
           currentCore: true,
-          update: true,
         },
-        update: { visible: false, hasUpdate: false, label: '', title: '' },
       };
     }
     return api.getState();
@@ -150,7 +140,6 @@ import { wireTopLevelNavigation } from './top_level_nav.shared.js';
     return {
       serviceStatus: !!loading.serviceStatus,
       currentCore: !!loading.currentCore,
-      update: !!loading.update,
     };
   }
 
@@ -179,7 +168,6 @@ import { wireTopLevelNavigation } from './top_level_nav.shared.js';
   function renderHeaderAsyncShell(snapshot) {
     const loading = readUiShellLoadingState(snapshot);
     setHeaderAsyncChipLoading(document.getElementById('xkeen-core-text'), loading.currentCore);
-    setHeaderAsyncChipLoading(document.getElementById('xk-update-link'), loading.update);
   }
 
   let _headerShellLoadingUnsubscribe = null;

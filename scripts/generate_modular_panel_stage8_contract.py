@@ -70,9 +70,9 @@ PANEL_PROFILE = {
         "module_id_forbidden": True,
     },
     "devtools": {
-        "stable": "delegates panel-update plan/apply/status to ModuleLifecycleService",
-        "main": "legacy branch update path marked development_only",
-        "rollback": "legacy panel backup rollback; never a module transaction rollback",
+        "summary": "read-only card; reads /api/modules/installed and /api/modules/panel/update-check",
+        "update": "legacy /api/devtools/update/* routes and update_xkeen_ui.sh are removed",
+        "rollback": "panel-rollback through the Modules manager only",
     },
     "rollback_scopes": {
         "module": "selected module files and state",
@@ -512,8 +512,8 @@ def render_markdown(payload: dict[str, Any]) -> str:
             "`panel-update` использует scope `panel`, принимает только строго более новую stable-версию и заменяет весь managed target текущего профиля. `profile-transition` использует scope `profile`, остаётся на установленной версии и материализует профиль, сохранённый через `POST /api/modules/profile`.",
             "Обе full-scope операции передают в plan/apply только `operation` и server-generated `plan_id`; `module_id` запрещён. Любое изменение release/profile между review и apply возвращает `operation_plan_stale`.",
             f"Profile response публикует `{panel_profile['profile_transition']['pending_fields'][0]}` и `{panel_profile['profile_transition']['pending_fields'][1]}`. Пока физический профиль не совпадает с желаемым, отдельный restart возвращает `{panel_profile['profile_transition']['restart_guard']}`.",
-            "Panel/profile journal сохраняет каждый заменённый или удалённый managed-файл и state; ошибка после apply вызывает полный rollback своего scope. `rollback_failed` блокирует новые операции до ручного восстановления backup. Module rollback, full-scope transaction rollback и legacy DevTools backup rollback не смешиваются.",
-            "Stable DevTools check/run/status делегируются `ModuleLifecycleService`; branch channel `main` сохраняет legacy development-only path. Подробные payload, error codes, cancel/recovery semantics и manual runbook: `docs/modular-panel-stage8-panel-profile.md`.",
+            "Panel/profile journal сохраняет каждый заменённый или удалённый managed-файл и state; ошибка после apply вызывает полный rollback своего scope. `rollback_failed` блокирует новые операции до ручного восстановления backup. Module rollback и full-scope transaction rollback не смешиваются.",
+            "Обновление и возврат версии идут только через `ModuleLifecycleService`; прежние маршруты `/api/devtools/update/*` и `update_xkeen_ui.sh` удалены, карточка DevTools справочная. Подробные payload, error codes, cancel/recovery semantics и manual runbook: `docs/modular-panel-stage8-panel-profile.md`.",
             "Stable full-scope codes: " + ", ".join(f"`{code}`" for code in panel_profile["stable_error_codes"]) + ".",
             "",
             "## Acceptance matrix",

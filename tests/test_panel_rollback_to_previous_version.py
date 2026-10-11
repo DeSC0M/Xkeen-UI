@@ -17,7 +17,6 @@ from unittest.mock import patch
 import pytest
 from flask import Flask
 
-from routes.devtools import create_devtools_blueprint
 from routes.modules import create_modules_blueprint
 from services.module_registry import ModuleRegistry
 from services.module_transactions.executor import recover, run_operation
@@ -323,38 +322,3 @@ def test_the_route_takes_the_operation_without_a_module(tmp_path):
     assert planned.status_code == 200 and planned.get_json()["applicable"] is True
     assert refused.status_code == 400
     assert applied.status_code == 202
-
-
-def test_devtools_shows_the_button_and_goes_back_through_the_engine(tmp_path):
-    panel, _before = _updated(tmp_path)
-    launcher = LaunchRecorder()
-    service, _ = make_service(panel, make_release(version=NEW), launch_operation=launcher)
-    app = Flask(__name__)
-    app.config["TESTING"] = True
-    app.register_blueprint(create_devtools_blueprint(str(tmp_path), lifecycle_service=service))
-    client = app.test_client()
-
-    with patch.dict(os.environ, {"XKEEN_UI_UPDATE_CHANNEL": "stable"}, clear=False):
-        status = client.get("/api/devtools/update/status").get_json()
-        started = client.post("/api/devtools/update/rollback", json={})
-
-    assert status["has_backup"] is True
-    assert status["previous_version"]["version"] == OLD
-    assert started.status_code == 202 and started.get_json()["started"] is True
-    assert launcher.plans[-1].operation == "panel-rollback"
-
-
-def test_devtools_hides_the_button_when_there_is_nothing_to_go_back_to(tmp_path):
-    panel = make_panel(tmp_path, version=OLD, installed=("core", "tool.files"))
-    service, _ = make_service(panel, make_release(version=OLD), launch_operation=LaunchRecorder())
-    app = Flask(__name__)
-    app.config["TESTING"] = True
-    app.register_blueprint(create_devtools_blueprint(str(tmp_path), lifecycle_service=service))
-    client = app.test_client()
-
-    with patch.dict(os.environ, {"XKEEN_UI_UPDATE_CHANNEL": "stable"}, clear=False):
-        status = client.get("/api/devtools/update/status").get_json()
-        refused = client.post("/api/devtools/update/rollback", json={}).get_json()
-
-    assert status["has_backup"] is False
-    assert (refused["ok"], refused["error"]) == (False, "no_backup")

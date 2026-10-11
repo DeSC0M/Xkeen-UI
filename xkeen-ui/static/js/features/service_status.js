@@ -227,21 +227,11 @@ let serviceStatusModuleApi = null;
     return {
       serviceStatus: '',
       currentCore: '',
-      version: {
-        currentLabel: '',
-        currentCommit: '',
-        currentBuiltAt: '',
-        latestLabel: '',
-        latestPublishedAt: '',
-        channel: '',
-      },
       control: { pending: false, action: '', requestId: 0 },
       loading: {
         serviceStatus: false,
         currentCore: true,
-        update: true,
       },
-      update: { visible: false, hasUpdate: false, label: '', title: '' },
     };
   }
 

@@ -9,7 +9,6 @@ function createDevtoolsNamespace() {
     devtoolsEnv: null,
     devtoolsUpdate: null,
     devtoolsTheme: null,
-    devtoolsTerminalTheme: null,
     devtoolsCustomCss: null,
   };
 }

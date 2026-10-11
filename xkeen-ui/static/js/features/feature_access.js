@@ -1,10 +1,8 @@
 import { ensureXkeenRoot } from './xkeen_runtime.js';
 import { getDevtoolsNamespaceApi } from './devtools_namespace.js';
-import { getUpdateNotifierApi } from './update_notifier.js';
 
 const featureAccessorRegistry = Object.freeze({
   devtools: () => getDevtoolsNamespaceApi('devtools'),
-  updateNotifier: getUpdateNotifierApi,
 });
 
 export function getFeatureAccessorRegistry() {

@@ -126,7 +126,7 @@ def test_xray_only_registers_xray_routes_and_excludes_mihomo_tools(tmp_path):
     assert "devtools" in app.blueprints
     assert "/api/mihomo/config" not in rules
     assert "/api/run-command" not in rules
-    assert app.test_client().get("/api/devtools/update/status").status_code == 200
+    assert app.test_client().get("/api/devtools/logs").status_code == 200
     assert app.test_client().get("/api/mihomo/config").status_code == 404
     assert app.extensions["xkeen.module_owner_errors"] == []
 
@@ -198,7 +198,7 @@ def test_advanced_diagnostics_routes_are_not_exposed_when_optional_module_is_off
     app = _register(tmp_path, ["core", "tool.editor", "engine.xray"])
     client = app.test_client()
 
-    assert client.get("/api/devtools/update/status").status_code == 200
+    assert client.get("/api/devtools/logs").status_code == 200
     assert client.get("/api/devtools/env").status_code == 404
     assert client.get("/api/system/resources").status_code == 404
 

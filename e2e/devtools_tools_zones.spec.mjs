@@ -3,37 +3,23 @@ import { test, expect } from './fixtures.mjs';
 
 async function openTools(page, viewport) {
   await page.setViewportSize(viewport);
-  await page.route('**/api/devtools/update/info', (route) => route.fulfill({ json: {
-    ok: true,
-    build: { version: '2.10.0', repo: 'umarcheh001/Xkeen-UI', channel: 'main', commit: 'abc1234' },
-    capabilities: { curl: true, tar: true, tar_exclude: true, sha256sum: true },
-    settings: { repo: 'umarcheh001/Xkeen-UI', channel: 'main', branch: 'main' },
-    security: {},
-  } }));
-  await page.route('**/api/devtools/update/status*', (route) => route.fulfill({ json: {
-    ok: true, status: { state: 'idle' }, log_tail: [],
-    lock: { exists: false, alive: false, stale: false }, backups: [], has_backup: false,
-    reconciled: false, development_only: true,
-  } }));
-  await page.route('**/api/devtools/update/check', (route) => route.fulfill({ json: {
-    ok: true, error: null, repo: 'umarcheh001/Xkeen-UI', channel: 'main', branch: 'main',
-    current: { version: '2.10.0', repo: 'umarcheh001/Xkeen-UI', channel: 'main', commit: 'abc1234' },
-    latest: { kind: 'main', branch: 'main', sha: 'abc1234', short_sha: 'abc1234',
-      tarball_url: 'https://example.test/main.tar.gz' },
-    update_available: false, stale: false, meta: null,
-    security: { settings: {}, download: { url: 'https://example.test/main.tar.gz', ok: true, reason: null },
-      checksum: null, warnings: [], will_block_run: false }, development_only: true,
-  } }));
   await page.route('**/api/modules/installed', (route) => route.fulfill({ json: {
     ok: true,
     profile: 'full',
+    panel_version: '2.10.0',
+    build: { exists: true, version: '2.10.0', repo: 'umarcheh001/Xkeen-UI', channel: 'stable', commit: 'abc1234' },
+    lifecycle: { available: true, code: null },
     modules: [
-      { id: 'core', name: 'Xkeen UI Core', version: '1.0.0', enabled: true },
-      { id: 'engine.xray', name: 'Xray', version: '1.0.0', enabled: true },
+      { id: 'core', name: 'Xkeen UI Core', version: '1.0.0', enabled: true, status: 'enabled' },
+      { id: 'engine.xray', name: 'Xray', version: '1.0.0', enabled: true, status: 'enabled' },
     ],
   } }));
+  await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({ json: {
+    ok: true, source_version: '2.10.0', target_version: '2.10.0', update_available: false,
+    requires_installer: false, min_updater: null, freshness: 'fresh', stale_reason: null, fetched_at: 1791700000,
+  } }));
   const envLoaded = page.waitForResponse((res) => new URL(res.url()).pathname === '/api/devtools/env');
-  const updateLoaded = page.waitForResponse((res) => new URL(res.url()).pathname === '/api/devtools/update/info');
+  const updateLoaded = page.waitForResponse((res) => new URL(res.url()).pathname === '/api/modules/panel/update-check');
   await page.goto('/devtools');
   await expect(page.locator('body')).toHaveClass(/\bdevtools-page\b/);
   await expect(page.locator('#dt-env-card')).toBeVisible();
@@ -41,7 +27,7 @@ async function openTools(page, viewport) {
   // клик по ним проваливается впустую, и на загруженной машине тест падает на
   // ровном месте. Атрибут data-xk-collapsible-wired ставит сама панель, когда
   // карточки уже связаны с обработчиками (static/js/ui/shared_primitives.js).
-  await expect(page.locator('#dt-terminal-theme-card')).toHaveAttribute(
+  await expect(page.locator('#dt-logging-card')).toHaveAttribute(
     'data-xk-collapsible-wired',
     '1',
   );
@@ -79,22 +65,6 @@ async function waitForToolsToSettle(page) {
 
 test.describe('DevTools Tools zones', () => {
   test('cards are laid out in three zones without horizontal scroll', async ({ page }) => {
-    // Проверка ниже про «чистый стенд», а сервер у e2e общий: smoke в том же
-    // прогоне жмёт «Обновить панель», и на Windows запуск падает с
-    // spawn_failed. Раньше тест успевал прочитать вердикт до ответа статуса и
-    // этого не видел; теперь он дожидается загрузки, поэтому статус подменяем.
-    await page.route('**/api/devtools/update/status*', (route) => route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        ok: true,
-        status: { state: 'idle' },
-        log_tail: [],
-        lock: { exists: false, alive: false, stale: false },
-        backups: [],
-        has_backup: false,
-      }),
-    }));
     await openTools(page, { width: 1600, height: 1000 });
 
     const heads = page.locator('#dt-tab-tools .dt-zone-head');
@@ -109,7 +79,6 @@ test.describe('DevTools Tools zones', () => {
       return {
         pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         happZone: zoneLabel('dt-happ-decryptor-card'),
-        terminalZone: zoneLabel('dt-terminal-theme-card'),
         brandingZone: zoneLabel('dt-branding-card'),
         layoutZone: zoneLabel('dt-layout-card'),
         trayBottom: document.querySelector('.dt-tools-left').getBoundingClientRect().bottom,
@@ -121,7 +90,7 @@ test.describe('DevTools Tools zones', () => {
 
     expect(geometry.pageOverflow).toBeLessThanOrEqual(1);
     expect(geometry.happZone).toBe('Система');
-    expect(geometry.terminalZone).toBe('Система');
+    await expect(page.locator('#dt-terminal-theme-card')).toHaveCount(0);
     expect(geometry.brandingZone).toBe('Вид интерфейса');
     expect(geometry.layoutZone).toBe('Вид интерфейса');
     expect(Math.abs(geometry.trayBottom - geometry.envBottom)).toBeLessThanOrEqual(2);
@@ -131,7 +100,8 @@ test.describe('DevTools Tools zones', () => {
     // а команды обновления живут в разделе «Модули и обновления».
     await expect(page.locator('#dt-update-card')).toContainText('Xkeen UI Core');
     await expect(page.locator('#dt-panel-profile')).toHaveText('full');
-    await expect(page.locator('#dt-panel-modules')).toContainText('Xray 1.0.0');
+    await expect(page.locator('#dt-panel-modules .dt-panel-module')).toHaveCount(2);
+    await expect(page.locator('#dt-panel-modules .dt-panel-module').nth(1)).toContainText('Xray');
     await expect(page.locator('#dt-update-card pre:visible')).toHaveCount(0);
     await expect(page.locator('#dt-update-log-box')).toHaveCount(0);
     await expect(page.locator('#dt-update-check')).toHaveCount(0);
@@ -179,10 +149,6 @@ test.describe('DevTools Tools zones', () => {
   test('every card keeps save and reset together on the right', async ({ page }) => {
     await openTools(page, { width: 1600, height: 1000 });
 
-    const terminal = page.locator('#dt-terminal-theme-card');
-    await terminal.locator('summary').click();
-    await expect(terminal).toHaveAttribute('open', /.*/);
-
     const rows = await page.evaluate(() => {
       const read = (id) => {
         const el = document.getElementById(id);
@@ -198,7 +164,6 @@ test.describe('DevTools Tools zones', () => {
         };
       };
       return {
-        terminal: read('dt-terminal-theme-card'),
         branding: read('dt-branding-card'),
         layout: read('dt-layout-card'),
         logging: read('dt-logging-card'),
@@ -207,7 +172,7 @@ test.describe('DevTools Tools zones', () => {
     });
 
     // Одинаково во всех карточках: компактная группа у правого края.
-    for (const key of ['terminal', 'branding', 'layout', 'logging', 'prefs']) {
+    for (const key of ['branding', 'layout', 'logging', 'prefs']) {
       const row = rows[key];
       expect(row.count).toBeGreaterThanOrEqual(1);
       expect(row.sameRow).toBe(true);
@@ -215,7 +180,6 @@ test.describe('DevTools Tools zones', () => {
       expect(row.rightInset).toBeLessThanOrEqual(16);
     }
 
-    expect(rows.terminal.count).toBe(2);
     expect(rows.branding.count).toBe(2);
     expect(rows.layout.count).toBe(1);
   });
@@ -350,31 +314,31 @@ test.describe('DevTools Tools zones', () => {
     expect(overflow).toBeLessThanOrEqual(1);
   });
 
-  test('terminal theme card starts collapsed and remembers being opened', async ({ page }) => {
+  test('a card remembers being collapsed', async ({ page }) => {
     await openTools(page, { width: 1600, height: 1000 });
 
-    const card = page.locator('#dt-terminal-theme-card');
-    await expect(card).not.toHaveAttribute('open', /.*/);
+    const card = page.locator('#dt-logging-card');
+    await expect(card).toHaveAttribute('open', /.*/);
 
     // Карточку перерисовывают уже после первой отрисовки страницы, и клик,
     // пришедший в этот момент, теряется вместе со старым узлом.
     await expect(async () => {
       await card.locator('summary').click();
-      await expect(card).toHaveAttribute('open', /.*/, { timeout: 2000 });
+      await expect(card).not.toHaveAttribute('open', /.*/, { timeout: 2000 });
     }).toPass({ timeout: 20000 });
 
     await page.reload();
     await expect(page.locator('#dt-env-card')).toBeVisible();
-    await expect(page.locator('#dt-terminal-theme-card')).toHaveAttribute('open', /.*/);
+    await expect(page.locator('#dt-logging-card')).not.toHaveAttribute('open', /.*/);
 
     const stored = await page.evaluate(
-      () => localStorage.getItem('xk.devtools.collapse.dt-terminal-theme-card.open'),
+      () => localStorage.getItem('xk.devtools.collapse.dt-logging-card.open'),
     );
-    expect(stored).toBe('1');
+    expect(stored).toBe('0');
 
-    await page.locator('#dt-terminal-theme-card summary').click();
+    await page.locator('#dt-logging-card summary').click();
     await page.reload();
     await expect(page.locator('#dt-env-card')).toBeVisible();
-    await expect(page.locator('#dt-terminal-theme-card')).not.toHaveAttribute('open', /.*/);
+    await expect(page.locator('#dt-logging-card')).toHaveAttribute('open', /.*/);
   });
 });

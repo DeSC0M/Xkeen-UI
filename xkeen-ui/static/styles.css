@@ -1727,27 +1727,6 @@ header p {
   gap: 6px;
 }
 
-/* Self-update notifier pill (header) */
-.service-core-text .xk-update-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--sem-warning, #fbbf24);
-  box-shadow: 0 0 6px color-mix(in srgb, var(--sem-warning, #fbbf24) 70%, transparent);
-  display: none;
-}
-
-.service-core-text.xk-update-available {
-  border-color: color-mix(in srgb, var(--sem-warning, #fbbf24) 55%, transparent);
-  background: color-mix(in srgb, var(--sem-warning, #fbbf24) 12%, var(--header-btn-bg, #020617) 88%);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sem-warning, #fbbf24) 35%, transparent);
-}
-
-.service-core-text.xk-update-available .xk-update-dot {
-  display: inline-block;
-  animation: service-status-pulse 1.4s ease-in-out infinite;
-}
-
 .service-core-text.has-core {
   border-color: var(--accent, #2563eb);
   background: color-mix(in srgb, var(--accent, #2563eb) 12%, var(--header-btn-bg, #020617) 88%);
@@ -25692,8 +25671,7 @@ html[data-theme="light"] body.panel-page {
     linear-gradient(90deg, rgba(96, 165, 250, 0.08), rgba(59, 130, 246, 0.18), rgba(96, 165, 250, 0.08));
 }
 
-body.panel-page #xkeen-core-text[data-loading="true"],
-body.panel-page #xk-update-link[data-loading="true"] {
+body.panel-page #xkeen-core-text[data-loading="true"] {
   position: relative;
   min-width: 108px;
   color: transparent !important;
@@ -25703,16 +25681,7 @@ body.panel-page #xk-update-link[data-loading="true"] {
   overflow: hidden;
 }
 
-body.panel-page #xk-update-link[data-loading="true"] {
-  min-width: 138px;
-}
-
-body.panel-page #xk-update-link.hidden[data-loading="true"] {
-  display: none !important;
-}
-
-body.panel-page #xkeen-core-text[data-loading="true"]::before,
-body.panel-page #xk-update-link[data-loading="true"]::before {
+body.panel-page #xkeen-core-text[data-loading="true"]::before {
   content: "";
   position: absolute;
   inset: -1px;
@@ -25722,8 +25691,7 @@ body.panel-page #xk-update-link[data-loading="true"]::before {
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
-body.panel-page #xkeen-core-text[data-loading="true"]::after,
-body.panel-page #xk-update-link[data-loading="true"]::after {
+body.panel-page #xkeen-core-text[data-loading="true"]::after {
   content: "";
   position: absolute;
   left: 12px;
@@ -25737,10 +25705,6 @@ body.panel-page #xk-update-link[data-loading="true"]::after {
   animation: xk-header-chip-shimmer 1.35s ease-in-out infinite;
 }
 
-body.panel-page #xk-update-link[data-loading="true"] .xk-update-dot {
-  opacity: 0;
-}
-
 @keyframes xk-header-chip-shimmer {
   0% {
     background-position: 200% 50%;
@@ -25751,14 +25715,12 @@ body.panel-page #xk-update-link[data-loading="true"] .xk-update-dot {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.panel-page #xkeen-core-text[data-loading="true"]::after,
-  body.panel-page #xk-update-link[data-loading="true"]::after {
+  body.panel-page #xkeen-core-text[data-loading="true"]::after {
     animation: none;
   }
 }
 
-body.panel-page.xk-perf-lite #xkeen-core-text[data-loading="true"]::after,
-body.panel-page.xk-perf-lite #xk-update-link[data-loading="true"]::after {
+body.panel-page.xk-perf-lite #xkeen-core-text[data-loading="true"]::after {
   animation: none;
 }
 
@@ -28580,7 +28542,6 @@ body.panel-page.xk-perf-lite .routing-focus-btn {
 }
 
 body.panel-page.xk-perf-lite .service-status-lamp,
-body.panel-page.xk-perf-lite .xk-update-dot,
 body.panel-page.xk-perf-lite .global-spinner-icon {
   animation: none !important;
 }

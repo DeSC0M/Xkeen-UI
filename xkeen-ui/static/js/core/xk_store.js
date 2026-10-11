@@ -28,14 +28,6 @@
   const UI_SHELL_DEFAULTS = Object.freeze({
     serviceStatus: "",
     currentCore: "",
-    version: {
-      currentLabel: "",
-      currentCommit: "",
-      currentBuiltAt: "",
-      latestLabel: "",
-      latestPublishedAt: "",
-      channel: "",
-    },
     control: {
       pending: false,
       action: "",
@@ -44,13 +36,6 @@
     loading: {
       serviceStatus: false,
       currentCore: true,
-      update: true,
-    },
-    update: {
-      visible: false,
-      hasUpdate: false,
-      label: "",
-      title: "",
     },
   });
   const UI_MODAL_DEFAULTS = Object.freeze({
@@ -149,23 +134,13 @@
 
   function cloneUiShellState(raw) {
     const source = isObject(raw) ? raw : {};
-    const rawVersion = isObject(source.version) ? source.version : {};
     const rawControl = isObject(source.control) ? source.control : {};
     const rawLoading = isObject(source.loading) ? source.loading : {};
-    const rawUpdate = isObject(source.update) ? source.update : {};
     const parsedRequestId = Number(rawControl.requestId);
 
     return {
       serviceStatus: typeof source.serviceStatus === "string" ? source.serviceStatus : UI_SHELL_DEFAULTS.serviceStatus,
       currentCore: typeof source.currentCore === "string" ? source.currentCore : UI_SHELL_DEFAULTS.currentCore,
-      version: {
-        currentLabel: typeof rawVersion.currentLabel === "string" ? rawVersion.currentLabel : UI_SHELL_DEFAULTS.version.currentLabel,
-        currentCommit: typeof rawVersion.currentCommit === "string" ? rawVersion.currentCommit : UI_SHELL_DEFAULTS.version.currentCommit,
-        currentBuiltAt: typeof rawVersion.currentBuiltAt === "string" ? rawVersion.currentBuiltAt : UI_SHELL_DEFAULTS.version.currentBuiltAt,
-        latestLabel: typeof rawVersion.latestLabel === "string" ? rawVersion.latestLabel : UI_SHELL_DEFAULTS.version.latestLabel,
-        latestPublishedAt: typeof rawVersion.latestPublishedAt === "string" ? rawVersion.latestPublishedAt : UI_SHELL_DEFAULTS.version.latestPublishedAt,
-        channel: typeof rawVersion.channel === "string" ? rawVersion.channel : UI_SHELL_DEFAULTS.version.channel,
-      },
       control: {
         pending: typeof rawControl.pending === "boolean" ? rawControl.pending : UI_SHELL_DEFAULTS.control.pending,
         action: typeof rawControl.action === "string" ? rawControl.action : UI_SHELL_DEFAULTS.control.action,
@@ -174,13 +149,6 @@
       loading: {
         serviceStatus: typeof rawLoading.serviceStatus === "boolean" ? rawLoading.serviceStatus : UI_SHELL_DEFAULTS.loading.serviceStatus,
         currentCore: typeof rawLoading.currentCore === "boolean" ? rawLoading.currentCore : UI_SHELL_DEFAULTS.loading.currentCore,
-        update: typeof rawLoading.update === "boolean" ? rawLoading.update : UI_SHELL_DEFAULTS.loading.update,
-      },
-      update: {
-        visible: typeof rawUpdate.visible === "boolean" ? rawUpdate.visible : UI_SHELL_DEFAULTS.update.visible,
-        hasUpdate: typeof rawUpdate.hasUpdate === "boolean" ? rawUpdate.hasUpdate : UI_SHELL_DEFAULTS.update.hasUpdate,
-        label: typeof rawUpdate.label === "string" ? rawUpdate.label : UI_SHELL_DEFAULTS.update.label,
-        title: typeof rawUpdate.title === "string" ? rawUpdate.title : UI_SHELL_DEFAULTS.update.title,
       },
     };
   }
@@ -342,22 +310,11 @@
     return (
       left.serviceStatus === right.serviceStatus &&
       left.currentCore === right.currentCore &&
-      left.version.currentLabel === right.version.currentLabel &&
-      left.version.currentCommit === right.version.currentCommit &&
-      left.version.currentBuiltAt === right.version.currentBuiltAt &&
-      left.version.latestLabel === right.version.latestLabel &&
-      left.version.latestPublishedAt === right.version.latestPublishedAt &&
-      left.version.channel === right.version.channel &&
       left.control.pending === right.control.pending &&
       left.control.action === right.control.action &&
       left.control.requestId === right.control.requestId &&
       left.loading.serviceStatus === right.loading.serviceStatus &&
-      left.loading.currentCore === right.loading.currentCore &&
-      left.loading.update === right.loading.update &&
-      left.update.visible === right.update.visible &&
-      left.update.hasUpdate === right.update.hasUpdate &&
-      left.update.label === right.update.label &&
-      left.update.title === right.update.title
+      left.loading.currentCore === right.loading.currentCore
     );
   }
 
@@ -546,20 +503,9 @@
     const next = {
       serviceStatus: Object.prototype.hasOwnProperty.call(extra, "serviceStatus") ? String(extra.serviceStatus || "") : current.serviceStatus,
       currentCore: Object.prototype.hasOwnProperty.call(extra, "currentCore") ? String(extra.currentCore || "") : current.currentCore,
-      version: Object.assign({}, current.version),
       control: Object.assign({}, current.control),
       loading: Object.assign({}, current.loading),
-      update: Object.assign({}, current.update),
     };
-
-    if (isObject(extra.version)) {
-      if (Object.prototype.hasOwnProperty.call(extra.version, "currentLabel")) next.version.currentLabel = String(extra.version.currentLabel || "");
-      if (Object.prototype.hasOwnProperty.call(extra.version, "currentCommit")) next.version.currentCommit = String(extra.version.currentCommit || "");
-      if (Object.prototype.hasOwnProperty.call(extra.version, "currentBuiltAt")) next.version.currentBuiltAt = String(extra.version.currentBuiltAt || "");
-      if (Object.prototype.hasOwnProperty.call(extra.version, "latestLabel")) next.version.latestLabel = String(extra.version.latestLabel || "");
-      if (Object.prototype.hasOwnProperty.call(extra.version, "latestPublishedAt")) next.version.latestPublishedAt = String(extra.version.latestPublishedAt || "");
-      if (Object.prototype.hasOwnProperty.call(extra.version, "channel")) next.version.channel = String(extra.version.channel || "");
-    }
 
     if (isObject(extra.control)) {
       if (Object.prototype.hasOwnProperty.call(extra.control, "pending")) next.control.pending = !!extra.control.pending;
@@ -573,14 +519,6 @@
     if (isObject(extra.loading)) {
       if (Object.prototype.hasOwnProperty.call(extra.loading, "serviceStatus")) next.loading.serviceStatus = !!extra.loading.serviceStatus;
       if (Object.prototype.hasOwnProperty.call(extra.loading, "currentCore")) next.loading.currentCore = !!extra.loading.currentCore;
-      if (Object.prototype.hasOwnProperty.call(extra.loading, "update")) next.loading.update = !!extra.loading.update;
-    }
-
-    if (isObject(extra.update)) {
-      if (Object.prototype.hasOwnProperty.call(extra.update, "visible")) next.update.visible = !!extra.update.visible;
-      if (Object.prototype.hasOwnProperty.call(extra.update, "hasUpdate")) next.update.hasUpdate = !!extra.update.hasUpdate;
-      if (Object.prototype.hasOwnProperty.call(extra.update, "label")) next.update.label = String(extra.update.label || "");
-      if (Object.prototype.hasOwnProperty.call(extra.update, "title")) next.update.title = String(extra.update.title || "");
     }
 
     return setUiShellState(next, meta);

@@ -4,7 +4,6 @@ import './codemirror6.shared.js';
 import '../core/xk_dom.js';
 import '../core/xk_http.js';
 import '../core/xk_storage.js';
-import '../features/update_notifier.js';
 import '../ui/theme.js?v=20260324b';
 import '../ui/tooltips_auto.js?v=20260805g';
 import '../util/helpers.js';

@@ -56,11 +56,6 @@ def test_selected_feature_modules_export_named_api_wrappers():
             "export function getTypographyApi()",
             "export const typographyApi = Object.freeze({",
         ],
-        "update_notifier.js": [
-            "let updateNotifierModuleApi = null;",
-            "export function getUpdateNotifierApi()",
-            "export const updateNotifierApi = Object.freeze({",
-        ],
         "routing_templates.js": [
             "let routingTemplatesModuleApi = null;",
             "export function getRoutingTemplatesApi()",
@@ -150,10 +145,6 @@ def test_selected_small_feature_modules_no_longer_use_window_xkeen_features_as_c
         "typography.js": [
             "window.XKeen.features ? (window.XKeen.features.typography || null) : null",
             "XK.features.typography = XK.features.typography || {};",
-        ],
-        "update_notifier.js": [
-            "window.XKeen.features ? (window.XKeen.features.updateNotifier || null) : null",
-            "XK.features.updateNotifier = XK.features.updateNotifier || {}",
         ],
         "routing_templates.js": [
             "window.XKeen.features ? (window.XKeen.features.routingTemplates || null) : null",
@@ -475,9 +466,6 @@ def test_selected_runtime_adapter_feature_modules_no_longer_read_raw_window_xkee
         "service_status.js": [
             "from './xkeen_runtime.js';",
         ],
-        "update_notifier.js": [
-            "from './xkeen_runtime.js';",
-        ],
         "xray_logs.js": [
             "from './xkeen_runtime.js';",
         ],
@@ -566,7 +554,6 @@ def test_feature_access_module_publishes_runtime_accessor_for_migrated_feature_c
     required_fragments = [
         "const featureAccessorRegistry = Object.freeze({",
         "devtools: () => getDevtoolsNamespaceApi('devtools'),",
-        "updateNotifier: getUpdateNotifierApi,",
         "export function getFeatureApi(name)",
         "export function requireFeatureApi(name)",
         "xk.runtime.getFeatureApi = getFeatureApi;",
@@ -581,10 +568,6 @@ def test_feature_access_module_publishes_runtime_accessor_for_migrated_feature_c
 
 def test_selected_canonical_consumers_use_feature_accessors_instead_of_window_xkeen_features():
     expectations = {
-        ROOT / 'xkeen-ui' / 'static' / 'js' / 'ui' / 'settings_panel.js': [
-            "import { getFeatureApi } from '../features/feature_access.js';",
-            "const api = getFeatureApi('updateNotifier');",
-        ],
         ROOT / 'xkeen-ui' / 'static' / 'js' / 'ui' / 'sections.js': [
             "typeof XK.runtime.getFeatureApi === 'function'",
             "const devtoolsApi = getFeatureApi('devtools');",
@@ -599,7 +582,6 @@ def test_selected_canonical_consumers_use_feature_accessors_instead_of_window_xk
     }
     forbidden = {
         ROOT / 'xkeen-ui' / 'static' / 'js' / 'ui' / 'settings_panel.js': [
-            'XK.features && XK.features.updateNotifier',
             'window.XKeen.features',
         ],
         ROOT / 'xkeen-ui' / 'static' / 'js' / 'ui' / 'sections.js': [

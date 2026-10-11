@@ -6,7 +6,7 @@ import os
 import sys
 from pathlib import Path
 
-from flask import Flask, Response
+from flask import Flask
 from werkzeug.security import generate_password_hash
 
 
@@ -91,10 +91,6 @@ def _build_client(tmp_path: Path, monkeypatch, *, restart_ok: bool = True):
 
     app = Flask("mobile-routing-write-test")
     app.config["TESTING"] = True
-
-    @app.get("/ui/terminal-theme.css")
-    def terminal_theme_css():
-        return Response("", mimetype="text/css")
 
     auth_setup.init_auth(app)
     mobile_routes.register_mobile_routes(app)

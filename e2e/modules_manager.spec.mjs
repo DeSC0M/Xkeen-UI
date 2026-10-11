@@ -67,29 +67,26 @@ const interruptedStatus = { ...runningStatus, result: 'interrupted', step: 'reco
 const rollbackFailedStatus = { ...interruptedStatus, result: 'rollback_failed', error_code: 'operation_rollback_failed' };
 const restartStatus = { ...runningStatus, result: 'committed', step: 'done', restart_required: true };
 
-test.describe('DevTools update channel boundary', () => {
-  const updateInfo = (channel) => ({
-    ok: true,
-    build: { version: '2.10.0', repo: 'umarcheh001/Xkeen-UI', channel, commit: 'abc1234' },
-    settings: { repo: 'umarcheh001/Xkeen-UI', channel, branch: 'main' },
-    capabilities: { curl: true, tar: true, sha256sum: true },
-    security: { sha_strict: '1', require_sha: '1' },
-  });
+test.describe('DevTools panel summary boundary', () => {
+  const noUpdate = {
+    ok: true, source_version: '2.10.0', target_version: '2.10.0', update_available: false,
+    requires_installer: false, min_updater: null, freshness: 'fresh', stale_reason: null, fetched_at: 1791700000,
+  };
 
-  test('stable DevTools shows panel identity and one Modules link without legacy update requests', async ({ page }) => {
+  test('DevTools shows panel identity and one Modules link without legacy update requests', async ({ page }) => {
     const legacyRequests = [];
-    await page.route('**/api/devtools/update/info', (route) => route.fulfill({ json: updateInfo('stable') }));
-    await page.route(/\/api\/devtools\/update\/(?:check|status|run|rollback)(?:\?|$)/, (route) => {
+    await page.route(/\/api\/devtools\/update\//, (route) => {
       legacyRequests.push(`${route.request().method()} ${new URL(route.request().url()).pathname}`);
-      return route.fulfill({ json: { ok: true, status: { state: 'idle' } } });
+      return route.fulfill({ status: 404, json: { ok: false } });
     });
+    await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({ json: noUpdate }));
     await installIdleLifecycleRoutes(page);
 
     await page.goto('/devtools');
     const updateCard = page.locator('#dt-update-card');
     await expect(page.locator('[data-dt-modules-manager-notice]')).toHaveCount(0);
     await expect(page.locator('[data-dt-main-update-controls]')).toHaveCount(0);
-    await expect(page.locator('#xk-update-link')).toBeHidden();
+    await expect(page.locator('#xk-update-link')).toHaveCount(0);
     await expect(updateCard).toContainText('2.10.0');
     await expect(updateCard).toContainText('mihomo-minimal');
     await expect(updateCard).toContainText('Xkeen UI Core');
@@ -101,13 +98,13 @@ test.describe('DevTools update channel boundary', () => {
     expect(legacyRequests).toEqual([]);
   });
 
-  test('stable DevTools stretches the panel information card to the ENV bottom edge', async ({ page }) => {
-    await page.route('**/api/devtools/update/info', (route) => route.fulfill({ json: updateInfo('stable') }));
+  test('DevTools stretches the panel information card to the ENV bottom edge', async ({ page }) => {
+    await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({ json: noUpdate }));
     await installIdleLifecycleRoutes(page);
 
     await page.goto('/devtools');
+    await expect(page.locator('#dt-panel-modules .dt-panel-module')).toHaveCount(2);
 
-    const updateCard = page.locator('#dt-update-card');
     const metrics = await page.evaluate(() => {
       const update = document.getElementById('dt-update-card');
       const env = document.getElementById('dt-env-card');
@@ -121,35 +118,6 @@ test.describe('DevTools update channel boundary', () => {
     expect(metrics.updateGrow).toBe('1');
     expect(metrics.bottomDelta, JSON.stringify(metrics)).toBeLessThanOrEqual(2);
   });
-
-  test('main DevTools stays informational and delegates update work to Modules', async ({ page }) => {
-    await page.route('**/api/devtools/update/info', (route) => route.fulfill({ json: updateInfo('main') }));
-    await installIdleLifecycleRoutes(page);
-
-    await page.goto('/devtools');
-    await expect(page.locator('#dt-update-current-version')).toHaveText('2.10.0');
-    await expect(page.locator('#dt-update-channel')).toHaveText('main');
-    await expect(page.locator('#dt-update-check')).toHaveCount(0);
-  });
-
-  for (const channel of ['main', 'stable']) {
-    test(`${channel} DevTools recovers after the first info request fails`, async ({ page }) => {
-      let allowInfo = false;
-      await page.route('**/api/devtools/update/info', (route) => route.fulfill(
-        allowInfo ? { json: updateInfo(channel) } : { status: 503, json: { ok: false, error: 'temporary failure' } },
-      ));
-
-      await page.goto('/devtools');
-      await expect(page.locator('#dt-update-current-version')).toHaveText('—');
-      allowInfo = true;
-      await page.evaluate(async () => {
-        const { getDevtoolsNamespace } = await import('/static/js/features/devtools_namespace.js');
-        getDevtoolsNamespace().devtoolsUpdate.activate();
-      });
-
-      await expect(page.locator('#dt-update-current-version')).toHaveText('2.10.0');
-    });
-  }
 });
 
 test.describe('Modules panel update surface', () => {

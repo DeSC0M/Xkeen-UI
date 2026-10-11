@@ -182,8 +182,8 @@ def test_operator_stylesheet_is_last_owned_and_fully_scoped():
         if "body.panel-page" in prelude:
             legacy_blocks.append(f"{prelude}{{{declarations}}}")
     legacy_digest = hashlib.sha256(("\n".join(legacy_blocks) + "\n").encode("utf-8")).hexdigest()
-    assert len(legacy_blocks) == 730
-    assert legacy_digest == "4eef5172616d6d97cecd708ced285cb1a3e6407fe7a9c6842d8d3f20a767cd8d"
+    assert len(legacy_blocks) == 727
+    assert legacy_digest == "d9710416b785fd853c997ec733364071f64cf73db8bea224f3c3f10fa1e38304"
 
     without_comments = re.sub(r"/\*.*?\*/", "", operator_css, flags=re.DOTALL)
     # Animation steps are not selectors. Scope is enforced on the rule that

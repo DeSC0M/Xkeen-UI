@@ -379,9 +379,9 @@ def test_stage8_contract_describes_closed_panel_and_profile_transactions(tmp_pat
         "module_id_forbidden": True,
     }
     assert panel_profile["devtools"] == {
-        "stable": "delegates panel-update plan/apply/status to ModuleLifecycleService",
-        "main": "legacy branch update path marked development_only",
-        "rollback": "legacy panel backup rollback; never a module transaction rollback",
+        "summary": "read-only card; reads /api/modules/installed and /api/modules/panel/update-check",
+        "update": "legacy /api/devtools/update/* routes and update_xkeen_ui.sh are removed",
+        "rollback": "panel-rollback through the Modules manager only",
     }
     assert panel_profile["rollback_scopes"] == {
         "module": "selected module files and state",
@@ -415,8 +415,7 @@ def test_stage8_panel_profile_operator_contract_and_roadmap_are_closed() -> None
         "operation_plan_stale",
         "rollback_failed",
         "POST /api/modules/recovery",
-        "Stable",
-        "development_only",
+        "update_xkeen_ui.sh",
         "Ручное восстановление",
     ):
         assert fragment in operator

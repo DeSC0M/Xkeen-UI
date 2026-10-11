@@ -86,6 +86,9 @@ def _cleanup_legacy_global_theme_files(*, ui_state_dir: str) -> Dict[str, Any]:
         "codemirror_theme.css",
         "custom.css",
         "custom_css.disabled",
+        # Отдельная тема терминала убрана: терминал берёт цвета общей темы.
+        "terminal_theme.json",
+        "terminal_theme.css",
     ):
         path = os.path.join(ui_state_dir, name)
         try:
@@ -354,13 +357,8 @@ def _init_auth_and_pages(
     from routes.auth import register_auth_routes
     from routes.pages import register_pages_routes
 
-    if "tool.advanced-diagnostics" in set(module_activation.get("active_module_ids", [])):
-        from services import devtools as _svc_devtools
-    else:
-        _svc_devtools = False
-
     init_ui_assets_helpers(app)
-    register_ui_assets_routes(app, UI_STATE_DIR=ui_state_dir, devtools_service=_svc_devtools)
+    register_ui_assets_routes(app, UI_STATE_DIR=ui_state_dir)
     register_auth_routes(app)
     if "engine.xray" in set(module_activation.get("active_module_ids", [])):
         from routes.mobile import register_mobile_routes

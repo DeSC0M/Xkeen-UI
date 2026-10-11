@@ -88,18 +88,7 @@ ENV_WHITELIST: Tuple[str, ...] = (
     # self-update (GitHub)
     "XKEEN_UI_UPDATE_REPO",
     "XKEEN_UI_UPDATE_CHANNEL",
-    "XKEEN_UI_UPDATE_BRANCH",
-    "XKEEN_UI_UPDATE_ASSET_NAME",
-    "XKEEN_UI_UPDATE_ALLOW_HOSTS",
-    "XKEEN_UI_UPDATE_ALLOW_HTTP",
-    "XKEEN_UI_UPDATE_MAX_BYTES",
-    "XKEEN_UI_UPDATE_MAX_CHECKSUM_BYTES",
-    "XKEEN_UI_UPDATE_CONNECT_TIMEOUT",
-    "XKEEN_UI_UPDATE_DOWNLOAD_TIMEOUT",
-    "XKEEN_UI_UPDATE_API_TIMEOUT",
     "XKEEN_UI_GITHUB_TOKEN",
-    "XKEEN_UI_UPDATE_SHA_STRICT",
-    "XKEEN_UI_UPDATE_REQUIRE_SHA",
     # UI layout/visibility (optional)
     "XKEEN_UI_PANEL_SECTIONS_WHITELIST",
     "XKEEN_UI_DEVTOOLS_SECTIONS_WHITELIST",
@@ -443,34 +432,11 @@ def _default_effective_value(
     if k == "XKEEN_GEODAT_ALLOW_PRIVATE_HOSTS":
         return "0"
 
-    # Self-update defaults
+    # Build identity defaults
     if k == "XKEEN_UI_UPDATE_REPO":
         return "umarcheh001/Xkeen-UI"
     if k == "XKEEN_UI_UPDATE_CHANNEL":
         return "stable"
-    if k == "XKEEN_UI_UPDATE_BRANCH":
-        return "main"
-    if k == "XKEEN_UI_UPDATE_ASSET_NAME":
-        # Default project convention (stable). For main channel this is ignored.
-        return "xkeen-ui-routing.tar.gz"
-    if k == "XKEEN_UI_UPDATE_ALLOW_HOSTS":
-        return "github.com,objects.githubusercontent.com,codeload.github.com"
-    if k == "XKEEN_UI_UPDATE_ALLOW_HTTP":
-        return "0"
-    if k == "XKEEN_UI_UPDATE_MAX_BYTES":
-        return str(60 * 1024 * 1024)
-    if k == "XKEEN_UI_UPDATE_MAX_CHECKSUM_BYTES":
-        return str(1024 * 1024)
-    if k == "XKEEN_UI_UPDATE_CONNECT_TIMEOUT":
-        return "10"
-    if k == "XKEEN_UI_UPDATE_DOWNLOAD_TIMEOUT":
-        return "300"
-    if k == "XKEEN_UI_UPDATE_API_TIMEOUT":
-        return "10"
-    if k == "XKEEN_UI_UPDATE_SHA_STRICT":
-        return "1"
-    if k == "XKEEN_UI_UPDATE_REQUIRE_SHA":
-        return "1"
 
     # Logging defaults (services/logging_setup.py + app.py fallback on non-router dev).
     if k == "XKEEN_LOG_DIR":

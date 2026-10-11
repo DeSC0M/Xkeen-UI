@@ -407,7 +407,7 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
 
         register_module_blueprints("tool.terminal", "terminal_blueprint_init_failed", _build_terminal)
 
-    # Core-owned maintenance APIs (self-update, core.log, recovery and
+    # Core-owned maintenance APIs (core.log, recovery and
     # module-control diagnostics) must remain available even when the optional
     # advanced diagnostics UI is disabled.
     from .devtools import create_devtools_blueprint
@@ -415,7 +415,6 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
         create_devtools_blueprint(
             ctx.ui_state_dir,
             include_advanced=module_active("tool.advanced-diagnostics"),
-            lifecycle_service=lifecycle_service,
         )
     )
 

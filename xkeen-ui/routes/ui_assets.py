@@ -1043,40 +1043,12 @@ def register_build_stamp_global(app: Flask, ui_state_dir: str) -> None:
     app.add_template_global(lambda: build_stamp(ui_state_dir), name="ui_build_stamp")
 
 
-def register_ui_assets_routes(app: Flask, *, UI_STATE_DIR: str, devtools_service=None) -> None:
+def register_ui_assets_routes(app: Flask, *, UI_STATE_DIR: str) -> None:
     """Register /ui/* asset endpoints and frontend build helpers."""
 
     if not isinstance(app.extensions.get(_APP_EXTENSIONS_KEY), FrontendAssetHelper):
         init_ui_assets_helpers(app)
     register_build_stamp_global(app, UI_STATE_DIR)
-
-    # Lazy import to avoid any accidental circular deps.
-    if devtools_service is None:
-        try:
-            from services import devtools as devtools_service  # type: ignore
-        except Exception:
-            devtools_service = None
-
-    @app.get("/ui/terminal-theme.css")
-    def terminal_theme_css():
-        """Serve optional Terminal (xterm.js) theme CSS."""
-
-        path = os.path.join(UI_STATE_DIR, "terminal_theme.css")
-        try:
-            if devtools_service and os.path.isfile(os.path.join(UI_STATE_DIR, "terminal_theme.json")):
-                devtools_service.terminal_theme_get(UI_STATE_DIR)
-        except Exception:
-            pass
-
-        try:
-            if os.path.isfile(path):
-                resp = send_file(path, mimetype="text/css")
-            else:
-                resp = Response("/* no terminal theme */\n", mimetype="text/css")
-        except Exception:
-            resp = Response("/* terminal theme failed */\n", mimetype="text/css")
-
-        return _no_cache(resp)
 
     @app.get("/ui/branding.json")
     def branding_json():

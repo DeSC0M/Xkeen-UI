@@ -25,8 +25,6 @@ _USER_FILES = {
     "devtools.env",
     "ui-settings.json",
     "branding.json",
-    "terminal_theme.json",
-    "terminal_theme.css",
     *STATE_FILENAMES,
 }
 # Template folders hold the shipped templates next to the ones the user made;

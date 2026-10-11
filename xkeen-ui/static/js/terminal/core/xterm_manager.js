@@ -173,64 +173,7 @@ import { appendTerminalDebug, markTerminalDebugState } from '../../features/term
       const root = _resolveThemeScopeEl();
       if (!root) return null;
 
-      // Prefer independent Terminal theme (DevTools → Terminal), if enabled.
-      const termEnabledRaw = _readCssVar(root, '--xk-term-enabled');
-      const termEnabled = termEnabledRaw != null && String(termEnabledRaw).trim() !== '' && String(termEnabledRaw).trim() !== '0';
-      if (termEnabled) {
-        const bg = _readCssVar(root, '--xk-term-background') || '#020617';
-        const fg = _readCssVar(root, '--xk-term-foreground') || '#e5e7eb';
-
-        const cursor = _readCssVar(root, '--xk-term-cursor') || fg;
-        const cursorAccent = _readCssVar(root, '--xk-term-cursor-accent') || bg;
-
-        const cursorBlink = _readCssVar(root, '--xk-term-cursor-blink') || cursor;
-        const cursorBlinkAccent = _readCssVar(root, '--xk-term-cursor-blink-accent') || cursorAccent;
-
-        const selectionBg = _readCssVar(root, '--xk-term-selection');
-        const selectionFg = _readCssVar(root, '--xk-term-selection-foreground');
-
-        const th = {
-          background: bg,
-          foreground: fg,
-          cursor: cursorBlinkEnabled ? cursorBlink : cursor,
-          cursorAccent: cursorBlinkEnabled ? cursorBlinkAccent : cursorAccent,
-        };
-
-        if (selectionBg) {
-          // New API (xterm v5+)
-          th.selectionBackground = selectionBg;
-          // Back-compat for older xterm builds
-          th.selection = selectionBg;
-        }
-        if (selectionFg) th.selectionForeground = selectionFg;
-
-        const add = (cssName, keyName) => {
-          const v = _readCssVar(root, '--xk-term-' + cssName);
-          if (v) th[keyName] = v;
-        };
-
-        // ANSI palette 0..15
-        add('black', 'black');
-        add('red', 'red');
-        add('green', 'green');
-        add('yellow', 'yellow');
-        add('blue', 'blue');
-        add('magenta', 'magenta');
-        add('cyan', 'cyan');
-        add('white', 'white');
-        add('bright-black', 'brightBlack');
-        add('bright-red', 'brightRed');
-        add('bright-green', 'brightGreen');
-        add('bright-yellow', 'brightYellow');
-        add('bright-blue', 'brightBlue');
-        add('bright-magenta', 'brightMagenta');
-        add('bright-cyan', 'brightCyan');
-        add('bright-white', 'brightWhite');
-
-        return th;
-      }
-
-      // Fallback: derive palette from global UI theme variables.
+      // Палитра терминала выводится из переменных общей темы интерфейса.
       let currentTheme = 'dark';
       try {
         const html = document && document.documentElement ? document.documentElement : null;

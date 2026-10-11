@@ -38,8 +38,7 @@ def build_panel_app(active_module_ids: list[str] | None, tmp_path: Path) -> Flas
     register_build_stamp_global(app, str(tmp_path))
     # Endpoints owned by other blueprints; the page only builds their URLs.
     app.add_url_rule("/logout", "logout_post", lambda: "", methods=["POST"])
-    app.add_url_rule("/terminal-theme.css", "terminal_theme_css", lambda: "")
-    app.context_processor(lambda: {"csrf_token": "token", "terminal_theme_v": 0})
+    app.context_processor(lambda: {"csrf_token": "token"})
     register_pages_routes(
         app,
         module_activation=(

@@ -5,7 +5,7 @@ import json
 import sys
 from pathlib import Path
 
-from flask import Flask, Response
+from flask import Flask
 from werkzeug.security import generate_password_hash
 
 
@@ -56,10 +56,6 @@ def _build_auth_client(tmp_path: Path, monkeypatch):
     @app.get("/")
     def index():
         return "ok", 200
-
-    @app.get("/ui/terminal-theme.css")
-    def terminal_theme_css():
-        return Response("", mimetype="text/css")
 
     auth_setup.init_auth(app)
     auth_routes.register_auth_routes(app)

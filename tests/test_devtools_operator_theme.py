@@ -18,9 +18,9 @@ def test_devtools_operator_stylesheet_is_isolated_and_loaded_last():
     css = CSS.read_text(encoding="utf-8")
 
     legacy_pos = template.index("filename='devtools.css'")
-    terminal_pos = template.index("id=\"xk-terminal-theme-link\"")
     operator_pos = template.index("filename='devtools-operator.css'")
-    assert legacy_pos < terminal_pos < operator_pos
+    assert legacy_pos < operator_pos
+    assert "xk-terminal-theme-link" not in template
     assert template.count("filename='devtools-operator.css'") == 1
 
     unscoped = []

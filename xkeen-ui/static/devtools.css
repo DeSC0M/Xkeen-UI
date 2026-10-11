@@ -82,6 +82,104 @@ details.dt-collapsible:not([open]) .dt-collapsible-icon {
   font-size: inherit;
 }
 
+/* Список модулей в карточке «Сборка панели»: строка на модуль — точка
+   состояния, имя, версия, состояние словом. Цвет дублирует слово, а не
+   заменяет его. */
+.dt-panel-modules {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dt-panel-module {
+  --dt-module-tone: var(--op-success, var(--sem-success, #34d399));
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto 74px;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 0;
+  border-top: 1px solid var(--op-border, var(--border));
+}
+
+.dt-panel-module:first-child {
+  border-top: 0;
+}
+
+.dt-panel-module[data-state="off"],
+.dt-panel-update-note[data-tone="off"] {
+  --dt-module-tone: var(--op-muted, var(--muted));
+}
+
+.dt-panel-module[data-state="bad"] {
+  --dt-module-tone: var(--op-danger, var(--sem-error, #f87171));
+}
+
+.dt-panel-module[data-state="warn"],
+.dt-panel-update-note[data-tone="warn"] {
+  --dt-module-tone: var(--op-warning, var(--sem-warning, #fbbf24));
+}
+
+.dt-panel-module-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dt-module-tone);
+}
+
+.dt-panel-module-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.dt-panel-module[data-state="off"] .dt-panel-module-name {
+  color: var(--op-muted, var(--muted));
+  font-weight: 500;
+}
+
+.dt-panel-module-version {
+  color: var(--op-muted, var(--muted));
+  font-family: var(--op-font-mono, ui-monospace, Consolas, monospace);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dt-panel-module-state {
+  color: var(--dt-module-tone);
+  text-align: right;
+}
+
+.dt-panel-modules-empty {
+  color: var(--op-muted, var(--muted));
+}
+
+/* Строка об обновлении над списком: оно одно на всю панель. */
+.dt-panel-update-note {
+  --dt-module-tone: var(--op-success, var(--sem-success, #34d399));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--op-border, var(--border));
+  border-radius: 6px;
+  color: var(--op-muted, var(--muted));
+}
+
+.dt-panel-update-note[hidden],
+#dt-panel-status[hidden] {
+  display: none;
+}
+
+.dt-panel-update-note[data-tone="warn"] {
+  border-color: color-mix(in srgb, var(--dt-module-tone) 55%, var(--op-border, var(--border)));
+  background: color-mix(in srgb, var(--dt-module-tone) 8%, transparent);
+  color: inherit;
+}
+
 /* Theme editor: sliders in ONE column to avoid overlap */
 .dt-theme-sliders {
   display: flex !important;
@@ -567,29 +665,6 @@ details.dt-theme-group .dt-collapsible-icon{
   opacity: 0;
 }
 
-
-/* --- Self-update card (DevTools) --- */
-.dt-update-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: baseline;
-}
-
-.dt-update-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-  margin-top: 10px;
-}
-
-/* Кнопки обновления делят ширину карточки поровну от своего текста: ряд
-   заполняется целиком, зазоры между кнопками везде одинаковые. */
-.dt-update-actions > * {
-  flex: 1 1 auto;
-}
-
 /* Вложенная карточка внутри карточки (проверка ссылки Happ и т.п.). */
 details.dt-subcard {
   border: 1px solid var(--border, #1f2937);
@@ -609,69 +684,6 @@ details.dt-subcard .dt-collapsible-body {
   margin-top: 0;
   padding: 10px 12px 12px;
 }
-
-/* Состояние темы терминала стоит над кнопками, а не прижимается к нижнему краю. */
-.dt-term-state {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 12px;
-  opacity: 0.85;
-}
-
-/* Блок автопроверки в карточке обновления. Слабину растянутой карточки он больше
-   не собирает: `margin-top: auto` копил её одной дырой посреди карточки, и на
-   высоком окне дыра доходила до полутысячи пикселей. Свободная высота уходит вниз,
-   под блок лога, — содержимое остаётся вверху, низы половин ряда сходятся. */
-.dt-update-autocheck-row {
-  margin: 0 0 6px 0;
-  padding-top: 12px;
-}
-
-/* Итог по update.log: шапка, строка вердикта и — при находках — кнопка в Logs. */
-.dt-update-log-summary {
-  margin-top: 12px;
-  /* Поля блока равны зазору между кнопками, чтобы строка итога не липла к рамке. */
-  padding: 12px;
-  border: 1px solid var(--border, #1f2937);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--card-bg, #020617) 92%, var(--text, #e5e7eb) 8%);
-}
-
-.dt-update-log-head {
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.dt-update-log-verdict {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.dt-update-log-verdict > .small {
-  opacity: 0.85;
-}
-
-/* При переносе на вторую строку кнопка остаётся у правого края. */
-.dt-update-log-verdict > button {
-  margin-left: auto;
-}
-
-.dt-update-log-verdict[data-verdict="warn"] > .small {
-  opacity: 1;
-  color: var(--sem-warning, #fbbf24);
-}
-
-.dt-update-log-verdict[data-verdict="failed"] > .small {
-  opacity: 1;
-  color: var(--sem-error, #f87171);
-}
-
-
-
 
 /* Update: colored meta + verdict pill */
 .dt-kv-grid{ display:flex; flex-wrap:wrap; gap:10px; align-items:baseline; }
@@ -705,8 +717,6 @@ details.dt-subcard .dt-collapsible-body {
 .dt-value-ok{ color: var(--sem-success, #34d399); }
 .dt-value-warn{ color: var(--sem-warning, #fbbf24); }
 .dt-value-bad{ color: var(--sem-error, #fca5a5); }
-
-.dt-update-verdict-row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
 .dt-pill{
   display:inline-flex;
   align-items:center;
@@ -1189,7 +1199,6 @@ body.devtools-page .dt-tools-left {
 
 body.devtools-page .card,
 body.devtools-page details.dt-collapsible,
-body.devtools-page .dt-update-log-summary,
 body.devtools-page details.dt-subcard {
   position: relative;
   border-radius: 24px;
@@ -1206,7 +1215,6 @@ body.devtools-page details.dt-subcard {
 
 body.devtools-page .card::before,
 body.devtools-page details.dt-collapsible::before,
-body.devtools-page .dt-update-log-summary::before,
 body.devtools-page details.dt-subcard::before {
   content: "";
   position: absolute;
@@ -1284,7 +1292,6 @@ body.devtools-page #dt-ui-prefs-card { --dt-card-glyph: "⌘"; --dt-side-accent:
 body.devtools-page #dt-branding-card { --dt-card-glyph: "✦"; --dt-side-accent: rgba(251, 191, 36, 0.88); }
 body.devtools-page #dt-ui-prefs-io-card { --dt-card-glyph: "⇄"; --dt-side-accent: rgba(167, 139, 250, 0.9); }
 body.devtools-page #dt-layout-card { --dt-card-glyph: "▦"; --dt-side-accent: rgba(52, 211, 153, 0.9); }
-body.devtools-page #dt-terminal-theme-card { --dt-card-glyph: ">_"; --dt-side-accent: rgba(45, 212, 191, 0.88); }
 
 body.devtools-page .dt-tools-right > .card,
 body.devtools-page .dt-logs-card {
@@ -1361,8 +1368,7 @@ body.devtools-page .dt-collapsible-icon {
   color: #bfdbfe;
 }
 
-body.devtools-page .dt-service-actions button.dt-ui-action,
-body.devtools-page #dt-update-run {
+body.devtools-page .dt-service-actions button.dt-ui-action {
   position: relative;
   overflow: hidden;
   border-width: 1px;
@@ -1371,8 +1377,7 @@ body.devtools-page #dt-update-run {
   -webkit-backdrop-filter: blur(16px) saturate(150%);
 }
 
-body.devtools-page .dt-service-actions button.dt-ui-action::before,
-body.devtools-page #dt-update-run::before {
+body.devtools-page .dt-service-actions button.dt-ui-action::before {
   content: "";
   position: absolute;
   inset: 1px;
@@ -1399,8 +1404,7 @@ body.devtools-page .dt-ui-action-stop {
   color: #fff0f2;
 }
 
-body.devtools-page .dt-ui-action-restart,
-body.devtools-page #dt-update-run {
+body.devtools-page .dt-ui-action-restart {
   border-color: rgba(251, 191, 36, 0.28);
   background:
     linear-gradient(180deg, rgba(92, 55, 13, 0.92), rgba(43, 25, 7, 0.9)),
@@ -1722,7 +1726,6 @@ html[data-theme="light"] body.devtools-page::before {
 html[data-theme="light"] body.devtools-page .dt-page-header,
 html[data-theme="light"] body.devtools-page .card,
 html[data-theme="light"] body.devtools-page details.dt-collapsible,
-html[data-theme="light"] body.devtools-page .dt-update-log-summary,
 html[data-theme="light"] body.devtools-page details.dt-subcard,
 html[data-theme="light"] body.devtools-page .dt-tabs,
 html[data-theme="light"] body.devtools-page .dt-tools-left,
@@ -1927,8 +1930,7 @@ html[data-theme="light"] body.devtools-page .dt-ui-action-stop {
   color: #7f1d1d;
 }
 
-html[data-theme="light"] body.devtools-page .dt-ui-action-restart,
-html[data-theme="light"] body.devtools-page #dt-update-run {
+html[data-theme="light"] body.devtools-page .dt-ui-action-restart {
   border-color: rgba(245, 158, 11, 0.22);
   background:
     linear-gradient(180deg, rgba(255, 251, 235, 0.98), rgba(254, 243, 199, 0.92)),
@@ -2223,8 +2225,7 @@ body.devtools-page .dt-top-tab.active {
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
-body.devtools-page .dt-ui-action,
-body.devtools-page #dt-update-run {
+body.devtools-page .dt-ui-action {
   border-color: color-mix(in srgb, var(--editor-btn-border, #60a5fa2e) 90%, transparent);
   background:
     linear-gradient(
@@ -2235,8 +2236,7 @@ body.devtools-page #dt-update-run {
   color: var(--editor-btn-text, #eaf2ff);
 }
 
-body.devtools-page .dt-ui-action:hover,
-body.devtools-page #dt-update-run:hover {
+body.devtools-page .dt-ui-action:hover {
   border-color: var(--editor-btn-hover-border, #baddff57);
   background:
     linear-gradient(
@@ -2277,8 +2277,7 @@ body.devtools-page .dt-ui-action-stop {
     0 12px 24px rgba(127, 29, 29, 0.24);
 }
 
-body.devtools-page .dt-ui-action-restart,
-body.devtools-page #dt-update-run {
+body.devtools-page .dt-ui-action-restart {
   border-color: color-mix(in srgb, var(--sem-warning, #fbbf24) 52%, var(--editor-btn-border, #60a5fa2e) 48%);
   background:
     linear-gradient(
@@ -2322,8 +2321,7 @@ body.devtools-page .dt-ui-action-stop:hover {
     0 16px 30px rgba(127, 29, 29, 0.34);
 }
 
-body.devtools-page .dt-ui-action-restart:hover,
-body.devtools-page #dt-update-run:hover {
+body.devtools-page .dt-ui-action-restart:hover {
   border-color: color-mix(in srgb, var(--sem-warning, #fbbf24) 64%, white 36%);
   background:
     linear-gradient(

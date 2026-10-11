@@ -81,7 +81,6 @@ def test_routes_use_stable_error_codes_instead_of_raw_exception_text():
     assert '"read_failed"' in config_exchange
     assert '"invalid_json"' in config_exchange
     assert '"apply_failed"' in config_exchange
-    assert '"spawn_failed"' in devtools
     assert '"install_failed"' in geodat
     assert '"core_switch_failed"' in service
     assert '"write_failed"' in xray_configs
@@ -94,11 +93,5 @@ def test_routes_use_stable_error_codes_instead_of_raw_exception_text():
 
 def test_frontend_prefers_server_hint_over_raw_error_code_for_sanitized_responses():
     github_js = (ROOT / "xkeen-ui" / "static" / "js" / "features" / "github.js").read_text(encoding="utf-8")
-    update_js = (ROOT / "xkeen-ui" / "static" / "js" / "features" / "devtools" / "update.js").read_text(encoding="utf-8")
 
     assert "(data && (data.hint || data.error))" in github_js
-    assert "const hint = data && data.hint ? String(data.hint) : '';" in update_js
-    assert "const err = data && (data.hint || data.error) ? String(data.hint || data.error) : 'run_failed';" in update_js
-    assert "const err = data && (data.hint || data.error) ? String(data.hint || data.error) : 'rollback_failed';" in update_js
-    assert "backup_tar_unsupported" in update_js
-    assert "{ skip_backup: true }" in update_js

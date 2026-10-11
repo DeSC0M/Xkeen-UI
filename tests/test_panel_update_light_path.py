@@ -13,9 +13,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
-from flask import Flask
 
-from routes.devtools import create_devtools_blueprint
 from services.module_lifecycle import ModuleLifecycleError
 from services.module_registry import ModuleRegistry
 from services.module_transactions import extract as extract_module
@@ -419,48 +417,3 @@ def test_runner_cli_accepts_the_archive_cache(tmp_path):
     assert code == 0
     assert _panel_downloads(release) == 0
     assert panel.read_json("BUILD.json")["version"] == "2.11.0"
-
-
-# --- DevTools ----------------------------------------------------------------------
-
-
-class _Lifecycle:
-    def __init__(self, available: bool) -> None:
-        self.available = available
-        self.calls: list[tuple] = []
-
-    def panel_update_check(self, *, force_refresh=False):
-        self.calls.append(("check", force_refresh))
-        return {
-            "ok": True,
-            "source_version": "1.0.0",
-            "target_version": "1.1.0" if self.available else "1.0.0",
-            "update_available": self.available,
-        }
-
-    def plan(self, *_args, **_kwargs):
-        raise AssertionError("an update check must not build a plan")
-
-
-def _devtools(tmp_path, lifecycle):
-    app = Flask(__name__)
-    app.config["TESTING"] = True
-    app.register_blueprint(create_devtools_blueprint(str(tmp_path), lifecycle_service=lifecycle))
-    return app.test_client()
-
-
-@pytest.mark.parametrize("available", [True, False])
-def test_devtools_check_uses_the_light_check_and_names_the_release(tmp_path, available):
-    lifecycle = _Lifecycle(available)
-    with patch.dict(os.environ, {"XKEEN_UI_UPDATE_CHANNEL": "stable"}, clear=False):
-        response = _devtools(tmp_path, lifecycle).post("/api/devtools/update/check", json={"force_refresh": True})
-
-    payload = response.get_json()
-    assert response.status_code == 200
-    assert payload["update_available"] is available
-    assert payload["current"]["version"] == "1.0.0"
-    assert payload["latest"]["version"] == ("1.1.0" if available else "1.0.0")
-    # Плашка обновления подписывает релиз его тегом.
-    assert payload["latest"]["tag"] == ("v1.1.0" if available else "v1.0.0")
-    assert payload["security"]["will_block_run"] is (not available)
-    assert lifecycle.calls == [("check", True)]

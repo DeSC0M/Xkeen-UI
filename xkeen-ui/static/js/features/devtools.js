@@ -80,8 +80,6 @@ let devtoolsInitialized = false;
       const update = DT.devtoolsUpdate || null;
       if (update && typeof update.activate === 'function') {
         update.activate(nextState);
-      } else if (update && typeof update.loadStatus === 'function') {
-        update.loadStatus(true).catch(() => {});
       }
     } catch (e) {}
 
@@ -208,7 +206,6 @@ let devtoolsInitialized = false;
     try { _wireDeferredModuleInit('update', 'devtoolsUpdate', 'dt-update-card', undefined, { hash: '#dt-update-card', idleDelay: 700 }); } catch (e) {}
     try { _wireDeferredModuleInit('happDecryptor', 'devtoolsHappDecryptor', 'dt-happ-decryptor-card', undefined, { hash: '#dt-happ-decryptor-card', idleDelay: 900, requireTarget: true }); } catch (e) {}
     try { _wireDeferredModuleInit('env', 'devtoolsEnv', 'dt-env-card', undefined, { idleDelay: 1200 }); } catch (e) {}
-    try { _wireDeferredModuleInit('terminalTheme', 'devtoolsTerminalTheme', 'dt-terminal-theme-card', undefined, { hash: '#dt-terminal-theme-card', idleDelay: 1800 }); } catch (e) {}
 
     try { _scheduleModuleInit('theme', 'devtoolsTheme', undefined, 2000); } catch (e) {}
     try { _scheduleModuleInit('customCss', 'devtoolsCustomCss', undefined, 2200); } catch (e) {}

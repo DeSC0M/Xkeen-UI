@@ -94,7 +94,7 @@ def test_modules_uses_the_panel_shell_and_stable_devtools_pointer_is_compact():
     assert 'class="modules-workspace"' in template
     assert "body.modules-page .container-wide" in manager_css
     assert "body.modules-page.panel-page" not in manager_css
-    assert "openModulesManager" in devtools_update
+    assert "createModuleLifecycleClient" in devtools_update
     assert "dt-panel-summary-grid" in devtools_css
 
 
@@ -111,11 +111,12 @@ def test_manager_source_is_isolated_and_entry_stays_thin():
 
 def test_stable_devtools_update_is_a_modules_link_not_a_second_runner():
     source = (ROOT / "xkeen-ui/static/js/features/devtools/update.js").read_text(encoding="utf-8")
-    notifier = (ROOT / "xkeen-ui/static/js/features/update_notifier.js").read_text(encoding="utf-8")
 
-    assert "openModulesManager" in source
-    assert "startLegacyMainUpdater" not in source
-    assert "stable" in notifier and "_stopSchedule" in notifier
+    # The card reads the lifecycle API and starts nothing by itself.
+    assert "/api/devtools/update" not in source
+    assert "api.plan(" not in source and "api.apply(" not in source
+    assert "Модули и обновления" in source
+    assert not (ROOT / "xkeen-ui/static/js/features/update_notifier.js").exists()
 
 
 def test_idle_operation_status_does_not_refer_to_restart_state():

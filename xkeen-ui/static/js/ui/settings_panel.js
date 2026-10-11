@@ -1,4 +1,3 @@
-import { getFeatureApi } from '../features/feature_access.js';
 (() => {
   'use strict';
 
@@ -7,7 +6,6 @@ import { getFeatureApi } from '../features/feature_access.js';
   XK.ui = XK.ui || {};
 
   let _settingsUnsubscribe = null;
-  let _shellUnsubscribe = null;
   let _rendered = false;
 
   const _dom = {
@@ -26,8 +24,6 @@ import { getFeatureApi } from '../features/feature_access.js';
     activeSection: 'editor',
     settingsError: '',
     settings: null,
-    uiShell: null,
-    updateSettings: null,
     auth: {
       loading: false,
       configured: false,
@@ -82,22 +78,6 @@ import { getFeatureApi } from '../features/feature_access.js';
   function getSettingsApi() {
     try {
       if (XK.ui && XK.ui.settings) return XK.ui.settings;
-    } catch (e) {}
-    return null;
-  }
-
-  function getUiShellApi() {
-    try {
-      const api = XK.core && XK.core.uiShell;
-      if (api && typeof api.getState === 'function') return api;
-    } catch (e) {}
-    return null;
-  }
-
-  function getUpdateNotifierApi() {
-    try {
-      const api = getFeatureApi('updateNotifier');
-      if (api) return api;
     } catch (e) {}
     return null;
   }
@@ -175,31 +155,6 @@ import { getFeatureApi } from '../features/feature_access.js';
     }
   }
 
-  function readUiShellState() {
-    const api = getUiShellApi();
-    if (!api) {
-      return {
-        serviceStatus: '',
-        currentCore: '',
-        version: {
-          currentLabel: '',
-          currentCommit: '',
-          currentBuiltAt: '',
-          latestLabel: '',
-          latestPublishedAt: '',
-          channel: '',
-        },
-        update: {
-          visible: false,
-          hasUpdate: false,
-          label: '',
-          title: '',
-        },
-      };
-    }
-    return api.getState();
-  }
-
   function readSettingsSnapshot() {
     try {
       const api = getSettingsApi();
@@ -208,22 +163,8 @@ import { getFeatureApi } from '../features/feature_access.js';
     return {};
   }
 
-  function readUpdateNotifierSettings() {
-    try {
-      const api = getUpdateNotifierApi();
-      if (api && typeof api.getSettings === 'function') return api.getSettings();
-    } catch (e) {}
-    return {
-      enabled: true,
-      intervalHours: 6,
-      intervalMs: 6 * 60 * 60 * 1000,
-    };
-  }
-
   function refreshLocalSnapshots() {
     _state.settings = readSettingsSnapshot();
-    _state.uiShell = readUiShellState();
-    _state.updateSettings = readUpdateNotifierSettings();
   }
 
   function isServerSettingsReady() {
@@ -282,26 +223,6 @@ import { getFeatureApi } from '../features/feature_access.js';
     const parsed = Number(value);
     if (!Number.isFinite(parsed)) return fallback;
     return Math.max(min, Math.min(max, Math.round(parsed)));
-  }
-
-  function shortCommit(value) {
-    const raw = String(value || '').trim();
-    return raw ? raw.slice(0, 7) : '';
-  }
-
-  function formatDateTime(value) {
-    const raw = String(value || '').trim();
-    if (!raw) return '';
-    try {
-      const date = new Date(raw);
-      if (Number.isNaN(date.getTime())) return raw;
-      return new Intl.DateTimeFormat(undefined, {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-      }).format(date);
-    } catch (e) {
-      return raw;
-    }
   }
 
   function describeLogsView(settings) {
@@ -386,104 +307,6 @@ import { getFeatureApi } from '../features/feature_access.js';
       setStatus(msg, true);
       toast({ id: 'ui-settings-save', message: msg, kind: 'error' });
       throw e;
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function saveUpdateNotifierSettings(patch, successMessage) {
-    const api = getUpdateNotifierApi();
-    if (!api || typeof api.setSettings !== 'function') {
-      const msg = 'Настройки проверки обновлений недоступны.';
-      setStatus(msg, true);
-      toast({ id: 'ui-settings-update-save', message: msg, kind: 'error' });
-      throw new Error(msg);
-    }
-
-    setBusy(true);
-    setStatus('Сохраняю настройки обновлений...', false);
-
-    try {
-      const current = readUpdateNotifierSettings();
-      api.setSettings(Object.assign({}, current, patch || {}));
-      refreshLocalSnapshots();
-      renderState();
-      setStatus('Сохранено.', false);
-      if (successMessage) {
-        toast({ id: 'ui-settings-update-save', message: successMessage, kind: 'success' });
-      }
-      return readUpdateNotifierSettings();
-    } catch (e) {
-      refreshLocalSnapshots();
-      renderState();
-      const msg = (e && e.message) ? String(e.message) : 'Не удалось сохранить настройки обновлений.';
-      setStatus(msg, true);
-      toast({ id: 'ui-settings-update-save', message: msg, kind: 'error' });
-      throw e;
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function runUpdateCheckNow() {
-    const api = getUpdateNotifierApi();
-    if (!api || typeof api.checkNow !== 'function') {
-      const msg = 'Проверка обновлений недоступна на этой странице.';
-      setStatus(msg, true);
-      toast({ id: 'ui-settings-update-check', message: msg, kind: 'error' });
-      throw new Error(msg);
-    }
-
-    setBusy(true);
-    setStatus('Проверяю обновления...', false);
-
-    try {
-      await api.checkNow({ silent: false });
-      refreshLocalSnapshots();
-      renderState();
-      setStatus('Проверка обновлений завершена.', false);
-      return readUiShellState();
-    } catch (e) {
-      refreshLocalSnapshots();
-      renderState();
-      const msg = (e && e.message) ? String(e.message) : 'Проверка обновлений завершилась ошибкой.';
-      setStatus(msg, true);
-      toast({ id: 'ui-settings-update-check', message: msg, kind: 'error' });
-      throw e;
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function refreshVersionInfo() {
-    const api = getUpdateNotifierApi();
-    if (!api || typeof api.refreshVersionInfo !== 'function') return readUiShellState();
-    try {
-      await api.refreshVersionInfo({ force: true });
-    } catch (e) {}
-    refreshLocalSnapshots();
-    renderState();
-    return readUiShellState();
-  }
-
-  async function resetUpdateBadge() {
-    const api = getUpdateNotifierApi();
-    if (!api || typeof api.resetCache !== 'function') {
-      const msg = 'Сброс бейджа обновлений недоступен.';
-      setStatus(msg, true);
-      toast({ id: 'ui-settings-update-reset', message: msg, kind: 'error' });
-      throw new Error(msg);
-    }
-
-    setBusy(true);
-    setStatus('Очищаю кэш состояния обновлений...', false);
-
-    try {
-      api.resetCache();
-      refreshLocalSnapshots();
-      renderState();
-      setStatus('Кэш бейджа очищен.', false);
-      toast({ id: 'ui-settings-update-reset', message: 'Кэш бейджа обновлений очищен.', kind: 'success' });
     } finally {
       setBusy(false);
     }
@@ -979,137 +802,6 @@ import { getFeatureApi } from '../features/feature_access.js';
       ],
     },
     {
-      key: 'updates',
-      navLabel: 'Обновления',
-      eyebrow: 'Обновления',
-      title: 'Бейдж обновлений и информация о сборке',
-      description: 'Локальные настройки проверки обновлений и общий снимок версии, который показывается в шапке панели.',
-      items: [
-        {
-          id: 'updates-current-build',
-          type: 'status',
-          label: 'Текущая сборка',
-          description: 'Подтягивается из локальной информации о сборке и синхронизируется с состоянием версии в uiShell.',
-          getValue(ctx) {
-            const version = (ctx.uiShell && ctx.uiShell.version) || {};
-            return String(version.currentLabel || '').trim() || 'Сборка неизвестна';
-          },
-          getMeta(ctx) {
-            const version = (ctx.uiShell && ctx.uiShell.version) || {};
-            const parts = [];
-            if (version.currentCommit) parts.push('коммит ' + shortCommit(version.currentCommit));
-            if (version.currentBuiltAt) parts.push(formatDateTime(version.currentBuiltAt));
-            if (version.channel) parts.push(String(version.channel));
-            return parts.join(' · ') || 'Ожидаю локальные метаданные сборки.';
-          },
-          getTone(ctx) {
-            const version = (ctx.uiShell && ctx.uiShell.version) || {};
-            return version.currentLabel ? 'positive' : 'muted';
-          },
-        },
-        {
-          id: 'updates-latest-build',
-          type: 'status',
-          label: 'Последняя известная доступная сборка',
-          description: 'Использует то же состояние обновлений из шапки, чтобы не было рассинхрона между точками входа.',
-          getValue(ctx) {
-            const version = (ctx.uiShell && ctx.uiShell.version) || {};
-            const update = (ctx.uiShell && ctx.uiShell.update) || {};
-            if (update.hasUpdate) return String(version.latestLabel || update.label || 'Доступно обновление');
-            if (version.latestLabel) return String(version.latestLabel);
-            return 'Пока не проверялось';
-          },
-          getMeta(ctx) {
-            const version = (ctx.uiShell && ctx.uiShell.version) || {};
-            const update = (ctx.uiShell && ctx.uiShell.update) || {};
-            if (update.hasUpdate) {
-              return 'Бейдж в шапке активен' + (version.latestPublishedAt ? (' · ' + formatDateTime(version.latestPublishedAt)) : '');
-            }
-            if (version.latestLabel) {
-              const extra = version.latestPublishedAt ? (' · ' + formatDateTime(version.latestPublishedAt)) : '';
-              return 'Сейчас нового бейджа нет' + extra;
-            }
-            return 'Нажмите «Проверить сейчас», чтобы обновить данные о версии.';
-          },
-          getTone(ctx) {
-            const update = (ctx.uiShell && ctx.uiShell.update) || {};
-            const version = (ctx.uiShell && ctx.uiShell.version) || {};
-            if (update.hasUpdate) return 'warning';
-            if (version.latestLabel) return 'positive';
-            return 'muted';
-          },
-        },
-        {
-          id: 'updates-enabled',
-          type: 'switch',
-          label: 'Показывать бейдж обновлений',
-          description: 'Хранится в браузере через существующие настройки уведомлений.',
-          getValue(ctx) {
-            return !!(ctx.updateSettings && ctx.updateSettings.enabled);
-          },
-          isDisabled(ctx) {
-            return ctx.loading || ctx.busy || !getUpdateNotifierApi();
-          },
-          getMeta() {
-            return 'Показывает или скрывает бейдж в шапке, не меняя состояние сервера.';
-          },
-          onChange(checked) {
-            return saveUpdateNotifierSettings({ enabled: !!checked }, 'Настройка бейджа обновлений сохранена.');
-          },
-        },
-        {
-          id: 'updates-interval',
-          type: 'select',
-          label: 'Интервал проверки',
-          description: 'Определяет, как часто открытая панель запрашивает GitHub за информацией об обновлениях.',
-          options: [
-            { value: '1', label: 'Каждый час' },
-            { value: '6', label: 'Каждые 6 часов' },
-            { value: '24', label: 'Каждые 24 часа' },
-          ],
-          getValue(ctx) {
-            const raw = ctx.updateSettings && ctx.updateSettings.intervalHours;
-            return String(raw == null ? 6 : raw);
-          },
-          isDisabled(ctx) {
-            return ctx.loading || ctx.busy || !getUpdateNotifierApi();
-          },
-          getMeta() {
-            return 'Применяется сразу в текущей вкладке и синхронизируется между открытыми вкладками.';
-          },
-          onChange(value) {
-            return saveUpdateNotifierSettings({
-              intervalHours: clampInt(value, 1, 24, 6),
-            }, 'Интервал проверки обновлений сохранен.');
-          },
-        },
-        {
-          id: 'updates-actions',
-          type: 'actions',
-          label: 'Инструменты обновлений',
-          description: 'Быстрые действия для проверки обновлений и сброса бейджа.',
-          actions: [
-            {
-              key: 'check',
-              label: 'Проверить сейчас',
-              kind: 'secondary',
-              onClick() {
-                return runUpdateCheckNow();
-              },
-            },
-            {
-              key: 'reset',
-              label: 'Сбросить бейдж',
-              kind: 'secondary',
-              onClick() {
-                return resetUpdateBadge();
-              },
-            },
-          ],
-        },
-      ],
-    },
-    {
       key: 'auth',
       navLabel: 'Сессия',
       eyebrow: 'Сессия',
@@ -1184,8 +876,6 @@ import { getFeatureApi } from '../features/feature_access.js';
       busy: _state.busy,
       settingsError: _state.settingsError,
       settings: _state.settings || {},
-      uiShell: _state.uiShell || readUiShellState(),
-      updateSettings: _state.updateSettings || readUpdateNotifierSettings(),
       auth: _state.auth,
       serverReady: isServerSettingsReady(),
     };
@@ -1642,24 +1332,9 @@ import { getFeatureApi } from '../features/feature_access.js';
     return _settingsUnsubscribe;
   }
 
-  function ensureShellSubscription() {
-    if (_shellUnsubscribe) return _shellUnsubscribe;
-
-    const api = getUiShellApi();
-    if (!api || typeof api.subscribe !== 'function') return null;
-
-    _shellUnsubscribe = api.subscribe((next) => {
-      _state.uiShell = next || readUiShellState();
-      renderState();
-    }, { immediate: false });
-
-    return _shellUnsubscribe;
-  }
-
   async function loadAndRender() {
     ensureSchemaRendered();
     ensureSettingsSubscription();
-    ensureShellSubscription();
 
     _state.loading = true;
     _state.settingsError = '';
@@ -1684,7 +1359,6 @@ import { getFeatureApi } from '../features/feature_access.js';
       _state.settingsError = 'Модуль настроек интерфейса недоступен.';
     }
 
-    tasks.push(refreshVersionInfo().catch(() => null));
     tasks.push(fetchAuthStatus({ silent: true }).catch(() => null));
 
     await Promise.allSettled(tasks);
@@ -1706,7 +1380,6 @@ import { getFeatureApi } from '../features/feature_access.js';
     ensureModalBinding(modal);
     ensureSchemaRendered();
     ensureSettingsSubscription();
-    ensureShellSubscription();
     showModal(modal);
     void loadAndRender();
     return true;
@@ -1733,7 +1406,6 @@ import { getFeatureApi } from '../features/feature_access.js';
     ensureModalBinding(modal);
     ensureSchemaRendered();
     ensureSettingsSubscription();
-    ensureShellSubscription();
 
     if (modal.dataset && modal.dataset.xkSettingsPanelWired === '1') return;
 

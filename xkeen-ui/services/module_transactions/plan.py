@@ -40,7 +40,7 @@ _REPAIR_ONLY_MODULES = REPAIR_ONLY_MODULES
 # with the profile planner so these contracts cannot diverge in production.
 STATE_FILES = {"modules.json", "module-installed.json", "install-profile.json", "install-managed.json"}
 USER_TOP_LEVEL = {"xray-jsonc", "var", "bin"}
-USER_FILES = {"secret.key", "devtools.env", "ui-settings.json", "branding.json", "terminal_theme.json", "terminal_theme.css"}
+USER_FILES = {"secret.key", "devtools.env", "ui-settings.json", "branding.json"}
 USER_PREFIXES = (
     "opt/etc/mihomo/profiles/",
     "opt/etc/mihomo/backup/",

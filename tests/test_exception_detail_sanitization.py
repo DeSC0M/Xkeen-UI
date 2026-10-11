@@ -126,43 +126,6 @@ def test_config_exchange_local_import_hides_invalid_json_parse_details():
     assert "line 1" not in raw
 
 
-def test_devtools_spawn_failed_hides_exception_details_in_response_and_status(monkeypatch, tmp_path: Path):
-    # Без этого status.json ложится в /opt/var, а на Windows это настоящий
-    # C:\opt\var: тест оставлял там «обновление упало», и след жил между прогонами.
-    monkeypatch.setenv("XKEEN_UI_UPDATE_DIR", str(tmp_path / "update"))
-    devtools = _reload("routes.devtools")
-    app = Flask("devtools-sanitize-spawn")
-    app.register_blueprint(devtools.create_devtools_blueprint(str(tmp_path)))
-    client = app.test_client()
-
-    monkeypatch.setattr(devtools.shutil, "which", lambda _name: "stub")
-
-    def fake_popen(*_args, **_kwargs):
-        raise RuntimeError("/opt/etc/xkeen-ui/scripts/update_xkeen_ui.sh spawn failure")
-
-    monkeypatch.setattr(devtools.subprocess, "Popen", fake_popen)
-
-    response = client.post("/api/devtools/update/run", json={})
-
-    assert response.status_code == 200
-    payload = response.get_json()
-    raw = json.dumps(payload, ensure_ascii=False)
-    assert payload["ok"] is False
-    assert payload["error"] == "spawn_failed"
-    assert payload["hint"] == "Не удалось запустить процесс обновления. Подробности — в логах панели."
-    assert "spawn failure" not in raw
-    assert "/opt/etc/xkeen-ui" not in raw
-    assert "meta" not in payload
-
-    status_response = client.get("/api/devtools/update/status?tail=0")
-    status_payload = status_response.get_json()
-    status_raw = json.dumps(status_payload, ensure_ascii=False)
-    assert status_payload["status"]["error"] == "spawn_failed"
-    assert status_payload["status"]["message"] == "Не удалось запустить процесс обновления"
-    assert "spawn failure" not in status_raw
-    assert "/opt/etc/xkeen-ui" not in status_raw
-
-
 def test_geodat_install_hides_exception_details(monkeypatch, tmp_path: Path):
     geodat = _load_routing_module("geodat")
     script_path = tmp_path / "install_xk_geodat.sh"

@@ -32,7 +32,6 @@
 
   {% include '_top_level_host_theme_bootstrap.html' %}
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css', v='20260907a') }}">
-  <link rel="stylesheet" id="xk-terminal-theme-link" href="{{ url_for('terminal_theme_css', v=terminal_theme_v) }}">
 </head>
 <body class="backups-page xk-backups-page" data-xk-top-level-screen="backups">
   {% set top_level_spinner_text = 'Применяем изменения и перезапускаем xkeen…' %}
@@ -78,16 +77,6 @@
             data-xk-top-nav="1"
             title="DevTools"
           >DevTools</a>
-          <a
-            href="{{ url_for('devtools_page') }}#dt-update-card"
-            id="xk-update-link"
-            class="service-core-text xk-header-btn xk-header-btn-devtools hidden"
-            data-xk-top-nav="1"
-            title="Обновление"
-          >
-            <span class="xk-update-dot" aria-hidden="true"></span>
-            <span data-xk-update-label>Обновление</span>
-          </a>
           {% endif %}
           {% set logout_button_class = 'service-core-text xk-header-btn xk-header-btn-logout' %}
           {% include '_logout_button.html' %}

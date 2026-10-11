@@ -269,7 +269,6 @@ body.devtools-page .dt-zone > details > summary h2::before {
   .dt-log-topbar,
   .dt-log-controls,
   .dt-log-view,
-  .dt-update-log-summary,
   .modal-content,
   .modal-header,
   .modal-actions
@@ -342,15 +341,6 @@ body.devtools-page :is(code, pre, textarea) {
 body.devtools-page .small,
 body.devtools-page :is(.dt-k, .dt-sub, .dt-logging-label, .dt-switch-label, .dt-page-header p) {
   color: var(--op-muted) !important;
-}
-
-/* Вердикт по update.log: приглушённый .small выше перебил бы цвет находки. */
-body.devtools-page .dt-update-log-verdict[data-verdict="warn"] > .small {
-  color: var(--op-warning) !important;
-}
-
-body.devtools-page .dt-update-log-verdict[data-verdict="failed"] > .small {
-  color: var(--op-danger) !important;
 }
 
 /* ========================================================================== 
@@ -588,7 +578,6 @@ body.devtools-page :is(.btn-danger, #dt-ui-prefs-resetall, #dt-log-clear):hover 
   color: var(--op-danger) !important;
 }
 
-body.devtools-page #dt-update-run:not(:disabled),
 body.devtools-page #dt-env-help-ok-btn,
 body.devtools-page #dt-log-context-ok-btn {
   border-color: var(--op-accent) !important;
@@ -596,7 +585,6 @@ body.devtools-page #dt-log-context-ok-btn {
   color: #fff !important;
 }
 
-body.devtools-page #dt-update-run:not(:disabled):hover,
 body.devtools-page #dt-env-help-ok-btn:hover,
 body.devtools-page #dt-log-context-ok-btn:hover {
   border-color: var(--op-accent-hover) !important;
@@ -800,7 +788,7 @@ body.devtools-page .dt-tools-left {
   box-shadow: none !important;
 }
 
-body.devtools-page :is(.card, details.dt-collapsible, .dt-update-log-summary, details.dt-subcard) {
+body.devtools-page :is(.card, details.dt-collapsible, details.dt-subcard) {
   position: relative;
   margin: 0;
   padding: 11px 12px;
@@ -809,13 +797,6 @@ body.devtools-page :is(.card, details.dt-collapsible, .dt-update-log-summary, de
   border-radius: var(--op-radius) !important;
   background: var(--op-surface) !important;
   box-shadow: var(--op-shadow) !important;
-}
-
-/* Правило карточек выше обнуляет margin, но блоку лога он нужен: сверху ровно
-   столько же, сколько остаётся под ним до края карточки (поле 11px + рамка).
-   Целимся по id: у правила с `:is()` специфичность выше, чем у одного класса. */
-body.devtools-page #dt-update-log-box {
-  margin-top: 12px;
 }
 
 body.devtools-page .dt-tools-left > :is(.card, details.card),

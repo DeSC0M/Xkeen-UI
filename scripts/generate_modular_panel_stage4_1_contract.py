@@ -99,7 +99,6 @@ SHELL_BOUNDARIES: tuple[dict[str, Any], ...] = (
         "target_partial": "xkeen-ui/templates/panel/head.html",
         "anchor_regex": r"^<head>$",
         "dom_anchors": [
-            "xk-terminal-theme-link",
             "xk-panel-operator-paint-guard",
         ],
         "template_context": [
@@ -120,7 +119,6 @@ SHELL_BOUNDARIES: tuple[dict[str, Any], ...] = (
             "xkeen_runtime_debug",
             "terminal_supports_pty",
             "xkeen_terminal_enable_optional_addons",
-            "terminal_theme_v",
         ],
         "asset_contract": [
             "styles.css",
@@ -193,7 +191,6 @@ SHELL_BOUNDARIES: tuple[dict[str, Any], ...] = (
             "xk-resource-monitor",
             "theme-toggle-btn",
             "ui-settings-open-btn",
-            "xk-update-link",
             "panel-core-ui-refresh-btn",
             "logout",
         ],

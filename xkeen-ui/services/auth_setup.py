@@ -140,15 +140,6 @@ def init_auth(app) -> None:
     @app.context_processor
     def _inject_auth_context():
 
-        # Independent themes (optional)
-        term_v = 0
-        try:
-            tp = os.path.join(UI_STATE_DIR, "terminal_theme.css")
-            if os.path.isfile(tp):
-                term_v = int(os.path.getmtime(tp) or 0)
-        except Exception:
-            term_v = 0
-
         # Safe mode (URL query): ?safe=1
         safe_mode = False
         try:
@@ -166,7 +157,6 @@ def init_auth(app) -> None:
             "csrf_token": _ensure_csrf_token(),
             "auth_user": session.get("user"),
             "auth_configured": auth_is_configured(),
-            "terminal_theme_v": term_v,
             "safe_mode": bool(safe_mode),
         }
 
@@ -184,7 +174,6 @@ def init_auth(app) -> None:
         # Always allow static assets
         if path.startswith("/static/") or path in (
             "/ui/branding.json",
-            "/ui/terminal-theme.css",
             "/mihomo/provider.yaml",
             "/mihomo/hwid/provider.yaml",
         ):

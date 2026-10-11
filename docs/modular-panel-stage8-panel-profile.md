@@ -162,11 +162,11 @@ Boot recovery вызывается init/install path до запуска пан�
 | `panel` | Все заменённые managed-файлы текущего профиля, BUILD и state |
 | `profile` | Все добавленные/удалённые managed-файлы профиля и state |
 
-Stable DevTools check/run/status делегируются `ModuleLifecycleService` как
-`panel-update`, а rollback — как `panel-rollback` (см. «Возврат на прежнюю
-версию»). Channel `main` сохраняет прежний branch updater с его full-panel
-backup и явно возвращает `development_only: true`. С подэтапа 8.6 в DevTools
-нет кнопок, которые его вызывают: это путь API, а сборку с `main` обновляют
+Обновление и возврат версии идут только через Lifecycle API
+(`panel-update`, `panel-rollback`, см. «Возврат на прежнюю версию») из экрана
+«Модули и обновления». Прежний путь DevTools снят целиком 11 октября 2026
+года: маршрутов `/api/devtools/update/*`, branch updater канала `main` и
+скрипта `update_xkeen_ui.sh` больше нет. Сборку с `main` обновляют
 установщиком.
 
 ## Возврат на прежнюю версию
@@ -213,9 +213,8 @@ Python и дополнения (`xk-geodat`, утилита ссылок), об�
 изменённые после него, встают в прежнее положение.
 
 `GET /api/modules/installed` отдаёт `previous_version` (`available`, `version`,
-`kept_at`, `size`, `reason`). На stable-канале `GET /api/devtools/update/status`
-выставляет по нему `has_backup`, а `POST /api/devtools/update/rollback`
-запускает `panel-rollback`.
+`kept_at`, `size`, `reason`). Экран «Модули и обновления» показывает по нему
+кнопку возврата и запускает `panel-rollback` через plan/apply.
 
 ## Переход профиля — только разница
 
@@ -258,7 +257,7 @@ staging, сразу после распаковки удаляет архив и
 Архив панели — десятки мегабайт после распаковки, а временный каталог роутера
 лежит в памяти, поэтому процесс панели архив не распаковывает никогда.
 
-- `POST /api/devtools/update/check` на stable-канале вызывает
+- `POST /api/modules/panel/update-check` вызывает
   `ModuleLifecycleService.panel_update_check()`: читается только подписанный
   каталог и сравниваются версии. Архив не скачивается ни когда обновление
   есть, ни когда его нет. Свежий каталог запрашивается только при
