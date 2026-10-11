@@ -4699,6 +4699,18 @@ function closeHelp() {
           // For any button click, close the menu.
           try { details.open = false; } catch (e2) {}
         });
+        // Клик мимо меню и Escape закрывают его: раньше закрыть можно было
+        // только повторным нажатием на саму кнопку.
+        document.addEventListener('pointerdown', (e) => {
+          if (!details.open) return;
+          if (e.target && details.contains(e.target)) return;
+          details.open = false;
+        }, true);
+        document.addEventListener('keydown', (e) => {
+          if (!details.open || e.key !== 'Escape') return;
+          details.open = false;
+          try { details.querySelector('summary').focus(); } catch (e2) {}
+        });
         if (details.dataset) details.dataset.xkAutoClose = '1';
       }
     } catch (e) {}
@@ -4929,11 +4941,19 @@ function closeHelp() {
           svg: icons.compare || '',
           fallbackText: '⇄',
           onClick: () => {
-            try { ensureRoutingDiffScopeRegistered(); } catch (e) {}
-            try {
+            // Окно сравнения догружается по первому нажатию: без этого шага
+            // в режиме Monaco кнопка молчала, пока сравнение не открывали
+            // из CodeMirror.
+            const capabilities = (getXkeenUiApi() || {}).editorCapabilities;
+            const ready = capabilities && typeof capabilities.ensure === 'function'
+              ? Promise.resolve(capabilities.ensure('diff'))
+              : Promise.resolve(true);
+            ready.then(() => {
+              ensureRoutingDiffScopeRegistered();
               const diff = getXkeenDiffApi();
-              if (diff && typeof diff.openForScope === 'function') diff.openForScope('routing').catch(() => {});
-            } catch (e) {}
+              if (diff && typeof diff.openForScope === 'function') return diff.openForScope('routing');
+              return null;
+            }).catch(() => {});
           },
         }));
         bar.appendChild(buildRoutingToolbarButton({

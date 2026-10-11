@@ -59,4 +59,52 @@ test.describe('Editor Compare button', () => {
     await expect(page.locator('#xkeen-diff-modal')).toBeVisible({ timeout: 20_000 });
     await closeDiff(page);
   });
+  test('opens the diff viewer on its first press in the routing editor under Monaco', async ({ page }) => {
+    // The Monaco toolbar has its own Compare button; it used to ask for the
+    // viewer without loading it, so in Monaco the button did nothing at all.
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.addInitScript(() => {
+      localStorage.setItem('xkeen.editor.engine', 'codemirror');
+    });
+    await page.goto('/');
+    await selectPanelView(page, 'routing');
+    const select = page.locator('#routing-editor-engine-select');
+    await select.scrollIntoViewIfNeeded();
+    await select.selectOption('monaco');
+    await expect(page.locator('#routing-editor-monaco .monaco-editor')).toBeVisible({ timeout: 15_000 });
+    expect(await page.evaluate(() => !!window.XKeen?.ui?.diff)).toBe(false);
+
+    await page.locator('.xk-routing-monaco-toolbar button[data-action-id="compare"]').click();
+
+    await expect(page.locator('#xkeen-diff-modal')).toBeVisible({ timeout: 20_000 });
+    await closeDiff(page);
+  });
+});
+
+
+test.describe('Routing editor menu', () => {
+  test('closes on a click outside and on Escape', async ({ page }) => {
+    await page.goto('/');
+    await selectPanelView(page, 'routing');
+    const routing = page.locator('#view-routing');
+    await expect(routing.locator('.cm-editor').first()).toBeVisible();
+    const menu = page.locator('details.xk-routing-menu');
+    const trigger = menu.locator('summary');
+    const panel = menu.locator('.xk-routing-menu-panel');
+
+    await trigger.click();
+    await expect(panel).toBeVisible();
+    // A click inside the menu, past its buttons, keeps it open.
+    await panel.locator('.terminal-menu-title').first().click();
+    await expect(panel).toBeVisible();
+
+    // Меню выпадает над правой частью редактора: щёлкаем в его левую часть.
+    await routing.locator('.cm-editor').first().click({ position: { x: 60, y: 200 } });
+    await expect(menu).not.toHaveAttribute('open', /.*/);
+
+    await trigger.click();
+    await expect(panel).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(menu).not.toHaveAttribute('open', /.*/);
+  });
 });
