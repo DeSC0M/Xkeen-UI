@@ -3385,6 +3385,67 @@ def _status_hosts(configs_dir: str, state: Dict[str, Any]) -> tuple[Dict[str, An
         return {}, False
 
 
+def follow_source_route(*, configs_dir: str, routing_file: str, ui_state_dir: str) -> Dict[str, Any]:
+    """Bring the managed clone in line with the balancer it was copied from.
+
+    The clone is a snapshot taken when the feature was switched on.  A
+    subscription that is added or removed rewrites the owner's balancer, and
+    the clone then keeps the old list: DNS ignores the new nodes or, worse,
+    is left pointing at nodes that are gone.  The caller is a subscription
+    operation that has just written its own changes and is about to ask the
+    core whether the result is sound -- so the clone is rebuilt here, inside
+    the same operation, and costs no restart of its own.
+
+    Only the clone is rewritten; the rules, the fragment and the feature's own
+    notes stay as they are.  Where the clone cannot be rebuilt safely nothing
+    is written and the caller is told to send the owner to the DNS window.
+    """
+    idle = {"status": "idle", "message": ""}
+    with _LOCK:
+        state = _load_state(ui_state_dir)
+        if not state.get("enabled"):
+            return idle
+        selection = _stored_selection(state)
+        routing, _raw = _read_routing_with_raw(routing_file)
+        if len(selection) != 1 or not _find_managed_clone(routing):
+            # A route built from hand-picked proxies is not a copy of anything.
+            return idle
+        source_tag = selection[0]
+        runtime = _collect_runtime(configs_dir, routing)
+        if _find_balancer(runtime, source_tag) and not _route_drift(runtime, routing, source_tag):
+            return idle
+
+        manual = {
+            "status": "manual",
+            "message": (
+                f"DNS-over-VLESS остался на прежнем маршруте: балансировщик «{source_tag}» "
+                "больше не подходит для DNS. Откройте окно DNS-over-VLESS и выберите маршрут заново."
+            ),
+        }
+        try:
+            target = _select_target(runtime, selection, routing)
+        except DnsOverVlessError:
+            return manual
+        clone = target.get("managed_balancer")
+        if target.get("kind") != "balancer" or not isinstance(clone, dict) or not clone.get("selector"):
+            return manual
+        if state.get("pass_non_ip"):
+            live = {item["tag"] for item in _proxy_outbounds(runtime)}
+            if _clean_tag(state.get("pass_non_ip_node")) not in live:
+                return manual
+
+        result = copy.deepcopy(routing)
+        balancers = result["routing"]["balancers"]
+        for index, item in enumerate(balancers):
+            if isinstance(item, dict) and _clean_tag(item.get("tag")) == BALANCER_TAG:
+                balancers[index] = copy.deepcopy(clone)
+        _write_routing_preserving_comments(routing_file, result)
+        return {
+            "status": "updated",
+            "message": f"Маршрут DNS-over-VLESS обновлён вслед за балансировщиком «{source_tag}».",
+        }
+
+
 def get_status(*, configs_dir: str, routing_file: str, ui_state_dir: str) -> Dict[str, Any]:
     routing, _raw = _read_routing_with_raw(routing_file)
     runtime = _collect_runtime(configs_dir, routing)

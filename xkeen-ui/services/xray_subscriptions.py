@@ -1183,6 +1183,13 @@ def _delete_subscription_guarded(
         if routing_jsonc_path:
             snapshot_cleanup_paths.append(routing_jsonc_path)
 
+    dns_route_note = ""
+    if output_removed or routing_changed:
+        dns_route_note, dns_route_rewritten = _follow_dns_route(
+            ui_state_dir, xray_configs_dir, str(routing_sync.get("routing_file") or "")
+        )
+        routing_changed = bool(routing_changed or dns_route_rewritten)
+
     preflight_warning = ""
     if output_removed or observatory_changed or routing_changed or outbounds_changed:
         preflight_warning = _confirm_live_config(guard, xray_configs_dir)
@@ -1190,7 +1197,9 @@ def _delete_subscription_guarded(
     snapshots_removed = _remove_config_snapshots_for_paths(xray_configs_dir, snapshot_cleanup_paths)
 
     skipped = list(rebuild_stats.get("skipped") or [])
-    warning = " ".join(part for part in (displaced_skipped_warning(skipped), preflight_warning) if part)
+    warning = " ".join(
+        part for part in (displaced_skipped_warning(skipped), dns_route_note, preflight_warning) if part
+    )
     # До перезапуска: он может оборвать связь с окном раньше, чем уйдёт ответ.
     store_operation_notice(ui_state_dir, "delete", warning, skipped, subject=str(removed.get("id") or ""))
 
@@ -1682,6 +1691,36 @@ PREFLIGHT_ALREADY_BROKEN_WARNING = (
     "Xray отклонял конфигурацию ещё до этой операции: изменения сохранены, "
     "но ядро с такими файлами не запустится. Проверьте свои файлы конфигурации."
 )
+
+
+def _follow_dns_route(ui_state_dir: str, xray_configs_dir: str, routing_file: str = "") -> Tuple[str, bool]:
+    """Let DNS-over-VLESS rebuild its copy of a balancer this operation changed.
+
+    The copy is a snapshot of the owner's balancer.  Adding or removing a
+    subscription rewrites that balancer, and without this step DNS would keep
+    the old list until the feature is switched off and on.  Called after the
+    operation wrote its files and before the core is asked about them, so the
+    check and the way back cover both changes at once.
+
+    Returns what the owner should be told (or an empty string) and whether
+    the routing file was rewritten.
+    """
+    try:
+        from services import dns_over_vless
+
+        outcome = dns_over_vless.follow_source_route(
+            configs_dir=xray_configs_dir,
+            routing_file=_config_fragment_path(xray_configs_dir, routing_file or ROUTING_FILE),
+            ui_state_dir=ui_state_dir,
+        )
+    except Exception:
+        return (
+            "Не удалось обновить маршрут DNS-over-VLESS. Откройте окно DNS-over-VLESS "
+            "и проверьте, что маршрут применён.",
+            False,
+        )
+    outcome = outcome if isinstance(outcome, dict) else {}
+    return str(outcome.get("message") or ""), outcome.get("status") == "updated"
 
 
 def _confirm_live_config(guard: xray_transactions.MemoryGuard, xray_configs_dir: str) -> str:
@@ -6670,6 +6709,14 @@ def refresh_subscription(
         if skipped_warning:
             warnings = warnings + [skipped_warning]
             sub["last_warnings"] = warnings
+        if changed or routing_changed:
+            dns_route_note, dns_route_rewritten = _follow_dns_route(
+                ui_state_dir, xray_configs_dir, str(routing_sync.get("routing_file") or "")
+            )
+            routing_changed = bool(routing_changed or dns_route_rewritten)
+            if dns_route_note:
+                warnings = warnings + [dns_route_note]
+                sub["last_warnings"] = warnings
         if changed or observatory_changed or routing_changed or outbounds_changed:
             preflight_warning = _confirm_live_config(guard, xray_configs_dir)
             if preflight_warning:

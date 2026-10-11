@@ -638,6 +638,90 @@ def test_status_reports_a_clone_that_drifted_from_its_source(tmp_path: Path, mon
     }
 
 
+def _enabled_on_balancer_main(tmp_path: Path):
+    configs, routing_path, state = _scenario_config(tmp_path)
+    routing = json.loads(routing_path.read_text(encoding="utf-8"))
+    target = dns._select_target(dns._collect_runtime(str(configs), routing), "balancer_main", routing)
+    _write(configs / dns.MANAGED_FRAGMENT, dns._managed_fragment())
+    _write(routing_path, dns._build_enabled_routing(routing, target))
+    _write(state / dns.STATE_FILENAME, {"enabled": True, "target": {"source": "balancer_main"}})
+    return configs, routing_path, state
+
+
+def _set_source_selector(routing_path: Path, selector: list[str]) -> None:
+    routing = json.loads(routing_path.read_text(encoding="utf-8"))
+    source = next(item for item in routing["routing"]["balancers"] if item["tag"] == "balancer_main")
+    source["selector"] = selector
+    _write(routing_path, routing)
+
+
+def _clone(routing_path: Path) -> dict:
+    routing = json.loads(routing_path.read_text(encoding="utf-8"))
+    return next(item for item in routing["routing"]["balancers"] if item["tag"] == dns.BALANCER_TAG)
+
+
+def test_follow_rebuilds_the_clone_after_its_source_changed(tmp_path: Path, monkeypatch):
+    configs, routing_path, state = _enabled_on_balancer_main(tmp_path)
+    _set_source_selector(routing_path, ["my_proxy", "reserve_proxy"])
+
+    result = dns.follow_source_route(
+        configs_dir=str(configs), routing_file=str(routing_path), ui_state_dir=str(state)
+    )
+
+    assert result["status"] == "updated"
+    assert "balancer_main" in result["message"]
+    assert _clone(routing_path)["selector"] == ["my_proxy", "reserve_proxy"]
+    # The clone stays where it was among the balancers and the rules are untouched.
+    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
+    status = dns.get_status(
+        configs_dir=str(configs), routing_file=str(routing_path), ui_state_dir=str(state)
+    )
+    assert status["enabled"] is True
+    assert status["route_drift"] is None
+
+
+def test_follow_leaves_a_matching_clone_alone(tmp_path: Path):
+    configs, routing_path, state = _enabled_on_balancer_main(tmp_path)
+    before = routing_path.read_bytes()
+
+    result = dns.follow_source_route(
+        configs_dir=str(configs), routing_file=str(routing_path), ui_state_dir=str(state)
+    )
+
+    assert result == {"status": "idle", "message": ""}
+    assert routing_path.read_bytes() == before
+
+
+def test_follow_does_nothing_while_the_feature_is_off(tmp_path: Path):
+    configs, routing_path, state = _enabled_on_balancer_main(tmp_path)
+    _write(state / dns.STATE_FILENAME, {"enabled": False, "target": {"source": "balancer_main"}})
+    _set_source_selector(routing_path, ["my_proxy", "reserve_proxy"])
+    before = routing_path.read_bytes()
+
+    result = dns.follow_source_route(
+        configs_dir=str(configs), routing_file=str(routing_path), ui_state_dir=str(state)
+    )
+
+    assert result["status"] == "idle"
+    assert routing_path.read_bytes() == before
+
+
+def test_follow_asks_for_the_owner_when_the_source_has_no_nodes_left(tmp_path: Path):
+    configs, routing_path, state = _enabled_on_balancer_main(tmp_path)
+    _set_source_selector(routing_path, ["gone_subscription_"])
+    before = routing_path.read_bytes()
+
+    result = dns.follow_source_route(
+        configs_dir=str(configs), routing_file=str(routing_path), ui_state_dir=str(state)
+    )
+
+    # Nothing is written: a clone without nodes would leave the network without names.
+    assert result["status"] == "manual"
+    assert "DNS-over-VLESS" in result["message"]
+    assert routing_path.read_bytes() == before
+
+
 def test_fallback_into_direct_is_still_dropped(tmp_path: Path):
     configs, routing_path, _state = _base_config(tmp_path)
     routing = json.loads(routing_path.read_text(encoding="utf-8"))
