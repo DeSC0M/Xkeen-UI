@@ -181,6 +181,11 @@ AUTO_BALANCER_FALLBACK_TAG = "direct"
 AUTO_BALANCER_PRESERVE_TAGS = ("vless-reality",)
 AUTO_MIGRATED_RULE_TAG_PREFIX = "xk_auto_vless_pool_"
 ROUTING_SCENARIO_RULE_PREFIX = "xk_scenario_mobile_whitelist_"
+# Балансировщики, которые панель строит и пересобирает сама (сейчас это копия
+# маршрута DNS-over-VLESS, `dns_over_vless.BALANCER_TAG`). Подписка в них свои
+# узлы не дописывает и в форме их не предлагает: иначе объект разошёлся бы с
+# тем, что его хозяин записал о нём у себя. Равенство стережёт тест.
+PANEL_OWNED_BALANCER_TAGS = frozenset({"xk-dns-over-vless"})
 ROUTING_SCENARIO_MAIN_BALANCER_TAG = "balancer_main"
 ROUTING_SCENARIO_RESERVE_BALANCER_TAG = "balancer_reserv"
 ROUTING_SCENARIO_WHITE_LIST_BALANCER_TAG = "balancer_white_list"
@@ -967,11 +972,15 @@ def upsert_subscription(ui_state_dir: str, payload: Dict[str, Any]) -> Dict[str,
             _stored_filter_value(base, TRANSPORT_FILTER_KEYS) if transport_filter_raw is _MISSING else transport_filter_raw
         )
         routing_mode = _clean_routing_mode(data.get("routing_mode", data.get("routingMode", base.get("routing_mode"))))
-        routing_balancer_tags = (
-            _read_string_list_value(data, ROUTING_BALANCER_TAGS_KEYS)
-            if _has_any_key(data, ROUTING_BALANCER_TAGS_KEYS)
-            else _read_string_list_value(base, ROUTING_BALANCER_TAGS_KEYS)
-        )
+        routing_balancer_tags = [
+            item
+            for item in (
+                _read_string_list_value(data, ROUTING_BALANCER_TAGS_KEYS)
+                if _has_any_key(data, ROUTING_BALANCER_TAGS_KEYS)
+                else _read_string_list_value(base, ROUTING_BALANCER_TAGS_KEYS)
+            )
+            if item not in PANEL_OWNED_BALANCER_TAGS
+        ]
         routing_auto_rule = _read_bool_value(
             data,
             ROUTING_AUTO_RULE_KEYS,
@@ -3419,15 +3428,16 @@ def _jsonc_semantically_matches_subscription_output(text: str, obj: Any) -> bool
 
 
 def _subscription_output_snapshot(snapshot: SnapshotCallback | None) -> SnapshotCallback | None:
-    """Rollback snapshots for generated subscription fragments are off by default.
+    """Copies in ``configs/backups`` are not made by subscription operations.
 
-    The fragment is fully reproducible by refreshing the subscription, so a
-    rollback copy per subscription only piles up in ``configs/backups`` and
-    rewrites router flash on every feed change. Set
-    ``XKEEN_SUBSCRIPTIONS_SNAPSHOT=1`` to bring the old behaviour back.
+    That catalogue keeps the previous version of a file the owner edited by
+    hand.  A subscription operation has its own way back: the operation guard
+    restores every touched file when the result does not pass ``xray -test``
+    or the restart fails, and the displacement journal returns what the panel
+    took out of the owner's files.  A copy per operation only piled up next to
+    the owner's own restore points and rewrote router flash on every change.
 
-    Human-edited configs (routing, inbounds, observatory) keep their snapshots
-    regardless of this flag.
+    ``XKEEN_SUBSCRIPTIONS_SNAPSHOT=1`` brings the copies back.
     """
     if snapshot is None:
         return None
@@ -3437,6 +3447,7 @@ def _subscription_output_snapshot(snapshot: SnapshotCallback | None) -> Snapshot
 
 
 def _write_subscription_output_if_changed(path: str, obj: Any, *, snapshot: SnapshotCallback | None = None) -> bool:
+    snapshot = _subscription_output_snapshot(snapshot)
     new_text = json.dumps(obj, ensure_ascii=False, indent=2) + "\n"
     try:
         old_text = load_text(path, default=None)
@@ -3459,6 +3470,7 @@ def _write_subscription_output_if_changed(path: str, obj: Any, *, snapshot: Snap
 
 
 def _write_json_if_changed(path: str, obj: Any, *, snapshot: SnapshotCallback | None = None) -> bool:
+    snapshot = _subscription_output_snapshot(snapshot)
     new_text = json.dumps(obj, ensure_ascii=False, indent=2) + "\n"
     try:
         if load_text(path, default=None) == new_text:
@@ -3473,6 +3485,7 @@ def _write_json_if_changed(path: str, obj: Any, *, snapshot: SnapshotCallback | 
 
 
 def _write_text_if_changed(path: str, text: str, *, snapshot: SnapshotCallback | None = None) -> bool:
+    snapshot = _subscription_output_snapshot(snapshot)
     next_text = str(text or "")
     try:
         if load_text(path, default=None) == next_text:
@@ -3487,6 +3500,7 @@ def _write_text_if_changed(path: str, text: str, *, snapshot: SnapshotCallback |
 
 
 def _remove_file_if_exists(path: str, *, snapshot: SnapshotCallback | None = None) -> bool:
+    snapshot = _subscription_output_snapshot(snapshot)
     try:
         if not os.path.isfile(path):
             return False
@@ -4317,6 +4331,7 @@ def _write_jsonc_sidecar_if_changed(
             text += json.dumps(obj, ensure_ascii=False, indent=2) + "\n"
         if old == text:
             return False
+        snapshot = _subscription_output_snapshot(snapshot)
         if snapshot and os.path.exists(jsonc):
             snapshot(jsonc)
         _atomic_write_text(jsonc, text)
@@ -4581,7 +4596,7 @@ def list_subscription_routing_balancers(xray_configs_dir: str) -> List[Dict[str,
         if not isinstance(balancer, dict):
             continue
         tag = str(balancer.get("tag") or "").strip()
-        if not tag:
+        if not tag or tag in PANEL_OWNED_BALANCER_TAGS:
             continue
         strategy = str(((balancer.get("strategy") or {}).get("type") if isinstance(balancer.get("strategy"), dict) else "") or "").strip()
         selector = _clean_tags_list(balancer.get("selector") if isinstance(balancer.get("selector"), list) else [])

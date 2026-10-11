@@ -7000,6 +7000,40 @@ def test_subscription_fragment_snapshot_can_be_restored_by_env(tmp_path: Path, m
     assert output_path in seen
 
 
+def test_subscription_refresh_leaves_no_copies_of_the_owners_files(tmp_path: Path, monkeypatch):
+    """Routing and observatory are rewritten under the operation guard, not copied."""
+
+    from services import xray_subscriptions as subs
+
+    sub_id = "sub_snap_none"
+    ui_state_dir, xray_dir = _prepare_batch_subscriptions(tmp_path, monkeypatch, subs, [sub_id])
+    (xray_dir / "05_routing.json").write_text(
+        json.dumps({"routing": {"balancers": [], "rules": []}}), encoding="utf-8"
+    )
+    routing_before = (xray_dir / "05_routing.json").read_text(encoding="utf-8")
+
+    seen = _refresh_recording_snapshots(subs, ui_state_dir, xray_dir, sub_id)
+
+    # The refresh did rewrite the owner's routing, so a copy would have been due.
+    assert (xray_dir / "05_routing.json").read_text(encoding="utf-8") != routing_before
+    assert seen == []
+
+
+def test_owner_file_copies_can_be_restored_by_env(tmp_path: Path, monkeypatch):
+    from services import xray_subscriptions as subs
+
+    sub_id = "sub_snap_all"
+    ui_state_dir, xray_dir = _prepare_batch_subscriptions(tmp_path, monkeypatch, subs, [sub_id])
+    (xray_dir / "05_routing.json").write_text(
+        json.dumps({"routing": {"balancers": [], "rules": []}}), encoding="utf-8"
+    )
+    monkeypatch.setenv("XKEEN_SUBSCRIPTIONS_SNAPSHOT", "1")
+
+    seen = _refresh_recording_snapshots(subs, ui_state_dir, xray_dir, sub_id)
+
+    assert str(xray_dir / "05_routing.json") in seen
+
+
 def _due_moments(subs, ui_state_dir: Path) -> dict:
     state = subs.load_subscription_state(str(ui_state_dir))
     return {item["id"]: item["next_update_ts"] for item in state["subscriptions"]}
