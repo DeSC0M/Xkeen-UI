@@ -85,12 +85,12 @@
         "xray"
       ],
       "removable": true,
-      "unit_count": 136,
-      "size_bytes": 3816383,
+      "unit_count": 137,
+      "size_bytes": 3831397,
       "kind_counts": {
         "backend_route": 13,
         "backend_service": 20,
-        "backend_test": 46,
+        "backend_test": 47,
         "configuration": 4,
         "editor_schema": 4,
         "frontend_feature": 35,
@@ -16125,7 +16125,7 @@
       "module_id": "engine.xray",
       "kind": "backend_service",
       "path": "xkeen-ui/services/dns_over_vless.py",
-      "size_bytes": 189221,
+      "size_bytes": 192270,
       "depends_on": [
         "core",
         "tool.editor"
@@ -16530,7 +16530,7 @@
       "module_id": "engine.xray",
       "kind": "backend_service",
       "path": "xkeen-ui/services/xray_subscriptions.py",
-      "size_bytes": 329220,
+      "size_bytes": 331354,
       "depends_on": [
         "core",
         "tool.editor",
@@ -16600,7 +16600,7 @@
       "module_id": "engine.xray",
       "kind": "backend_test",
       "path": "tests/test_dns_over_vless.py",
-      "size_bytes": 205314,
+      "size_bytes": 208966,
       "depends_on": [
         "core",
         "tool.editor"
@@ -17353,6 +17353,29 @@
         "xray"
       ],
       "environment_variables": [],
+      "removable": true
+    },
+    {
+      "module_id": "engine.xray",
+      "kind": "backend_test",
+      "path": "tests/test_xray_subscription_dns_route_follow.py",
+      "size_bytes": 6179,
+      "depends_on": [
+        "core",
+        "tool.editor"
+      ],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "xkeen",
+        "xray"
+      ],
+      "environment_variables": [
+        "XKEEN_SUBSCRIPTIONS_PREFLIGHT"
+      ],
       "removable": true
     },
     {
@@ -30039,7 +30062,7 @@
       {
         "from": "engine.xray",
         "to": "core",
-        "unit_count": 136,
+        "unit_count": 137,
         "examples": [
           "xkeen-ui/routes/routing/__init__.py",
           "xkeen-ui/routes/routing/blueprint.py",
@@ -30080,7 +30103,7 @@
       {
         "from": "engine.xray",
         "to": "tool.editor",
-        "unit_count": 136,
+        "unit_count": 137,
         "examples": [
           "xkeen-ui/routes/routing/__init__.py",
           "xkeen-ui/routes/routing/blueprint.py",
