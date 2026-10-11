@@ -103,8 +103,8 @@ Cancel передаёт просьбу слушателю самого live runn
 `panel-update` использует scope `panel`, принимает только строго более новую stable-версию и заменяет весь managed target текущего профиля. `profile-transition` использует scope `profile`, остаётся на установленной версии и материализует профиль, сохранённый через `POST /api/modules/profile`.
 Обе full-scope операции передают в plan/apply только `operation` и server-generated `plan_id`; `module_id` запрещён. Любое изменение release/profile между review и apply возвращает `operation_plan_stale`.
 Profile response публикует `transition_required` и `transition_target`. Пока физический профиль не совпадает с желаемым, отдельный restart возвращает `profile_transition_required`.
-Panel/profile journal сохраняет каждый заменённый или удалённый managed-файл и state; ошибка после apply вызывает полный rollback своего scope. `rollback_failed` блокирует новые операции до ручного восстановления backup. Module rollback, full-scope transaction rollback и legacy DevTools backup rollback не смешиваются.
-Stable DevTools check/run/status делегируются `ModuleLifecycleService`; branch channel `main` сохраняет legacy development-only path. Подробные payload, error codes, cancel/recovery semantics и manual runbook: `docs/modular-panel-stage8-panel-profile.md`.
+Panel/profile journal сохраняет каждый заменённый или удалённый managed-файл и state; ошибка после apply вызывает полный rollback своего scope. `rollback_failed` блокирует новые операции до ручного восстановления backup. Module rollback и full-scope transaction rollback не смешиваются.
+Обновление и возврат версии идут только через `ModuleLifecycleService`; прежние маршруты `/api/devtools/update/*` и `update_xkeen_ui.sh` удалены, карточка DevTools справочная. Подробные payload, error codes, cancel/recovery semantics и manual runbook: `docs/modular-panel-stage8-panel-profile.md`.
 Stable full-scope codes: `panel_update_unavailable`, `panel_version_current`, `panel_archive_invalid`, `profile_transition_required`, `profile_transition_not_required`, `profile_payload_unavailable`, `profile_target_invalid`, `operation_free_space`.
 
 ## Acceptance matrix

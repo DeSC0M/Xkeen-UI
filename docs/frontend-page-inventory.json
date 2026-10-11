@@ -216,11 +216,6 @@
           "lazy_features": []
         },
         {
-          "path": "static/js/features/update_notifier.js",
-          "globals": [],
-          "lazy_features": []
-        },
-        {
           "path": "static/js/pages/panel_shell.shared.js",
           "globals": [
             "XKeen.runtime",
@@ -834,11 +829,6 @@
           "lazy_features": []
         },
         {
-          "path": "static/js/features/update_notifier.js",
-          "globals": [],
-          "lazy_features": []
-        },
-        {
           "path": "static/js/pages/editor.shared.js",
           "globals": [],
           "lazy_features": []
@@ -1348,11 +1338,6 @@
           "lazy_features": []
         },
         {
-          "path": "static/js/features/update_notifier.js",
-          "globals": [],
-          "lazy_features": []
-        },
-        {
           "path": "static/js/ui/theme.js",
           "globals": [
             "XKeen.ui",
@@ -1667,11 +1652,6 @@
           "lazy_features": []
         },
         {
-          "path": "static/js/features/update_notifier.js",
-          "globals": [],
-          "lazy_features": []
-        },
-        {
           "path": "static/js/pages/editor.shared.js",
           "globals": [],
           "lazy_features": []
@@ -1953,20 +1933,16 @@
         },
         {
           "path": "static/js/features/devtools/update.js",
-          "globals": [
-            "XKeen.ui",
-            "XKeen.ui.showToast",
-            "XKeen.ui.confirm"
-          ],
-          "lazy_features": []
-        },
-        {
-          "path": "static/js/features/devtools/happ_decryptor.js",
           "globals": [],
           "lazy_features": []
         },
         {
-          "path": "static/js/features/devtools/terminal_theme.js",
+          "path": "static/js/features/module_manager/api.js",
+          "globals": [],
+          "lazy_features": []
+        },
+        {
+          "path": "static/js/features/devtools/happ_decryptor.js",
           "globals": [],
           "lazy_features": []
         },
@@ -2304,11 +2280,6 @@
         },
         {
           "path": "static/js/features/devtools_namespace.js",
-          "globals": [],
-          "lazy_features": []
-        },
-        {
-          "path": "static/js/features/update_notifier.js",
           "globals": [],
           "lazy_features": []
         },
@@ -2715,11 +2686,6 @@
         },
         {
           "path": "static/js/features/devtools_namespace.js",
-          "globals": [],
-          "lazy_features": []
-        },
-        {
-          "path": "static/js/features/update_notifier.js",
           "globals": [],
           "lazy_features": []
         },

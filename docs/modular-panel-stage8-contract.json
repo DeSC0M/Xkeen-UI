@@ -200,8 +200,6 @@
       "branding.json",
       "devtools.env",
       "secret.key",
-      "terminal_theme.css",
-      "terminal_theme.json",
       "ui-settings.json"
     ],
     "user_top_level": [
@@ -516,9 +514,9 @@
       "module_id_forbidden": true
     },
     "devtools": {
-      "stable": "delegates panel-update plan/apply/status to ModuleLifecycleService",
-      "main": "legacy branch update path marked development_only",
-      "rollback": "legacy panel backup rollback; never a module transaction rollback"
+      "summary": "read-only card; reads /api/modules/installed and /api/modules/panel/update-check",
+      "update": "legacy /api/devtools/update/* routes and update_xkeen_ui.sh are removed",
+      "rollback": "panel-rollback through the Modules manager only"
     },
     "rollback_scopes": {
       "module": "selected module files and state",
