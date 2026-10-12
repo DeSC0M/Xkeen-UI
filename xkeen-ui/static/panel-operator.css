@@ -6536,25 +6536,23 @@ html[data-theme="light"] body.panel-page .terminal-buffer-menu {
   box-shadow: var(--op-shadow-float) !important;
 }
 
-body.panel-page .terminal-overflow-menu .terminal-tool-btn,
+body.panel-page .terminal-overflow-menu .terminal-menu-section > .terminal-tool-btn,
+body.panel-page .terminal-overflow-menu .terminal-menu-section > .terminal-signals-item,
 body.panel-page .terminal-view-menu .terminal-tool-btn,
-body.panel-page .terminal-buffer-menu .terminal-tool-btn,
-body.panel-page .terminal-commands-item,
-body.panel-page .terminal-signals-item {
+body.panel-page .terminal-buffer-menu .terminal-tool-btn {
   min-height: 32px;
   padding: 6px 8px;
-  border: 0 !important;
+  border: 1px solid var(--op-border) !important;
   border-radius: 5px !important;
-  background: transparent !important;
+  background: var(--op-surface) !important;
   color: var(--op-text) !important;
   box-shadow: none !important;
 }
 
-body.panel-page .terminal-overflow-menu .terminal-tool-btn:hover,
+body.panel-page .terminal-overflow-menu .terminal-menu-section > .terminal-tool-btn:hover,
+body.panel-page .terminal-overflow-menu .terminal-menu-section > .terminal-signals-item:hover,
 body.panel-page .terminal-view-menu .terminal-tool-btn:hover,
-body.panel-page .terminal-buffer-menu .terminal-tool-btn:hover,
-body.panel-page .terminal-commands-item:hover,
-body.panel-page .terminal-signals-item:hover {
+body.panel-page .terminal-buffer-menu .terminal-tool-btn:hover {
   background: var(--op-surface-3) !important;
 }
 
@@ -23411,4 +23409,16 @@ body.panel-page .xk-core-install-steps li[data-state="done"]::before { backgroun
   body.panel-page .xk-core-install-steps li::before { display: inline-block; margin: 0 6px 0 0; }
   body.panel-page .xk-core-source-modal-actions { align-items: stretch; flex-direction: column-reverse; }
   body.panel-page .xk-core-source-modal-actions button { width: 100%; }
+}
+
+/* SSH profile actions pair operator icons and labels on one baseline. */
+body.panel-page #ssh-modal :is(#ssh-add-btn, #ssh-delete-selected-btn, #ssh-export-btn, #ssh-import-btn, #ssh-copy-preview-btn, #ssh-run-preview-btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+body.panel-page #ssh-modal :is(#ssh-add-btn, #ssh-delete-selected-btn, #ssh-export-btn, #ssh-import-btn, #ssh-copy-preview-btn, #ssh-run-preview-btn) .xk-action-icon {
+  margin: 0;
 }
