@@ -1069,12 +1069,12 @@
           {
             "id": "gevent",
             "optional": true,
-            "available": false
+            "available": true
           },
           {
             "id": "gevent-websocket",
             "optional": true,
-            "available": false
+            "available": true
           }
         ],
         "size_bytes": 1048576,

@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import time
 import sys
@@ -153,6 +154,18 @@ def _pin(value: Any) -> Any:
     return pinned
 
 
+# Libraries the registry looks for on the machine it runs on. The file must not
+# depend on what is installed where it is written: the router has them all.
+_ROUTER_LIBRARIES = frozenset({"flask", "gevent", "geventwebsocket"})
+
+
+def _router_find_spec(real: Callable[..., Any]) -> Callable[..., Any]:
+    def find_spec(name: str, *args: Any, **kwargs: Any) -> Any:
+        return object() if name in _ROUTER_LIBRARIES else real(name, *args, **kwargs)
+
+    return find_spec
+
+
 def build_fixtures() -> dict[str, Any]:
     _import_paths(ROOT)
     from services.module_transactions import journal as journal_module
@@ -160,7 +173,11 @@ def build_fixtures() -> dict[str, Any]:
     from services.module_transactions.state import ModuleTransactionError
     from tests.support.module_tx import make_release
 
-    with tempfile.TemporaryDirectory(prefix="xk-module-fixtures-") as raw, mock.patch("time.time", _Clock()):
+    with (
+        tempfile.TemporaryDirectory(prefix="xk-module-fixtures-") as raw,
+        mock.patch("time.time", _Clock()),
+        mock.patch("importlib.util.find_spec", _router_find_spec(importlib.util.find_spec)),
+    ):
         tmp = Path(raw)
         release = make_release()
         fixtures: dict[str, Any] = {}
