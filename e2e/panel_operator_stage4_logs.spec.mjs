@@ -100,6 +100,67 @@ async function readLogsGeometry(page) {
 
 
 test.describe('Operator Console Stage 4 logs', () => {
+  test('keeps stream preferences in the more menu and couples auto-update to log enablement', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('xkeen.ui.xrayLogs.liveWanted.v1', '1');
+    });
+    await openLogs(page, 'dark', { width: 1440, height: 900 });
+
+    await expect(page.locator('.xray-log-controls > #xray-log-live')).toHaveCount(0);
+    await expect(page.locator('.xray-log-controls > #xray-log-follow')).toHaveCount(0);
+    await expect(page.locator('.xray-log-controls > .dt-log-interval')).toHaveCount(0);
+
+    await page.locator('#xray-log-more > summary').click();
+    await expect(page.locator('#xray-log-more #xray-log-live')).toBeVisible();
+    await expect(page.locator('#xray-log-more #xray-log-follow')).toBeVisible();
+    await expect(page.locator('#xray-log-more #xray-log-interval')).toBeVisible();
+    const menuBox = await page.locator('#xray-log-more .dt-log-menu-panel').boundingBox();
+    expect(menuBox.x).toBeGreaterThanOrEqual(0);
+    expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(1440);
+
+    const live = page.locator('#xray-log-more #xray-log-live');
+    const follow = page.locator('#xray-log-more #xray-log-follow');
+    await expect(live).not.toBeChecked();
+
+    await page.locator('#xray-log-view-btn').click();
+    await expect(live).not.toBeChecked();
+
+    await page.route('**/api/xray-logs/enable', async (route) => {
+      await route.fulfill({ json: { loglevel: 'warning', xray_restarted: true } });
+    });
+    await page.route('**/api/xray-logs/disable', async (route) => {
+      await route.fulfill({ json: { ok: true } });
+    });
+
+    await page.locator('#xray-log-enable-btn').click();
+    await expect(live).toBeChecked();
+    await expect(follow).toBeChecked();
+
+    await page.locator('#xray-log-disable-btn').click();
+    await expect(live).not.toBeChecked();
+  });
+
+  test('renders log mode and line count as status chips', async ({ page }) => {
+    await openLogs(page, 'dark', { width: 1440, height: 900 });
+
+    const chips = page.locator('#view-xray-logs :is(#xray-log-mode, .xk-log-counter[data-kind="lines"])');
+    await expect(chips).toHaveCount(2);
+    const appearance = await chips.evaluateAll((nodes) => nodes.map((node) => {
+      const style = getComputedStyle(node);
+      return {
+        borderTopWidth: style.borderTopWidth,
+        backgroundColor: style.backgroundColor,
+        borderRadius: style.borderTopLeftRadius,
+      };
+    }));
+
+    for (const chip of appearance) {
+      expect(chip.borderTopWidth).toBe('1px');
+      expect(chip.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+      expect(Number.parseFloat(chip.borderRadius)).toBeGreaterThan(0);
+    }
+  });
+
   test('Xray log filter clear icon is centered in its button', async ({ page }) => {
     await openLogs(page, 'dark', { width: 1440, height: 900 });
 

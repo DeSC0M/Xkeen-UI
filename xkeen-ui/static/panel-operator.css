@@ -5358,6 +5358,12 @@ body.panel-page #view-xray-logs .dt-log-menu {
   position: relative;
 }
 
+body.panel-page #view-xray-logs #xray-log-more .dt-log-menu-panel {
+  right: auto;
+  left: 0;
+  max-width: min(280px, calc(100vw - 16px));
+}
+
 body.panel-page #view-xray-logs .dt-log-menu[open] > summary {
   border-color: var(--op-accent-border) !important;
   background: var(--op-accent-soft) !important;
@@ -5389,6 +5395,27 @@ body.panel-page #view-xray-logs #xray-log-more .dt-log-menu-panel > .dt-log-btn:
   background: var(--op-surface-3) !important;
 }
 
+body.panel-page #view-xray-logs #xray-log-more :is(.xray-log-menu-switch, .xray-log-menu-interval, .dt-log-menu-row) {
+  min-height: 32px;
+  padding: 6px 8px;
+  border: 1px solid var(--op-border) !important;
+  border-radius: 5px !important;
+  background: var(--op-surface) !important;
+}
+
+body.panel-page #view-xray-logs #xray-log-more .xray-log-menu-switch {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+body.panel-page #view-xray-logs #xray-log-more .xray-log-menu-interval {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 body.panel-page .xray-line-menu .dt-log-btn {
   justify-content: flex-start;
   width: 100%;
@@ -5399,23 +5426,23 @@ body.panel-page .xray-line-menu .dt-log-btn {
 
 body.panel-page #view-xray-logs .xk-log-counters {
   display: flex;
-  align-items: stretch;
-  gap: 0;
+  align-items: center;
+  gap: 4px;
   margin-left: auto;
   min-width: 0;
 }
 
-body.panel-page #view-xray-logs :is(.xray-log-mode, .dt-log-stats) {
-  display: flex;
+body.panel-page #view-xray-logs .xray-log-mode,
+body.panel-page #view-xray-logs .xk-log-counter {
+  display: inline-flex;
   align-items: center;
-  gap: 0;
+  gap: 5px;
   min-height: var(--op-control-h);
   margin: 0;
   padding: 0 8px;
-  border: 0 !important;
-  border-left: 1px solid var(--op-border) !important;
-  border-radius: 0 !important;
-  background: transparent !important;
+  border: 1px solid var(--op-border) !important;
+  border-radius: var(--op-control-radius) !important;
+  background: var(--op-surface-2) !important;
   color: var(--op-data-muted) !important;
   box-shadow: none !important;
   opacity: 1;
@@ -5429,17 +5456,10 @@ body.panel-page #view-xray-logs .xray-log-mode::before {
 }
 
 body.panel-page #view-xray-logs .dt-log-stats {
-  padding: 0;
+  display: contents;
 }
 
 body.panel-page #view-xray-logs .xk-log-counter {
-  display: grid;
-  grid-template-columns: auto auto;
-  align-items: baseline;
-  gap: 5px;
-  min-height: var(--op-control-h);
-  padding: 7px 8px 0;
-  border-left: 1px solid var(--op-border);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -18020,7 +18040,7 @@ body.panel-page :is(#json-editor-modal, #fm-editor-modal) :is(#json-editor-save-
     margin-left: 4px;
   }
 
-  body.panel-page #view-xray-logs :is(.xray-log-mode, .dt-log-stats) {
+  body.panel-page #view-xray-logs :is(.xray-log-mode, .xk-log-counter) {
     min-height: var(--op-touch-target);
   }
 

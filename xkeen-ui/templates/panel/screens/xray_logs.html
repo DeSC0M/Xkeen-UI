@@ -48,29 +48,6 @@
           </button>
         </div>
         <div class="dt-log-controls xray-log-controls xk-log-control-bar" aria-label="Управление логами Xray">
-          <label class="dt-switch" title="Онлайн-режим: автообновление новых строк.">
-            <input id="xray-log-live" type="checkbox" />
-            <span class="dt-switch-slider" aria-hidden="true"></span>
-            <span class="dt-switch-label">Онлайн</span>
-          </label>
-
-          <div class="dt-log-interval" title="Интервал авто‑обновления (используется при HTTP‑поллинге).">
-            <span class="dt-log-interval-label">каждые</span>
-            <select id="xray-log-interval" class="xray-log-select" aria-label="Интервал">
-              <option value="1000">1s</option>
-              <option value="2000" selected>2s</option>
-              <option value="5000">5s</option>
-              <option value="10000">10s</option>
-              <option value="30000">30s</option>
-            </select>
-          </div>
-
-          <label class="dt-switch" title="Авто‑прокрутка в конец при обновлении.">
-            <input id="xray-log-follow" type="checkbox" checked />
-            <span class="dt-switch-slider" aria-hidden="true"></span>
-            <span class="dt-switch-label">В конец</span>
-          </label>
-
           <button type="button" id="xray-log-pause" class="btn-secondary dt-log-btn" title="Пауза: заморозить вывод (строки продолжают собираться)." aria-label="Пауза">{{ op_icon('pause') }}<span class="xk-action-label">Пауза</span></button>
 
           <button type="button" id="xray-log-scroll-bottom" class="btn-secondary dt-log-btn xray-log-scroll-btn" title="Прокрутить к последним показанным строкам." aria-label="Прокрутить к последним строкам лога" hidden>К последним</button>
@@ -78,14 +55,34 @@
           <details class="dt-log-menu" id="xray-log-more">
             <summary class="btn-secondary dt-log-btn" title="Дополнительно" aria-label="Дополнительно">{{ op_icon('more') }}</summary>
             <div class="dt-log-menu-panel" role="menu" aria-label="Дополнительные действия">
-  <div class="dt-log-menu-row" aria-label="Окно логов">
-    <span class="small" style="opacity:0.85;">Строк</span>
-    <input id="xray-log-lines" class="dt-log-lines-input" type="number" min="50" max="5000" step="50" value="800" aria-label="Количество строк" />
-  </div>
-  <button type="button" id="xray-log-copy-selection" class="btn-secondary dt-log-btn" title="Скопировать выделенное в буфер обмена.">Скопировать выделенное</button>
-  <button type="button" id="xray-log-download" class="btn-secondary dt-log-btn" title="Скачать текущий логфайл.">Скачать</button>
-  <button type="button" id="xray-log-load-more" class="btn-secondary dt-log-btn" title="Подгрузить более старые строки (увеличить окно назад).">Загрузить ещё</button>
-</div>
+              <label class="dt-switch xray-log-menu-switch" title="Онлайн-режим: автообновление новых строк.">
+                <input id="xray-log-live" type="checkbox" />
+                <span class="dt-switch-slider" aria-hidden="true"></span>
+                <span class="dt-switch-label">Автообновление</span>
+              </label>
+              <div class="dt-log-interval xray-log-menu-interval" title="Интервал авто‑обновления (используется при HTTP‑поллинге).">
+                <span class="dt-log-interval-label">каждые</span>
+                <select id="xray-log-interval" class="xray-log-select" aria-label="Интервал">
+                  <option value="1000">1s</option>
+                  <option value="2000" selected>2s</option>
+                  <option value="5000">5s</option>
+                  <option value="10000">10s</option>
+                  <option value="30000">30s</option>
+                </select>
+              </div>
+              <label class="dt-switch xray-log-menu-switch" title="Авто‑прокрутка в конец при обновлении.">
+                <input id="xray-log-follow" type="checkbox" checked />
+                <span class="dt-switch-slider" aria-hidden="true"></span>
+                <span class="dt-switch-label">В конец</span>
+              </label>
+              <div class="dt-log-menu-row" aria-label="Окно логов">
+                <span class="small" style="opacity:0.85;">Строк</span>
+                <input id="xray-log-lines" class="dt-log-lines-input" type="number" min="50" max="5000" step="50" value="800" aria-label="Количество строк" />
+              </div>
+              <button type="button" id="xray-log-copy-selection" class="btn-secondary dt-log-btn" title="Скопировать выделенное в буфер обмена.">Скопировать выделенное</button>
+              <button type="button" id="xray-log-download" class="btn-secondary dt-log-btn" title="Скачать текущий логфайл.">Скачать</button>
+              <button type="button" id="xray-log-load-more" class="btn-secondary dt-log-btn" title="Подгрузить более старые строки (увеличить окно назад).">Загрузить ещё</button>
+            </div>
           </details>
 
           <div class="xk-log-counters" aria-label="Состояние и счётчики журнала">
