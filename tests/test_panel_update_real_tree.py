@@ -119,6 +119,7 @@ def test_real_tree_panel_update_preserves_profile_and_user_state(built: Built, t
     changed = target / "app.py"
     changed.write_bytes(changed.read_bytes() + b"\n# stage 8.5 update proof\n")
     release_builder = _load("build_modular_panel_release_next", ROOT / "scripts" / "build_modular_panel_release.py")
+    release_builder.ARCHIVE_COMPRESSLEVEL = 1
     dist = tmp_path / "next-dist"
     release_builder.build_release(
         package_root,

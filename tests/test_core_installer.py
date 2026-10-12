@@ -18,7 +18,10 @@ state_module = importlib.import_module("services.core_profile_state")
 def _xray_archive(payload: bytes) -> bytes:
     stream = io.BytesIO()
     with zipfile.ZipFile(stream, "w") as archive:
-        archive.writestr("xray", payload)
+        # Дата закреплена: архив и его контрольную сумму тесты строят двумя
+        # отдельными вызовами, а zip вписывает текущее время с шагом в две
+        # секунды — на границе шага сумма переставала совпадать.
+        archive.writestr(zipfile.ZipInfo("xray", date_time=(2026, 1, 1, 0, 0, 0)), payload)
     return stream.getvalue()
 
 

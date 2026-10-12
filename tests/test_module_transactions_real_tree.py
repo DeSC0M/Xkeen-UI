@@ -60,6 +60,8 @@ def built(tmp_path_factory) -> Built:
     user_archive = _load("build_user_archive", ROOT / "scripts" / "build_user_archive.py")
     release_builder = _load("build_modular_panel_release", ROOT / "scripts" / "build_modular_panel_release.py")
     installer = _load("module_profile_install", PANEL / "scripts" / "module_profile_install.py")
+    # Степень сжатия на установку не влияет, а занимает больше половины сборки.
+    release_builder.ARCHIVE_COMPRESSLEVEL = 1
     package_root = base / "package-root"
     tree = package_root / "xkeen-ui"
     shutil.copytree(

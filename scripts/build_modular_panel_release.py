@@ -111,6 +111,10 @@ _STAGE7_PATH = Path(__file__).resolve().parents[1] / PACKAGE_DIRNAME / "scripts"
 _STAGE7_MODULE: Any | None = None
 _REGISTRY_MODULES: dict[Path, Any] = {}
 _OWNERSHIP_CACHE: dict[tuple[Any, ...], dict[str, tuple[str, ...]]] = {}
+# Published archives are always packed at 9. Tests that only need a working
+# release to install from lower it on their own copy of this module: packing
+# is more than half of the build time.
+ARCHIVE_COMPRESSLEVEL = 9
 
 
 class ReleaseBuildError(ValueError):
@@ -193,7 +197,7 @@ def build_deterministic_tar(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     try:
         with output_path.open("wb") as raw:
-            with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=int(epoch), compresslevel=9) as packed:
+            with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=int(epoch), compresslevel=ARCHIVE_COMPRESSLEVEL) as packed:
                 with tarfile.open(fileobj=packed, mode="w", format=tarfile.USTAR_FORMAT) as archive:
                     for directory in sorted(directories):
                         info = tarfile.TarInfo(directory)
@@ -569,11 +573,16 @@ def build_module_manifest(
     version: str,
     architectures: Sequence[str] = DEFAULT_ARCHITECTURES,
     min_core: str = DEFAULT_MIN_CORE,
+    ownership: Mapping[str, Sequence[str]] | None = None,
 ) -> dict[str, Any]:
-    """Build the Stage 8.0 manifest for one registry module."""
+    """Build the Stage 8.0 manifest for one registry module.
+
+    ``ownership`` is the result of build_module_ownership() for the same root:
+    a release build passes it so that the tree is not walked once per module.
+    """
 
     definition = _registry_definition(root, module_id)
-    ownership = build_module_ownership(root).get(module_id, ())
+    ownership = (build_module_ownership(root) if ownership is None else ownership).get(module_id, ())
     if not ownership:
         raise ReleaseBuildError(f"module has no managed payload files: {module_id}")
     package = Path(root).resolve() / PACKAGE_DIRNAME
@@ -602,6 +611,7 @@ def module_archive_spec(
     version: str,
     architectures: Sequence[str] = DEFAULT_ARCHITECTURES,
     min_core: str = DEFAULT_MIN_CORE,
+    ownership: Mapping[str, Sequence[str]] | None = None,
 ) -> ArchiveSpec:
     manifest = build_module_manifest(
         root,
@@ -609,6 +619,7 @@ def module_archive_spec(
         version=version,
         architectures=architectures,
         min_core=min_core,
+        ownership=ownership,
     )
     package = Path(root).resolve() / PACKAGE_DIRNAME
     manifest_data = (json.dumps(manifest, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
@@ -676,6 +687,7 @@ def build_module_archive(
     architectures: Sequence[str],
     min_core: str,
     epoch: int,
+    ownership: Mapping[str, Sequence[str]] | None = None,
 ) -> BuiltAsset:
     """Build one self-describing Stage 8 module tarball."""
 
@@ -685,6 +697,7 @@ def build_module_archive(
         version=version,
         architectures=architectures,
         min_core=min_core,
+        ownership=ownership,
     )
     path = Path(output_dir) / spec.filename
     build_deterministic_tar(path, dict(spec.members), epoch=epoch)
@@ -830,6 +843,7 @@ def build_release(
             architectures=inputs.architectures,
             min_core=inputs.min_core,
             epoch=inputs.source_date_epoch,
+            ownership=ownership,
         )
         manifest = build_module_manifest(
             root,
@@ -837,6 +851,7 @@ def build_release(
             version=inputs.version,
             architectures=inputs.architectures,
             min_core=inputs.min_core,
+            ownership=ownership,
         )
         modules.append(asset)
         catalog_entries.append(_catalog_entry(manifest, asset))
