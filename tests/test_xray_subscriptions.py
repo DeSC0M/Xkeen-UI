@@ -98,6 +98,9 @@ def test_fetch_subscription_body_retries_through_loopback_mihomo_proxy_after_net
     monkeypatch.setattr(subs, "_subscription_policy", lambda: URLPolicy(("example.test",)))
     monkeypatch.setattr(subs, "_read_subscription_response", fake_read)
     monkeypatch.setattr(subs, "_subscription_mihomo_proxy_port", lambda: 17890)
+    # Без подмены имя уходит настоящему резолверу системы, и тот думает над
+    # несуществующим `example.test` секунд по десять на каждый вызов.
+    monkeypatch.setattr(subs, "_subscription_host_uses_mihomo_fake_ip", lambda _url: False)
 
     body, headers = subs._fetch_subscription_body_once("https://example.test/sub")
     preview_body, preview_headers, meta = subs.fetch_subscription_body_for_xray("https://example.test/sub")
@@ -152,6 +155,8 @@ def test_fetch_subscription_body_does_not_proxy_retry_http_errors(monkeypatch):
         "_subscription_mihomo_proxy_port",
         lambda: (_ for _ in ()).throw(AssertionError("proxy fallback must not run for HTTP errors")),
     )
+    # Настоящий резолвер системы здесь не нужен и только тянет время.
+    monkeypatch.setattr(subs, "_subscription_host_uses_mihomo_fake_ip", lambda _url: False)
 
     with pytest.raises(urllib.error.HTTPError):
         subs._fetch_subscription_body_once("https://example.test/sub")

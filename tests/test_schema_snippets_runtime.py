@@ -184,6 +184,7 @@ def test_json_completion_runtime_hides_rule_block_snippets_while_typing_rule_pro
         """
 import fs from 'node:fs';
 import { EditorState } from '@codemirror/state';
+import { ensureSyntaxTree } from '@codemirror/language';
 import { CompletionContext } from '@codemirror/autocomplete';
 import { json } from '@codemirror/lang-json';
 import { stateExtensions, jsonCompletion } from './xkeen-ui/static/js/vendor/codemirror_json_schema.js';
@@ -210,10 +211,14 @@ const provider = resolveEditorSnippetProvider({
   file: '05_routing.jsonc',
   mode: 'jsonc',
 });
-const state = EditorState.create({
+const draft = EditorState.create({
   doc,
   extensions: [json(), stateExtensions(schema)],
 });
+// Разбор документа при создании ограничен 20 мс. На занятой машине он не
+// успевает, и схема видит обрывок дерева — поэтому разбор доводится до конца.
+ensureSyntaxTree(draft, draft.doc.length, 5000);
+const state = draft.update({}).state;
 const result = await jsonCompletion({
   schemaKind: 'xray-routing',
   snippetProvider: provider,

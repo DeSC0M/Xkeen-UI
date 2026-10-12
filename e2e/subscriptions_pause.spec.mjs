@@ -72,6 +72,20 @@ async function openSubscriptions(page) {
   await expect(body).toBeVisible();
   await page.locator('#outbounds-subscriptions-btn').click();
   await expect(page.locator('#outbounds-subscriptions-modal')).toBeVisible();
+  // Часы страницы с этого места управляемые: идут как обычно, но их можно
+  // перевести вперёд, когда окно переспрашивает роутер об итоге.
+  await page.clock.install();
+}
+
+// Окно узнаёт итог переспросами раз в несколько секунд. Ждать их по-настоящему
+// незачем: часы переводятся шагами, пока в статусе не появится нужный текст, —
+// шагами, чтобы ответ на каждый переспрос успел прийти до следующего.
+async function advanceUntilText(page, locator, text, limitMs = 120000, step = 500) {
+  for (let passed = 0; passed < limitMs; passed += step) {
+    if (((await locator.textContent()) || '').includes(text)) return;
+    await page.clock.runFor(step);
+    await new Promise((resolve) => { setTimeout(resolve, 25); });
+  }
 }
 
 const master = (page) => page.locator('#outbounds-subscriptions-master');
@@ -177,7 +191,8 @@ test.describe('рубильник подписок', () => {
 
     const status = page.locator('#outbounds-subscriptions-status');
     await expect(status).toContainText('Жду итог');
-    await expect(status).toContainText(warning, { timeout: 15000 });
+    await advanceUntilText(page, status, warning);
+    await expect(status).toContainText(warning);
     await expect(status).toHaveClass(/is-warning/);
     await expect(banner(page)).toBeVisible();
   });
@@ -196,7 +211,8 @@ test.describe('рубильник подписок', () => {
     await page.locator('#confirm-modal-ok-btn').click();
 
     const status = page.locator('#outbounds-subscriptions-status');
-    await expect(status).toContainText('Подписки приостановлены.', { timeout: 15000 });
+    await advanceUntilText(page, status, 'Подписки приостановлены.');
+    await expect(status).toContainText('Подписки приостановлены.');
     await expect(status).not.toContainText('старое сообщение');
     await expect(status).toHaveClass(/is-success/);
   });
@@ -394,7 +410,8 @@ test.describe('удаление одной подписки при обрыве 
     await deleteFirstSubscription(page);
 
     await expect(status(page)).toContainText('Жду итог');
-    await expect(status(page)).toContainText(warning, { timeout: 15000 });
+    await advanceUntilText(page, status(page), warning);
+    await expect(status(page)).toContainText(warning);
     await expect(status(page)).toContainText('Удалено.');
     await expect(status(page)).not.toContainText('Ошибка удаления');
     await expect(status(page)).toHaveClass(/is-warning/);
@@ -411,7 +428,9 @@ test.describe('удаление одной подписки при обрыве 
     await openSubscriptions(page);
     await deleteFirstSubscription(page);
 
-    await expect(status(page)).toContainText('Удалено.', { timeout: 15000 });
+    await advanceUntilText(page, status(page), 'Удалено.');
+
+    await expect(status(page)).toContainText('Удалено.');
     await expect(status(page)).not.toContainText('старое сообщение');
     await expect(status(page)).toHaveClass(/is-success/);
     await expect(page.locator('#outbounds-subscriptions-tbody tr')).toHaveCount(1);
@@ -423,7 +442,8 @@ test.describe('удаление одной подписки при обрыве 
     await deleteFirstSubscription(page);
 
     await expect(status(page)).toContainText('Жду итог');
-    await expect(status(page)).toContainText('Ошибка удаления', { timeout: 15000 });
+    await advanceUntilText(page, status(page), 'Ошибка удаления');
+    await expect(status(page)).toContainText('Ошибка удаления');
     await expect(status(page)).toContainText('подписка осталась на месте');
     await expect(page.locator('#outbounds-subscriptions-tbody tr')).toHaveCount(2);
   });
@@ -475,7 +495,8 @@ test.describe('обновление подписки при обрыве свя�
     await page.locator('#outbounds-subscriptions-tbody tr[data-sub-id="alpha"] .xk-sub-refresh').click();
 
     await expect(status(page)).toContainText('Жду итог');
-    await expect(status(page)).toContainText('Готово: узлов 7', { timeout: 15000 });
+    await advanceUntilText(page, status(page), 'Готово: узлов 7');
+    await expect(status(page)).toContainText('Готово: узлов 7');
     await expect(status(page)).toContainText('файл обновлён');
     await expect(status(page)).toContainText(warning);
     await expect(status(page)).not.toContainText('Ошибка обновления');
@@ -487,7 +508,9 @@ test.describe('обновление подписки при обрыве свя�
     await openSubscriptions(page);
     await page.locator('#outbounds-subscriptions-tbody tr[data-sub-id="alpha"] .xk-sub-refresh').click();
 
-    await expect(status(page)).toContainText('Ошибка обновления: сервер подписки ответил 502', { timeout: 15000 });
+    await advanceUntilText(page, status(page), 'Ошибка обновления: сервер подписки ответил 502');
+
+    await expect(status(page)).toContainText('Ошибка обновления: сервер подписки ответил 502');
     await expect(status(page)).not.toContainText('Failed to fetch');
   });
 
@@ -497,7 +520,8 @@ test.describe('обновление подписки при обрыве свя�
     await page.locator('#outbounds-subscriptions-tbody tr[data-sub-id="alpha"] .xk-sub-refresh').click();
 
     await expect(status(page)).toContainText('Жду итог');
-    await expect(status(page)).toContainText('Ошибка обновления', { timeout: 40000 });
+    await advanceUntilText(page, status(page), 'Ошибка обновления');
+    await expect(status(page)).toContainText('Ошибка обновления');
     await expect(status(page)).toContainText('подписка осталась в прежнем состоянии');
     await expect(status(page)).not.toContainText('Failed to fetch');
   });
@@ -509,7 +533,8 @@ test.describe('обновление подписки при обрыве свя�
     await page.locator('#outbounds-subscriptions-refresh-due-btn').click();
 
     await expect(status(page)).toContainText('Жду итог');
-    await expect(status(page)).toContainText('Просроченные обновлены: 1 / 1', { timeout: 15000 });
+    await advanceUntilText(page, status(page), 'Просроченные обновлены: 1 / 1');
+    await expect(status(page)).toContainText('Просроченные обновлены: 1 / 1');
     await expect(status(page)).toHaveClass(/is-success/);
     expect(state.posts).toEqual(['refresh-due']);
   });

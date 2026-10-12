@@ -471,6 +471,9 @@ def test_hwid_fetch_provider_payload_rejects_html_install_page(monkeypatch):
         )
 
     monkeypatch.setattr(hwid, "_fetch_provider_subscription_text", fake_fetch)
+    # Помощник ссылок здесь ничего не разобрал. Без подмены запускался настоящий
+    # и ходил в сеть на `provider.example`, пока не истекал его таймаут.
+    monkeypatch.setattr(hwid.happ_links, "resolve_source", lambda _url, **_kwargs: None)
 
     with pytest.raises(ValueError, match="landing_page_html"):
         hwid.fetch_provider_payload(

@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import os
 import stat
 
 import pytest
@@ -315,7 +316,9 @@ def test_client_returns_fresh_signature_verified_catalog_and_writes_private_cach
     ]
     cache_path = tmp_path / "module-catalog" / "catalog-cache.json"
     assert cache_path.is_file()
-    assert stat.S_IMODE(cache_path.stat().st_mode) == 0o600
+    # На Windows прав доступа POSIX нет: там у файла всегда 0o666.
+    if os.name != "nt":
+        assert stat.S_IMODE(cache_path.stat().st_mode) == 0o600
 
 
 def test_client_returns_fresh_cache_without_network_request(tmp_path) -> None:

@@ -178,7 +178,7 @@ def test_profile_status_renders_without_literal_quotes():
             "choose_panel_profile",
         )
     )
-    proc = subprocess.run([_shell(), "-c", script], capture_output=True, text=True)
+    proc = subprocess.run([_shell(), "-c", script], capture_output=True, text=True, encoding="utf-8")
 
     assert proc.returncode == 0, proc.stderr
     assert proc.stdout == "  Профиль:     full\n"

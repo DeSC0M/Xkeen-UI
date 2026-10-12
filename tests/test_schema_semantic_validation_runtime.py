@@ -977,14 +977,19 @@ def test_codemirror_json_schema_linter_supports_xray_semantic_validation():
     script = f"""
 import fs from 'node:fs';
 import {{ EditorState }} from '@codemirror/state';
+import {{ ensureSyntaxTree }} from '@codemirror/language';
 import {{ json }} from '@codemirror/lang-json';
 import {{ jsonSchemaLinter, stateExtensions }} from './xkeen-ui/static/js/vendor/codemirror_json_schema.js';
 
 const schema = JSON.parse(fs.readFileSync('./xkeen-ui/static/schemas/xray-routing.schema.json', 'utf8'));
-const state = EditorState.create({{
+const draft = EditorState.create({{
   doc: {json.dumps(doc)},
   extensions: [json(), stateExtensions(schema)],
 }});
+// Разбор документа при создании ограничен 20 мс. На занятой машине он не
+// успевает, и схема видит обрывок дерева — поэтому разбор доводится до конца.
+ensureSyntaxTree(draft, draft.doc.length, 5000);
+const state = draft.update({{}}).state;
 const diagnostics = jsonSchemaLinter({{
   semanticValidation: {{
     kind: 'xray-routing',
@@ -1041,14 +1046,19 @@ def test_codemirror_json_schema_linter_supports_xray_outbounds_semantic_validati
     script = f"""
 import fs from 'node:fs';
 import {{ EditorState }} from '@codemirror/state';
+import {{ ensureSyntaxTree }} from '@codemirror/language';
 import {{ json }} from '@codemirror/lang-json';
 import {{ jsonSchemaLinter, stateExtensions }} from './xkeen-ui/static/js/vendor/codemirror_json_schema.js';
 
 const schema = JSON.parse(fs.readFileSync('./xkeen-ui/static/schemas/xray-outbounds.schema.json', 'utf8'));
-const state = EditorState.create({{
+const draft = EditorState.create({{
   doc: {json.dumps(doc)},
   extensions: [json(), stateExtensions(schema)],
 }});
+// Разбор документа при создании ограничен 20 мс. На занятой машине он не
+// успевает, и схема видит обрывок дерева — поэтому разбор доводится до конца.
+ensureSyntaxTree(draft, draft.doc.length, 5000);
+const state = draft.update({{}}).state;
 const diagnostics = jsonSchemaLinter({{
   semanticValidation: {{
     kind: 'xray-outbounds',

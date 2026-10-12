@@ -5,6 +5,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[1]
 GENERATOR = ROOT / "scripts" / "generate_modular_panel_inventory.py"
@@ -38,7 +40,11 @@ REQUIRED_UNIT_FIELDS = {
 }
 
 
-def _generate(tmp_path: Path) -> tuple[dict, str]:
+@pytest.fixture(scope="module")
+def generated(tmp_path_factory) -> tuple[dict, str]:
+    # Генератор обходит всё дерево и идёт десяток секунд, а результат у него
+    # один на всех: проверки только читают его, поэтому запуск общий.
+    tmp_path = tmp_path_factory.mktemp("stage0-inventory")
     json_out = tmp_path / "modular-panel-stage0-inventory.json"
     markdown_out = tmp_path / "modular-panel-stage0-inventory.md"
     result = subprocess.run(
@@ -61,8 +67,8 @@ def _generate(tmp_path: Path) -> tuple[dict, str]:
     return json.loads(json_out.read_text(encoding="utf-8")), markdown_out.read_text(encoding="utf-8")
 
 
-def test_stage0_inventory_generator_runs_and_covers_required_contract(tmp_path):
-    payload, _markdown = _generate(tmp_path)
+def test_stage0_inventory_generator_runs_and_covers_required_contract(generated):
+    payload, _markdown = generated
 
     assert payload["schema_version"] == 1
     assert payload["stage"] == {
@@ -158,11 +164,11 @@ def test_stage0_inventory_generator_runs_and_covers_required_contract(tmp_path):
     assert len(surfaces["panel_modals"]) == 53
 
 
-def test_stage0_inventory_snapshot_and_markdown_match_generator(tmp_path):
+def test_stage0_inventory_snapshot_and_markdown_match_generator(generated):
     assert SNAPSHOT.is_file()
     assert CONTRACT.is_file()
 
-    payload, markdown = _generate(tmp_path)
+    payload, markdown = generated
     assert json.loads(SNAPSHOT.read_text(encoding="utf-8")) == payload
     assert CONTRACT.read_text(encoding="utf-8") == markdown
 

@@ -277,11 +277,18 @@ def test_explicit_package_owners_are_imported_only_by_their_own_module() -> None
     closures = builder._dependency_closures(ROOT, tuple(ownership))
 
     assert builder._PACKAGE_OWNER_OVERRIDES
+    # Каждый файл разбирается один раз на все именные файлы сразу: разбор заново
+    # под каждый из них умножал время проверки на их число.
+    targets = set(builder._PACKAGE_OWNER_OVERRIDES)
+    imports_of = {
+        source: _imported_panel_files(package / source, targets)
+        for source in sorted(path for path in owner_of if path.endswith(".py"))
+    }
     strangers = []
     for target, module_id in builder._PACKAGE_OWNER_OVERRIDES.items():
         assert owner_of[target] == module_id, target
-        for source in sorted(path for path in owner_of if path.endswith(".py") and path != target):
-            if target in _imported_panel_files(package / source, {target}) and module_id not in closures[owner_of[source]]:
+        for source, imported in imports_of.items():
+            if source != target and target in imported and module_id not in closures[owner_of[source]]:
                 strangers.append(f"{owner_of[source]}:{source} -> {module_id}:{target}")
     assert strangers == []
 

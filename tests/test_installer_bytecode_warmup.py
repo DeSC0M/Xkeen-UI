@@ -60,6 +60,13 @@ def _run_warmup(
 
 
 @pytest.fixture()
+def tmp_path(tmp_path_factory) -> Path:
+    # Короткое имя вместо названия теста: кэш байткода повторяет внутри себя
+    # полный путь исходника, и на Windows удвоенный путь упирается в 260 знаков.
+    return tmp_path_factory.mktemp("w")
+
+
+@pytest.fixture()
 def panel_tree(tmp_path: Path) -> Path:
     ui_dir = tmp_path / "xkeen-ui"
     (ui_dir / "routes").mkdir(parents=True)

@@ -56,7 +56,10 @@ jobs:
       - name: Run Python tests
         run: |
           set -o pipefail
-          python -m pytest -q 2>&1 | tee "$RUNNER_TEMP/pytest.log"
+          # Проверки, которые меряют настоящее время, идут отдельно, по потоку на файл:
+          # рядом с параллельным прогоном они падают без всякой поломки.
+          python -m pytest -q -n auto --dist loadfile -m "not timing" 2>&1 | tee "$RUNNER_TEMP/pytest.log"
+          python -m pytest -q -n 4 --dist loadfile -m timing 2>&1 | tee -a "$RUNNER_TEMP/pytest.log"
 
       # Журнал шага виден только участникам репозитория, а заметки — всем:
       # по ним понятно, какой тест упал и с чем, не открывая журнал.

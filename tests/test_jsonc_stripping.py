@@ -147,15 +147,21 @@ def _char_by_char(s: str) -> str:
     return "".join(res)
 
 
-def _median_seconds(fn, payload: str, repeats: int = 5, iterations: int = 3) -> float:
-    samples: list[float] = []
+def _seconds(fn, payload: str, iterations: int = 3) -> float:
+    started = time.process_time()
+    for _ in range(iterations):
+        fn(payload)
+    return (time.process_time() - started) / iterations
+
+
+def _median_ratio(slow, fast, payload: str, repeats: int = 7) -> float:
+    # Оба прохода меряются вплотную друг к другу, пара за парой: соседние тесты
+    # и смена частоты процессора тогда задевают их одинаково, а не один из двух.
+    ratios: list[float] = []
     for _ in range(repeats):
-        started = time.process_time()
-        for _ in range(iterations):
-            fn(payload)
-        elapsed = (time.process_time() - started) / iterations
-        samples.append(elapsed)
-    return float(statistics.median(samples))
+        slow_seconds = _seconds(slow, payload)
+        ratios.append(slow_seconds / max(_seconds(fast, payload), 1e-9))
+    return float(statistics.median(ratios))
 
 
 def test_stripping_beats_the_char_by_char_walk() -> None:
@@ -172,7 +178,7 @@ def test_stripping_beats_the_char_by_char_walk() -> None:
     _char_by_char(payload)
     strip_json_comments_text(payload)
 
-    ratio = _median_seconds(_char_by_char, payload) / _median_seconds(strip_json_comments_text, payload)
+    ratio = _median_ratio(_char_by_char, strip_json_comments_text, payload)
 
     # The old implementation remains measurably slower on the same machine,
     # while allowing for Python/runner variance (the failed Linux run was

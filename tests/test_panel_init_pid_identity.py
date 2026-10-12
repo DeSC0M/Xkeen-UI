@@ -31,8 +31,11 @@ def _run(tmp_path: Path, body: str) -> subprocess.CompletedProcess:
     ui.mkdir(exist_ok=True)
     # «Панель» проверки — сценарий, который просто живёт: службе важна только
     # командная строка процесса.
+    # Вывод «панели» отвязан от канала проверки: `kill` снимает оболочку, а её
+    # `sleep` живёт дальше и держал бы канал открытым все свои 30 секунд.
     for name in ("run_server.py", "app.py", "other.sh"):
         (ui / name).write_bytes(b"sleep 30\n")
+    (ui / "gone.sh").write_bytes(b":\n")
     script = tmp_path / "call.sh"
     script.write_bytes(
         "\n".join(
@@ -59,7 +62,7 @@ needs_proc = pytest.mark.skipif(not Path("/proc/self/cmdline").exists() and os.n
 def test_the_panel_itself_is_recognised(tmp_path, target):
     proc = _run(
         tmp_path,
-        f'sh "$UI_DIR/{target}" & started=$!; echo "$started" > "$PID_FILE"; sleep 1; '
+        f'sh "$UI_DIR/{target}" >/dev/null 2>&1 & started=$!; echo "$started" > "$PID_FILE"; sleep 1; '
         'found="$(panel_pid)" && echo "panel=$found started=$started" || echo "not-panel"',
     )
 
@@ -72,7 +75,7 @@ def test_the_panel_itself_is_recognised(tmp_path, target):
 def test_another_process_under_the_remembered_number_is_not_the_panel(tmp_path):
     proc = _run(
         tmp_path,
-        'sh "$UI_DIR/other.sh" & started=$!; echo "$started" > "$PID_FILE"; sleep 1; '
+        'sh "$UI_DIR/other.sh" >/dev/null 2>&1 & started=$!; echo "$started" > "$PID_FILE"; sleep 1; '
         'found="$(panel_pid)" && echo "panel=$found" || echo "not-panel"',
     )
 
@@ -82,7 +85,9 @@ def test_another_process_under_the_remembered_number_is_not_the_panel(tmp_path):
 def test_a_number_nobody_holds_is_not_the_panel(tmp_path):
     proc = _run(
         tmp_path,
-        'sh "$UI_DIR/run_server.py" & started=$!; kill "$started"; wait "$started" 2>/dev/null; '
+        # Процесс завершается сам: снятый сразу после запуска `kill` под нагрузкой
+        # мог не дойти, и тогда `wait` ждал все 30 секунд.
+        'sh "$UI_DIR/gone.sh" >/dev/null 2>&1 & started=$!; wait "$started" 2>/dev/null; '
         'echo "$started" > "$PID_FILE"; found="$(panel_pid)" && echo "panel=$found" || echo "not-panel"',
     )
 

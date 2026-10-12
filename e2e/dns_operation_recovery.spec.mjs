@@ -44,6 +44,27 @@ async function loseAnswer(page, url, { before, after, answer, hang = false, late
   return box;
 }
 
+// Окно ждёт ответа роутера десятки секунд, а итог сдаёт через две с половиной
+// минуты. Настоящее время здесь ничего не проверяет, поэтому часы страницы
+// переводятся вперёд — шагами, чтобы ответ на каждый переспрос статуса успел
+// прийти раньше следующего таймера.
+async function advanceClock(page, ms, step = 1000) {
+  for (let passed = 0; passed < ms; passed += step) {
+    await page.clock.runFor(Math.min(step, ms - passed));
+    await new Promise((resolve) => { setTimeout(resolve, 25); });
+  }
+}
+
+// Уведомление живёт несколько секунд по тем же часам: переводить их дальше
+// его появления нельзя, иначе оно успеет исчезнуть до проверки.
+async function advanceClockUntilToast(page, limitMs, step = 500) {
+  const toast = page.locator('#toast-container .toast');
+  for (let passed = 0; passed < limitMs && !(await toast.count()); passed += step) {
+    await page.clock.runFor(step);
+    await new Promise((resolve) => { setTimeout(resolve, 25); });
+  }
+}
+
 async function confirmApply(page, applyId) {
   await page.locator(applyId).click();
   await expect(page.locator('#confirm-modal')).not.toHaveClass(/hidden/);
@@ -87,7 +108,6 @@ test('DNS-over-VLESS: потерянный отказ показывается �
 
 
 test('DNS-over-VLESS: зависший ответ — окно говорит, что проверяет, и находит итог', async ({ page }) => {
-  test.setTimeout(90000);
   await mockClients(page, { available: true, counts: { total: 1, reaches: 1, intercepted: 0 }, clients: [] });
   await openDialog(page, VLESS_ON);
   await loseAnswer(page, '**/api/routing/dns-over-vless', {
@@ -98,11 +118,13 @@ test('DNS-over-VLESS: зависший ответ — окно говорит, �
     lateBy: 5,
   });
 
+  await page.clock.install();
   await confirmApply(page, '#routing-dns-over-vless-apply');
 
   // Синяя плашка со счётчиком и яркая кнопка с тем же счётчиком.
   const notice = page.locator('#routing-dns-over-vless-status .xk-dns-op-notice');
-  await expect(notice).toHaveAttribute('data-tone', 'info', { timeout: 30000 });
+  await advanceClock(page, 21000);
+  await expect(notice).toHaveAttribute('data-tone', 'info');
   await expect(notice).toContainText(/Ждём ответа роутера · \d+ с/);
   await expect(notice).toContainText('Ничего нажимать не нужно');
   const apply = page.locator('#routing-dns-over-vless-apply');
@@ -112,9 +134,11 @@ test('DNS-over-VLESS: зависший ответ — окно говорит, �
   await expect(apply).not.toHaveAttribute('disabled', /.*/);
   await expect(apply).toHaveAttribute('aria-disabled', 'true');
   const first = await notice.locator('.xk-dns-op-notice-title').textContent();
+  await advanceClock(page, 2000);
   await expect(notice.locator('.xk-dns-op-notice-title')).not.toHaveText(first || '');
 
-  await expect(page.locator('#toast-container .toast')).toContainText('DNS-over-VLESS отключён', { timeout: 15000 });
+  await advanceClockUntilToast(page, 30000);
+  await expect(page.locator('#toast-container .toast')).toContainText('DNS-over-VLESS отключён');
   await expect(apply).toHaveText('Включить безопасно');
   await expect(apply).not.toHaveAttribute('aria-disabled', 'true');
   await expect(notice).toHaveCount(0);
@@ -176,7 +200,6 @@ test('Mihomo DNS: оборванный ответ на включение дос
 
 
 test('DNS-over-VLESS: итог так и не пришёл — плашка становится оранжевой', async ({ page }) => {
-  test.setTimeout(240000);
   await mockClients(page, { available: true, counts: { total: 1, reaches: 1, intercepted: 0 }, clients: [] });
   await openDialog(page, VLESS_ON);
   // Статус отвечает, но записи с нашим номером в нём нет: итог неизвестен.
@@ -188,11 +211,14 @@ test('DNS-over-VLESS: итог так и не пришёл — плашка ст
     lateBy: Infinity,
   });
 
+  await page.clock.install();
   await confirmApply(page, '#routing-dns-over-vless-apply');
 
   const notice = page.locator('#routing-dns-over-vless-status .xk-dns-op-notice');
-  await expect(notice).toHaveAttribute('data-tone', 'info', { timeout: 30000 });
-  await expect(notice).toHaveAttribute('data-tone', 'warn', { timeout: 170000 });
+  await advanceClock(page, 21000);
+  await expect(notice).toHaveAttribute('data-tone', 'info');
+  await advanceClock(page, 140000);
+  await expect(notice).toHaveAttribute('data-tone', 'warn');
   await expect(notice).toContainText('Итог операции неизвестен');
   await expect(notice).toContainText('обновите страницу');
   const apply = page.locator('#routing-dns-over-vless-apply');
@@ -200,6 +226,7 @@ test('DNS-over-VLESS: итог так и не пришёл — плашка ст
   await expect(apply).not.toHaveAttribute('aria-disabled', 'true');
   // Раз в 3 секунды за две с половиной минуты — около полусотни запросов,
   // а не шквал после того, как сам запрос оборвался по тайм-ауту.
+  expect(box.statusAfter).toBeGreaterThan(20);
   expect(box.statusAfter).toBeLessThan(80);
   // Красного уведомления с тем же текстом нет: хватает плашки.
   await expect(page.locator('#toast-container .toast')).toHaveCount(0);
@@ -207,7 +234,6 @@ test('DNS-over-VLESS: итог так и не пришёл — плашка ст
 
 
 test('Mihomo DNS: зависший ответ — счётчик на нажатой кнопке и синяя плашка', async ({ page }) => {
-  test.setTimeout(90000);
   await loseAnswer(page, '**/api/mihomo/dns', {
     before: MIHOMO_OFF,
     after: MIHOMO_ON,
@@ -222,18 +248,20 @@ test('Mihomo DNS: зависший ответ — счётчик на нажат
   await page.locator('#mihomo-dns-btn').click();
   await expect(page.locator('#mihomo-dns-modal')).toBeVisible();
 
+  await page.clock.install();
   await confirmApply(page, '#mihomo-dns-apply');
 
   const notice = page.locator('#mihomo-dns-status .xk-dns-op-notice');
-  await expect(notice).toHaveAttribute('data-tone', 'info', { timeout: 30000 });
+  await advanceClock(page, 21000);
+  await expect(notice).toHaveAttribute('data-tone', 'info');
   await expect(page.locator('#mihomo-dns-apply')).toHaveText(/Ждём ответа роутера… \d+ с/);
-  await expect(page.locator('#toast-container .toast')).toContainText('Защищённый DNS включён', { timeout: 15000 });
+  await advanceClockUntilToast(page, 30000);
+  await expect(page.locator('#toast-container .toast')).toContainText('Защищённый DNS включён');
   await expect(notice).toHaveCount(0);
 });
 
 
 test('Mihomo DNS: «Применить изменения» — счётчик в подписи, иконка на месте', async ({ page }) => {
-  test.setTimeout(90000);
   const on = { ...MIHOMO_ON, can_reconfigure: true, proxy_groups: ['PROXY'] };
   await loseAnswer(page, '**/api/mihomo/dns', {
     before: on,
@@ -249,12 +277,15 @@ test('Mihomo DNS: «Применить изменения» — счётчик �
   await page.locator('#mihomo-dns-btn').click();
   await expect(page.locator('#mihomo-dns-update')).toBeVisible();
 
+  await page.clock.install();
   await confirmApply(page, '#mihomo-dns-update');
 
   const update = page.locator('#mihomo-dns-update');
-  await expect(page.locator('#mihomo-dns-update-label')).toHaveText(/Ждём ответа роутера… \d+ с/, { timeout: 30000 });
+  await advanceClock(page, 21000);
+  await expect(page.locator('#mihomo-dns-update-label')).toHaveText(/Ждём ответа роутера… \d+ с/);
   await expect(update.locator('svg')).toHaveCount(1);
-  await expect(page.locator('#toast-container .toast')).toContainText('Настройки защищённого DNS применены', { timeout: 20000 });
+  await advanceClockUntilToast(page, 30000);
+  await expect(page.locator('#toast-container .toast')).toContainText('Настройки защищённого DNS применены');
   await expect(page.locator('#mihomo-dns-update-label')).toHaveText('Применить изменения');
   await expect(update.locator('svg')).toHaveCount(1);
 });

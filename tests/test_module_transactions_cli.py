@@ -417,7 +417,9 @@ def test_launch_clears_a_dead_operation_first(stand) -> None:
     )
 
     deadline = time.monotonic() + 30
-    while time.monotonic() < deadline and read_status(stand.panel.state)["result"] == "running":
+    # Статус читается, пока исполнитель его переписывает: на миг вместо итога
+    # приходит пустое значение, и ждать надо сквозь него, как в соседних проверках.
+    while time.monotonic() < deadline and read_status(stand.panel.state)["result"] in (None, "running"):
         time.sleep(0.2)
     after = snapshot(stand.panel.root)
     assert read_status(stand.panel.state)["result"] == "committed"

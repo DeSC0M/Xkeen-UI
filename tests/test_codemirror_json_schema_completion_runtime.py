@@ -18,6 +18,7 @@ def _run_completion_labels(doc_with_marker: str, schema_path: str = "./xkeen-ui/
     script = f"""
 import fs from 'node:fs';
 import {{ EditorState }} from '@codemirror/state';
+import {{ ensureSyntaxTree }} from '@codemirror/language';
 import {{ CompletionContext }} from '@codemirror/autocomplete';
 import {{ json }} from '@codemirror/lang-json';
 import {{ stateExtensions, jsonCompletion }} from './xkeen-ui/static/js/vendor/codemirror_json_schema.js';
@@ -27,10 +28,14 @@ const marker = '__CURSOR__';
 const docWithMarker = {json.dumps(doc_with_marker)};
 const pos = docWithMarker.indexOf(marker);
 const doc = docWithMarker.replace(marker, '');
-const state = EditorState.create({{
+const draft = EditorState.create({{
   doc,
   extensions: [json(), stateExtensions(schema)],
 }});
+// Разбор документа при создании ограничен 20 мс. На занятой машине он не
+// успевает, и схема видит обрывок дерева — поэтому разбор доводится до конца.
+ensureSyntaxTree(draft, draft.doc.length, 5000);
+const state = draft.update({{}}).state;
 const result = await jsonCompletion()(new CompletionContext(state, pos, true));
 console.log(JSON.stringify(result ? result.options.map((option) => option.label) : null));
 """
@@ -57,15 +62,20 @@ def _run_linter_diagnostics(doc: str, schema_path: str = "./xkeen-ui/static/sche
     script = f"""
 import fs from 'node:fs';
 import {{ EditorState }} from '@codemirror/state';
+import {{ ensureSyntaxTree }} from '@codemirror/language';
 import {{ json }} from '@codemirror/lang-json';
 import {{ jsonSchemaLinter, stateExtensions }} from './xkeen-ui/static/js/vendor/codemirror_json_schema.js';
 
 const schema = JSON.parse(fs.readFileSync({json.dumps(schema_path)}, 'utf8'));
 const doc = {json.dumps(doc)};
-const state = EditorState.create({{
+const draft = EditorState.create({{
   doc,
   extensions: [json(), stateExtensions(schema)],
 }});
+// Разбор документа при создании ограничен 20 мс. На занятой машине он не
+// успевает, и схема видит обрывок дерева — поэтому разбор доводится до конца.
+ensureSyntaxTree(draft, draft.doc.length, 5000);
+const state = draft.update({{}}).state;
 const diagnostics = jsonSchemaLinter()({{ state }});
 console.log(JSON.stringify(diagnostics.map((item) => {{
   const line = state.doc.lineAt(item.from);
