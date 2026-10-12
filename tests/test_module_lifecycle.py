@@ -179,6 +179,29 @@ def test_installed_keeps_local_sha_build_readable_without_lifecycle_actions(tmp_
     assert catalog.requested_versions == []
 
 
+def test_local_demo_exposes_module_screens_without_catalog_or_router_state(tmp_path, monkeypatch):
+    from services.local_module_demo import ensure_state
+
+    state = tmp_path / "local-demo"
+    monkeypatch.setenv("XKEEN_UI_LOCAL_DEMO", "1")
+    ensure_state(state)
+    registry = ModuleRegistry(str(state), which=lambda _name: "/bin/tool")
+    service, catalog = make_service(
+        SimpleNamespace(root=state, state=state),
+        make_release(),
+        registry=registry,
+        local_demo=True,
+    )
+
+    installed = service.installed()
+
+    assert installed["lifecycle"] == {"available": True, "code": None}
+    assert installed["installed_module_ids"] == list(MODULE_IDS)
+    assert len(service.available()["modules"]) == len(MODULE_IDS)
+    assert service.panel_update_check()["freshness"] == "local"
+    assert catalog.requested_versions == []
+
+
 def test_available_uses_installed_release_and_exposes_only_stage83_actions(tmp_path):
     panel = make_panel(tmp_path)
     service, catalog = make_service(panel, make_release())

@@ -14,6 +14,12 @@ import os
 import sys
 import traceback
 
+# A checkout launched directly on macOS is a visual-preview server, not a
+# router installation.  Keep the opt-out explicit so Linux/router launches
+# retain the production lifecycle behavior.
+if sys.platform == "darwin" and "XKEEN_UI_LOCAL_DEMO" not in os.environ:
+    os.environ["XKEEN_UI_LOCAL_DEMO"] = "1"
+
 GEVENT_AVAILABLE = True
 GEVENT_IMPORT_ERROR = None
 try:

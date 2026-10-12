@@ -469,6 +469,15 @@ def create_app(*, ws_runtime: bool = False):
     from services.module_registry import ModuleRegistry
 
     module_registry = ModuleRegistry(UI_STATE_DIR)
+    # A source checkout has no installer-created lifecycle manifests.  The
+    # local preview server opts into a disposable baseline so its module and
+    # DevTools screens can be inspected without a router or a release catalog.
+    from services.local_module_demo import enabled as local_module_demo_enabled
+
+    if local_module_demo_enabled():
+        from services.local_module_demo import ensure_state as ensure_local_module_demo_state
+
+        ensure_local_module_demo_state(UI_STATE_DIR)
     try:
         # Missing state is migrated to legacy-full before routes/background
         # services start; the activation below gates them for this process.
