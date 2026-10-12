@@ -4843,7 +4843,6 @@ function copyXrayContextModal() {
         }
 
         try { updateXrayLogStats(); } catch (e5) {}
-        closeXrayMoreMenu();
         try { scheduleSaveUiState(); } catch (e6) {}
       } catch (e) {}
     });

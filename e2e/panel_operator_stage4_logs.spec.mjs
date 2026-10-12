@@ -208,6 +208,21 @@ test.describe('Operator Console Stage 4 logs', () => {
     }
   });
 
+  test('keeps the more menu open while changing the log line limit', async ({ page }) => {
+    await openLogs(page, 'dark', { width: 1440, height: 900 });
+    await page.locator('#xray-log-more > summary').click();
+
+    const menu = page.locator('#xray-log-more');
+    const lines = page.locator('#xray-log-lines');
+    await expect(menu).toHaveAttribute('open', '');
+    await expect(lines).toHaveValue('800');
+
+    await lines.focus();
+    await page.keyboard.press('ArrowUp');
+    await expect(lines).toHaveValue('850');
+    await expect(menu).toHaveAttribute('open', '');
+  });
+
   test('Xray logs use the compact operator header in desktop and mobile layouts', async ({ page }) => {
     await openLogs(page, 'dark', { width: 1440, height: 900 });
 

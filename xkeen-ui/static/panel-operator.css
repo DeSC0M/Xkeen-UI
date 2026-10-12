@@ -5416,6 +5416,18 @@ body.panel-page #view-xray-logs #xray-log-more .xray-log-menu-interval {
   justify-content: space-between;
 }
 
+body.panel-page #view-xray-logs #xray-log-more .xray-log-menu-interval .xray-log-select {
+  width: 92px;
+  min-width: 92px;
+  min-height: 32px;
+  padding: 0 28px 0 10px;
+  border: 1px solid var(--op-border) !important;
+  border-radius: 5px !important;
+  background-color: var(--op-surface-2) !important;
+  color: var(--op-text) !important;
+  box-shadow: none !important;
+}
+
 body.panel-page .xray-line-menu .dt-log-btn {
   justify-content: flex-start;
   width: 100%;
