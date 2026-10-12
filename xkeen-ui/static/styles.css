@@ -33544,3 +33544,14 @@ html[data-theme="light"] .xkeen-diff-modal .xkeen-diff-host .cm-collapsedLines:f
     justify-content: flex-end;
   }
 }
+
+/* The update mark sits in the headers of several pages, not only on the Modules one. */
+[data-xk-modules-update-badge]:not([hidden]) {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: #a83432;
+  color: #fff;
+  font-size: 0.7em;
+}

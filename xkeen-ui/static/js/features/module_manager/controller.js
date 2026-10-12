@@ -1,4 +1,4 @@
-import { renderInstalled, renderAvailable, renderPlan, renderOperationStatus, hasOperationStatus, describeLifecycleFailure } from './render.js';
+import { renderInstalled, renderAvailable, renderCatalogError, renderPlan, renderPlanError, renderOperationStatus, hasOperationStatus, describeLifecycleFailure } from './render.js';
 import { clearModulesUpdateBadge, reconcileModulesUpdateBadge, reconcileModulesUpdateCheck, reconcileModulesUpdatePlan, reconcileModulesUpdateStatus } from './badge.js';
 
 // The panel restarts at the end of every operation and after a restart
@@ -22,6 +22,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     installed: null,
     status: null,
     catalog: null,
+    catalogError: null,
     selectedTab: 'installed',
     plan: null,
     update: { checked: false, loading: false, error: null },
@@ -75,6 +76,15 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
   }
 
   function clearError() { if (errorHost) errorHost.textContent = ''; }
+
+  // Names for the ids the server speaks in: what is installed and what the catalog offers.
+  function moduleNames() {
+    const names = new Map();
+    for (const item of [...(state.catalog?.modules || []), ...(state.installed?.modules || [])]) {
+      if (item && typeof item.id === 'string' && item.name) names.set(item.id, String(item.name));
+    }
+    return names;
+  }
 
   function invalidateStatus(error) {
     statusFresh = false;
@@ -133,7 +143,9 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
       refreshStatusButton.disabled = busy || statusRefreshPending;
     }
     if (state.selectedTab === 'available') {
-      if (state.catalog) renderAvailable(host, state.catalog, requestPlan, actionsDisabled);
+      if (state.catalog) renderAvailable(host, state.catalog, requestPlan, actionsDisabled, { names: moduleNames(), onRefresh: reloadCatalog });
+      // The refusal stays until the next attempt: a redraw must not turn it into "loading".
+      else if (state.catalogError) renderCatalogError(host, state.catalogError, reloadCatalog);
       else host.textContent = 'Загрузка каталога…';
     } else if (state.installed) {
       renderInstalled(host, state.installed, toggleEnabled, requestPlan, actionsDisabled, {
@@ -149,6 +161,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     if (hasOperationStatus(state.status)) renderOperationStatus(statusHost, state.status, {
       onCancel: requestCancel, onRecovery: requestRecovery,
       busy: !statusFresh || !installedFresh || busy || cancelPending,
+      names: moduleNames(),
     });
     else statusHost.replaceChildren();
     const notice = waitNotice();
@@ -199,7 +212,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
       state.plan = plan;
       clearError();
       reconcileModulesUpdatePlan(plan);
-      renderPlan(dialog, plan);
+      renderPlan(dialog, plan, moduleNames());
       dialog.showModal();
       dialog.querySelector('#modules-plan-title').focus();
     } catch (error) {
@@ -212,10 +225,13 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     }
   }
 
-  async function refreshInstalledAfterTerminal() {
+  async function refreshInstalledAfterTerminal({ keepTab = false } = {}) {
     stopPolling();
     closePlan({ restoreFocus: false, force: true });
+    // Coming back to the screen is not an operation ending: the tab the owner left is theirs.
+    const returnTo = keepTab ? state.selectedTab : 'installed';
     state.catalog = null;
+    state.catalogError = null;
     catalogGeneration += 1;
     catalogLoad = null;
     state.selectedTab = 'installed';
@@ -249,6 +265,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
       }
     }
     if (active) render();
+    if (active && returnTo === 'available' && state.installed?.lifecycle?.available === true) await selectTab('available');
   }
 
   function observeStatus(status, operationId) {
@@ -351,12 +368,15 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     } catch (error) {
       if (error?.code === 'operation_in_progress') await refreshInstalledAfterTerminal();
       else {
-        if (['module_plan_stale', 'operation_plan_stale'].includes(error?.code)) closePlan({ force: true });
-        else {
+        if (['module_plan_stale', 'operation_plan_stale'].includes(error?.code)) {
+          closePlan({ force: true });
+          showError(error);
+        } else {
           dialog.querySelector('#modules-plan-apply').disabled = false;
           dialog.querySelector('#modules-plan-cancel').disabled = false;
+          // The plan is still open and covers the page: the refusal is said inside it.
+          renderPlanError(dialog, error);
         }
-        showError(error);
       }
     } finally {
       busy = false;
@@ -469,19 +489,31 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     if (name === 'available' && !state.catalog) {
       if (!catalogLoad) {
         const generation = catalogGeneration;
+        state.catalogError = null;
+        render();
         catalogLoad = api.loadAvailable().then((catalog) => {
           if (generation !== catalogGeneration) return;
           state.catalog = catalog;
           clearError();
           if (active && state.selectedTab === 'available') render();
         }).catch((error) => {
-          if (generation === catalogGeneration) showError(error);
+          if (generation !== catalogGeneration) return;
+          state.catalogError = error;
+          if (active && state.selectedTab === 'available') render();
         }).finally(() => {
           if (generation === catalogGeneration) catalogLoad = null;
         });
       }
       await catalogLoad;
     }
+  }
+
+  function reloadCatalog() {
+    if (catalogLoad) return;
+    state.catalog = null;
+    state.catalogError = null;
+    catalogGeneration += 1;
+    void selectTab('available');
   }
 
   function init() {
@@ -531,7 +563,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
       }
       if (reentering && initialLoad) {
         await initialLoad;
-        await refreshInstalledAfterTerminal();
+        await refreshInstalledAfterTerminal({ keepTab: true });
       }
       render();
       if (state.status?.result === 'running') schedulePoll();

@@ -187,6 +187,63 @@ body.modules-page .modules-error:not(:empty) {
   overflow-wrap: anywhere;
 }
 
+body.modules-page .modules-alert,
+body.modules-page .modules-warning {
+  margin: 8px 0 !important;
+  padding: 7px 10px;
+  border-left: 3px solid #c2413a;
+  border-radius: 0 5px 5px 0;
+  background: rgba(194, 65, 58, 0.12);
+  overflow-wrap: anywhere;
+}
+body.modules-page .modules-warning {
+  border-left-color: #c58a1f;
+  background: rgba(197, 138, 31, 0.13);
+}
+body.modules-page .modules-alert-detail { display: block; margin-top: 2px; }
+body.modules-page .modules-card-host > .modules-alert,
+body.modules-page .modules-card-host > .modules-warning { font-size: calc(13px * var(--xk-font-scale, 1)); }
+body.modules-page .modules-meta,
+body.modules-page .modules-empty,
+body.modules-page .modules-build-note { color: var(--header-tab-text, #6b7480); }
+body.modules-page .modules-update-available { color: var(--accent-color, #7470dd); font-weight: 600; }
+body.modules-page .modules-chip {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 4px;
+  background: rgba(116, 112, 221, 0.16);
+  color: var(--accent-color, #7470dd);
+  font-size: calc(11px * var(--xk-font-scale, 1));
+  font-weight: 600;
+  vertical-align: 1px;
+}
+body.modules-page .modules-chip.is-ok { background: rgba(62, 174, 120, 0.16); color: #2f9a68; }
+body.modules-page .modules-chip.is-bad { background: rgba(194, 65, 58, 0.16); color: #cf5b54; }
+body.modules-page .modules-command {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+body.modules-page .modules-command code {
+  padding: 2px 6px;
+  border: 1px solid var(--border-color, #c9d0da);
+  border-radius: 4px;
+  font-family: Consolas, monospace;
+  font-size: calc(12px * var(--xk-font-scale, 1));
+  overflow-wrap: anywhere;
+}
+body.modules-page .modules-command-copy,
+body.modules-page .modules-inline-action {
+  min-height: 26px !important;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: calc(11px * var(--xk-font-scale, 1));
+}
+body.modules-page .modules-inline-action { margin-left: 8px; }
+
 body.modules-page .modules-operation {
   border-left: 3px solid var(--accent-color, #247b76);
   border-radius: 6px;
@@ -196,7 +253,26 @@ body.modules-page .modules-operation {
 
 body.modules-page .modules-operation h2 { font-size: calc(13px * var(--xk-font-scale, 1)); margin: 0 0 6px; }
 body.modules-page .modules-operation p { margin: 3px 0; overflow-wrap: anywhere; font-size: calc(12px * var(--xk-font-scale, 1)); }
-body.modules-page .modules-operation-log-region { max-height: 180px; margin: 8px 0; overflow: auto; font-family: monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+body.modules-page .modules-operation.is-ok { border-left-color: #3eae78; }
+body.modules-page .modules-operation.is-bad { border-left-color: #c2413a; }
+body.modules-page .modules-operation-log-region {
+  max-height: 180px;
+  margin: 8px 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+  font-size: calc(12px * var(--xk-font-scale, 1));
+}
+body.modules-page .modules-operation-log {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  padding: 2px 0;
+  overflow-wrap: anywhere;
+}
+body.modules-page .modules-operation-log time {
+  color: var(--header-tab-text, #6b7480);
+  font-variant-numeric: tabular-nums;
+}
 
 body.modules-page .modules-card-host {
   display: grid;
@@ -414,24 +490,23 @@ body.modules-page .modules-build-meta {
   font-size: calc(11px * var(--xk-font-scale, 1)) !important;
 }
 
-[data-xk-modules-update-badge]:not([hidden]) {
-  display: inline-block;
-  margin-left: 6px;
-  padding: 2px 5px;
-  border-radius: 3px;
-  background: #a83432;
-  color: #fff;
-  font-size: 0.7em;
-}
-
 body.modules-page .modules-plan-confirm {
   width: min(760px, calc(100vw - 24px));
   max-width: calc(100vw - 24px);
   box-sizing: border-box;
   max-height: calc(100vh - 32px);
   overflow: auto;
+  border: 1px solid var(--border-color, #c9d0da);
   border-radius: 8px;
 }
+body.modules-page .modules-plan-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 4px 12px;
+  margin: 8px 0;
+}
+body.modules-page .modules-plan-facts dt { color: var(--header-tab-text, #6b7480); }
+body.modules-page .modules-plan-facts dd { margin: 0; overflow-wrap: anywhere; }
 
 body.modules-page .modules-plan-confirm::backdrop {
   background: rgb(0 0 0 / 55%);

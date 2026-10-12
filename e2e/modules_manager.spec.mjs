@@ -754,7 +754,7 @@ test.describe('Module manager recovery and guards', () => {
     });
     await page.goto('/modules');
     await page.evaluate(() => { window.xkBeforeRestart = true; });
-    await expect(page.locator('#modules-operation-status')).toContainText('restarting');
+    await expect(page.locator('#modules-operation-status')).toContainText('Перезапуск панели');
 
     panelDown = true;
     await advanceClock(page, 1100);
@@ -772,7 +772,7 @@ test.describe('Module manager recovery and guards', () => {
     panelDown = false;
     await advanceClock(page, 10000);
     await expect.poll(() => page.evaluate(() => window.xkBeforeRestart === true), { timeout: 15000 }).toBe(false);
-    await expect(page.locator('#modules-operation-status')).toContainText('committed');
+    await expect(page.locator('#modules-operation-status')).toContainText('Готово');
   });
 
   test('names a lost connection plainly while an operation has not reached the restart', async ({ page }) => {
@@ -824,7 +824,7 @@ test.describe('Module manager recovery and guards', () => {
 
     await recover.click();
 
-    await expect(page.locator('#modules-operation-status')).toContainText('rolled_back');
+    await expect(page.locator('#modules-operation-status')).toContainText('Отменено, файлы возвращены');
     await expect(page.locator('.modules-row').filter({ hasText: 'Терминал' })).toBeVisible();
     expect(installedLoads).toBeGreaterThan(loadsBeforeRecovery);
   });
@@ -889,7 +889,7 @@ test.describe('Module manager recovery and guards', () => {
         const { getModulesController } = await import('/static/js/pages/modules.init.js');
         await getModulesController().activate();
       });
-      await expect(page.locator('#modules-operation-status')).toContainText('interrupted');
+      await expect(page.locator('#modules-operation-status')).toContainText('Прервана');
       await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeEnabled();
       expect(statusCalls).toBeGreaterThan(beforeReturn);
       expect(catalogCalls).toBe(0);
@@ -944,7 +944,7 @@ test.describe('Module manager recovery and guards', () => {
     await page.goto('/modules');
     await expect(page.getByRole('switch', { name: 'Включить Mihomo' })).toBeDisabled();
     await page.getByRole('button', { name: 'Повторить восстановление' }).click();
-    await expect(page.locator('#modules-operation-status')).toContainText('rolled_back');
+    await expect(page.locator('#modules-operation-status')).toContainText('Отменено, файлы возвращены');
     await expect(page.getByRole('switch', { name: 'Включить Mihomo' })).toBeEnabled();
     expect(recoveryCalls).toBe(1);
     expect(restartCalls).toBe(0);
@@ -1003,8 +1003,8 @@ test.describe('Module manager recovery and guards', () => {
     } }));
     await page.goto('/modules');
     await page.getByRole('tab', { name: 'Доступные' }).click();
-    await expect(page.locator('#modules-error')).toContainText('catalog_unavailable');
-    await expect(page.locator('#modules-error')).not.toContainText('/private/path');
+    await expect(page.locator('#modules-card-host')).toContainText('catalog_unavailable');
+    await expect(page.locator('#modules-card-host')).not.toContainText('/private/path');
     await page.getByRole('tab', { name: 'Установленные' }).click();
     await expect(page.locator('.modules-row').first()).toContainText('Xkeen UI Core');
     expect(await page.evaluate(() => window.catalogInjected)).toBeUndefined();
@@ -1090,7 +1090,7 @@ test.describe('Module manager recovery and guards', () => {
     } }));
     await page.goto('/modules');
     await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toBeVisible();
-    await expect(page.locator('.modules-operation-log-region code')).toContainText('a'.repeat(200));
+    await expect(page.locator('.modules-operation-log-region')).toContainText('a'.repeat(200));
     await page.screenshot({ path: 'test-results/modules-operation-mobile.png', fullPage: true });
     const overflow = await page.evaluate(() => ({ width: document.documentElement.scrollWidth, viewport: innerWidth,
       elements: [...document.querySelectorAll('body *')].filter((el) => el.getBoundingClientRect().right > innerWidth + 1).slice(0, 8).map((el) => [el.tagName, el.className, Math.round(el.getBoundingClientRect().right)]),
@@ -1457,8 +1457,9 @@ test.describe('Module lifecycle review', () => {
     const install = page.getByRole('button', { name: 'Установить Терминал' });
     await install.click();
     const dialog = page.getByRole('dialog', { name: 'План установки' });
-    await expect(dialog).toContainText('Нужно места: 12 МБ');
-    await expect(dialog).toContainText('tool.terminal');
+    await expect(dialog).toContainText('нужно 12 МБ');
+    await expect(dialog).toContainText('Установить модуль «Терминал» 2.10.0');
+    await expect(dialog).not.toContainText('tool.terminal');
     await expect(page.locator('#modules-plan-title')).toBeFocused();
     expect(planBodies).toEqual([{ operation: 'install', module_id: 'tool.terminal' }]);
     expect(applyBodies).toEqual([]);
@@ -1596,7 +1597,7 @@ test.describe('Module lifecycle review', () => {
     expect(cancelCalls).toBe(1);
     await expect(page.locator('#modules-operation-status')).toContainText('download');
     terminal = true;
-    await expect(page.locator('#modules-operation-status')).toContainText('committed');
+    await expect(page.locator('#modules-operation-status')).toContainText('Готово');
     await expect.poll(() => installedLoads).toBe(2);
     await expect.poll(() => statusLoads).toBeGreaterThanOrEqual(3);
     await page.getByRole('button', { name: 'Обновить панель' }).click();
@@ -1722,5 +1723,236 @@ test.describe('Editor variant choice', () => {
       expect(look[1].background, theme).not.toBe(look[0].background);
       expect(look[1].color, theme).toBe('rgb(255, 255, 255)');
     }
+  });
+});
+
+// The stubs here keep the shape the server really sends: seconds with a
+// fraction, the runner's own step names, the four keys of the dependency diff.
+test.describe('What the window says about operations and refusals', () => {
+  const T0 = 1791571142.1234567;
+  const named = {
+    ...installedSnapshot,
+    modules: [
+      ...installedSnapshot.modules,
+      { id: 'tool.files', name: 'Файловый менеджер', version: '1.0.0', enabled: true, can_disable: true, lifecycle_actions: ['repair', 'remove'] },
+    ],
+  };
+  const failedUpdate = {
+    ok: true, operation_id: 'op-7f3a', scope: 'panel', operation: 'panel-update', module_id: null, version: '2.11.0',
+    step: 'rolling_back', result: 'rolled_back', error_code: 'operation_environment_failed',
+    error: 'the router could not be prepared for the release',
+    error_detail: 'pip: No space left on device', failed_path: 'xkeen-ui/requirements.txt', environment_restored: false,
+    warnings: [{ code: 'package_missing', package: 'python3-light', command: 'opkg install python3-light' }, { code: 'packages_step_failed' }],
+    started_at: T0, finished_at: T0 + 47.71, restart_required: false,
+    log: [{ step: 'prepared', at: T0 + 0.2 }, { step: 'downloading', at: T0 + 1.4 }, { step: 'rolling_back', at: T0 + 39.6 }],
+  };
+  const realPlan = {
+    ok: true, operation: 'install', module_id: 'tool.terminal', scope: 'module', version: '2.10.0',
+    affected_module_ids: ['tool.terminal'], files_add: [{ path: 'a' }, { path: 'b' }], files_remove: [],
+    required_free_bytes: 12 * 1024 * 1024, restart_required: true, target_profile: null,
+    dependency_diff: { requires: ['core'], missing: [], conflicts: [], required_by: ['tool.files'] },
+    blockers: [], applicable: true, plan_id: 'b'.repeat(64),
+  };
+  const realCatalog = {
+    ok: true, release_version: '2.10.0', fetched_at: 1791560000, freshness: 'fresh', stale_reason: null,
+    modules: [
+      { id: 'tool.files', name: 'Файловый менеджер', version: '2.10.0', requires: ['core'], conflicts: [], installed: true, lifecycle_actions: ['repair', 'remove'] },
+      { id: 'tool.terminal', name: 'Терминал и команды', version: '2.10.0', requires: ['core'], conflicts: ['tool.files'], installed: false, lifecycle_actions: ['install'] },
+    ],
+  };
+
+  test('a failed operation names itself, its cause and what is missing', async ({ page }) => {
+    await installLifecycleRoutes(page, { status: failedUpdate, installed: named });
+    await page.goto('/modules');
+    const block = page.locator('.modules-operation');
+    await expect(block.locator('h2')).toContainText('Обновление панели до 2.11.0');
+    await expect(block.locator('.modules-chip')).toHaveText('Отменено, файлы возвращены');
+    await expect(block).toContainText(/Начато \d{2}\.\d{2}\.\d{4}, \d{2}:\d{2}:\d{2} · длилось 48 с/);
+    await expect(block).not.toContainText('1791571142');
+    await expect(block).toContainText('Роутер не удалось подготовить к новому выпуску.');
+    await expect(block).toContainText('pip: No space left on device');
+    await expect(block).toContainText('Сорвалось на файле xkeen-ui/requirements.txt');
+    await expect(block).toContainText('Окружение роутера не восстановлено.');
+    await expect(block).toContainText('Не установлен пакет python3-light.');
+    await expect(block.locator('.modules-command code')).toHaveText('opkg install python3-light');
+    await expect(block.getByRole('button', { name: 'Копировать' })).toBeVisible();
+    await expect(block).toContainText('Установка пакетов завершилась с ошибкой.');
+    const steps = block.locator('.modules-operation-log');
+    await expect(steps).toHaveCount(3);
+    await expect(steps.nth(1)).toHaveText(/^\d{2}:\d{2}:\d{2}Загрузка архива$/);
+    await expect(steps.nth(2)).toContainText('Возврат прежних файлов');
+    for (const word of ['rolled_back', 'rolling_back', 'downloading', 'prepared']) await expect(block).not.toContainText(word);
+    // An operation that was undone is not marked with the colour of success.
+    const stripe = await block.evaluate((node) => getComputedStyle(node).borderLeftColor);
+    expect(stripe).toBe('rgb(194, 65, 58)');
+  });
+
+  test('an operation on a module is called by the module name', async ({ page }) => {
+    await installLifecycleRoutes(page, {
+      installed: named,
+      status: { ...runningStatus, operation: 'remove', module_id: 'tool.files', version: '1.0.0', step: 'applying', started_at: T0, log: [{ step: 'applying', at: T0 }] },
+    });
+    await page.goto('/modules');
+    const block = page.locator('.modules-operation');
+    await expect(block.locator('h2')).toContainText('Удаление модуля «Файловый менеджер» 1.0.0');
+    await expect(block.locator('.modules-chip')).toHaveText('Выполняется');
+    await expect(block).toContainText('Сейчас: Замена файлов');
+  });
+
+  test('warnings and refusals are set apart from plain text in both themes', async ({ page }) => {
+    await installLifecycleRoutes(page, { status: failedUpdate, installed: { ...named, restart_required: true } });
+    for (const theme of ['dark', 'light']) {
+      await page.addInitScript((value) => { localStorage.setItem('xkeen-theme', value); }, theme);
+      await page.goto('/modules');
+      await page.locator('.modules-operation .modules-alert').first().waitFor();
+      const look = await page.evaluate(() => {
+        const read = (selector) => {
+          const style = getComputedStyle(document.querySelector(selector));
+          return { stripe: style.borderLeftWidth, colour: style.borderLeftColor, fill: style.backgroundColor };
+        };
+        return {
+          alert: read('.modules-operation .modules-alert'),
+          warning: read('.modules-operation .modules-warning'),
+          restart: read('.modules-summary .modules-warning'),
+          plain: getComputedStyle(document.querySelector('.modules-summary .modules-build-version')).backgroundColor,
+        };
+      });
+      expect(look.alert.stripe, theme).toBe('3px');
+      expect(look.warning.stripe, theme).toBe('3px');
+      expect(look.alert.colour, theme).not.toBe(look.warning.colour);
+      expect(look.alert.fill, theme).not.toBe(look.plain);
+      expect(look.restart.colour, theme).toBe(look.warning.colour);
+    }
+  });
+
+  test('the plan speaks of modules by name and shows the free space next to the needed', async ({ page }) => {
+    await installLifecycleRoutes(page, { installed: named, available: realCatalog });
+    await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: {
+      ...realPlan, applicable: false, plan_id: null,
+      blockers: [{ code: 'module_free_space', message: 'not enough free space for the operation and its rollback copy', required: 12 * 1024 * 1024, free: 3 * 1024 * 1024 }],
+    } }));
+    await page.goto('/modules');
+    await page.getByRole('tab', { name: 'Доступные' }).click();
+    await page.getByRole('button', { name: 'Установить Терминал и команды' }).click();
+    const dialog = page.getByRole('dialog', { name: 'План установки' });
+    const facts = dialog.locator('.modules-plan-facts');
+    await expect(facts.locator('dt')).toHaveText(['Действие', 'Файлы', 'Место', 'Нужны модули', 'От него зависят']);
+    await expect(facts.locator('dd')).toHaveText([
+      'Установить модуль «Терминал и команды» 2.10.0', 'добавить 2, удалить 0', 'нужно 12 МБ, свободно 3 МБ',
+      'Xkeen UI Core', 'Файловый менеджер',
+    ]);
+    await expect(dialog.locator('.modules-alert')).toContainText('Недостаточно свободного места. Нужно 12 МБ, свободно 3 МБ.');
+    await expect(dialog.locator('.modules-warning')).toContainText('потребуется перезапуск');
+    for (const word of ['requires', 'required_by', 'module', 'tool.']) await expect(facts).not.toContainText(word);
+    await expect(dialog.getByRole('button', { name: 'Применить план' })).toBeHidden();
+    const border = await dialog.evaluate((node) => getComputedStyle(node).borderTopWidth);
+    expect(border).toBe('1px');
+  });
+
+  test('a refusal to apply is said inside the plan, in the words of the server', async ({ page }) => {
+    await installLifecycleRoutes(page, { installed: named, available: realCatalog });
+    await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: realPlan }));
+    let refusal = { ok: false, code: 'dns_guard_refused', message: 'Сначала безопасно снимите активную DNS-защиту' };
+    await page.route('**/api/modules/operations/apply', (route) => route.fulfill({ status: 409, json: refusal }));
+    await page.goto('/modules');
+    await page.getByRole('tab', { name: 'Доступные' }).click();
+    await page.getByRole('button', { name: 'Установить Терминал и команды' }).click();
+    const dialog = page.getByRole('dialog', { name: 'План установки' });
+    const apply = dialog.getByRole('button', { name: 'Применить план' });
+    await apply.click();
+    const error = dialog.locator('.modules-plan-error');
+    await expect(error).toHaveText('План не применён. Сначала безопасно снимите активную DNS-защиту (dns_guard_refused)');
+    await expect(page.locator('#modules-error')).toBeEmpty();
+    await expect(apply).toBeEnabled();
+
+    // Words meant for a log, a path or markup are never shown as sent.
+    refusal = { ok: false, code: 'weird_refusal', message: 'Ошибка в /opt/etc/private <b>x</b>' };
+    await apply.click();
+    await expect(error).toHaveText('План не применён. Не удалось выполнить операцию с модулями. (weird_refusal)');
+    await expect(dialog.locator('.modules-plan-error')).toHaveCount(1);
+  });
+
+  test('the Available tab marks what is installed and offers no actions on it', async ({ page }) => {
+    await installLifecycleRoutes(page, { installed: named, available: { ...realCatalog, freshness: 'stale', stale_reason: 'network' } });
+    await page.goto('/modules');
+    await page.getByRole('tab', { name: 'Доступные' }).click();
+    const host = page.locator('#modules-card-host');
+    await expect(host.locator('.modules-warning')).toContainText('Каталог мог устареть. Не удалось связаться с GitHub, показан каталог выпуска 2.10.0 от');
+    await expect(host.getByRole('button', { name: 'Обновить каталог' })).toBeVisible();
+    const files = host.locator('.modules-card').filter({ hasText: 'Файловый менеджер 2.10.0' });
+    await expect(files.locator('.modules-chip')).toHaveText('Установлен');
+    await expect(files.getByRole('button')).toHaveCount(0);
+    const terminal = host.locator('.modules-card').filter({ hasText: 'Терминал и команды' });
+    await expect(terminal.locator('.modules-chip')).toHaveCount(0);
+    await expect(terminal).toContainText('Нужны модули: Xkeen UI Core');
+    await expect(terminal).toContainText('Конфликтуют: Файловый менеджер');
+    await expect(terminal.getByRole('button', { name: 'Установить Терминал и команды' })).toBeVisible();
+  });
+
+  test('a fresh catalog carries no warning', async ({ page }) => {
+    await installLifecycleRoutes(page, { installed: named, available: realCatalog });
+    await page.goto('/modules');
+    await page.getByRole('tab', { name: 'Доступные' }).click();
+    await expect(page.locator('#modules-card-host .modules-card')).toHaveCount(2);
+    await expect(page.locator('#modules-card-host .modules-warning')).toHaveCount(0);
+  });
+
+  test('a catalog that failed to load stays said, once, with a way to try again', async ({ page }) => {
+    await installLifecycleRoutes(page, { installed: named, status: { ...runningStatus, started_at: T0 } });
+    let fail = true;
+    let requests = 0;
+    await page.route('**/api/modules/available', (route) => {
+      requests += 1;
+      return fail ? route.fulfill({ status: 503, json: { ok: false, code: 'catalog_unavailable' } }) : route.fulfill({ json: realCatalog });
+    });
+    await page.clock.install();
+    await page.goto('/modules');
+    await page.getByRole('tab', { name: 'Доступные' }).click();
+    const host = page.locator('#modules-card-host');
+    await expect(host.locator('.modules-alert')).toContainText('Каталог модулей временно недоступен. (catalog_unavailable)');
+    // The running operation redraws the screen every second.
+    await advanceClock(page, 3500);
+    await expect(host.locator('.modules-alert')).toHaveCount(1);
+    await expect(host).not.toContainText('Загрузка каталога');
+    await expect(page.locator('#modules-error')).toBeEmpty();
+    expect(requests).toBe(1);
+
+    fail = false;
+    await host.getByRole('button', { name: 'Повторить' }).click();
+    await expect(host.locator('.modules-card')).toHaveCount(2);
+    await expect(host.locator('.modules-alert')).toHaveCount(0);
+  });
+
+  test('the tab the owner left is the one they come back to', async ({ page }) => {
+    await installLifecycleRoutes(page, { installed: named, available: realCatalog });
+    await page.goto('/modules');
+    await page.getByRole('tab', { name: 'Доступные' }).click();
+    await expect(page.locator('#modules-card-host .modules-card')).toHaveCount(2);
+    await page.evaluate(async () => {
+      const controller = (await import('/static/js/pages/modules.init.js')).getModulesController();
+      controller.deactivate();
+      await controller.activate();
+    });
+    await expect(page.getByRole('tab', { name: 'Доступные' })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('#modules-card-host .modules-card')).toHaveCount(2);
+  });
+
+  test('the update mark in the DevTools header is a mark, not text glued to the label', async ({ page }) => {
+    await page.addInitScript(() => {
+      sessionStorage.setItem('xkeen.modules.update.v1', JSON.stringify({ schema: 1, sourceVersion: '2.10.0', targetVersion: '2.11.0' }));
+    });
+    await installIdleLifecycleRoutes(page);
+    await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({ json: {
+      ok: true, source_version: '2.10.0', target_version: '2.11.0', update_available: true, requires_installer: false,
+      min_updater: null, freshness: 'fresh', stale_reason: null, fetched_at: 1791700000,
+    } }));
+    await page.goto('/devtools');
+    const mark = page.locator('[data-xk-modules-update-badge]').first();
+    await expect(mark).toHaveText('Обновление');
+    const look = await mark.evaluate((node) => {
+      const style = getComputedStyle(node);
+      return { fill: style.backgroundColor, gap: style.marginLeft, ink: style.color };
+    });
+    expect(look).toEqual({ fill: 'rgb(168, 52, 50)', gap: '6px', ink: 'rgb(255, 255, 255)' });
   });
 });
