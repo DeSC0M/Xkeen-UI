@@ -69,6 +69,26 @@ TIMING_TEST_FILES = frozenset(
 )
 
 
+# Параллельный прогон раздаёт потокам файлы целиком (`--dist loadfile`), так что
+# быстрее самого долгого файла он не закончится. Тесты этих файлов друг от друга
+# не зависят и общих фикстур на файл не держат, поэтому раздаются поштучно.
+# Файл с фикстурой уровня модуля сюда вносить нельзя: её соберёт каждый поток.
+# Два файла `real_tree` здесь потому, что их общий релиз собирается один раз на
+# все потоки (фикстура `built`).
+SPLIT_TEST_FILES = frozenset(
+    {
+        "test_installer_profiles",
+        "test_modular_panel_ownership_map",
+        "test_modular_panel_release_builder",
+        "test_module_transactions_cli",
+        "test_module_transactions_install_state",
+        "test_module_transactions_real_tree",
+        "test_panel_update_real_tree",
+        "test_uninstall_is_clean",
+    }
+)
+
+
 def _platform_supports_full_app() -> bool:
     return not sys.platform.startswith("win")
 
@@ -86,6 +106,20 @@ def pytest_configure(config):
         "markers",
         "timing: test measures real time (TIMING_TEST_FILES) and must not share the CPU with a parallel run",
     )
+
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_xdist_make_scheduler(config, log):
+    if config.getvalue("dist") != "loadfile":
+        return None
+    from xdist.scheduler import LoadFileScheduling
+
+    class SplitHeavyFiles(LoadFileScheduling):
+        def _split_scope(self, nodeid: str) -> str:
+            path = nodeid.split("::", 1)[0]
+            return nodeid if Path(path).stem in SPLIT_TEST_FILES else path
+
+    return SplitHeavyFiles(config, log)
 
 
 def pytest_collection_modifyitems(config, items):

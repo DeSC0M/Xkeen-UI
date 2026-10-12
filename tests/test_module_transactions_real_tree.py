@@ -12,9 +12,11 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import re
 import shutil
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -52,14 +54,9 @@ class Built:
     pass
 
 
-@pytest.fixture(scope="module")
-def built(tmp_path_factory) -> Built:
-    """One release built the way CI builds it: compressed tree, map, packages."""
-
-    base = tmp_path_factory.mktemp("release")
+def _build_release(base: Path, installer) -> dict:
     user_archive = _load("build_user_archive", ROOT / "scripts" / "build_user_archive.py")
     release_builder = _load("build_modular_panel_release", ROOT / "scripts" / "build_modular_panel_release.py")
-    installer = _load("module_profile_install", PANEL / "scripts" / "module_profile_install.py")
     # Степень сжатия на установку не влияет, а занимает больше половины сборки.
     release_builder.ARCHIVE_COMPRESSLEVEL = 1
     package_root = base / "package-root"
@@ -89,9 +86,54 @@ def built(tmp_path_factory) -> Built:
             links = {"templates/" + name for name in _TEMPLATE_LINK.findall(markup)}
             edges.setdefault(relative, set()).update(link for link in links if link in owner_of)
 
+    return {
+        "tree": str(tree),
+        "dist": str(dist),
+        "keyring": {key_id: key.hex() for key_id, key in keyring.items()},
+        "ownership": ownership,
+        "edges": {source: sorted(targets) for source, targets in edges.items()},
+    }
+
+
+@pytest.fixture(scope="session")
+def built(tmp_path_factory) -> Built:
+    """One release built the way CI builds it: compressed tree, map, packages.
+
+    Сборка одна на весь прогон, в том числе параллельный: первый поток, которому
+    она понадобилась, собирает её в общем каталоге, остальные ждут готовую.
+    Поэтому тесты этого файла раздаются потокам поштучно (`SPLIT_TEST_FILES`),
+    а собранное дерево и релиз никто из них не меняет.
+    """
+
+    base = tmp_path_factory.getbasetemp()
+    if os.environ.get("PYTEST_XDIST_WORKER"):
+        base = base.parent
+    base = base / "real-tree-release"
+    ready, failed = base / "built.json", base / "failed"
+    installer = _load("module_profile_install", PANEL / "scripts" / "module_profile_install.py")
+    try:
+        base.mkdir()
+    except FileExistsError:
+        deadline = time.monotonic() + 900
+        while not ready.is_file():
+            if failed.exists() or time.monotonic() > deadline:
+                pytest.fail("the shared release was not built by the worker that started it")
+            time.sleep(0.2)
+    else:
+        try:
+            draft = base / "built.json.tmp"
+            draft.write_text(json.dumps(_build_release(base, installer)), encoding="utf-8")
+            os.replace(draft, ready)
+        except BaseException:
+            failed.touch()
+            raise
+
+    data = json.loads(ready.read_text(encoding="utf-8"))
     built = Built()
-    built.tree, built.dist, built.keyring, built.installer = tree, dist, keyring, installer
-    built.ownership, built.edges = ownership, edges
+    built.tree, built.dist, built.installer = Path(data["tree"]), Path(data["dist"]), installer
+    built.keyring = {key_id: bytes.fromhex(key) for key_id, key in data["keyring"].items()}
+    built.ownership = data["ownership"]
+    built.edges = {source: set(targets) for source, targets in data["edges"].items()}
     return built
 
 
