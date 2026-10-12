@@ -1,0 +1,1848 @@
+{
+  "installed": {
+    "ok": true,
+    "panel_version": "2.10.0",
+    "build": {
+      "exists": true,
+      "version": "2.10.0",
+      "base_commit": null,
+      "commit": "cccccccccccccccccccccccccccccccccccccccc",
+      "dirty": null,
+      "tree_sha256": null,
+      "built_utc": null,
+      "repo": "umarcheh001/Xkeen-UI",
+      "channel": "stable"
+    },
+    "profile": "custom",
+    "editor": {
+      "variant": "light",
+      "available_variants": [
+        "light",
+        "full",
+        "advanced"
+      ],
+      "capabilities": [
+        "codemirror",
+        "schema-basic"
+      ],
+      "requires_restart": false,
+      "installed_variant": "light"
+    },
+    "restart_required": false,
+    "transition_required": false,
+    "installed_module_ids": [
+      "core",
+      "engine.mihomo",
+      "tool.editor"
+    ],
+    "installed_set": "mihomo-minimal",
+    "enabled_set": "custom",
+    "previous_version": {
+      "available": false,
+      "reason": "no_previous_version",
+      "version": null,
+      "kept_at": null,
+      "size": 0
+    },
+    "modules": [
+      {
+        "id": "core",
+        "module_id": "core",
+        "name": "Xkeen UI Core",
+        "description": "Запуск панели, авторизация, shell, настройки, сервис и общий runtime.",
+        "version": "1.0.0",
+        "api_version": 1,
+        "depends_on": [],
+        "dependencies": [],
+        "conflicts": [],
+        "system_requirements": [
+          {
+            "id": "python3",
+            "optional": false,
+            "available": true
+          },
+          {
+            "id": "flask",
+            "optional": false,
+            "available": true
+          }
+        ],
+        "size_bytes": 1048576,
+        "removable": false,
+        "can_disable": false,
+        "requires_restart": false,
+        "frontend": {
+          "bundles": [
+            "panel-core"
+          ],
+          "navigation_views": [
+            "xkeen"
+          ]
+        },
+        "installed": true,
+        "enabled": true,
+        "effective_enabled": true,
+        "available": true,
+        "status": "enabled",
+        "reason": null,
+        "missing_requirement_ids": [],
+        "unavailable_dependency_ids": [],
+        "lifecycle_actions": []
+      },
+      {
+        "id": "engine.mihomo",
+        "module_id": "engine.mihomo",
+        "name": "Mihomo",
+        "description": "Mihomo config, Clash API, DNS, генератор, импорт, telemetry.",
+        "version": "1.0.0",
+        "api_version": 1,
+        "depends_on": [
+          "core",
+          "tool.editor"
+        ],
+        "dependencies": [
+          "core",
+          "tool.editor"
+        ],
+        "conflicts": [],
+        "system_requirements": [
+          {
+            "id": "xkeen",
+            "optional": false,
+            "available": true
+          },
+          {
+            "id": "mihomo",
+            "optional": false,
+            "available": true
+          }
+        ],
+        "size_bytes": 1048576,
+        "removable": true,
+        "can_disable": true,
+        "requires_restart": true,
+        "frontend": {
+          "bundles": [
+            "panel-mihomo",
+            "mihomo-generator-page"
+          ],
+          "navigation_views": [
+            "mihomo"
+          ]
+        },
+        "installed": true,
+        "enabled": false,
+        "effective_enabled": false,
+        "available": true,
+        "status": "disabled",
+        "reason": "user_disabled",
+        "missing_requirement_ids": [],
+        "unavailable_dependency_ids": [],
+        "lifecycle_actions": [
+          "repair",
+          "remove"
+        ]
+      },
+      {
+        "id": "tool.editor",
+        "module_id": "tool.editor",
+        "name": "Редакторы",
+        "description": "CodeMirror, Monaco, JSON/YAML schema, форматирование, diff и quick-fix.",
+        "version": "1.0.0",
+        "api_version": 1,
+        "depends_on": [
+          "core"
+        ],
+        "dependencies": [
+          "core"
+        ],
+        "conflicts": [],
+        "system_requirements": [
+          {
+            "id": "browser-esm",
+            "optional": false,
+            "available": true
+          }
+        ],
+        "size_bytes": 1048576,
+        "removable": true,
+        "can_disable": true,
+        "requires_restart": true,
+        "frontend": {
+          "bundles": [],
+          "navigation_views": []
+        },
+        "installed": true,
+        "enabled": true,
+        "effective_enabled": true,
+        "available": true,
+        "status": "enabled",
+        "reason": null,
+        "missing_requirement_ids": [],
+        "unavailable_dependency_ids": [],
+        "lifecycle_actions": [
+          "repair"
+        ]
+      }
+    ],
+    "lifecycle": {
+      "available": true,
+      "code": null
+    }
+  },
+  "available": {
+    "ok": true,
+    "release_version": "2.10.0",
+    "catalog_url": "https://github.com/umarcheh001/Xkeen-UI/releases/download/v2.10.0/catalog.json",
+    "fetched_at": 1791463143.2334564,
+    "freshness": "fresh",
+    "stale_reason": null,
+    "modules": [
+      {
+        "id": "core",
+        "version": "2.10.0",
+        "channel": "stable",
+        "panel_api": "1",
+        "module_api": "1",
+        "min_core": "1.0.0",
+        "architectures": [
+          "aarch64",
+          "mips",
+          "mipsel"
+        ],
+        "requires": [],
+        "conflicts": [],
+        "requires_restart": false,
+        "archive": "xkeen-module-core-2.10.0.tar.gz",
+        "size": 4096,
+        "sha256": "bc8140fbcf3c5b07c0412d61eaf7975150aa79543fdc82337d46a1afa7339604",
+        "signing_key_id": "release-2026",
+        "name": "Xkeen UI Core",
+        "description": "Запуск панели, авторизация, shell, настройки, сервис и общий runtime.",
+        "installed": true,
+        "lifecycle_actions": [],
+        "update_available": false
+      },
+      {
+        "id": "engine.mihomo",
+        "version": "2.10.0",
+        "channel": "stable",
+        "panel_api": "1",
+        "module_api": "1",
+        "min_core": "1.0.0",
+        "architectures": [
+          "aarch64",
+          "mips",
+          "mipsel"
+        ],
+        "requires": [
+          "core",
+          "tool.editor"
+        ],
+        "conflicts": [],
+        "requires_restart": true,
+        "archive": "xkeen-module-engine.mihomo-2.10.0.tar.gz",
+        "size": 4096,
+        "sha256": "816508e9b203a819c9cc328430d15204ab64f5da0410e7752d761cb59d8b71d5",
+        "signing_key_id": "release-2026",
+        "name": "Mihomo",
+        "description": "Mihomo config, Clash API, DNS, генератор, импорт, telemetry.",
+        "installed": true,
+        "lifecycle_actions": [
+          "repair",
+          "remove"
+        ],
+        "update_available": false
+      },
+      {
+        "id": "engine.xray",
+        "version": "2.10.0",
+        "channel": "stable",
+        "panel_api": "1",
+        "module_api": "1",
+        "min_core": "1.0.0",
+        "architectures": [
+          "aarch64",
+          "mips",
+          "mipsel"
+        ],
+        "requires": [
+          "core",
+          "tool.editor"
+        ],
+        "conflicts": [],
+        "requires_restart": true,
+        "archive": "xkeen-module-engine.xray-2.10.0.tar.gz",
+        "size": 4096,
+        "sha256": "e939228c9095f2c5c2b2afd7ade5ea0e3d000eca475dc09c78365e0bd24fecd8",
+        "signing_key_id": "release-2026",
+        "name": "Xray",
+        "description": "Routing, inbounds, outbounds, подписки, логи, DNS-over-VLESS и geodat.",
+        "installed": false,
+        "lifecycle_actions": [
+          "install"
+        ],
+        "update_available": false
+      },
+      {
+        "id": "integration.happ",
+        "version": "2.10.0",
+        "channel": "stable",
+        "panel_api": "1",
+        "module_api": "1",
+        "min_core": "1.0.0",
+        "architectures": [
+          "aarch64",
+          "mips",
+          "mipsel"
+        ],
+        "requires": [
+          "core"
+        ],
+        "conflicts": [],
+        "requires_restart": true,
+        "archive": "xkeen-module-integration.happ-2.10.0.tar.gz",
+        "size": 4096,
+        "sha256": "b4669b46fc5289314e45806280bee3327d339aa93972e43b9c991cb1b423dc87",
+        "signing_key_id": "release-2026",
+        "name": "Утилита ссылок подписок",
+        "description": "Установка и проверка утилиты ссылок подписок, HWID-подписки.",
+        "installed": false,
+        "lifecycle_actions": [
+          "install"
+        ],
+        "update_available": false
+      },
+      {
+        "id": "tool.advanced-diagnostics",
+        "version": "2.10.0",
+        "channel": "stable",
+        "panel_api": "1",
+        "module_api": "1",
+        "min_core": "1.0.0",
+        "architectures": [
+          "aarch64",
+          "mips",
+          "mipsel"
+        ],
+        "requires": [
+          "core"
+        ],
+        "conflicts": [],
+        "requires_restart": true,
+        "archive": "xkeen-module-tool.advanced-diagnostics-2.10.0.tar.gz",
+        "size": 4096,
+        "sha256": "17e3e0aac99fe556e47166920e662f2a98eca7a9c3a244f7ec7148ff0fdac30a",
+        "signing_key_id": "release-2026",
+        "name": "Расширенная диагностика",
+        "description": "DevTools, ресурсы, router diagnostics и служебные журналы.",
+        "installed": false,
+        "lifecycle_actions": [
+          "install"
+        ],
+        "update_available": false
+      },
+      {
+        "id": "tool.backups",
+        "version": "2.10.0",
+        "channel": "stable",
+        "panel_api": "1",
+        "module_api": "1",
+        "min_core": "1.0.0",
+        "architectures": [
+          "aarch64",
+          "mips",
+          "mipsel"
+        ],
+        "requires": [
+          "core"
+        ],
+        "conflicts": [],
+        "requires_restart": true,
+        "archive": "xkeen-module-tool.backups-2.10.0.tar.gz",
+        "size": 4096,
+        "sha256": "6a35d1a94d1d60ff2452808c0d00f273967cf27c03ba23c09b9c4a4d27b1ba83",
+        "signing_key_id": "release-2026",
+        "name": "Резервные копии",
+        "description": "Карточка и API резервных копий конфигураций Xray/Mihomo.",
+        "installed": false,
+        "lifecycle_actions": [
+          "install"
+        ],
+        "update_available": false
+      },
+      {
+        "id": "tool.editor",
+        "version": "2.10.0",
+        "channel": "stable",
+        "panel_api": "1",
+        "module_api": "1",
+        "min_core": "1.0.0",
+        "architectures": [
+          "aarch64",
+          "mips",
+          "mipsel"
+        ],
+        "requires": [
+          "core"
+        ],
+        "conflicts": [],
+        "requires_restart": true,
+        "archive": "xkeen-module-tool.editor-2.10.0.tar.gz",
+        "size": 4096,
+        "sha256": "62b963e6f345aa94bd9f7dcbb12cfaa5059ff69431bb00ed406be8365222e02e",
+        "signing_key_id": "release-2026",
+        "name": "Редакторы",
+        "description": "CodeMirror, Monaco, JSON/YAML schema, форматирование, diff и quick-fix.",
+        "installed": true,
+        "lifecycle_actions": [
+          "repair"
+        ],
+        "update_available": false
+      },
+      {
+        "id": "tool.files",
+        "version": "2.10.0",
+        "channel": "stable",
+        "panel_api": "1",
+        "module_api": "1",
+        "min_core": "1.0.0",
+        "architectures": [
+          "aarch64",
+          "mips",
+          "mipsel"
+        ],
+        "requires": [
+          "core"
+        ],
+        "conflicts": [],
+        "requires_restart": true,
+        "archive": "xkeen-module-tool.files-2.10.0.tar.gz",
+        "size": 4096,
+        "sha256": "91e610094777b9ef24158a0991c44d83fc67f7b3fcd6bdee39f6553643d2f364",
+        "signing_key_id": "release-2026",
+        "name": "Файловый менеджер",
+        "description": "Локальные/удалённые операции, архивы, передачи и USB storage.",
+        "installed": false,
+        "lifecycle_actions": [
+          "install"
+        ],
+        "update_available": false
+      },
+      {
+        "id": "tool.terminal",
+        "version": "2.10.0",
+        "channel": "stable",
+        "panel_api": "1",
+        "module_api": "1",
+        "min_core": "1.0.0",
+        "architectures": [
+          "aarch64",
+          "mips",
+          "mipsel"
+        ],
+        "requires": [
+          "core"
+        ],
+        "conflicts": [],
+        "requires_restart": true,
+        "archive": "xkeen-module-tool.terminal-2.10.0.tar.gz",
+        "size": 4096,
+        "sha256": "59386e5df3a7d0858aa3fef57ff1c5e5f252bd25d42d823c7af971c3548e6aad",
+        "signing_key_id": "release-2026",
+        "name": "Терминал и команды",
+        "description": "PTY, WebSocket, xterm, command jobs и shell policy.",
+        "installed": false,
+        "lifecycle_actions": [
+          "install"
+        ],
+        "update_available": false
+      }
+    ]
+  },
+  "status_none": {
+    "ok": true,
+    "result": null,
+    "log": [],
+    "error": null
+  },
+  "install_plan": {
+    "ok": true,
+    "operation": "install",
+    "module_id": "tool.terminal",
+    "version": "2.10.0",
+    "affected_module_ids": [
+      "tool.terminal"
+    ],
+    "files_add": [
+      "services/ws_pty.py",
+      "static/js/pages/terminal.lazy.entry.js",
+      "static/js/pages/terminal.lazy.entry.js.gz",
+      "static/js/terminal/_core.js"
+    ],
+    "files_remove": [],
+    "required_free_bytes": 12582912,
+    "restart_required": true,
+    "installed_after": [
+      "core",
+      "engine.mihomo",
+      "tool.editor",
+      "tool.terminal"
+    ],
+    "dependency_diff": {
+      "requires": [
+        "core"
+      ],
+      "missing": [],
+      "conflicts": [],
+      "required_by": []
+    },
+    "blockers": [],
+    "applicable": true,
+    "plan_id": "ccc503e0971d5bf1d3015de1aeb0b2d25124fcf28b48a7f0527b48df69629247"
+  },
+  "update_check_current": {
+    "ok": true,
+    "source_version": "2.10.0",
+    "target_version": "2.10.0",
+    "update_available": false,
+    "requires_installer": false,
+    "min_updater": null,
+    "freshness": "fresh",
+    "stale_reason": null,
+    "fetched_at": 1791463143.2334564
+  },
+  "panel_update_current": {
+    "ok": true,
+    "scope": "panel",
+    "operation": "panel-update",
+    "module_id": null,
+    "source_version": "2.10.0",
+    "target_version": "2.10.0",
+    "target_profile": null,
+    "affected_module_ids": [],
+    "files_add": [],
+    "files_remove": [],
+    "required_free_bytes": 0,
+    "restart_required": true,
+    "installed_after": [],
+    "dependency_diff": {},
+    "blockers": [
+      {
+        "code": "panel_version_current",
+        "message": "the stable catalog does not contain a newer panel release",
+        "current_version": "2.10.0",
+        "target_version": "2.10.0"
+      }
+    ],
+    "applicable": false,
+    "plan_id": null
+  },
+  "install_steps": {
+    "prepared": {
+      "ok": true,
+      "operation_id": "20261006T120000Z-abcdef",
+      "scope": "module",
+      "operation": "install",
+      "module_id": "tool.terminal",
+      "version": "2.10.0",
+      "step": "prepared",
+      "result": "running",
+      "error_code": null,
+      "error": null,
+      "started_at": 1791463143.6034563,
+      "finished_at": null,
+      "log": [
+        {
+          "step": "prepared",
+          "at": 1791463143.9734561
+        }
+      ]
+    },
+    "downloading": {
+      "ok": true,
+      "operation_id": "20261006T120000Z-abcdef",
+      "scope": "module",
+      "operation": "install",
+      "module_id": "tool.terminal",
+      "version": "2.10.0",
+      "step": "downloading",
+      "result": "running",
+      "error_code": null,
+      "error": null,
+      "started_at": 1791463143.6034563,
+      "finished_at": null,
+      "log": [
+        {
+          "step": "prepared",
+          "at": 1791463143.9734561
+        },
+        {
+          "step": "downloading",
+          "at": 1791463144.343456
+        }
+      ]
+    },
+    "verifying": {
+      "ok": true,
+      "operation_id": "20261006T120000Z-abcdef",
+      "scope": "module",
+      "operation": "install",
+      "module_id": "tool.terminal",
+      "version": "2.10.0",
+      "step": "verifying",
+      "result": "running",
+      "error_code": null,
+      "error": null,
+      "started_at": 1791463143.6034563,
+      "finished_at": null,
+      "log": [
+        {
+          "step": "prepared",
+          "at": 1791463143.9734561
+        },
+        {
+          "step": "downloading",
+          "at": 1791463144.343456
+        },
+        {
+          "step": "verifying",
+          "at": 1791463144.713456
+        }
+      ]
+    },
+    "applying": {
+      "ok": true,
+      "operation_id": "20261006T120000Z-abcdef",
+      "scope": "module",
+      "operation": "install",
+      "module_id": "tool.terminal",
+      "version": "2.10.0",
+      "step": "applying",
+      "result": "running",
+      "error_code": null,
+      "error": null,
+      "started_at": 1791463143.6034563,
+      "finished_at": null,
+      "log": [
+        {
+          "step": "prepared",
+          "at": 1791463143.9734561
+        },
+        {
+          "step": "downloading",
+          "at": 1791463144.343456
+        },
+        {
+          "step": "verifying",
+          "at": 1791463144.713456
+        },
+        {
+          "step": "applying",
+          "at": 1791463145.0834558
+        }
+      ]
+    },
+    "state": {
+      "ok": true,
+      "operation_id": "20261006T120000Z-abcdef",
+      "scope": "module",
+      "operation": "install",
+      "module_id": "tool.terminal",
+      "version": "2.10.0",
+      "step": "state",
+      "result": "running",
+      "error_code": null,
+      "error": null,
+      "started_at": 1791463143.6034563,
+      "finished_at": null,
+      "log": [
+        {
+          "step": "prepared",
+          "at": 1791463143.9734561
+        },
+        {
+          "step": "downloading",
+          "at": 1791463144.343456
+        },
+        {
+          "step": "verifying",
+          "at": 1791463144.713456
+        },
+        {
+          "step": "applying",
+          "at": 1791463145.0834558
+        },
+        {
+          "step": "state",
+          "at": 1791463145.4534557
+        }
+      ]
+    },
+    "restarting": {
+      "ok": true,
+      "operation_id": "20261006T120000Z-abcdef",
+      "scope": "module",
+      "operation": "install",
+      "module_id": "tool.terminal",
+      "version": "2.10.0",
+      "step": "restarting",
+      "result": "running",
+      "error_code": null,
+      "error": null,
+      "started_at": 1791463143.6034563,
+      "finished_at": null,
+      "log": [
+        {
+          "step": "prepared",
+          "at": 1791463143.9734561
+        },
+        {
+          "step": "downloading",
+          "at": 1791463144.343456
+        },
+        {
+          "step": "verifying",
+          "at": 1791463144.713456
+        },
+        {
+          "step": "applying",
+          "at": 1791463145.0834558
+        },
+        {
+          "step": "state",
+          "at": 1791463145.4534557
+        },
+        {
+          "step": "restarting",
+          "at": 1791463145.8234556
+        }
+      ]
+    },
+    "health": {
+      "ok": true,
+      "operation_id": "20261006T120000Z-abcdef",
+      "scope": "module",
+      "operation": "install",
+      "module_id": "tool.terminal",
+      "version": "2.10.0",
+      "step": "health",
+      "result": "running",
+      "error_code": null,
+      "error": null,
+      "started_at": 1791463143.6034563,
+      "finished_at": null,
+      "log": [
+        {
+          "step": "prepared",
+          "at": 1791463143.9734561
+        },
+        {
+          "step": "downloading",
+          "at": 1791463144.343456
+        },
+        {
+          "step": "verifying",
+          "at": 1791463144.713456
+        },
+        {
+          "step": "applying",
+          "at": 1791463145.0834558
+        },
+        {
+          "step": "state",
+          "at": 1791463145.4534557
+        },
+        {
+          "step": "restarting",
+          "at": 1791463145.8234556
+        },
+        {
+          "step": "health",
+          "at": 1791463146.1934555
+        }
+      ]
+    },
+    "committed": {
+      "ok": true,
+      "operation_id": "20261006T120000Z-abcdef",
+      "scope": "module",
+      "operation": "install",
+      "module_id": "tool.terminal",
+      "version": "2.10.0",
+      "step": "committed",
+      "result": "running",
+      "error_code": null,
+      "error": null,
+      "started_at": 1791463143.6034563,
+      "finished_at": null,
+      "log": [
+        {
+          "step": "prepared",
+          "at": 1791463143.9734561
+        },
+        {
+          "step": "downloading",
+          "at": 1791463144.343456
+        },
+        {
+          "step": "verifying",
+          "at": 1791463144.713456
+        },
+        {
+          "step": "applying",
+          "at": 1791463145.0834558
+        },
+        {
+          "step": "state",
+          "at": 1791463145.4534557
+        },
+        {
+          "step": "restarting",
+          "at": 1791463145.8234556
+        },
+        {
+          "step": "health",
+          "at": 1791463146.1934555
+        },
+        {
+          "step": "committed",
+          "at": 1791463146.5634553
+        }
+      ]
+    }
+  },
+  "install_committed": {
+    "ok": true,
+    "operation_id": "20261006T120000Z-abcdef",
+    "scope": "module",
+    "operation": "install",
+    "module_id": "tool.terminal",
+    "version": "2.10.0",
+    "step": "committed",
+    "result": "committed",
+    "error_code": null,
+    "error": null,
+    "started_at": 1791463143.6034563,
+    "finished_at": 1791463146.9334552,
+    "log": [
+      {
+        "step": "prepared",
+        "at": 1791463143.9734561
+      },
+      {
+        "step": "downloading",
+        "at": 1791463144.343456
+      },
+      {
+        "step": "verifying",
+        "at": 1791463144.713456
+      },
+      {
+        "step": "applying",
+        "at": 1791463145.0834558
+      },
+      {
+        "step": "state",
+        "at": 1791463145.4534557
+      },
+      {
+        "step": "restarting",
+        "at": 1791463145.8234556
+      },
+      {
+        "step": "health",
+        "at": 1791463146.1934555
+      },
+      {
+        "step": "committed",
+        "at": 1791463146.5634553
+      }
+    ]
+  },
+  "installed_after_install": {
+    "ok": true,
+    "panel_version": "2.10.0",
+    "build": {
+      "exists": true,
+      "version": "2.10.0",
+      "base_commit": null,
+      "commit": "cccccccccccccccccccccccccccccccccccccccc",
+      "dirty": null,
+      "tree_sha256": null,
+      "built_utc": null,
+      "repo": "umarcheh001/Xkeen-UI",
+      "channel": "stable"
+    },
+    "profile": "custom",
+    "editor": {
+      "variant": "light",
+      "available_variants": [
+        "light",
+        "full",
+        "advanced"
+      ],
+      "capabilities": [
+        "codemirror",
+        "schema-basic"
+      ],
+      "requires_restart": false,
+      "installed_variant": "light"
+    },
+    "restart_required": false,
+    "transition_required": false,
+    "installed_module_ids": [
+      "core",
+      "engine.mihomo",
+      "tool.editor",
+      "tool.terminal"
+    ],
+    "installed_set": "custom",
+    "enabled_set": "custom",
+    "previous_version": {
+      "available": false,
+      "reason": "no_previous_version",
+      "version": null,
+      "kept_at": null,
+      "size": 0
+    },
+    "modules": [
+      {
+        "id": "core",
+        "module_id": "core",
+        "name": "Xkeen UI Core",
+        "description": "Запуск панели, авторизация, shell, настройки, сервис и общий runtime.",
+        "version": "1.0.0",
+        "api_version": 1,
+        "depends_on": [],
+        "dependencies": [],
+        "conflicts": [],
+        "system_requirements": [
+          {
+            "id": "python3",
+            "optional": false,
+            "available": true
+          },
+          {
+            "id": "flask",
+            "optional": false,
+            "available": true
+          }
+        ],
+        "size_bytes": 1048576,
+        "removable": false,
+        "can_disable": false,
+        "requires_restart": false,
+        "frontend": {
+          "bundles": [
+            "panel-core"
+          ],
+          "navigation_views": [
+            "xkeen"
+          ]
+        },
+        "installed": true,
+        "enabled": true,
+        "effective_enabled": true,
+        "available": true,
+        "status": "enabled",
+        "reason": null,
+        "missing_requirement_ids": [],
+        "unavailable_dependency_ids": [],
+        "lifecycle_actions": []
+      },
+      {
+        "id": "engine.mihomo",
+        "module_id": "engine.mihomo",
+        "name": "Mihomo",
+        "description": "Mihomo config, Clash API, DNS, генератор, импорт, telemetry.",
+        "version": "1.0.0",
+        "api_version": 1,
+        "depends_on": [
+          "core",
+          "tool.editor"
+        ],
+        "dependencies": [
+          "core",
+          "tool.editor"
+        ],
+        "conflicts": [],
+        "system_requirements": [
+          {
+            "id": "xkeen",
+            "optional": false,
+            "available": true
+          },
+          {
+            "id": "mihomo",
+            "optional": false,
+            "available": true
+          }
+        ],
+        "size_bytes": 1048576,
+        "removable": true,
+        "can_disable": true,
+        "requires_restart": true,
+        "frontend": {
+          "bundles": [
+            "panel-mihomo",
+            "mihomo-generator-page"
+          ],
+          "navigation_views": [
+            "mihomo"
+          ]
+        },
+        "installed": true,
+        "enabled": false,
+        "effective_enabled": false,
+        "available": true,
+        "status": "disabled",
+        "reason": "user_disabled",
+        "missing_requirement_ids": [],
+        "unavailable_dependency_ids": [],
+        "lifecycle_actions": [
+          "repair",
+          "remove"
+        ]
+      },
+      {
+        "id": "tool.editor",
+        "module_id": "tool.editor",
+        "name": "Редакторы",
+        "description": "CodeMirror, Monaco, JSON/YAML schema, форматирование, diff и quick-fix.",
+        "version": "1.0.0",
+        "api_version": 1,
+        "depends_on": [
+          "core"
+        ],
+        "dependencies": [
+          "core"
+        ],
+        "conflicts": [],
+        "system_requirements": [
+          {
+            "id": "browser-esm",
+            "optional": false,
+            "available": true
+          }
+        ],
+        "size_bytes": 1048576,
+        "removable": true,
+        "can_disable": true,
+        "requires_restart": true,
+        "frontend": {
+          "bundles": [],
+          "navigation_views": []
+        },
+        "installed": true,
+        "enabled": true,
+        "effective_enabled": true,
+        "available": true,
+        "status": "enabled",
+        "reason": null,
+        "missing_requirement_ids": [],
+        "unavailable_dependency_ids": [],
+        "lifecycle_actions": [
+          "repair"
+        ]
+      },
+      {
+        "id": "tool.terminal",
+        "module_id": "tool.terminal",
+        "name": "Терминал и команды",
+        "description": "PTY, WebSocket, xterm, command jobs и shell policy.",
+        "version": "1.0.0",
+        "api_version": 1,
+        "depends_on": [
+          "core"
+        ],
+        "dependencies": [
+          "core"
+        ],
+        "conflicts": [],
+        "system_requirements": [
+          {
+            "id": "shell",
+            "optional": false,
+            "available": true
+          },
+          {
+            "id": "gevent",
+            "optional": true,
+            "available": false
+          },
+          {
+            "id": "gevent-websocket",
+            "optional": true,
+            "available": false
+          }
+        ],
+        "size_bytes": 1048576,
+        "removable": true,
+        "can_disable": true,
+        "requires_restart": true,
+        "frontend": {
+          "bundles": [
+            "terminal-lazy"
+          ],
+          "navigation_views": [
+            "commands"
+          ]
+        },
+        "installed": true,
+        "enabled": true,
+        "effective_enabled": true,
+        "available": true,
+        "status": "enabled",
+        "reason": null,
+        "missing_requirement_ids": [],
+        "unavailable_dependency_ids": [],
+        "lifecycle_actions": [
+          "repair",
+          "remove"
+        ]
+      }
+    ],
+    "lifecycle": {
+      "available": true,
+      "code": null
+    }
+  },
+  "available_after_install": {
+    "ok": true,
+    "release_version": "2.10.0",
+    "catalog_url": "https://github.com/umarcheh001/Xkeen-UI/releases/download/v2.10.0/catalog.json",
+    "fetched_at": 1791463143.2334564,
+    "freshness": "fresh",
+    "stale_reason": null,
+    "modules": [
+      {
+        "id": "core",
+        "version": "2.10.0",
+        "channel": "stable",
+        "panel_api": "1",
+        "module_api": "1",
+        "min_core": "1.0.0",
+        "architectures": [
+          "aarch64",
+          "mips",
+          "mipsel"
+        ],
+        "requires": [],
+        "conflicts": [],
+        "requires_restart": false,
+        "archive": "xkeen-module-core-2.10.0.tar.gz",
+        "size": 4096,
+        "sha256": "bc8140fbcf3c5b07c0412d61eaf7975150aa79543fdc82337d46a1afa7339604",
+        "signing_key_id": "release-2026",
+        "name": "Xkeen UI Core",
+        "description": "Запуск панели, авторизация, shell, настройки, сервис и общий runtime.",
+        "installed": true,
+        "lifecycle_actions": [],
+        "update_available": false
+      },
+      {
+        "id": "engine.mihomo",
+        "version": "2.10.0",
+        "channel": "stable",
+        "panel_api": "1",
+        "module_api": "1",
+        "min_core": "1.0.0",
+        "architectures": [
+          "aarch64",
+          "mips",
+          "mipsel"
+        ],
+        "requires": [
+          "core",
+          "tool.editor"
+        ],
+        "conflicts": [],
+        "requires_restart": true,
+        "archive": "xkeen-module-engine.mihomo-2.10.0.tar.gz",
+        "size": 4096,
+        "sha256": "816508e9b203a819c9cc328430d15204ab64f5da0410e7752d761cb59d8b71d5",
+        "signing_key_id": "release-2026",
+        "name": "Mihomo",
+        "description": "Mihomo config, Clash API, DNS, генератор, импорт, telemetry.",
+        "installed": true,
+        "lifecycle_actions": [
+          "repair",
+          "remove"
+        ],
+        "update_available": false
+      },
+      {
+        "id": "engine.xray",
+        "version": "2.10.0",
+        "channel": "stable",
+        "panel_api": "1",
+        "module_api": "1",
+        "min_core": "1.0.0",
+        "architectures": [
+          "aarch64",
+          "mips",
+          "mipsel"
+        ],
+        "requires": [
+          "core",
+          "tool.editor"
+        ],
+        "conflicts": [],
+        "requires_restart": true,
+        "archive": "xkeen-module-engine.xray-2.10.0.tar.gz",
+        "size": 4096,
+        "sha256": "e939228c9095f2c5c2b2afd7ade5ea0e3d000eca475dc09c78365e0bd24fecd8",
+        "signing_key_id": "release-2026",
+        "name": "Xray",
+        "description": "Routing, inbounds, outbounds, подписки, логи, DNS-over-VLESS и geodat.",
+        "installed": false,
+        "lifecycle_actions": [
+          "install"
+        ],
+        "update_available": false
+      },
+      {
+        "id": "integration.happ",
+        "version": "2.10.0",
+        "channel": "stable",
+        "panel_api": "1",
+        "module_api": "1",
+        "min_core": "1.0.0",
+        "architectures": [
+          "aarch64",
+          "mips",
+          "mipsel"
+        ],
+        "requires": [
+          "core"
+        ],
+        "conflicts": [],
+        "requires_restart": true,
+        "archive": "xkeen-module-integration.happ-2.10.0.tar.gz",
+        "size": 4096,
+        "sha256": "b4669b46fc5289314e45806280bee3327d339aa93972e43b9c991cb1b423dc87",
+        "signing_key_id": "release-2026",
+        "name": "Утилита ссылок подписок",
+        "description": "Установка и проверка утилиты ссылок подписок, HWID-подписки.",
+        "installed": false,
+        "lifecycle_actions": [
+          "install"
+        ],
+        "update_available": false
+      },
+      {
+        "id": "tool.advanced-diagnostics",
+        "version": "2.10.0",
+        "channel": "stable",
+        "panel_api": "1",
+        "module_api": "1",
+        "min_core": "1.0.0",
+        "architectures": [
+          "aarch64",
+          "mips",
+          "mipsel"
+        ],
+        "requires": [
+          "core"
+        ],
+        "conflicts": [],
+        "requires_restart": true,
+        "archive": "xkeen-module-tool.advanced-diagnostics-2.10.0.tar.gz",
+        "size": 4096,
+        "sha256": "17e3e0aac99fe556e47166920e662f2a98eca7a9c3a244f7ec7148ff0fdac30a",
+        "signing_key_id": "release-2026",
+        "name": "Расширенная диагностика",
+        "description": "DevTools, ресурсы, router diagnostics и служебные журналы.",
+        "installed": false,
+        "lifecycle_actions": [
+          "install"
+        ],
+        "update_available": false
+      },
+      {
+        "id": "tool.backups",
+        "version": "2.10.0",
+        "channel": "stable",
+        "panel_api": "1",
+        "module_api": "1",
+        "min_core": "1.0.0",
+        "architectures": [
+          "aarch64",
+          "mips",
+          "mipsel"
+        ],
+        "requires": [
+          "core"
+        ],
+        "conflicts": [],
+        "requires_restart": true,
+        "archive": "xkeen-module-tool.backups-2.10.0.tar.gz",
+        "size": 4096,
+        "sha256": "6a35d1a94d1d60ff2452808c0d00f273967cf27c03ba23c09b9c4a4d27b1ba83",
+        "signing_key_id": "release-2026",
+        "name": "Резервные копии",
+        "description": "Карточка и API резервных копий конфигураций Xray/Mihomo.",
+        "installed": false,
+        "lifecycle_actions": [
+          "install"
+        ],
+        "update_available": false
+      },
+      {
+        "id": "tool.editor",
+        "version": "2.10.0",
+        "channel": "stable",
+        "panel_api": "1",
+        "module_api": "1",
+        "min_core": "1.0.0",
+        "architectures": [
+          "aarch64",
+          "mips",
+          "mipsel"
+        ],
+        "requires": [
+          "core"
+        ],
+        "conflicts": [],
+        "requires_restart": true,
+        "archive": "xkeen-module-tool.editor-2.10.0.tar.gz",
+        "size": 4096,
+        "sha256": "62b963e6f345aa94bd9f7dcbb12cfaa5059ff69431bb00ed406be8365222e02e",
+        "signing_key_id": "release-2026",
+        "name": "Редакторы",
+        "description": "CodeMirror, Monaco, JSON/YAML schema, форматирование, diff и quick-fix.",
+        "installed": true,
+        "lifecycle_actions": [
+          "repair"
+        ],
+        "update_available": false
+      },
+      {
+        "id": "tool.files",
+        "version": "2.10.0",
+        "channel": "stable",
+        "panel_api": "1",
+        "module_api": "1",
+        "min_core": "1.0.0",
+        "architectures": [
+          "aarch64",
+          "mips",
+          "mipsel"
+        ],
+        "requires": [
+          "core"
+        ],
+        "conflicts": [],
+        "requires_restart": true,
+        "archive": "xkeen-module-tool.files-2.10.0.tar.gz",
+        "size": 4096,
+        "sha256": "91e610094777b9ef24158a0991c44d83fc67f7b3fcd6bdee39f6553643d2f364",
+        "signing_key_id": "release-2026",
+        "name": "Файловый менеджер",
+        "description": "Локальные/удалённые операции, архивы, передачи и USB storage.",
+        "installed": false,
+        "lifecycle_actions": [
+          "install"
+        ],
+        "update_available": false
+      },
+      {
+        "id": "tool.terminal",
+        "version": "2.10.0",
+        "channel": "stable",
+        "panel_api": "1",
+        "module_api": "1",
+        "min_core": "1.0.0",
+        "architectures": [
+          "aarch64",
+          "mips",
+          "mipsel"
+        ],
+        "requires": [
+          "core"
+        ],
+        "conflicts": [],
+        "requires_restart": true,
+        "archive": "xkeen-module-tool.terminal-2.10.0.tar.gz",
+        "size": 4096,
+        "sha256": "59386e5df3a7d0858aa3fef57ff1c5e5f252bd25d42d823c7af971c3548e6aad",
+        "signing_key_id": "release-2026",
+        "name": "Терминал и команды",
+        "description": "PTY, WebSocket, xterm, command jobs и shell policy.",
+        "installed": true,
+        "lifecycle_actions": [
+          "repair",
+          "remove"
+        ],
+        "update_available": false
+      }
+    ]
+  },
+  "recovery_interrupted": {
+    "ok": true,
+    "recovery_result": "interrupted",
+    "operation_id": "20261006T120000Z-abcdef",
+    "scope": "module",
+    "operation": "install",
+    "module_id": "tool.terminal",
+    "version": "2.10.0",
+    "step": "downloading",
+    "result": "interrupted",
+    "error_code": "operation_interrupted",
+    "error": "the module operation was interrupted",
+    "started_at": 1791463148.043455,
+    "finished_at": 1791463149.1534545,
+    "recovered": true,
+    "log": [
+      {
+        "step": "prepared",
+        "at": 1791463148.4134548
+      },
+      {
+        "step": "downloading",
+        "at": 1791463148.7834547
+      }
+    ]
+  },
+  "interrupted": {
+    "ok": true,
+    "operation_id": "20261006T120000Z-abcdef",
+    "scope": "module",
+    "operation": "install",
+    "module_id": "tool.terminal",
+    "version": "2.10.0",
+    "step": "downloading",
+    "result": "interrupted",
+    "error_code": "operation_interrupted",
+    "error": "the module operation was interrupted",
+    "started_at": 1791463148.043455,
+    "finished_at": 1791463149.1534545,
+    "recovered": true,
+    "log": [
+      {
+        "step": "prepared",
+        "at": 1791463148.4134548
+      },
+      {
+        "step": "downloading",
+        "at": 1791463148.7834547
+      }
+    ]
+  },
+  "cancelled": {
+    "ok": true,
+    "operation_id": "20261006T120000Z-abcdef",
+    "scope": "module",
+    "operation": "install",
+    "module_id": "tool.terminal",
+    "version": "2.10.0",
+    "step": "downloading",
+    "result": "interrupted",
+    "error_code": "operation_cancelled",
+    "error": "the module operation was cancelled",
+    "started_at": 1791463150.2634542,
+    "finished_at": 1791463151.3734539,
+    "log": [
+      {
+        "step": "prepared",
+        "at": 1791463150.633454
+      },
+      {
+        "step": "downloading",
+        "at": 1791463151.003454
+      }
+    ]
+  },
+  "recovery_rolled_back": {
+    "ok": true,
+    "recovery_result": "rolled_back",
+    "operation_id": "20261006T120000Z-abcdef",
+    "scope": "module",
+    "operation": "install",
+    "module_id": "tool.terminal",
+    "version": "2.10.0",
+    "step": "health",
+    "result": "rolled_back",
+    "error_code": "operation_interrupted",
+    "error": "the module operation was interrupted",
+    "started_at": 1791463152.4834535,
+    "finished_at": 1791463155.8134525,
+    "recovered": true,
+    "restart_required": true,
+    "log": [
+      {
+        "step": "prepared",
+        "at": 1791463152.8534534
+      },
+      {
+        "step": "downloading",
+        "at": 1791463153.2234533
+      },
+      {
+        "step": "verifying",
+        "at": 1791463153.963453
+      },
+      {
+        "step": "applying",
+        "at": 1791463154.333453
+      },
+      {
+        "step": "state",
+        "at": 1791463154.7034528
+      },
+      {
+        "step": "restarting",
+        "at": 1791463155.0734527
+      },
+      {
+        "step": "health",
+        "at": 1791463155.4434526
+      }
+    ]
+  },
+  "rolled_back_restart": {
+    "ok": true,
+    "operation_id": "20261006T120000Z-abcdef",
+    "scope": "module",
+    "operation": "install",
+    "module_id": "tool.terminal",
+    "version": "2.10.0",
+    "step": "health",
+    "result": "rolled_back",
+    "error_code": "operation_interrupted",
+    "error": "the module operation was interrupted",
+    "started_at": 1791463152.4834535,
+    "finished_at": 1791463155.8134525,
+    "recovered": true,
+    "restart_required": true,
+    "log": [
+      {
+        "step": "prepared",
+        "at": 1791463152.8534534
+      },
+      {
+        "step": "downloading",
+        "at": 1791463153.2234533
+      },
+      {
+        "step": "verifying",
+        "at": 1791463153.963453
+      },
+      {
+        "step": "applying",
+        "at": 1791463154.333453
+      },
+      {
+        "step": "state",
+        "at": 1791463154.7034528
+      },
+      {
+        "step": "restarting",
+        "at": 1791463155.0734527
+      },
+      {
+        "step": "health",
+        "at": 1791463155.4434526
+      }
+    ]
+  },
+  "rollback_failed": {
+    "ok": true,
+    "operation_id": "20261006T120000Z-abcdef",
+    "scope": "module",
+    "operation": "install",
+    "module_id": "tool.terminal",
+    "version": "2.10.0",
+    "step": "rolling_back",
+    "result": "rollback_failed",
+    "error_code": "operation_health_failed",
+    "error": "the panel did not become healthy after the module operation",
+    "started_at": 1791463156.9234521,
+    "finished_at": 1791463160.623451,
+    "log": [
+      {
+        "step": "prepared",
+        "at": 1791463157.293452
+      },
+      {
+        "step": "downloading",
+        "at": 1791463157.663452
+      },
+      {
+        "step": "verifying",
+        "at": 1791463158.4034517
+      },
+      {
+        "step": "applying",
+        "at": 1791463158.7734516
+      },
+      {
+        "step": "state",
+        "at": 1791463159.1434515
+      },
+      {
+        "step": "restarting",
+        "at": 1791463159.5134513
+      },
+      {
+        "step": "health",
+        "at": 1791463159.8834512
+      },
+      {
+        "step": "rolling_back",
+        "at": 1791463160.253451
+      }
+    ],
+    "failed_path": "services/ws_pty.py"
+  },
+  "installed_mihomo_on": {
+    "ok": true,
+    "panel_version": "2.10.0",
+    "build": {
+      "exists": true,
+      "version": "2.10.0",
+      "base_commit": null,
+      "commit": "cccccccccccccccccccccccccccccccccccccccc",
+      "dirty": null,
+      "tree_sha256": null,
+      "built_utc": null,
+      "repo": "umarcheh001/Xkeen-UI",
+      "channel": "stable"
+    },
+    "profile": "custom",
+    "editor": {
+      "variant": "light",
+      "available_variants": [
+        "light",
+        "full",
+        "advanced"
+      ],
+      "capabilities": [
+        "codemirror",
+        "schema-basic"
+      ],
+      "requires_restart": true,
+      "installed_variant": "light"
+    },
+    "restart_required": true,
+    "transition_required": false,
+    "installed_module_ids": [
+      "core",
+      "engine.mihomo",
+      "tool.editor"
+    ],
+    "installed_set": "mihomo-minimal",
+    "enabled_set": "mihomo-minimal",
+    "previous_version": {
+      "available": false,
+      "reason": "no_previous_version",
+      "version": null,
+      "kept_at": null,
+      "size": 0
+    },
+    "modules": [
+      {
+        "id": "core",
+        "module_id": "core",
+        "name": "Xkeen UI Core",
+        "description": "Запуск панели, авторизация, shell, настройки, сервис и общий runtime.",
+        "version": "1.0.0",
+        "api_version": 1,
+        "depends_on": [],
+        "dependencies": [],
+        "conflicts": [],
+        "system_requirements": [
+          {
+            "id": "python3",
+            "optional": false,
+            "available": true
+          },
+          {
+            "id": "flask",
+            "optional": false,
+            "available": true
+          }
+        ],
+        "size_bytes": 1048576,
+        "removable": false,
+        "can_disable": false,
+        "requires_restart": false,
+        "frontend": {
+          "bundles": [
+            "panel-core"
+          ],
+          "navigation_views": [
+            "xkeen"
+          ]
+        },
+        "installed": true,
+        "enabled": true,
+        "effective_enabled": true,
+        "available": true,
+        "status": "enabled",
+        "reason": null,
+        "missing_requirement_ids": [],
+        "unavailable_dependency_ids": [],
+        "lifecycle_actions": []
+      },
+      {
+        "id": "engine.mihomo",
+        "module_id": "engine.mihomo",
+        "name": "Mihomo",
+        "description": "Mihomo config, Clash API, DNS, генератор, импорт, telemetry.",
+        "version": "1.0.0",
+        "api_version": 1,
+        "depends_on": [
+          "core",
+          "tool.editor"
+        ],
+        "dependencies": [
+          "core",
+          "tool.editor"
+        ],
+        "conflicts": [],
+        "system_requirements": [
+          {
+            "id": "xkeen",
+            "optional": false,
+            "available": true
+          },
+          {
+            "id": "mihomo",
+            "optional": false,
+            "available": true
+          }
+        ],
+        "size_bytes": 1048576,
+        "removable": true,
+        "can_disable": true,
+        "requires_restart": true,
+        "frontend": {
+          "bundles": [
+            "panel-mihomo",
+            "mihomo-generator-page"
+          ],
+          "navigation_views": [
+            "mihomo"
+          ]
+        },
+        "installed": true,
+        "enabled": true,
+        "effective_enabled": true,
+        "available": true,
+        "status": "enabled",
+        "reason": null,
+        "missing_requirement_ids": [],
+        "unavailable_dependency_ids": [],
+        "lifecycle_actions": [
+          "repair",
+          "remove"
+        ]
+      },
+      {
+        "id": "tool.editor",
+        "module_id": "tool.editor",
+        "name": "Редакторы",
+        "description": "CodeMirror, Monaco, JSON/YAML schema, форматирование, diff и quick-fix.",
+        "version": "1.0.0",
+        "api_version": 1,
+        "depends_on": [
+          "core"
+        ],
+        "dependencies": [
+          "core"
+        ],
+        "conflicts": [],
+        "system_requirements": [
+          {
+            "id": "browser-esm",
+            "optional": false,
+            "available": true
+          }
+        ],
+        "size_bytes": 1048576,
+        "removable": true,
+        "can_disable": false,
+        "requires_restart": true,
+        "frontend": {
+          "bundles": [],
+          "navigation_views": []
+        },
+        "installed": true,
+        "enabled": true,
+        "effective_enabled": true,
+        "available": true,
+        "status": "enabled",
+        "reason": null,
+        "missing_requirement_ids": [],
+        "unavailable_dependency_ids": [],
+        "lifecycle_actions": [
+          "repair"
+        ]
+      }
+    ],
+    "lifecycle": {
+      "available": true,
+      "code": null
+    }
+  },
+  "update_check": {
+    "ok": true,
+    "source_version": "2.10.0",
+    "target_version": "2.11.0",
+    "update_available": true,
+    "requires_installer": false,
+    "min_updater": null,
+    "freshness": "fresh",
+    "stale_reason": null,
+    "fetched_at": 1791463163.2134502
+  },
+  "panel_update_plan": {
+    "ok": true,
+    "scope": "panel",
+    "operation": "panel-update",
+    "module_id": null,
+    "version": "2.11.0",
+    "source_version": "2.10.0",
+    "target_version": "2.11.0",
+    "target_profile": {
+      "profile": "mihomo-minimal",
+      "module_ids": [
+        "core",
+        "engine.mihomo",
+        "tool.editor"
+      ],
+      "editor_variant": "light"
+    },
+    "affected_module_ids": [
+      "core",
+      "engine.mihomo",
+      "tool.editor"
+    ],
+    "files_add": [
+      "app.py",
+      "routes/mihomo.py",
+      "services/mihomo_subscriptions.py",
+      "services/module_registry.py",
+      "static/frontend-build/.vite/manifest.build.json",
+      "static/frontend-build/.vite/manifest.json",
+      "static/frontend-build/assets/panel-bridge.js",
+      "static/js/core.js",
+      "static/js/core.js.gz",
+      "static/js/pages/codemirror6.shared.js"
+    ],
+    "files_remove": [],
+    "required_free_bytes": 12582912,
+    "restart_required": true,
+    "installed_after": [
+      "core",
+      "engine.mihomo",
+      "tool.editor"
+    ],
+    "dependency_diff": {},
+    "blockers": [],
+    "applicable": true,
+    "plan_id": "3a58284907c91c74652b0f5ead93eb440ce3343d28e76e4e802971108a9e8a81"
+  }
+}

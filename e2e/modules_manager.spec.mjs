@@ -1,46 +1,23 @@
+import { readFileSync } from 'node:fs';
+
 import { test, expect } from './fixtures.mjs';
 
-const installedSnapshot = {
-  ok: true,
-  panel_version: '2.10.0',
-  build: {
-    exists: true,
-    version: '2.10.0',
-    commit: 'abc123456789',
-    built_utc: '2026-10-09T09:10:11Z',
-    repo: 'umarcheh001/Xkeen-UI',
-    channel: 'stable',
-  },
-  profile: 'mihomo-minimal',
-  transition_required: false,
-  editor: { variant: 'codemirror' },
-  restart_required: false,
-  lifecycle: { available: true, code: null },
-  modules: [
-    { id: 'core', name: 'Xkeen UI Core', version: '1.0.0', enabled: true, can_disable: false },
-    { id: 'engine.mihomo', name: 'Mihomo', version: '1.19.0', enabled: false, can_disable: true, lifecycle_actions: ['repair', 'remove'] },
-  ],
-};
-const idleStatus = { ok: true, result: 'idle' };
-const availableSnapshot = {
-  ok: true,
-  release_version: '2.10.0',
-  modules: [
-    { id: 'tool.terminal', name: 'Терминал', description: 'Командная строка', version: '2.10.0', requires: ['core'], conflicts: [], lifecycle_actions: ['install'] },
-  ],
-};
-const installPlan = {
-  ok: true, operation: 'install', module_id: 'tool.terminal', version: '2.10.0',
-  affected_module_ids: ['tool.terminal'], files_add: [{ path: 'terminal.js' }], files_remove: [],
-  required_free_bytes: 12 * 1024 * 1024, restart_required: true,
-  dependency_diff: { add: ['core'], remove: [] }, blockers: [], applicable: true,
-  plan_id: 'a'.repeat(64),
-};
-const runningStatus = {
-  ok: true, operation_id: 'op-123', operation: 'install', module_id: 'tool.terminal',
-  result: 'running', step: 'download', started_at: 1781000000,
-  log: [{ step: 'prepare', at: 1781000000 }, { step: 'download', at: 1781000001 }],
-};
+// What the server really answers. The file is written from the lifecycle
+// service by scripts/generate_module_manager_e2e_fixtures.py and kept current
+// by tests/test_module_manager_e2e_fixtures.py: no answer here is hand-made.
+const server = JSON.parse(readFileSync(new URL('./fixtures/module_manager_server.json', import.meta.url), 'utf8'));
+// Mihomo is installed and switched off; the terminal is not installed.
+const installedSnapshot = server.installed;
+const idleStatus = server.status_none;
+const availableSnapshot = server.available;
+const installPlan = server.install_plan;
+const panelUpdatePlan = server.panel_update_plan;
+const runningStatus = server.install_steps.downloading;
+const committedStatus = server.install_committed;
+const terminalEntry = availableSnapshot.modules.find((item) => item.id === 'tool.terminal');
+const TERMINAL = terminalEntry.name;
+// The installed snapshot the way the server gives it once Mihomo is switched.
+const withMihomo = (enabled) => (enabled ? server.installed_mihomo_on : installedSnapshot);
 
 async function installIdleLifecycleRoutes(page) {
   await page.route('**/api/modules/installed', (route) => route.fulfill({ json: installedSnapshot }));
@@ -63,15 +40,14 @@ async function advanceClock(page, ms, step = 500) {
   }
 }
 
-const interruptedStatus = { ...runningStatus, result: 'interrupted', step: 'recover', error_code: 'operation_interrupted' };
-const rollbackFailedStatus = { ...interruptedStatus, result: 'rollback_failed', error_code: 'operation_rollback_failed' };
-const restartStatus = { ...runningStatus, result: 'committed', step: 'done', restart_required: true };
+// The runner died while downloading; the undo that could not put a file back;
+// the undo made under a running panel, which now has to be restarted.
+const interruptedStatus = server.interrupted;
+const rollbackFailedStatus = server.rollback_failed;
+const restartStatus = server.rolled_back_restart;
 
 test.describe('DevTools panel summary boundary', () => {
-  const noUpdate = {
-    ok: true, source_version: '2.10.0', target_version: '2.10.0', update_available: false,
-    requires_installer: false, min_updater: null, freshness: 'fresh', stale_reason: null, fetched_at: 1791700000,
-  };
+  const noUpdate = server.update_check_current;
 
   test('DevTools shows panel identity and one Modules link without legacy update requests', async ({ page }) => {
     const legacyRequests = [];
@@ -88,7 +64,7 @@ test.describe('DevTools panel summary boundary', () => {
     await expect(page.locator('[data-dt-main-update-controls]')).toHaveCount(0);
     await expect(page.locator('#xk-update-link')).toHaveCount(0);
     await expect(updateCard).toContainText('2.10.0');
-    await expect(page.locator('#dt-panel-enabled-set')).toHaveText('свой набор (1 из 2)');
+    await expect(page.locator('#dt-panel-enabled-set')).toHaveText('свой набор (2 из 3)');
     await expect(updateCard).toContainText('Xkeen UI Core');
     await expect(updateCard).toContainText('Mihomo');
     const modulesLinks = page.getByRole('link', { name: 'Модули и обновления', exact: true });
@@ -103,7 +79,7 @@ test.describe('DevTools panel summary boundary', () => {
     await installIdleLifecycleRoutes(page);
 
     await page.goto('/devtools');
-    await expect(page.locator('#dt-panel-modules .dt-panel-module')).toHaveCount(2);
+    await expect(page.locator('#dt-panel-modules .dt-panel-module')).toHaveCount(installedSnapshot.modules.length);
 
     const metrics = await page.evaluate(() => {
       const update = document.getElementById('dt-update-card');
@@ -149,22 +125,8 @@ test.describe('Modules panel update surface', () => {
 
   test('checks the signed catalog before offering a panel update plan', async ({ page }) => {
     await installIdleLifecycleRoutes(page);
-    await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({ json: {
-      ok: true,
-      source_version: '2.10.0',
-      target_version: '2.11.0',
-      update_available: true,
-      requires_installer: false,
-      min_updater: null,
-    } }));
-    await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: {
-      ...installPlan,
-      operation: 'panel-update',
-      module_id: null,
-      scope: 'panel',
-      source_version: '2.10.0',
-      target_version: '2.11.0',
-    } }));
+    await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({ json: server.update_check }));
+    await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: panelUpdatePlan }));
 
     await page.goto('/modules');
     await expect(page.getByText('Источник: umarcheh001/Xkeen-UI · канал: stable')).toBeVisible();
@@ -178,8 +140,7 @@ test.describe('Modules panel update surface', () => {
   test('says that the update answer comes from an old copy of the catalog', async ({ page }) => {
     await installIdleLifecycleRoutes(page);
     await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({ json: {
-      ok: true, source_version: '2.10.0', target_version: '2.10.0', update_available: false,
-      requires_installer: false, min_updater: null,
+      ...server.update_check_current,
       freshness: 'stale', stale_reason: 'catalog_transport_unavailable', fetched_at: 1791000000.5,
     } }));
     await page.goto('/modules');
@@ -502,13 +463,12 @@ test.describe('Module manager recovery and guards', () => {
     await page.goto('/modules');
     await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toBeEnabled();
     await page.getByRole('tab', { name: 'Доступные' }).click();
-    await expect(page.getByRole('button', { name: 'Установить Терминал' })).toBeVisible();
+    await expect(page.getByRole('button', { name: `Установить ${TERMINAL}` })).toBeVisible();
     await page.getByRole('tab', { name: 'Установленные' }).click();
     await page.evaluate(async () => (await import('/static/js/pages/modules.init.js')).getModulesController().deactivate());
-    installed = { ...installed, profile: 'full', transition_required: true,
-      modules: installed.modules.map((item) => ({ ...item, enabled: true })) };
+    installed = { ...withMihomo(true), transition_required: true };
     await page.evaluate(async () => (await import('/static/js/pages/modules.init.js')).getModulesController().activate());
-    await expect(page.locator('.modules-summary')).toContainText('Включено: все модули (2 из 2)');
+    await expect(page.locator('.modules-summary')).toContainText('Включено: все модули (3 из 3)');
     await expect(page.getByRole('switch', { name: 'Включить Mihomo' })).toBeChecked();
     await expect(page.getByRole('button', { name: 'Применить профиль' })).toBeEnabled();
     await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toHaveCount(0);
@@ -643,8 +603,7 @@ test.describe('Module manager recovery and guards', () => {
     let restartCalls = 0;
     await installIdleLifecycleRoutes(page);
     await page.route('**/api/modules/installed', (route) => route.fulfill({ json: {
-      ...installedSnapshot, restart_required: enabled,
-      modules: installedSnapshot.modules.map((item) => item.id === 'engine.mihomo' ? { ...item, enabled } : item),
+      ...withMihomo(enabled), restart_required: enabled,
     } }));
     await page.route('**/api/modules/engine.mihomo', (route) => {
       enabled = route.request().postDataJSON().enabled;
@@ -675,8 +634,7 @@ test.describe('Module manager recovery and guards', () => {
     await page.route('**/api/modules/installed', (route) => {
       if (panelDown) { probesWhileDown += 1; return route.abort('connectionrefused'); }
       return route.fulfill({ json: {
-        ...installedSnapshot, restart_required: restartRequired,
-        modules: installedSnapshot.modules.map((item) => item.id === 'engine.mihomo' ? { ...item, enabled } : item),
+        ...withMihomo(enabled), restart_required: restartRequired,
       } });
     });
     await page.route('**/api/modules/operations/status', (route) => (panelDown
@@ -737,20 +695,14 @@ test.describe('Module manager recovery and guards', () => {
 
   test('shows the planned restart of an operation as a wait and slows the polling down', async ({ page }) => {
     await page.clock.install();
-    const restarting = {
-      ...runningStatus, step: 'restarting',
-      log: [{ step: 'applying', at: 1781000001.5 }, { step: 'restarting', at: 1781000002.25 }],
-    };
+    const restarting = server.install_steps.restarting;
     let panelDown = false;
     let finished = false;
     let failedPolls = 0;
     await installLifecycleRoutes(page, { status: restarting });
     await page.route('**/api/modules/operations/status', (route) => {
       if (panelDown) { failedPolls += 1; return route.abort('connectionrefused'); }
-      return route.fulfill({ json: finished ? {
-        ...restarting, result: 'committed', step: 'committed', finished_at: 1781000009.5,
-        log: [...restarting.log, { step: 'health', at: 1781000003 }, { step: 'committed', at: 1781000009.5 }],
-      } : restarting });
+      return route.fulfill({ json: finished ? committedStatus : restarting });
     });
     await page.goto('/modules');
     await page.evaluate(() => { window.xkBeforeRestart = true; });
@@ -783,7 +735,7 @@ test.describe('Module manager recovery and guards', () => {
       ? route.abort('connectionrefused')
       : route.fulfill({ json: runningStatus })));
     await page.goto('/modules');
-    await expect(page.locator('#modules-operation-status')).toContainText('download');
+    await expect(page.locator('#modules-operation-status')).toContainText('Загрузка архива');
 
     panelDown = true;
     await advanceClock(page, 1100);
@@ -802,16 +754,13 @@ test.describe('Module manager recovery and guards', () => {
     let recovered = false;
     await page.route('**/api/modules/installed', (route) => {
       installedLoads += 1;
-      return route.fulfill({ json: recovered ? {
-        ...installedSnapshot,
-        modules: [...installedSnapshot.modules, { id: 'tool.terminal', name: 'Терминал', version: '2.10.0', enabled: true, can_disable: true }],
-      } : installedSnapshot });
+      return route.fulfill({ json: recovered ? server.installed_after_install : installedSnapshot });
     });
     await page.route('**/api/modules/operations/status', (route) => route.fulfill({ json: currentStatus }));
     await page.route('**/api/modules/available', (route) => route.fulfill({ json: availableSnapshot }));
     await page.route('**/api/modules/recovery', (route) => {
       recovered = true;
-      currentStatus = { ...rollbackFailedStatus, result: 'rolled_back', error_code: 'operation_interrupted', recovered: true };
+      currentStatus = server.recovery_rolled_back;
       return route.fulfill({ json: currentStatus });
     });
     await page.goto('/modules');
@@ -825,7 +774,7 @@ test.describe('Module manager recovery and guards', () => {
     await recover.click();
 
     await expect(page.locator('#modules-operation-status')).toContainText('Отменено, файлы возвращены');
-    await expect(page.locator('.modules-row').filter({ hasText: 'Терминал' })).toBeVisible();
+    await expect(page.locator('.modules-row').filter({ hasText: TERMINAL })).toBeVisible();
     expect(installedLoads).toBeGreaterThan(loadsBeforeRecovery);
   });
 
@@ -835,10 +784,8 @@ test.describe('Module manager recovery and guards', () => {
     let restartRequired = false;
     await installIdleLifecycleRoutes(page);
     await page.route('**/api/modules/installed', (route) => route.fulfill({ json: {
-      ...installedSnapshot,
-      profile,
+      ...withMihomo(enabled),
       restart_required: restartRequired,
-      modules: installedSnapshot.modules.map((item) => item.id === 'engine.mihomo' ? { ...item, enabled } : item),
     } }));
     await page.route('**/api/modules/engine.mihomo', (route) => {
       enabled = route.request().postDataJSON().enabled;
@@ -853,16 +800,16 @@ test.describe('Module manager recovery and guards', () => {
     await expect(row.locator('.modules-switch-state')).toHaveText('Включён');
     await expect(row.locator('.modules-switch-state')).toHaveClass(/is-enabled/);
     await control.locator('..').click();
-    await expect(page.locator('.modules-summary')).toContainText('Включено: свой набор (1 из 2)');
+    await expect(page.locator('.modules-summary')).toContainText('Включено: свой набор (2 из 3)');
     await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toBeVisible();
     await control.locator('..').click();
-    await expect(page.locator('.modules-summary')).toContainText('Включено: все модули (2 из 2)');
+    await expect(page.locator('.modules-summary')).toContainText('Включено: все модули (3 из 3)');
     await expect(page.locator('.modules-summary')).not.toContainText('Требуется перезапуск');
     await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toHaveCount(0);
   });
 
-  for (const previousStatus of [idleStatus, { ...runningStatus, result: 'committed', step: 'done' }]) {
-    test(`refreshes ${previousStatus.result} status when the manager is reactivated`, async ({ page }) => {
+  for (const [was, previousStatus] of [['no operation', idleStatus], ['a committed one', committedStatus]]) {
+    test(`refreshes the status after ${was} when the manager is reactivated`, async ({ page }) => {
       let currentStatus = previousStatus;
       let statusCalls = 0;
       let catalogCalls = 0;
@@ -900,10 +847,10 @@ test.describe('Module manager recovery and guards', () => {
     // What the server keeps after a failed download or a cancel: the
     // record of the operation is gone and there is nothing to recover.
     let recoveryCalls = 0;
-    await installLifecycleRoutes(page, { status: { ...interruptedStatus, step: 'downloading', error_code: 'operation_cancelled' } });
+    await installLifecycleRoutes(page, { status: server.cancelled });
     await page.route('**/api/modules/recovery', (route) => {
       recoveryCalls += 1;
-      return route.fulfill({ json: { ok: true, recovery_result: null, ...interruptedStatus } });
+      return route.fulfill({ json: { ...server.cancelled, recovery_result: null } });
     });
     await page.goto('/modules');
 
@@ -913,7 +860,7 @@ test.describe('Module manager recovery and guards', () => {
     await expect(page.getByRole('switch', { name: 'Включить Mihomo' })).toBeEnabled();
     await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeEnabled();
     await page.getByRole('tab', { name: 'Доступные' }).click();
-    await expect(page.getByRole('button', { name: 'Установить Терминал' })).toBeEnabled();
+    await expect(page.getByRole('button', { name: `Установить ${TERMINAL}` })).toBeEnabled();
     expect(recoveryCalls).toBe(0);
   });
 
@@ -934,7 +881,7 @@ test.describe('Module manager recovery and guards', () => {
     await page.route('**/api/modules/operations/status', (route) => route.fulfill({ json: currentStatus }));
     await page.route('**/api/modules/recovery', (route) => {
       recoveryCalls += 1;
-      currentStatus = { ...interruptedStatus, result: 'rolled_back', recovered: true };
+      currentStatus = server.recovery_rolled_back;
       return route.fulfill({ json: currentStatus });
     });
     await page.route('**/api/modules/restart', (route) => {
@@ -955,7 +902,7 @@ test.describe('Module manager recovery and guards', () => {
     await page.goto('/modules');
     await expect(page.getByText('Восстановление файлов не завершилось')).toBeVisible();
     await page.getByRole('tab', { name: 'Доступные' }).click();
-    await expect(page.getByRole('button', { name: 'Установить Терминал' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: `Установить ${TERMINAL}` })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Повторить восстановление' })).toBeEnabled();
     await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toHaveCount(0);
   });
@@ -978,7 +925,7 @@ test.describe('Module manager recovery and guards', () => {
   test('profile transition offers reviewed plan instead of restart', async ({ page }) => {
     await installLifecycleRoutes(page, { status: restartStatus, installed: { ...installedSnapshot, transition_required: true } });
     await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: {
-      ...installPlan, operation: 'profile-transition', module_id: null, scope: 'panel',
+      ...panelUpdatePlan, operation: 'profile-transition',
     } }));
     await page.goto('/modules');
     await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toHaveCount(0);
@@ -1022,7 +969,7 @@ test.describe('Module manager recovery and guards', () => {
     await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeDisabled();
     await expect(page.getByRole('switch', { name: 'Включить Mihomo' })).toBeDisabled();
     await page.getByRole('tab', { name: 'Доступные' }).click();
-    await expect(page.getByRole('button', { name: 'Установить Терминал' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: `Установить ${TERMINAL}` })).toBeDisabled();
   });
 
   test('locks stale terminal actions until a failed status refresh succeeds', async ({ page }) => {
@@ -1052,7 +999,7 @@ test.describe('Module manager recovery and guards', () => {
     await page.evaluate(() => document.querySelector('input[role="switch"]').click());
     await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toHaveCount(0);
     await page.getByRole('tab', { name: 'Доступные' }).click();
-    await expect(page.getByRole('button', { name: 'Установить Терминал' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: `Установить ${TERMINAL}` })).toBeDisabled();
     await page.evaluate(async () => {
       const { getModulesController } = await import('/static/js/pages/modules.init.js');
       await getModulesController().requestPlan('install', 'tool.terminal');
@@ -1138,7 +1085,7 @@ test.describe('Module manager loading', () => {
     expect(availableCalls).toBe(0);
 
     await page.getByRole('tab', { name: 'Доступные' }).click();
-    await expect(page.getByRole('heading', { name: 'Терминал 2.10.0' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: `${TERMINAL} 2.10.0` })).toBeVisible();
     expect(availableCalls).toBe(1);
 
     await page.getByRole('tab', { name: 'Установленные' }).click();
@@ -1151,7 +1098,7 @@ test.describe('Module manager loading', () => {
     await page.route('**/api/modules/operations/status', (route) => route.fulfill({ json: idleStatus }));
     await page.route('**/api/modules/available', (route) => route.fulfill({ json: {
       ...availableSnapshot,
-      modules: [{ ...availableSnapshot.modules[0], name: '<img src=x onerror="window.catalogInjected=1">' }],
+      modules: [{ ...terminalEntry, name: '<img src=x onerror="window.catalogInjected=1">' }],
     } }));
     await page.goto('/modules');
     await page.getByRole('tab', { name: 'Доступные' }).click();
@@ -1194,7 +1141,7 @@ test.describe('Module manager loading', () => {
       let loads = 0;
       const api = {
         loadInstalled: () => (++loads === 1 ? Promise.reject({ message: 'Temporary failure' }) : Promise.resolve({ ok: true, panel_version: '2.10.0', modules: [] })),
-        loadStatus: () => Promise.resolve({ ok: true, result: 'idle' }),
+        loadStatus: () => Promise.resolve({ ok: true, result: null }),
       };
       const controller = createModuleManagerController({ root, api, pollMs: 0 });
       await controller.init();
@@ -1222,7 +1169,7 @@ test.describe('Module lifecycle review', () => {
           if (conflictAt === 'plan') conflicted = true;
           return route.fulfill(conflicted
             ? { status: 409, json: { ok: false, code: 'operation_in_progress' } }
-            : { json: { ...installPlan, operation: 'panel-update', module_id: null } });
+            : { json: panelUpdatePlan });
         });
         await page.route('**/api/modules/operations/apply', (route) => {
           conflicted = true;
@@ -1238,7 +1185,7 @@ test.describe('Module lifecycle review', () => {
           await expect(page.locator('#modules-error')).toContainText('module_status_unavailable');
           await expect(page.locator('#modules-refresh-status')).toBeVisible();
         } else {
-          await expect(page.locator('#modules-operation-status')).toContainText('download');
+          await expect(page.locator('#modules-operation-status')).toContainText('Загрузка архива');
           await expect(page.getByRole('button', { name: 'Отменить операцию' })).toBeEnabled();
           await expect.poll(() => statusCalls).toBeGreaterThan(2);
         }
@@ -1263,7 +1210,7 @@ test.describe('Module lifecycle review', () => {
     await page.goto('/modules');
     await page.getByRole('tab', { name: 'Доступные' }).click();
     await expect.poll(() => Boolean(releaseCatalog)).toBe(true);
-    status = { ...runningStatus, result: 'committed', step: 'done' };
+    status = server.cancelled;
     await expect(page.getByRole('tab', { name: 'Установленные' })).toHaveAttribute('aria-selected', 'true');
     await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeEnabled();
     const staleResponse = page.waitForResponse('**/api/modules/available');
@@ -1274,38 +1221,40 @@ test.describe('Module lifecycle review', () => {
     expect(catalogCalls).toBe(2);
   });
 
-  test('discards catalog after terminal refresh and fetches fresh actions on next Available selection', async ({ page }) => {
+  test('loads the page anew after a confirmed installation and shows the module as installed', async ({ page }) => {
     let status = idleStatus;
     let catalogCalls = 0;
-    let installedCalls = 0;
     await installIdleLifecycleRoutes(page);
-    await page.route('**/api/modules/installed', (route) => {
-      installedCalls += 1;
-      return route.fulfill({ json: installedSnapshot });
-    });
+    await page.route('**/api/modules/installed', (route) => route.fulfill({
+      json: status.result === 'committed' ? server.installed_after_install : installedSnapshot,
+    }));
     await page.route('**/api/modules/operations/status', (route) => route.fulfill({ json: status }));
     await page.route('**/api/modules/available', (route) => {
       catalogCalls += 1;
-      return route.fulfill({ json: status.result === 'committed' ? {
-        ...availableSnapshot, modules: [{ ...availableSnapshot.modules[0], lifecycle_actions: ['repair', 'remove'] }],
-      } : availableSnapshot });
+      return route.fulfill({ json: status.result === 'committed' ? server.available_after_install : availableSnapshot });
     });
     await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: installPlan }));
     await page.route('**/api/modules/operations/apply', (route) => {
-      status = { ...runningStatus, result: 'committed', step: 'done' };
+      status = server.install_steps.prepared;
       return route.fulfill({ status: 202, json: { ok: true, operation_id: status.operation_id, status } });
     });
     await page.goto('/modules');
+    await page.evaluate(() => { window.xkBeforeInstall = true; });
     await page.getByRole('tab', { name: 'Доступные' }).click();
-    await page.getByRole('button', { name: 'Установить Терминал' }).click();
+    await page.getByRole('button', { name: `Установить ${TERMINAL}` }).click();
     await page.getByRole('button', { name: 'Применить план' }).click();
-    await expect(page.getByRole('tab', { name: 'Установленные' })).toHaveAttribute('aria-selected', 'true');
-    await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeEnabled();
-    expect(installedCalls).toBe(2);
+    await expect(page.locator('#modules-operation-status')).toContainText('Сейчас: Подготовка');
+
+    // The runner restarted the panel on the way: the page must not go on with the old scripts.
+    status = committedStatus;
+    await expect.poll(() => page.evaluate(() => window.xkBeforeInstall === true), { timeout: 15000 }).toBe(false);
+    await expect(page.locator('.modules-row').filter({ hasText: TERMINAL })).toBeVisible();
+    await expect(page.locator('#modules-operation-status')).toContainText('Готово');
     expect(catalogCalls).toBe(1);
     await page.getByRole('tab', { name: 'Доступные' }).click();
-    await expect(page.getByRole('button', { name: 'Восстановить Терминал' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Установить Терминал' })).toHaveCount(0);
+    const card = page.locator('#modules-card-host .modules-card').filter({ hasText: TERMINAL });
+    await expect(card.locator('.modules-chip')).toHaveText('Установлен');
+    await expect(card.getByRole('button')).toHaveCount(0);
     expect(catalogCalls).toBe(2);
   });
 
@@ -1315,12 +1264,10 @@ test.describe('Module lifecycle review', () => {
     let cancelCalls = 0;
     await installIdleLifecycleRoutes(page);
     await page.route('**/api/modules/operations/status', (route) => route.fulfill({ json: status }));
-    await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: {
-      ...installPlan, operation: 'panel-update', module_id: null, scope: 'panel',
-    } }));
+    await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: panelUpdatePlan }));
     await page.route('**/api/modules/operations/apply', (route) => {
       applyCalls += 1;
-      status = { ...runningStatus, operation_id: `op-${applyCalls}`, result: applyCalls === 1 ? 'committed' : 'running' };
+      status = { ...server.install_steps.prepared, operation_id: `op-${applyCalls}` };
       return route.fulfill({ status: 202, json: { ok: true, operation_id: status.operation_id, status } });
     });
     await page.route('**/api/modules/operations/op-2/cancel', (route) => {
@@ -1330,6 +1277,8 @@ test.describe('Module lifecycle review', () => {
     await page.goto('/modules');
     await page.getByRole('button', { name: 'Обновить панель' }).click();
     await page.getByRole('button', { name: 'Применить план' }).click();
+    await expect(page.getByRole('button', { name: 'Отменить операцию' })).toBeEnabled();
+    status = { ...server.cancelled, operation_id: 'op-1' };
     await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeEnabled();
     await page.getByRole('button', { name: 'Обновить панель' }).click();
     const dismiss = page.getByRole('dialog').getByRole('button', { name: 'Отменить', exact: true });
@@ -1355,7 +1304,7 @@ test.describe('Module lifecycle review', () => {
       } }));
       await page.goto('/modules');
       await page.getByRole('tab', { name: 'Доступные' }).click();
-      await page.getByRole('button', { name: 'Установить Терминал' }).click();
+      await page.getByRole('button', { name: `Установить ${TERMINAL}` }).click();
       const dialog = page.getByRole('dialog', { name: 'План установки' });
       await expect(dialog).toBeVisible();
 
@@ -1392,11 +1341,11 @@ test.describe('Module lifecycle review', () => {
     await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: installPlan }));
     await page.route('**/api/modules/operations/apply', async (route) => {
       await new Promise((resolve) => { releaseApply = resolve; });
-      await route.fulfill({ status: 202, json: { ok: true, operation_id: 'op-123', status: runningStatus } });
+      await route.fulfill({ status: 202, json: { ok: true, operation_id: runningStatus.operation_id, status: server.install_steps.prepared } });
     });
     await page.goto('/modules');
     await page.getByRole('tab', { name: 'Доступные' }).click();
-    await page.getByRole('button', { name: 'Установить Терминал' }).click();
+    await page.getByRole('button', { name: `Установить ${TERMINAL}` }).click();
     await page.getByRole('button', { name: 'Применить план' }).click();
     await expect.poll(() => Boolean(releaseApply)).toBe(true);
     await page.evaluate(async () => {
@@ -1412,7 +1361,7 @@ test.describe('Module lifecycle review', () => {
       const { getModulesController } = await import('/static/js/pages/modules.init.js');
       await getModulesController().activate();
     });
-    await expect(page.locator('#modules-operation-status')).toContainText('download');
+    await expect(page.locator('#modules-operation-status')).toContainText('Загрузка архива');
     await expect.poll(() => statusLoads).toBeGreaterThan(1);
   });
 
@@ -1424,11 +1373,11 @@ test.describe('Module lifecycle review', () => {
     await page.route('**/api/modules/operations/apply', async (route) => {
       applyCalls += 1;
       await new Promise((resolve) => { releaseApply = resolve; });
-      await route.fulfill({ status: 202, json: { ok: true, operation_id: 'op-123', status: runningStatus } });
+      await route.fulfill({ status: 202, json: { ok: true, operation_id: runningStatus.operation_id, status: server.install_steps.prepared } });
     });
     await page.goto('/modules');
     await page.getByRole('tab', { name: 'Доступные' }).click();
-    await page.getByRole('button', { name: 'Установить Терминал' }).click();
+    await page.getByRole('button', { name: `Установить ${TERMINAL}` }).click();
     await page.getByRole('button', { name: 'Применить план' }).click();
     await expect.poll(() => Boolean(releaseApply)).toBe(true);
     await expect(page.getByRole('button', { name: 'Отменить', exact: true })).toBeDisabled();
@@ -1443,22 +1392,23 @@ test.describe('Module lifecycle review', () => {
     const planBodies = [];
     const applyBodies = [];
     await installIdleLifecycleRoutes(page);
+    await page.route('**/api/modules/operations/status', (route) => route.fulfill({ json: applyBodies.length ? runningStatus : idleStatus }));
     await page.route('**/api/modules/operations/plan', (route) => {
       planBodies.push(route.request().postDataJSON());
       return route.fulfill({ json: installPlan });
     });
     await page.route('**/api/modules/operations/apply', (route) => {
       applyBodies.push(route.request().postDataJSON());
-      return route.fulfill({ status: 202, json: { ok: true, operation_id: 'op-123', status: runningStatus } });
+      return route.fulfill({ status: 202, json: { ok: true, operation_id: runningStatus.operation_id, status: server.install_steps.prepared } });
     });
 
     await page.goto('/modules');
     await page.getByRole('tab', { name: 'Доступные' }).click();
-    const install = page.getByRole('button', { name: 'Установить Терминал' });
+    const install = page.getByRole('button', { name: `Установить ${TERMINAL}` });
     await install.click();
     const dialog = page.getByRole('dialog', { name: 'План установки' });
     await expect(dialog).toContainText('нужно 12 МБ');
-    await expect(dialog).toContainText('Установить модуль «Терминал» 2.10.0');
+    await expect(dialog).toContainText(`Установить модуль «${TERMINAL}» 2.10.0`);
     await expect(dialog).not.toContainText('tool.terminal');
     await expect(page.locator('#modules-plan-title')).toBeFocused();
     expect(planBodies).toEqual([{ operation: 'install', module_id: 'tool.terminal' }]);
@@ -1468,8 +1418,8 @@ test.describe('Module lifecycle review', () => {
 
     await install.click();
     await dialog.getByRole('button', { name: 'Применить план' }).click();
-    await expect(page.locator('#modules-operation-status')).toContainText('download');
-    expect(applyBodies).toEqual([{ operation: 'install', module_id: 'tool.terminal', plan_id: 'a'.repeat(64) }]);
+    await expect(page.locator('#modules-operation-status')).toContainText('Загрузка архива');
+    expect(applyBodies).toEqual([{ operation: 'install', module_id: 'tool.terminal', plan_id: installPlan.plan_id }]);
     await expect(install).toBeDisabled();
   });
 
@@ -1481,7 +1431,7 @@ test.describe('Module lifecycle review', () => {
     } }));
     await page.goto('/modules');
     await page.getByRole('tab', { name: 'Доступные' }).click();
-    await page.getByRole('button', { name: 'Установить Терминал' }).click();
+    await page.getByRole('button', { name: `Установить ${TERMINAL}` }).click();
     const dialog = page.getByRole('dialog', { name: 'План установки' });
     await expect(dialog).toContainText('Не хватает зависимости');
     await expect(dialog.getByRole('button', { name: 'Применить план' })).toHaveCount(0);
@@ -1510,7 +1460,7 @@ test.describe('Module lifecycle review', () => {
     test(`discards ${code} and requires a new review`, async ({ page }) => {
       const catalog = code === 'operation_plan_stale' ? null : availableSnapshot;
       const plan = code === 'operation_plan_stale'
-        ? { ...installPlan, operation: 'panel-update', module_id: null, scope: 'panel', source_version: '2.10.0', target_version: '2.11.0' }
+        ? panelUpdatePlan
         : installPlan;
       const bodies = [];
       await installIdleLifecycleRoutes(page);
@@ -1521,7 +1471,7 @@ test.describe('Module lifecycle review', () => {
       });
       await page.goto('/modules');
       if (catalog) await page.getByRole('tab', { name: 'Доступные' }).click();
-      await page.getByRole('button', { name: catalog ? 'Установить Терминал' : 'Обновить панель' }).click();
+      await page.getByRole('button', { name: catalog ? `Установить ${TERMINAL}` : 'Обновить панель' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Применить план' }).click();
       await expect(page.getByRole('dialog')).toHaveCount(0);
       await expect(page.locator('#modules-error')).toContainText('План устарел');
@@ -1534,10 +1484,7 @@ test.describe('Module lifecycle review', () => {
     await page.addInitScript(() => sessionStorage.setItem('xkeen.modules.update.v1', JSON.stringify({
       schema: 1, sourceVersion: '2.10.0', targetVersion: '2.11.0',
     })));
-    await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: {
-      ...installPlan, operation: 'panel-update', module_id: null, scope: 'panel', applicable: false,
-      plan_id: null, blockers: [{ code: 'panel_version_current', message: 'Обновлений нет' }],
-    } }));
+    await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: server.panel_update_current }));
     await page.goto('/modules');
     await page.getByRole('button', { name: 'Обновить панель' }).click();
     // A current panel is an answer, not a plan with nothing in it.
@@ -1550,10 +1497,7 @@ test.describe('Module lifecycle review', () => {
 
   test('sets update badge only after an applicable newer panel plan', async ({ page }) => {
     await installIdleLifecycleRoutes(page);
-    await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: {
-      ...installPlan, operation: 'panel-update', module_id: null, scope: 'panel',
-      source_version: '2.10.0', target_version: '2.11.0',
-    } }));
+    await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: panelUpdatePlan }));
     await page.goto('/modules');
     expect(await page.evaluate(() => sessionStorage.getItem('xkeen.modules.update.v1'))).toBeNull();
     await page.getByRole('button', { name: 'Обновить панель' }).click();
@@ -1574,30 +1518,25 @@ test.describe('Module lifecycle review', () => {
     });
     await page.route('**/api/modules/operations/status', (route) => {
       statusLoads += 1;
-      return route.fulfill({ json: statusLoads === 1 || !terminal ? runningStatus : {
-        ...runningStatus, result: 'committed', step: 'done', finished_at: 1781000002,
-      } });
+      return route.fulfill({ json: statusLoads === 1 || !terminal ? runningStatus : server.cancelled });
     });
-    await page.route('**/api/modules/operations/op-123/cancel', (route) => {
+    await page.route(`**/api/modules/operations/${runningStatus.operation_id}/cancel`, (route) => {
       cancelCalls += 1;
-      return route.fulfill({ status: 202, json: { ok: true, operation_id: 'op-123', cancel_requested: true } });
+      return route.fulfill({ status: 202, json: { ok: true, operation_id: runningStatus.operation_id, cancel_requested: true } });
     });
-    await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: {
-      ...installPlan, operation: 'panel-update', module_id: null, scope: 'panel',
-      source_version: '2.10.0', target_version: '2.11.0',
-    } }));
+    await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: panelUpdatePlan }));
     await page.route('**/api/modules/operations/apply', (route) => route.fulfill({ status: 202, json: {
       ok: true, operation_id: 'op-456', status: {
         ...runningStatus, operation_id: 'op-456', operation: 'panel-update', module_id: null,
       },
     } }));
     await page.goto('/modules');
-    await expect(page.locator('#modules-operation-status')).toContainText('download');
+    await expect(page.locator('#modules-operation-status')).toContainText('Загрузка архива');
     await page.getByRole('button', { name: 'Отменить операцию' }).click();
     expect(cancelCalls).toBe(1);
-    await expect(page.locator('#modules-operation-status')).toContainText('download');
+    await expect(page.locator('#modules-operation-status')).toContainText('Загрузка архива');
     terminal = true;
-    await expect(page.locator('#modules-operation-status')).toContainText('Готово');
+    await expect(page.locator('#modules-operation-status')).toContainText('Операция отменена');
     await expect.poll(() => installedLoads).toBe(2);
     await expect.poll(() => statusLoads).toBeGreaterThanOrEqual(3);
     await page.getByRole('button', { name: 'Обновить панель' }).click();
@@ -1645,11 +1584,11 @@ test.describe('Installed and enabled sets', () => {
 });
 
 test.describe('Editor variant choice', () => {
-  const editorRow = { id: 'tool.editor', name: 'Редакторы', version: '1.0.0', enabled: true, can_disable: false, description: 'CodeMirror, Monaco.' };
+  // Mihomo is on, so the editors cannot be switched off.
   const withEditor = (editor, extra = {}) => ({
-    ...installedSnapshot,
-    editor: { available_variants: ['light', 'full', 'advanced'], installed_variant: 'full', ...editor },
-    modules: [...installedSnapshot.modules, editorRow],
+    ...withMihomo(true),
+    restart_required: false,
+    editor: { ...withMihomo(true).editor, installed_variant: 'full', ...editor },
     ...extra,
   });
 
@@ -1942,10 +1881,7 @@ test.describe('What the window says about operations and refusals', () => {
       sessionStorage.setItem('xkeen.modules.update.v1', JSON.stringify({ schema: 1, sourceVersion: '2.10.0', targetVersion: '2.11.0' }));
     });
     await installIdleLifecycleRoutes(page);
-    await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({ json: {
-      ok: true, source_version: '2.10.0', target_version: '2.11.0', update_available: true, requires_installer: false,
-      min_updater: null, freshness: 'fresh', stale_reason: null, fetched_at: 1791700000,
-    } }));
+    await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({ json: server.update_check }));
     await page.goto('/devtools');
     const mark = page.locator('[data-xk-modules-update-badge]').first();
     await expect(mark).toHaveText('Обновление');

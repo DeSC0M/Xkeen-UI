@@ -15,3 +15,4 @@ docs/modular-panel-stage0-inventory.md text eol=lf
 xkeen-ui/static/icons/operator.svg text eol=lf
 xkeen-ui/static/icons/tabler-icons.LICENSE text eol=lf
 xkeen-ui/static/js/ui/operator_icons_manifest.js text eol=lf
+e2e/fixtures/module_manager_server.json text eol=lf

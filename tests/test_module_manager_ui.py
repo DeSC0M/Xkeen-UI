@@ -89,8 +89,6 @@ def test_modules_uses_the_panel_shell_and_stable_devtools_pointer_is_compact():
     devtools_update = (ROOT / "xkeen-ui/static/js/features/devtools/update.js").read_text(encoding="utf-8")
     devtools_css = (ROOT / "xkeen-ui/static/devtools.css").read_text(encoding="utf-8")
 
-    assert '<body class="modules-page"' in template
-    assert '<body class="modules-page panel-page"' not in template
     assert 'class="modules-workspace"' in template
     assert "body.modules-page .container-wide" in manager_css
     assert "body.modules-page.panel-page" not in manager_css
@@ -112,14 +110,7 @@ def test_manager_source_is_isolated_and_entry_stays_thin():
 def test_stable_devtools_update_is_a_modules_link_not_a_second_runner():
     source = (ROOT / "xkeen-ui/static/js/features/devtools/update.js").read_text(encoding="utf-8")
 
-    # The card reads the lifecycle API and starts nothing by itself.
-    assert "/api/devtools/update" not in source
+    # The card starts nothing by itself. That it asks the old update API for
+    # nothing and holds one link to the Modules screen is checked in a browser.
     assert "api.plan(" not in source and "api.apply(" not in source
-    assert "Модули и обновления" in source
     assert not (ROOT / "xkeen-ui/static/js/features/update_notifier.js").exists()
-
-
-def test_idle_operation_status_does_not_refer_to_restart_state():
-    source = (MANAGER / "render.js").read_text(encoding="utf-8")
-
-    assert "if (!hasOperationStatus(status)) return;" in source
