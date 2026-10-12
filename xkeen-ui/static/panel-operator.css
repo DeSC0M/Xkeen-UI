@@ -5282,11 +5282,19 @@ body.panel-page #view-xray-logs .xk-log-filter-bar {
 }
 
 body.panel-page #view-xray-logs .xk-log-filter-bar #xray-log-filter-clear {
+  display: inline-grid;
+  place-items: center;
   width: var(--op-control-h);
   min-width: var(--op-control-h);
   padding: 0;
   border: 1px solid var(--op-border) !important;
   border-radius: var(--op-control-radius) !important;
+}
+
+body.panel-page #view-xray-logs .xk-log-filter-bar #xray-log-filter-clear .xk-action-icon {
+  width: 16px;
+  height: 16px;
+  margin: 0;
 }
 
 body.panel-page #view-xray-logs .xray-log-controls {
@@ -5350,6 +5358,12 @@ body.panel-page #view-xray-logs .dt-log-menu {
   position: relative;
 }
 
+body.panel-page #view-xray-logs #xray-log-more .dt-log-menu-panel {
+  right: auto;
+  left: 0;
+  max-width: min(280px, calc(100vw - 16px));
+}
+
 body.panel-page #view-xray-logs .dt-log-menu[open] > summary {
   border-color: var(--op-accent-border) !important;
   background: var(--op-accent-soft) !important;
@@ -5366,7 +5380,54 @@ body.panel-page .xray-line-menu {
   box-shadow: var(--op-shadow-float) !important;
 }
 
-body.panel-page #view-xray-logs .dt-log-menu-panel .dt-log-btn,
+body.panel-page #view-xray-logs #xray-log-more .dt-log-menu-panel > .dt-log-btn {
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 8px;
+  border-color: var(--op-border) !important;
+  border-radius: 5px !important;
+  background: var(--op-surface) !important;
+  text-align: left;
+}
+
+body.panel-page #view-xray-logs #xray-log-more .dt-log-menu-panel > .dt-log-btn:hover {
+  background: var(--op-surface-3) !important;
+}
+
+body.panel-page #view-xray-logs #xray-log-more :is(.xray-log-menu-switch, .xray-log-menu-interval, .dt-log-menu-row) {
+  min-height: 32px;
+  padding: 6px 8px;
+  border: 1px solid var(--op-border) !important;
+  border-radius: 5px !important;
+  background: var(--op-surface) !important;
+}
+
+body.panel-page #view-xray-logs #xray-log-more .xray-log-menu-switch {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+body.panel-page #view-xray-logs #xray-log-more .xray-log-menu-interval {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+body.panel-page #view-xray-logs #xray-log-more .xray-log-menu-interval .xray-log-select {
+  width: 92px;
+  min-width: 92px;
+  min-height: 32px;
+  padding: 0 28px 0 10px;
+  border: 1px solid var(--op-border) !important;
+  border-radius: 5px !important;
+  background-color: var(--op-surface-2) !important;
+  color: var(--op-text) !important;
+  box-shadow: none !important;
+}
+
 body.panel-page .xray-line-menu .dt-log-btn {
   justify-content: flex-start;
   width: 100%;
@@ -5377,23 +5438,23 @@ body.panel-page .xray-line-menu .dt-log-btn {
 
 body.panel-page #view-xray-logs .xk-log-counters {
   display: flex;
-  align-items: stretch;
-  gap: 0;
+  align-items: center;
+  gap: 4px;
   margin-left: auto;
   min-width: 0;
 }
 
-body.panel-page #view-xray-logs :is(.xray-log-mode, .dt-log-stats) {
-  display: flex;
+body.panel-page #view-xray-logs .xray-log-mode,
+body.panel-page #view-xray-logs .xk-log-counter {
+  display: inline-flex;
   align-items: center;
-  gap: 0;
+  gap: 5px;
   min-height: var(--op-control-h);
   margin: 0;
   padding: 0 8px;
-  border: 0 !important;
-  border-left: 1px solid var(--op-border) !important;
-  border-radius: 0 !important;
-  background: transparent !important;
+  border: 1px solid var(--op-border) !important;
+  border-radius: var(--op-control-radius) !important;
+  background: var(--op-surface-2) !important;
   color: var(--op-data-muted) !important;
   box-shadow: none !important;
   opacity: 1;
@@ -5407,17 +5468,10 @@ body.panel-page #view-xray-logs .xray-log-mode::before {
 }
 
 body.panel-page #view-xray-logs .dt-log-stats {
-  padding: 0;
+  display: contents;
 }
 
 body.panel-page #view-xray-logs .xk-log-counter {
-  display: grid;
-  grid-template-columns: auto auto;
-  align-items: baseline;
-  gap: 5px;
-  min-height: var(--op-control-h);
-  padding: 7px 8px 0;
-  border-left: 1px solid var(--op-border);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -6536,25 +6590,23 @@ html[data-theme="light"] body.panel-page .terminal-buffer-menu {
   box-shadow: var(--op-shadow-float) !important;
 }
 
-body.panel-page .terminal-overflow-menu .terminal-tool-btn,
+body.panel-page .terminal-overflow-menu .terminal-menu-section > .terminal-tool-btn,
+body.panel-page .terminal-overflow-menu .terminal-menu-section > .terminal-signals-item,
 body.panel-page .terminal-view-menu .terminal-tool-btn,
-body.panel-page .terminal-buffer-menu .terminal-tool-btn,
-body.panel-page .terminal-commands-item,
-body.panel-page .terminal-signals-item {
+body.panel-page .terminal-buffer-menu .terminal-tool-btn {
   min-height: 32px;
   padding: 6px 8px;
-  border: 0 !important;
+  border: 1px solid var(--op-border) !important;
   border-radius: 5px !important;
-  background: transparent !important;
+  background: var(--op-surface) !important;
   color: var(--op-text) !important;
   box-shadow: none !important;
 }
 
-body.panel-page .terminal-overflow-menu .terminal-tool-btn:hover,
+body.panel-page .terminal-overflow-menu .terminal-menu-section > .terminal-tool-btn:hover,
+body.panel-page .terminal-overflow-menu .terminal-menu-section > .terminal-signals-item:hover,
 body.panel-page .terminal-view-menu .terminal-tool-btn:hover,
-body.panel-page .terminal-buffer-menu .terminal-tool-btn:hover,
-body.panel-page .terminal-commands-item:hover,
-body.panel-page .terminal-signals-item:hover {
+body.panel-page .terminal-buffer-menu .terminal-tool-btn:hover {
   background: var(--op-surface-3) !important;
 }
 
@@ -18000,7 +18052,7 @@ body.panel-page :is(#json-editor-modal, #fm-editor-modal) :is(#json-editor-save-
     margin-left: 4px;
   }
 
-  body.panel-page #view-xray-logs :is(.xray-log-mode, .dt-log-stats) {
+  body.panel-page #view-xray-logs :is(.xray-log-mode, .xk-log-counter) {
     min-height: var(--op-touch-target);
   }
 
@@ -23411,4 +23463,16 @@ body.panel-page .xk-core-install-steps li[data-state="done"]::before { backgroun
   body.panel-page .xk-core-install-steps li::before { display: inline-block; margin: 0 6px 0 0; }
   body.panel-page .xk-core-source-modal-actions { align-items: stretch; flex-direction: column-reverse; }
   body.panel-page .xk-core-source-modal-actions button { width: 100%; }
+}
+
+/* SSH profile actions pair operator icons and labels on one baseline. */
+body.panel-page #ssh-modal :is(#ssh-add-btn, #ssh-delete-selected-btn, #ssh-export-btn, #ssh-import-btn, #ssh-copy-preview-btn, #ssh-run-preview-btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+body.panel-page #ssh-modal :is(#ssh-add-btn, #ssh-delete-selected-btn, #ssh-export-btn, #ssh-import-btn, #ssh-copy-preview-btn, #ssh-run-preview-btn) .xk-action-icon {
+  margin: 0;
 }

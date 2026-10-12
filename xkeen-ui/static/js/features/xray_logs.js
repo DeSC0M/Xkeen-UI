@@ -99,10 +99,6 @@ let xrayLogsModuleApi = null;
   // независимый от Live и от loglevel. Значение ключа оставлено старым ('domainsWanted')
   // для бесшовной миграции прежнего выбора пользователя.
   const XRAY_DOMAINS_DISPLAY_STORAGE_KEY = 'xkeen.ui.xrayLogs.domainsWanted.v1';
-  // Намерение пользователя держать онлайн-поток (переключатель «Live логов»).
-  // Сохраняется, чтобы после F5 поток восстанавливался, а не сбрасывался.
-  const XRAY_LIVE_WANTED_STORAGE_KEY = 'xkeen.ui.xrayLogs.liveWanted.v1';
-
   let _maxLines = DEFAULT_MAX_LINES;
   let _pollMs = DEFAULT_POLL_MS;
   let _follow = true;
@@ -150,7 +146,7 @@ let xrayLogsModuleApi = null;
   let _uiSettingsUnsubscribe = null;
   let _ansiEnabled = false;
   let _ws2Enabled = false;
-  // Xray logs view prefs (file/filter/follow/live/maxLines/pollMs/height)
+  // Xray logs view prefs (file/filter/follow/maxLines/pollMs/height)
   // are stored in /api/ui-settings (Commit 14). We apply them lazily when the
   // user actually uses the logs view (view/enable/live).
   let _logsViewPrefsReady = false;
@@ -200,8 +196,6 @@ let xrayLogsModuleApi = null;
   // не выполняем: восстановление состояния при переоткрытии вкладки НЕ должно
   // молча рестартовать ядро. Поток логов при этом восстанавливается как обычно.
   let _logsUserActivated = false;
-  // Восстановленное при загрузке намерение Live (null = не трогали).
-  let _xrayLiveWantedRestore = null;
   const _xrayLogUiStatus = {
     phase: 'idle',
     tone: 'muted',
@@ -1514,11 +1508,8 @@ let xrayLogsModuleApi = null;
     const lvl = String(prefs.loglevel || '').toLowerCase();
     if (dom.level && ALLOWED_LOGLEVELS.includes(lvl)) dom.level.value = lvl;
 
-    // live/follow toggles
-    if (typeof prefs.live === 'boolean') {
-      setXrayLogsLiveWanted(!!prefs.live, { skipRender: true });
-    }
-
+    // Follow is a view preference; auto-update is intentionally session-bound
+    // and always starts disabled until the user enables Xray logs.
     if (typeof prefs.follow === 'boolean') {
       setXrayLogsFollowEnabled(!!prefs.follow, { skipRender: true, skipScroll: true });
     }
@@ -2128,25 +2119,6 @@ let xrayLogsModuleApi = null;
     try {
       if (window.localStorage) {
         localStorage.setItem(XRAY_DOMAINS_DISPLAY_STORAGE_KEY, display ? '1' : '0');
-      }
-    } catch (e) {}
-  }
-
-  // ---- Персистентность намерения Live (переключатель сбрасывался при F5) ----
-
-  function loadPersistedXrayLiveWanted() {
-    try {
-      if (!window.localStorage) return;
-      const raw = localStorage.getItem(XRAY_LIVE_WANTED_STORAGE_KEY);
-      if (raw === '1') _xrayLiveWantedRestore = true;
-      else if (raw === '0') _xrayLiveWantedRestore = false;
-    } catch (e) {}
-  }
-
-  function persistXrayLiveWanted(wanted) {
-    try {
-      if (window.localStorage) {
-        localStorage.setItem(XRAY_LIVE_WANTED_STORAGE_KEY, wanted ? '1' : '0');
       }
     } catch (e) {}
   }
@@ -3749,6 +3721,7 @@ let xrayLogsModuleApi = null;
   async function xrayLogsView() {
     try { await ensureLogsViewPrefsLoadedForLogs(); } catch (e) {}
     try { void refreshXrayLogDeviceNames({ silent: true, staleMs: 0, router: true }); } catch (e) {}
+    _logsUserActivated = true;
     setXrayLogUiStatus({
       phase: 'loading',
       tone: 'muted',
@@ -3848,6 +3821,7 @@ let xrayLogsModuleApi = null;
       return;
     }
     _enableInFlight = true;
+    _logsUserActivated = true;
     const enableBtn = $('xray-log-enable-btn');
     if (enableBtn) enableBtn.disabled = true;
 
@@ -3926,7 +3900,10 @@ let xrayLogsModuleApi = null;
       _cursor = '';
       _pendingCount = 0;
 
-      const wantStream = !!_liveWanted;
+      setXrayLogsLiveWanted(true, { skipRender: true });
+      setXrayLogsFollowEnabled(true, { skipRender: true });
+      try { scheduleSaveUiState(); } catch (e) {}
+      const wantStream = true;
       const visible = isLogsViewVisible();
 
       if (visible) {
@@ -3970,6 +3947,8 @@ let xrayLogsModuleApi = null;
 
   async function xrayLogsDisable() {
     // Stop auto updates immediately to keep last snapshot
+    setXrayLogsLiveWanted(false, { skipRender: true });
+    try { scheduleSaveUiState(); } catch (e) {}
     stopXrayLogAuto();
     const statusEl = $('xray-log-status');
     setXrayLogUiStatus({
@@ -4732,13 +4711,10 @@ function copyXrayContextModal() {
 	  if (liveEl) {
 	    _liveWanted = !!liveEl.checked;
 	    liveEl.addEventListener('change', () => {
-	      _logsUserActivated = true;
-	      setXrayLogsLiveWanted(!!liveEl.checked, { skipRender: true });
-      // Явный выбор пользователя — сохраняем намерение Live, чтобы оно
-      // пережило перезагрузку страницы (поток восстановится на init).
-      try { persistXrayLiveWanted(!!liveEl.checked); } catch (e) {}
-	      if (liveEl.checked) startXrayLogAuto();
-	      else stopXrayLogAuto();
+      _logsUserActivated = true;
+      setXrayLogsLiveWanted(!!liveEl.checked, { skipRender: true });
+      if (liveEl.checked) startXrayLogAuto();
+      else stopXrayLogAuto();
       try { updateXrayLogStats(); } catch (e) {}
       try { scheduleSaveUiState(); } catch (e) {}
     });
@@ -4867,7 +4843,6 @@ function copyXrayContextModal() {
         }
 
         try { updateXrayLogStats(); } catch (e5) {}
-        closeXrayMoreMenu();
         try { scheduleSaveUiState(); } catch (e6) {}
       } catch (e) {}
     });
@@ -5137,12 +5112,10 @@ function bindFilterUi() {
     try { loadPersistedXrayDestinationDomains(); } catch (e) {}
     // Восстанавливаем display-флаг показа доменов (независим от Live/loglevel).
     try { loadPersistedXrayDomainsDisplay(); } catch (e) {}
-    // Восстанавливаем намерение Live, чтобы поток после F5 не сбрасывался.
-    try { loadPersistedXrayLiveWanted(); } catch (e) {}
     try { updateXrayLogLampState(); } catch (e) {}
     try { setXrayHeaderBadgeState((_activeLogLevel && _activeLogLevel !== 'none') ? 'on' : 'off', _activeLogLevel || 'none'); } catch (e) {}
 
-    // Restore UI preferences for this page (file/live/follow/interval/lines/filter/height)
+    // Restore UI preferences for this page (file/follow/interval/lines/filter/height)
     // BEFORE wiring listeners, so we don't accidentally trigger actions.
     try { applyInitialUiStateNoFetch(); } catch (e) {}
 
@@ -5207,23 +5180,6 @@ function bindFilterUi() {
       });
     } catch (e) {}
 
-    // Авто-возобновление Live после перезагрузки страницы: если онлайн-поток был
-    // включён до F5 и вкладка логов сейчас видима — поднимаем его заново.
-    // Делается после bindControlsUi (строка `_liveWanted = liveEl.checked`
-    // перезатирает флаг), чтобы startXrayLogAuto выставил и флаг, и галочку.
-    try {
-      if (_xrayLiveWantedRestore === true && isLogsViewVisible()) {
-        // Выставляем намерение СИНХРОННО (флаг + галочка) до того, как
-        // resolve'нется уже запущенный выше refreshXrayLogStatus: его reconcile
-        // доменов одноразовый и проверяет `_liveWanted || _streaming`.
-        _liveWanted = true;
-        try {
-          const liveEl = $('xray-log-live');
-          if (liveEl) liveEl.checked = true;
-        } catch (e) {}
-        void startXrayLogAuto();
-      }
-    } catch (e) {}
   }
 
   const api = {

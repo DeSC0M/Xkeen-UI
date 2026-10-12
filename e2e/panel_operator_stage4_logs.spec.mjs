@@ -100,6 +100,129 @@ async function readLogsGeometry(page) {
 
 
 test.describe('Operator Console Stage 4 logs', () => {
+  test('keeps stream preferences in the more menu and couples auto-update to log enablement', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('xkeen.ui.xrayLogs.liveWanted.v1', '1');
+    });
+    await openLogs(page, 'dark', { width: 1440, height: 900 });
+
+    await expect(page.locator('.xray-log-controls > #xray-log-live')).toHaveCount(0);
+    await expect(page.locator('.xray-log-controls > #xray-log-follow')).toHaveCount(0);
+    await expect(page.locator('.xray-log-controls > .dt-log-interval')).toHaveCount(0);
+
+    await page.locator('#xray-log-more > summary').click();
+    await expect(page.locator('#xray-log-more #xray-log-live')).toBeVisible();
+    await expect(page.locator('#xray-log-more #xray-log-follow')).toBeVisible();
+    await expect(page.locator('#xray-log-more #xray-log-interval')).toBeVisible();
+    const menuBox = await page.locator('#xray-log-more .dt-log-menu-panel').boundingBox();
+    expect(menuBox.x).toBeGreaterThanOrEqual(0);
+    expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(1440);
+
+    const live = page.locator('#xray-log-more #xray-log-live');
+    const follow = page.locator('#xray-log-more #xray-log-follow');
+    await expect(live).not.toBeChecked();
+
+    await page.locator('#xray-log-view-btn').click();
+    await expect(live).not.toBeChecked();
+
+    await page.route('**/api/xray-logs/enable', async (route) => {
+      await route.fulfill({ json: { loglevel: 'warning', xray_restarted: true } });
+    });
+    await page.route('**/api/xray-logs/disable', async (route) => {
+      await route.fulfill({ json: { ok: true } });
+    });
+
+    await page.locator('#xray-log-enable-btn').click();
+    await expect(live).toBeChecked();
+    await expect(follow).toBeChecked();
+
+    await page.locator('#xray-log-disable-btn').click();
+    await expect(live).not.toBeChecked();
+  });
+
+  test('renders log mode and line count as status chips', async ({ page }) => {
+    await openLogs(page, 'dark', { width: 1440, height: 900 });
+
+    const chips = page.locator('#view-xray-logs :is(#xray-log-mode, .xk-log-counter[data-kind="lines"])');
+    await expect(chips).toHaveCount(2);
+    const appearance = await chips.evaluateAll((nodes) => nodes.map((node) => {
+      const style = getComputedStyle(node);
+      return {
+        borderTopWidth: style.borderTopWidth,
+        backgroundColor: style.backgroundColor,
+        borderRadius: style.borderTopLeftRadius,
+      };
+    }));
+
+    for (const chip of appearance) {
+      expect(chip.borderTopWidth).toBe('1px');
+      expect(chip.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+      expect(Number.parseFloat(chip.borderRadius)).toBeGreaterThan(0);
+    }
+  });
+
+  test('Xray log filter clear icon is centered in its button', async ({ page }) => {
+    await openLogs(page, 'dark', { width: 1440, height: 900 });
+
+    const geometry = await page.locator('#xray-log-filter-clear').evaluate((button) => {
+      const icon = button.querySelector('.xk-action-icon');
+      if (!icon) return null;
+
+      const buttonBox = button.getBoundingClientRect();
+      const iconBox = icon.getBoundingClientRect();
+      return {
+        buttonCenterX: buttonBox.left + buttonBox.width / 2,
+        buttonCenterY: buttonBox.top + buttonBox.height / 2,
+        iconCenterX: iconBox.left + iconBox.width / 2,
+        iconCenterY: iconBox.top + iconBox.height / 2,
+      };
+    });
+
+    expect(geometry).not.toBeNull();
+    expect(Math.abs(geometry.iconCenterX - geometry.buttonCenterX)).toBeLessThanOrEqual(1);
+    expect(Math.abs(geometry.iconCenterY - geometry.buttonCenterY)).toBeLessThanOrEqual(1);
+  });
+
+  test('Xray log more menu renders secondary actions as bordered menu buttons', async ({ page }) => {
+    await openLogs(page, 'dark', { width: 1440, height: 900 });
+    await page.locator('#xray-log-more > summary').click();
+
+    const actions = page.locator(
+      '#xray-log-more .dt-log-menu-panel > :is(#xray-log-copy-selection, #xray-log-download, #xray-log-load-more)',
+    );
+    await expect(actions).toHaveCount(3);
+
+    const appearance = await actions.evaluateAll((buttons) => buttons.map((button) => {
+      const style = getComputedStyle(button);
+      return {
+        borderTopWidth: style.borderTopWidth,
+        backgroundColor: style.backgroundColor,
+        borderRadius: style.borderTopLeftRadius,
+      };
+    }));
+
+    for (const action of appearance) {
+      expect(action.borderTopWidth).toBe('1px');
+      expect(action.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+      expect(Number.parseFloat(action.borderRadius)).toBeGreaterThan(0);
+    }
+  });
+
+  test('keeps the more menu open while changing the log line limit', async ({ page }) => {
+    await openLogs(page, 'dark', { width: 1440, height: 900 });
+    await page.locator('#xray-log-more > summary').click();
+
+    const menu = page.locator('#xray-log-more');
+    const lines = page.locator('#xray-log-lines');
+    await expect(menu).toHaveAttribute('open', '');
+    await expect(lines).toHaveValue('800');
+
+    await lines.focus();
+    await page.keyboard.press('ArrowUp');
+    await expect(lines).toHaveValue('850');
+    await expect(menu).toHaveAttribute('open', '');
+  });
+
   test('Xray logs use the compact operator header in desktop and mobile layouts', async ({ page }) => {
     await openLogs(page, 'dark', { width: 1440, height: 900 });
 

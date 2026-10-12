@@ -15887,17 +15887,15 @@ html[data-theme="light"] .terminal-uptime {
 .terminal-commands-list{
   display:flex;
   flex-direction:column;
-  gap:6px;
-  max-height: 260px;
-  overflow:auto;
+  gap:4px;
   padding-right: 2px;
 }
 
 .terminal-commands-item{
   width:100%;
   text-align:left;
-  padding:8px 10px;
-  border-radius:10px;
+  padding:4px 8px;
+  border-radius:6px;
   border: 1px solid var(--border, rgba(255,255,255,.10));
   background: color-mix(in srgb, var(--card-bg, #020617) 92%, transparent);
   color:inherit;
@@ -15914,7 +15912,7 @@ html[data-theme="light"] .terminal-uptime {
 
 .terminal-commands-item-desc{
   display:block;
-  margin-top: 2px;
+  margin-top: 1px;
   font-size: calc(11px * var(--xk-font-scale));
   color: var(--muted, #94a3b8);
 }

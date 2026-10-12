@@ -4386,8 +4386,8 @@
       },
       {
         "index": 37,
-        "locator": "span.small@L2443",
-        "line": 2443,
+        "locator": "span.small@L2440",
+        "line": 2440,
         "kind": "presentation-geometry",
         "source": "opacity:0.85;",
         "declarations": [
@@ -4400,7 +4400,7 @@
       {
         "index": 38,
         "locator": "#inbounds-apply-socks-row",
-        "line": 2833,
+        "line": 2830,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -4412,8 +4412,8 @@
       },
       {
         "index": 39,
-        "locator": "div.xk-modal-gap-12@L2834",
-        "line": 2834,
+        "locator": "div.xk-modal-gap-12@L2831",
+        "line": 2831,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:flex-start; flex-wrap: wrap;",
         "declarations": [
@@ -4433,8 +4433,8 @@
       },
       {
         "index": 40,
-        "locator": "label.routing-rule-field.xk-modal-m-0@L2835",
-        "line": 2835,
+        "locator": "label.routing-rule-field.xk-modal-m-0@L2832",
+        "line": 2832,
         "kind": "presentation-geometry",
         "source": "min-width: 220px;",
         "declarations": [
@@ -4447,7 +4447,7 @@
       {
         "index": 41,
         "locator": "#inbounds-apply-warn",
-        "line": 2845,
+        "line": 2842,
         "kind": "mixed-state-and-presentation",
         "source": "display:none; color: var(--warning, #f59e0b);",
         "declarations": [
@@ -4464,7 +4464,7 @@
       {
         "index": 42,
         "locator": "#inbounds-apply-error",
-        "line": 2847,
+        "line": 2844,
         "kind": "mixed-state-and-presentation",
         "source": "display:none; color: var(--danger, #ef4444);",
         "declarations": [
@@ -4480,8 +4480,8 @@
       },
       {
         "index": 43,
-        "locator": "div.xk-editor-workbench-toolbar.xk-editor-workbench-toolbar--snapshot.xk-modal-gap-12@L3029",
-        "line": 3029,
+        "locator": "div.xk-editor-workbench-toolbar.xk-editor-workbench-toolbar--snapshot.xk-modal-gap-12@L3026",
+        "line": 3026,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:flex-start; justify-content:space-between;",
         "declarations": [
@@ -4501,8 +4501,8 @@
       },
       {
         "index": 44,
-        "locator": "div.modal-actions.xk-editor-workbench-actions@L3043",
-        "line": 3043,
+        "locator": "div.modal-actions.xk-editor-workbench-actions@L3040",
+        "line": 3040,
         "kind": "presentation-geometry",
         "source": "justify-content: space-between;",
         "declarations": [
@@ -4514,8 +4514,8 @@
       },
       {
         "index": 45,
-        "locator": "div.xk-editor-workbench-action-group.xk-modal-gap-10@L3045",
-        "line": 3045,
+        "locator": "div.xk-editor-workbench-action-group.xk-modal-gap-10@L3042",
+        "line": 3042,
         "kind": "presentation-geometry",
         "source": "display:flex;",
         "declarations": [
@@ -4527,8 +4527,8 @@
       },
       {
         "index": 46,
-        "locator": "div.xk-modal-gap-10@L3069",
-        "line": 3069,
+        "locator": "div.xk-modal-gap-10@L3066",
+        "line": 3066,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:flex-start; justify-content:space-between;",
         "declarations": [
@@ -4548,8 +4548,8 @@
       },
       {
         "index": 47,
-        "locator": "div.modal-actions@L3090",
-        "line": 3090,
+        "locator": "div.modal-actions@L3087",
+        "line": 3087,
         "kind": "presentation-geometry",
         "source": "justify-content: space-between;",
         "declarations": [
@@ -4561,8 +4561,8 @@
       },
       {
         "index": 48,
-        "locator": "div.xk-modal-gap-10@L3091",
-        "line": 3091,
+        "locator": "div.xk-modal-gap-10@L3088",
+        "line": 3088,
         "kind": "presentation-geometry",
         "source": "display:flex; flex-wrap: wrap;",
         "declarations": [
@@ -4578,8 +4578,8 @@
       },
       {
         "index": 49,
-        "locator": "div.xk-modal-gap-10@L3097",
-        "line": 3097,
+        "locator": "div.xk-modal-gap-10@L3094",
+        "line": 3094,
         "kind": "presentation-geometry",
         "source": "display:flex;",
         "declarations": [
@@ -4591,8 +4591,8 @@
       },
       {
         "index": 50,
-        "locator": "div.xk-modal-gap-10@L3146",
-        "line": 3146,
+        "locator": "div.xk-modal-gap-10@L3143",
+        "line": 3143,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -4609,7 +4609,7 @@
       {
         "index": 51,
         "locator": "#outbounds-gen-cred-trojan",
-        "line": 3287,
+        "line": 3284,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -4622,7 +4622,7 @@
       {
         "index": 52,
         "locator": "#outbounds-gen-cred-vmess",
-        "line": 3292,
+        "line": 3289,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -4635,7 +4635,7 @@
       {
         "index": 53,
         "locator": "#outbounds-gen-cred-ss",
-        "line": 3297,
+        "line": 3294,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -4648,7 +4648,7 @@
       {
         "index": 54,
         "locator": "#outbounds-gen-cred-ss-pass",
-        "line": 3308,
+        "line": 3305,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -4661,7 +4661,7 @@
       {
         "index": 55,
         "locator": "#outbounds-gen-cred-hy2",
-        "line": 3313,
+        "line": 3310,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -4674,7 +4674,7 @@
       {
         "index": 56,
         "locator": "#outbounds-gen-field-ss-plugin",
-        "line": 3399,
+        "line": 3396,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -4687,7 +4687,7 @@
       {
         "index": 57,
         "locator": "#outbounds-gen-field-hy2-insecure",
-        "line": 3404,
+        "line": 3401,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -4700,7 +4700,7 @@
       {
         "index": 58,
         "locator": "#outbounds-gen-field-hy2-obfs",
-        "line": 3412,
+        "line": 3409,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -4713,7 +4713,7 @@
       {
         "index": 59,
         "locator": "#outbounds-gen-field-hy2-obfspwd",
-        "line": 3420,
+        "line": 3417,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -4726,7 +4726,7 @@
       {
         "index": 60,
         "locator": "#outbounds-gen-field-hy2-pinsha256",
-        "line": 3425,
+        "line": 3422,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -4739,7 +4739,7 @@
       {
         "index": 61,
         "locator": "#routing-dat-contents-ipfilter",
-        "line": 3632,
+        "line": 3629,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -4752,7 +4752,7 @@
       {
         "index": 62,
         "locator": "#routing-dat-contents-search-items-more",
-        "line": 3638,
+        "line": 3635,
         "kind": "state-visibility-hook",
         "source": "display:none",
         "declarations": [
@@ -4764,8 +4764,8 @@
       },
       {
         "index": 63,
-        "locator": "div.modal-actions.xk-dat-modal-actions@L3646",
-        "line": 3646,
+        "locator": "div.modal-actions.xk-dat-modal-actions@L3643",
+        "line": 3643,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -4778,7 +4778,7 @@
       {
         "index": 64,
         "locator": "#terminal-overlay",
-        "line": 3653,
+        "line": 3650,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -4790,8 +4790,8 @@
       },
       {
         "index": 65,
-        "locator": "div.xk-modal-gap-8.xk-modal-mb-10@L3835",
-        "line": 3835,
+        "locator": "div.xk-modal-gap-8.xk-modal-mb-10@L3832",
+        "line": 3832,
         "kind": "presentation-geometry",
         "source": "display:flex; flex-wrap:wrap;",
         "declarations": [
@@ -4808,7 +4808,7 @@
       {
         "index": 66,
         "locator": "#ssh-profiles-list",
-        "line": 3842,
+        "line": 3839,
         "kind": "presentation-geometry",
         "source": "display:flex; flex-direction:column;",
         "declarations": [
@@ -4824,8 +4824,8 @@
       },
       {
         "index": 67,
-        "locator": "hr.xk-modal-m-0.xk-modal-mt-12.xk-modal-mb-12@L3844",
-        "line": 3844,
+        "locator": "hr.xk-modal-m-0.xk-modal-mt-12.xk-modal-mb-12@L3841",
+        "line": 3841,
         "kind": "presentation-geometry",
         "source": "border:0; border-top:1px solid #334155;",
         "declarations": [
@@ -4841,8 +4841,8 @@
       },
       {
         "index": 68,
-        "locator": "div.xk-modal-gap-8@L3846",
-        "line": 3846,
+        "locator": "div.xk-modal-gap-8@L3843",
+        "line": 3843,
         "kind": "presentation-geometry",
         "source": "display:flex; flex-direction:column;",
         "declarations": [
@@ -4858,8 +4858,8 @@
       },
       {
         "index": 69,
-        "locator": "label@L3847",
-        "line": 3847,
+        "locator": "label@L3844",
+        "line": 3844,
         "kind": "presentation-geometry",
         "source": "opacity:.85;",
         "declarations": [
@@ -4872,7 +4872,7 @@
       {
         "index": 70,
         "locator": "#ssh-command-preview",
-        "line": 3848,
+        "line": 3845,
         "kind": "presentation-geometry",
         "source": "width:100%;",
         "declarations": [
@@ -4884,8 +4884,8 @@
       },
       {
         "index": 71,
-        "locator": "div.xk-modal-gap-8@L3849",
-        "line": 3849,
+        "locator": "div.xk-modal-gap-8@L3846",
+        "line": 3846,
         "kind": "presentation-geometry",
         "source": "display:flex; justify-content:flex-end; flex-wrap:wrap;",
         "declarations": [
@@ -4905,8 +4905,8 @@
       },
       {
         "index": 72,
-        "locator": "div.xk-modal-gap-8@L3891",
-        "line": 3891,
+        "locator": "div.xk-modal-gap-8@L3888",
+        "line": 3888,
         "kind": "presentation-geometry",
         "source": "display:flex; justify-content:flex-end;",
         "declarations": [
@@ -4923,7 +4923,7 @@
       {
         "index": 73,
         "locator": "#ssh-confirm-text",
-        "line": 3907,
+        "line": 3904,
         "kind": "presentation-geometry",
         "source": "white-space:pre-wrap;",
         "declarations": [
@@ -4935,8 +4935,8 @@
       },
       {
         "index": 74,
-        "locator": "div.modal-actions@L3909",
-        "line": 3909,
+        "locator": "div.modal-actions@L3906",
+        "line": 3906,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -4948,8 +4948,8 @@
       },
       {
         "index": 75,
-        "locator": "div.modal-body.xk-modal-gap-10@L3922",
-        "line": 3922,
+        "locator": "div.modal-body.xk-modal-gap-10@L3919",
+        "line": 3919,
         "kind": "presentation-geometry",
         "source": "display:flex; flex-direction:column;",
         "declarations": [
@@ -4966,7 +4966,7 @@
       {
         "index": 76,
         "locator": "#ssh-transfer-help",
-        "line": 3923,
+        "line": 3920,
         "kind": "presentation-geometry",
         "source": "opacity:.85;",
         "declarations": [
@@ -4979,7 +4979,7 @@
       {
         "index": 77,
         "locator": "#ssh-transfer-text",
-        "line": 3924,
+        "line": 3921,
         "kind": "presentation-geometry",
         "source": "min-height:280px;",
         "declarations": [
@@ -4991,8 +4991,8 @@
       },
       {
         "index": 78,
-        "locator": "div.xk-modal-gap-8@L3929",
-        "line": 3929,
+        "locator": "div.xk-modal-gap-8@L3926",
+        "line": 3926,
         "kind": "presentation-geometry",
         "source": "display:flex; justify-content:flex-end;",
         "declarations": [
@@ -5009,7 +5009,7 @@
       {
         "index": 79,
         "locator": "#github-catalog-error",
-        "line": 4047,
+        "line": 4044,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -5021,8 +5021,8 @@
       },
       {
         "index": 80,
-        "locator": "div.xk-modal-gap-8@L4052",
-        "line": 4052,
+        "locator": "div.xk-modal-gap-8@L4049",
+        "line": 4049,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center; flex-wrap:wrap;",
         "declarations": [
@@ -5042,8 +5042,8 @@
       },
       {
         "index": 81,
-        "locator": "div.xk-modal-gap-8@L4057",
-        "line": 4057,
+        "locator": "div.xk-modal-gap-8@L4054",
+        "line": 4054,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -5059,8 +5059,8 @@
       },
       {
         "index": 82,
-        "locator": "div.xk-card-desc@L4378",
-        "line": 4378,
+        "locator": "div.xk-card-desc@L4375",
+        "line": 4375,
         "kind": "presentation-geometry",
         "source": "opacity:0.75;",
         "declarations": [
@@ -5073,7 +5073,7 @@
       {
         "index": 83,
         "locator": "#mihomo-proxy-tools-no-proxies",
-        "line": 4482,
+        "line": 4479,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -5086,7 +5086,7 @@
       {
         "index": 84,
         "locator": "#mihomo-validation-summary-wrap",
-        "line": 4612,
+        "line": 4609,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -5099,7 +5099,7 @@
       {
         "index": 85,
         "locator": "#mihomo-validation-explain-wrap",
-        "line": 4617,
+        "line": 4614,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -5112,7 +5112,7 @@
       {
         "index": 86,
         "locator": "#mihomo-validation-side-panel",
-        "line": 4624,
+        "line": 4621,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -5125,7 +5125,7 @@
       {
         "index": 87,
         "locator": "#mihomo-validation-log-wrap",
-        "line": 4625,
+        "line": 4622,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -5137,8 +5137,8 @@
       },
       {
         "index": 88,
-        "locator": "p.modal-hint.xk-modal-m-0.xk-modal-mt-8@L4778",
-        "line": 4778,
+        "locator": "p.modal-hint.xk-modal-m-0.xk-modal-mt-8@L4775",
+        "line": 4775,
         "kind": "presentation-geometry",
         "source": "opacity:0.75; font-size: 0.85rem;",
         "declarations": [
@@ -5154,8 +5154,8 @@
       },
       {
         "index": 89,
-        "locator": "div.xk-modal-gap-8@L4801",
-        "line": 4801,
+        "locator": "div.xk-modal-gap-8@L4798",
+        "line": 4798,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -5172,7 +5172,7 @@
       {
         "index": 90,
         "locator": "#fm-conn-profile",
-        "line": 4802,
+        "line": 4799,
         "kind": "presentation-geometry",
         "source": "flex:1;",
         "declarations": [
@@ -5185,7 +5185,7 @@
       {
         "index": 91,
         "locator": "#fm-key-file-label",
-        "line": 4833,
+        "line": 4830,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -5198,7 +5198,7 @@
       {
         "index": 92,
         "locator": "#fm-key-file",
-        "line": 4834,
+        "line": 4831,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -5211,7 +5211,7 @@
       {
         "index": 93,
         "locator": "#fm-key-path-label",
-        "line": 4836,
+        "line": 4833,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -5224,7 +5224,7 @@
       {
         "index": 94,
         "locator": "#fm-key-path",
-        "line": 4837,
+        "line": 4834,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -5237,7 +5237,7 @@
       {
         "index": 95,
         "locator": "#fm-passphrase-label",
-        "line": 4839,
+        "line": 4836,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -5250,7 +5250,7 @@
       {
         "index": 96,
         "locator": "#fm-passphrase",
-        "line": 4840,
+        "line": 4837,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -5262,8 +5262,8 @@
       },
       {
         "index": 97,
-        "locator": "div.xk-modal-gap-8@L4843",
-        "line": 4843,
+        "locator": "div.xk-modal-gap-8@L4840",
+        "line": 4840,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -5280,7 +5280,7 @@
       {
         "index": 98,
         "locator": "#fm-hostkey-policy",
-        "line": 4844,
+        "line": 4841,
         "kind": "presentation-geometry",
         "source": "flex:1;",
         "declarations": [
@@ -5293,7 +5293,7 @@
       {
         "index": 99,
         "locator": "#fm-hostkey-row",
-        "line": 4853,
+        "line": 4850,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -5310,7 +5310,7 @@
       {
         "index": 100,
         "locator": "#fm-hostkey-fp",
-        "line": 4854,
+        "line": 4851,
         "kind": "presentation-geometry",
         "source": "padding:8px 10px; opacity:.85; flex:1;",
         "declarations": [
@@ -5330,8 +5330,8 @@
       },
       {
         "index": 101,
-        "locator": "div.xk-modal-gap-10@L4872",
-        "line": 4872,
+        "locator": "div.xk-modal-gap-10@L4869",
+        "line": 4869,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -5347,8 +5347,8 @@
       },
       {
         "index": 102,
-        "locator": "span@L4874",
-        "line": 4874,
+        "locator": "span@L4871",
+        "line": 4871,
         "kind": "presentation-geometry",
         "source": "opacity:.85;",
         "declarations": [
@@ -5361,7 +5361,7 @@
       {
         "index": 103,
         "locator": "#fm-connect-warn",
-        "line": 4878,
+        "line": 4875,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -5373,8 +5373,8 @@
       },
       {
         "index": 104,
-        "locator": "div.modal-actions@L4880",
-        "line": 4880,
+        "locator": "div.modal-actions@L4877",
+        "line": 4877,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -5387,7 +5387,7 @@
       {
         "index": 105,
         "locator": "#fm-knownhosts-path",
-        "line": 4896,
+        "line": 4893,
         "kind": "presentation-geometry",
         "source": "padding:8px 10px; opacity:.85;",
         "declarations": [
@@ -5403,8 +5403,8 @@
       },
       {
         "index": 106,
-        "locator": "div.form-row.xk-modal-gap-8.xk-modal-m-0@L4898",
-        "line": 4898,
+        "locator": "div.form-row.xk-modal-gap-8.xk-modal-m-0@L4895",
+        "line": 4895,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center; flex-wrap:wrap;",
         "declarations": [
@@ -5424,8 +5424,8 @@
       },
       {
         "index": 107,
-        "locator": "label@L4899",
-        "line": 4899,
+        "locator": "label@L4896",
+        "line": 4896,
         "kind": "presentation-geometry",
         "source": "min-width:170px;",
         "declarations": [
@@ -5438,7 +5438,7 @@
       {
         "index": 108,
         "locator": "#fm-knownhosts-remove-host",
-        "line": 4900,
+        "line": 4897,
         "kind": "presentation-geometry",
         "source": "flex:1; min-width:260px;",
         "declarations": [
@@ -5454,8 +5454,8 @@
       },
       {
         "index": 109,
-        "locator": "div.xk-modal-gap-8.xk-modal-mb-10@L4904",
-        "line": 4904,
+        "locator": "div.xk-modal-gap-8.xk-modal-mb-10@L4901",
+        "line": 4901,
         "kind": "presentation-geometry",
         "source": "display:flex; justify-content:flex-end; flex-wrap:wrap;",
         "declarations": [
@@ -5476,7 +5476,7 @@
       {
         "index": 110,
         "locator": "#fm-knownhosts-hashed-hint",
-        "line": 4909,
+        "line": 4906,
         "kind": "mixed-state-and-presentation",
         "source": "display:none; opacity:.75;",
         "declarations": [
@@ -5493,7 +5493,7 @@
       {
         "index": 111,
         "locator": "#fm-knownhosts-body",
-        "line": 4910,
+        "line": 4907,
         "kind": "presentation-geometry",
         "source": "max-height:380px; overflow:auto;",
         "declarations": [
@@ -5509,8 +5509,8 @@
       },
       {
         "index": 112,
-        "locator": "div.status.xk-modal-mt-10@L4911",
-        "line": 4911,
+        "locator": "div.status.xk-modal-mt-10@L4908",
+        "line": 4908,
         "kind": "presentation-geometry",
         "source": "opacity:.75;",
         "declarations": [
@@ -5522,8 +5522,8 @@
       },
       {
         "index": 113,
-        "locator": "div.modal-actions@L4913",
-        "line": 4913,
+        "locator": "div.modal-actions@L4910",
+        "line": 4910,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -5536,7 +5536,7 @@
       {
         "index": 114,
         "locator": "#fm-create-dest",
-        "line": 4932,
+        "line": 4929,
         "kind": "presentation-geometry",
         "source": "padding:8px 10px;",
         "declarations": [
@@ -5548,8 +5548,8 @@
       },
       {
         "index": 115,
-        "locator": "label.xk-modal-gap-8@L4935",
-        "line": 4935,
+        "locator": "label.xk-modal-gap-8@L4932",
+        "line": 4932,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -5566,7 +5566,7 @@
       {
         "index": 116,
         "locator": "#fm-create-createonly-row",
-        "line": 4941,
+        "line": 4938,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -5582,8 +5582,8 @@
       },
       {
         "index": 117,
-        "locator": "div.modal-actions@L4948",
-        "line": 4948,
+        "locator": "div.modal-actions@L4945",
+        "line": 4945,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -5596,7 +5596,7 @@
       {
         "index": 118,
         "locator": "#fm-rename-src",
-        "line": 4969,
+        "line": 4966,
         "kind": "presentation-geometry",
         "source": "padding:8px 10px;",
         "declarations": [
@@ -5608,8 +5608,8 @@
       },
       {
         "index": 119,
-        "locator": "div.status.xk-modal-mt-10@L4971",
-        "line": 4971,
+        "locator": "div.status.xk-modal-mt-10@L4968",
+        "line": 4968,
         "kind": "presentation-geometry",
         "source": "opacity:.8;",
         "declarations": [
@@ -5621,8 +5621,8 @@
       },
       {
         "index": 120,
-        "locator": "div.modal-actions@L4974",
-        "line": 4974,
+        "locator": "div.modal-actions@L4971",
+        "line": 4971,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -5634,8 +5634,8 @@
       },
       {
         "index": 121,
-        "locator": "div.fm-form-grid@L4989",
-        "line": 4989,
+        "locator": "div.fm-form-grid@L4986",
+        "line": 4986,
         "kind": "presentation-geometry",
         "source": "grid-template-columns: 160px 1fr;",
         "declarations": [
@@ -5648,7 +5648,7 @@
       {
         "index": 122,
         "locator": "#fm-archive-src",
-        "line": 4991,
+        "line": 4988,
         "kind": "presentation-geometry",
         "source": "padding:8px 10px;",
         "declarations": [
@@ -5661,7 +5661,7 @@
       {
         "index": 123,
         "locator": "#fm-archive-list",
-        "line": 4994,
+        "line": 4991,
         "kind": "presentation-geometry",
         "source": "max-height:180px;",
         "declarations": [
@@ -5673,8 +5673,8 @@
       },
       {
         "index": 124,
-        "locator": "label.xk-modal-gap-8@L5006",
-        "line": 5006,
+        "locator": "label.xk-modal-gap-8@L5003",
+        "line": 5003,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -5690,8 +5690,8 @@
       },
       {
         "index": 125,
-        "locator": "div.modal-actions@L5013",
-        "line": 5013,
+        "locator": "div.modal-actions@L5010",
+        "line": 5010,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -5703,8 +5703,8 @@
       },
       {
         "index": 126,
-        "locator": "div.fm-form-grid@L5028",
-        "line": 5028,
+        "locator": "div.fm-form-grid@L5025",
+        "line": 5025,
         "kind": "presentation-geometry",
         "source": "grid-template-columns: 160px 1fr;",
         "declarations": [
@@ -5717,7 +5717,7 @@
       {
         "index": 127,
         "locator": "#fm-extract-archive",
-        "line": 5030,
+        "line": 5027,
         "kind": "presentation-geometry",
         "source": "padding:8px 10px;",
         "declarations": [
@@ -5729,8 +5729,8 @@
       },
       {
         "index": 128,
-        "locator": "div.xk-modal-gap-8@L5036",
-        "line": 5036,
+        "locator": "div.xk-modal-gap-8@L5033",
+        "line": 5033,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center; flex-wrap:wrap;",
         "declarations": [
@@ -5751,7 +5751,7 @@
       {
         "index": 129,
         "locator": "#fm-extract-dest-here-btn",
-        "line": 5037,
+        "line": 5034,
         "kind": "presentation-geometry",
         "source": "padding:6px 10px; font-size:12px;",
         "declarations": [
@@ -5768,7 +5768,7 @@
       {
         "index": 130,
         "locator": "#fm-extract-dest-other-btn",
-        "line": 5038,
+        "line": 5035,
         "kind": "presentation-geometry",
         "source": "padding:6px 10px; font-size:12px;",
         "declarations": [
@@ -5785,7 +5785,7 @@
       {
         "index": 131,
         "locator": "#fm-extract-dest-pick-btn",
-        "line": 5039,
+        "line": 5036,
         "kind": "presentation-geometry",
         "source": "padding:6px 10px; font-size:12px;",
         "declarations": [
@@ -5801,8 +5801,8 @@
       },
       {
         "index": 132,
-        "locator": "span@L5040",
-        "line": 5040,
+        "locator": "span@L5037",
+        "line": 5037,
         "kind": "presentation-geometry",
         "source": "opacity:.7; font-size:12px;",
         "declarations": [
@@ -5818,8 +5818,8 @@
       },
       {
         "index": 133,
-        "locator": "label.xk-modal-gap-8@L5044",
-        "line": 5044,
+        "locator": "label.xk-modal-gap-8@L5041",
+        "line": 5041,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -5835,8 +5835,8 @@
       },
       {
         "index": 134,
-        "locator": "label.xk-modal-gap-8@L5050",
-        "line": 5050,
+        "locator": "label.xk-modal-gap-8@L5047",
+        "line": 5047,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -5852,8 +5852,8 @@
       },
       {
         "index": 135,
-        "locator": "label.xk-modal-gap-8@L5056",
-        "line": 5056,
+        "locator": "label.xk-modal-gap-8@L5053",
+        "line": 5053,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -5869,8 +5869,8 @@
       },
       {
         "index": 136,
-        "locator": "label.xk-modal-gap-8@L5062",
-        "line": 5062,
+        "locator": "label.xk-modal-gap-8@L5059",
+        "line": 5059,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -5886,8 +5886,8 @@
       },
       {
         "index": 137,
-        "locator": "div.status.xk-modal-mt-10@L5067",
-        "line": 5067,
+        "locator": "div.status.xk-modal-mt-10@L5064",
+        "line": 5064,
         "kind": "presentation-geometry",
         "source": "opacity:.75;",
         "declarations": [
@@ -5899,8 +5899,8 @@
       },
       {
         "index": 138,
-        "locator": "div.modal-actions@L5070",
-        "line": 5070,
+        "locator": "div.modal-actions@L5067",
+        "line": 5067,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -5912,8 +5912,8 @@
       },
       {
         "index": 139,
-        "locator": "div.xk-modal-gap-8.xk-modal-mb-10@L5085",
-        "line": 5085,
+        "locator": "div.xk-modal-gap-8.xk-modal-mb-10@L5082",
+        "line": 5082,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center; flex-wrap:wrap;",
         "declarations": [
@@ -5934,7 +5934,7 @@
       {
         "index": 140,
         "locator": "#fm-folder-picker-up-btn",
-        "line": 5086,
+        "line": 5083,
         "kind": "presentation-geometry",
         "source": "padding:6px 10px; font-size:12px;",
         "declarations": [
@@ -5951,7 +5951,7 @@
       {
         "index": 141,
         "locator": "#fm-folder-picker-home-btn",
-        "line": 5087,
+        "line": 5084,
         "kind": "presentation-geometry",
         "source": "padding:6px 10px; font-size:12px;",
         "declarations": [
@@ -5968,7 +5968,7 @@
       {
         "index": 142,
         "locator": "#fm-folder-picker-path",
-        "line": 5088,
+        "line": 5085,
         "kind": "presentation-geometry",
         "source": "flex:1; min-width:220px;",
         "declarations": [
@@ -5985,7 +5985,7 @@
       {
         "index": 143,
         "locator": "#fm-folder-picker-status",
-        "line": 5090,
+        "line": 5087,
         "kind": "presentation-geometry",
         "source": "padding:6px 10px; opacity:.85;",
         "declarations": [
@@ -6002,7 +6002,7 @@
       {
         "index": 144,
         "locator": "#fm-folder-picker-list",
-        "line": 5091,
+        "line": 5088,
         "kind": "presentation-geometry",
         "source": "max-height:420px; overflow:auto; padding:0;",
         "declarations": [
@@ -6022,8 +6022,8 @@
       },
       {
         "index": 145,
-        "locator": "div.modal-actions@L5094",
-        "line": 5094,
+        "locator": "div.modal-actions@L5091",
+        "line": 5091,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -6035,8 +6035,8 @@
       },
       {
         "index": 146,
-        "locator": "div.fm-form-grid@L5109",
-        "line": 5109,
+        "locator": "div.fm-form-grid@L5106",
+        "line": 5106,
         "kind": "presentation-geometry",
         "source": "grid-template-columns: 120px 1fr;",
         "declarations": [
@@ -6049,7 +6049,7 @@
       {
         "index": 147,
         "locator": "#fm-archive-list-path",
-        "line": 5111,
+        "line": 5108,
         "kind": "presentation-geometry",
         "source": "padding:8px 10px;",
         "declarations": [
@@ -6061,8 +6061,8 @@
       },
       {
         "index": 148,
-        "locator": "div.xk-modal-gap-8.xk-modal-m-0.xk-modal-mb-6@L5115",
-        "line": 5115,
+        "locator": "div.xk-modal-gap-8.xk-modal-m-0.xk-modal-mb-6@L5112",
+        "line": 5112,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -6079,7 +6079,7 @@
       {
         "index": 149,
         "locator": "#fm-archive-list-filter",
-        "line": 5116,
+        "line": 5113,
         "kind": "presentation-geometry",
         "source": "flex:1; min-width:200px;",
         "declarations": [
@@ -6096,7 +6096,7 @@
       {
         "index": 150,
         "locator": "#fm-archive-list-body",
-        "line": 5120,
+        "line": 5117,
         "kind": "presentation-geometry",
         "source": "max-height:420px; overflow:auto; padding:0;",
         "declarations": [
@@ -6117,7 +6117,7 @@
       {
         "index": 151,
         "locator": "#fm-archive-list-meta",
-        "line": 5124,
+        "line": 5121,
         "kind": "presentation-geometry",
         "source": "padding:6px 10px; opacity:.8;",
         "declarations": [
@@ -6133,8 +6133,8 @@
       },
       {
         "index": 152,
-        "locator": "div.modal-actions.xk-modal-gap-10@L5128",
-        "line": 5128,
+        "locator": "div.modal-actions.xk-modal-gap-10@L5125",
+        "line": 5125,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -6146,8 +6146,8 @@
       },
       {
         "index": 153,
-        "locator": "div.status.xk-modal-m-0@L5150",
-        "line": 5150,
+        "locator": "div.status.xk-modal-m-0@L5147",
+        "line": 5147,
         "kind": "presentation-geometry",
         "source": "padding:8px 10px;",
         "declarations": [
@@ -6159,8 +6159,8 @@
       },
       {
         "index": 154,
-        "locator": "div.modal-actions@L5154",
-        "line": 5154,
+        "locator": "div.modal-actions@L5151",
+        "line": 5151,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -6172,8 +6172,8 @@
       },
       {
         "index": 155,
-        "locator": "div.xk-modal-gap-2@L5165",
-        "line": 5165,
+        "locator": "div.xk-modal-gap-2@L5162",
+        "line": 5162,
         "kind": "presentation-geometry",
         "source": "display:flex; flex-direction:column;",
         "declarations": [
@@ -6190,7 +6190,7 @@
       {
         "index": 156,
         "locator": "#fm-props-modal-meta",
-        "line": 5167,
+        "line": 5164,
         "kind": "presentation-geometry",
         "source": "padding:0; background:transparent; border:none; opacity:.75; font-size:0.82rem;",
         "declarations": [
@@ -6218,8 +6218,8 @@
       },
       {
         "index": 157,
-        "locator": "div.modal-actions@L5174",
-        "line": 5174,
+        "locator": "div.modal-actions@L5171",
+        "line": 5171,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -6231,8 +6231,8 @@
       },
       {
         "index": 158,
-        "locator": "div.xk-modal-gap-2@L5184",
-        "line": 5184,
+        "locator": "div.xk-modal-gap-2@L5181",
+        "line": 5181,
         "kind": "presentation-geometry",
         "source": "display:flex; flex-direction:column;",
         "declarations": [
@@ -6249,7 +6249,7 @@
       {
         "index": 159,
         "locator": "#fm-hash-meta",
-        "line": 5186,
+        "line": 5183,
         "kind": "presentation-geometry",
         "source": "padding:0; background:transparent; border:none; opacity:.75; font-size:0.82rem;",
         "declarations": [
@@ -6277,8 +6277,8 @@
       },
       {
         "index": 160,
-        "locator": "div.fm-form-grid@L5191",
-        "line": 5191,
+        "locator": "div.fm-form-grid@L5188",
+        "line": 5188,
         "kind": "presentation-geometry",
         "source": "grid-template-columns: 120px 1fr auto; align-items:center;",
         "declarations": [
@@ -6294,8 +6294,8 @@
       },
       {
         "index": 161,
-        "locator": "div.modal-actions@L5206",
-        "line": 5206,
+        "locator": "div.modal-actions@L5203",
+        "line": 5203,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -6307,8 +6307,8 @@
       },
       {
         "index": 162,
-        "locator": "div.fm-form-grid@L5220",
-        "line": 5220,
+        "locator": "div.fm-form-grid@L5217",
+        "line": 5217,
         "kind": "presentation-geometry",
         "source": "grid-template-columns: 160px 1fr;",
         "declarations": [
@@ -6321,7 +6321,7 @@
       {
         "index": 163,
         "locator": "#fm-chmod-src",
-        "line": 5222,
+        "line": 5219,
         "kind": "presentation-geometry",
         "source": "padding:8px 10px;",
         "declarations": [
@@ -6334,7 +6334,7 @@
       {
         "index": 164,
         "locator": "#fm-chmod-list",
-        "line": 5225,
+        "line": 5222,
         "kind": "presentation-geometry",
         "source": "max-height:160px;",
         "declarations": [
@@ -6346,8 +6346,8 @@
       },
       {
         "index": 165,
-        "locator": "div.status.xk-modal-m-0@L5231",
-        "line": 5231,
+        "locator": "div.status.xk-modal-m-0@L5228",
+        "line": 5228,
         "kind": "presentation-geometry",
         "source": "opacity:.8;",
         "declarations": [
@@ -6359,8 +6359,8 @@
       },
       {
         "index": 166,
-        "locator": "div.modal-actions@L5258",
-        "line": 5258,
+        "locator": "div.modal-actions@L5255",
+        "line": 5255,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -6372,8 +6372,8 @@
       },
       {
         "index": 167,
-        "locator": "div.fm-form-grid@L5273",
-        "line": 5273,
+        "locator": "div.fm-form-grid@L5270",
+        "line": 5270,
         "kind": "presentation-geometry",
         "source": "grid-template-columns: 160px 1fr;",
         "declarations": [
@@ -6386,7 +6386,7 @@
       {
         "index": 168,
         "locator": "#fm-chown-src",
-        "line": 5275,
+        "line": 5272,
         "kind": "presentation-geometry",
         "source": "padding:8px 10px;",
         "declarations": [
@@ -6399,7 +6399,7 @@
       {
         "index": 169,
         "locator": "#fm-chown-list",
-        "line": 5278,
+        "line": 5275,
         "kind": "presentation-geometry",
         "source": "max-height:160px;",
         "declarations": [
@@ -6411,8 +6411,8 @@
       },
       {
         "index": 170,
-        "locator": "div.status.xk-modal-m-0@L5287",
-        "line": 5287,
+        "locator": "div.status.xk-modal-m-0@L5284",
+        "line": 5284,
         "kind": "presentation-geometry",
         "source": "opacity:.8;",
         "declarations": [
@@ -6424,8 +6424,8 @@
       },
       {
         "index": 171,
-        "locator": "div.modal-actions@L5291",
-        "line": 5291,
+        "locator": "div.modal-actions@L5288",
+        "line": 5288,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -6437,8 +6437,8 @@
       },
       {
         "index": 172,
-        "locator": "div.status.xk-modal-mt-10@L5308",
-        "line": 5308,
+        "locator": "div.status.xk-modal-mt-10@L5305",
+        "line": 5305,
         "kind": "presentation-geometry",
         "source": "opacity:.8;",
         "declarations": [
@@ -6450,8 +6450,8 @@
       },
       {
         "index": 173,
-        "locator": "div.modal-actions@L5310",
-        "line": 5310,
+        "locator": "div.modal-actions@L5307",
+        "line": 5307,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -6463,8 +6463,8 @@
       },
       {
         "index": 174,
-        "locator": "label.xk-modal-gap-8@L5328",
-        "line": 5328,
+        "locator": "label.xk-modal-gap-8@L5325",
+        "line": 5325,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -6480,8 +6480,8 @@
       },
       {
         "index": 175,
-        "locator": "span@L5329",
-        "line": 5329,
+        "locator": "span@L5326",
+        "line": 5326,
         "kind": "presentation-geometry",
         "source": "opacity:.85;",
         "declarations": [
@@ -6493,8 +6493,8 @@
       },
       {
         "index": 176,
-        "locator": "div.modal-actions@L5338",
-        "line": 5338,
+        "locator": "div.modal-actions@L5335",
+        "line": 5335,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -6507,7 +6507,7 @@
       {
         "index": 177,
         "locator": "#fm-bookmarks-error",
-        "line": 5357,
+        "line": 5354,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -6520,7 +6520,7 @@
       {
         "index": 178,
         "locator": "#fm-download-multi-desc",
-        "line": 5381,
+        "line": 5378,
         "kind": "presentation-geometry",
         "source": "opacity:.9;",
         "declarations": [
@@ -6532,8 +6532,8 @@
       },
       {
         "index": 179,
-        "locator": "div.xk-modal-gap-10@L5383",
-        "line": 5383,
+        "locator": "div.xk-modal-gap-10@L5380",
+        "line": 5380,
         "kind": "presentation-geometry",
         "source": "display:flex; flex-direction:column;",
         "declarations": [
@@ -6549,8 +6549,8 @@
       },
       {
         "index": 180,
-        "locator": "label.xk-modal-gap-10@L5384",
-        "line": 5384,
+        "locator": "label.xk-modal-gap-10@L5381",
+        "line": 5381,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:flex-start;",
         "declarations": [
@@ -6566,8 +6566,8 @@
       },
       {
         "index": 181,
-        "locator": "div@L5387",
-        "line": 5387,
+        "locator": "div@L5384",
+        "line": 5384,
         "kind": "presentation-geometry",
         "source": "font-weight:600;",
         "declarations": [
@@ -6579,8 +6579,8 @@
       },
       {
         "index": 182,
-        "locator": "div@L5388",
-        "line": 5388,
+        "locator": "div@L5385",
+        "line": 5385,
         "kind": "presentation-geometry",
         "source": "font-size:12px; opacity:.8;",
         "declarations": [
@@ -6596,8 +6596,8 @@
       },
       {
         "index": 183,
-        "locator": "label.xk-modal-gap-10@L5392",
-        "line": 5392,
+        "locator": "label.xk-modal-gap-10@L5389",
+        "line": 5389,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:flex-start;",
         "declarations": [
@@ -6613,8 +6613,8 @@
       },
       {
         "index": 184,
-        "locator": "div@L5395",
-        "line": 5395,
+        "locator": "div@L5392",
+        "line": 5392,
         "kind": "presentation-geometry",
         "source": "font-weight:600;",
         "declarations": [
@@ -6627,7 +6627,7 @@
       {
         "index": 185,
         "locator": "#fm-download-multi-queue-hint",
-        "line": 5396,
+        "line": 5393,
         "kind": "presentation-geometry",
         "source": "font-size:12px; opacity:.8;",
         "declarations": [
@@ -6643,8 +6643,8 @@
       },
       {
         "index": 186,
-        "locator": "label.xk-modal-gap-8.xk-modal-mt-12@L5401",
-        "line": 5401,
+        "locator": "label.xk-modal-gap-8.xk-modal-mt-12@L5398",
+        "line": 5398,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -6660,8 +6660,8 @@
       },
       {
         "index": 187,
-        "locator": "span@L5403",
-        "line": 5403,
+        "locator": "span@L5400",
+        "line": 5400,
         "kind": "presentation-geometry",
         "source": "font-size:12px; opacity:.9;",
         "declarations": [
@@ -6677,8 +6677,8 @@
       },
       {
         "index": 188,
-        "locator": "div.modal-actions.xk-modal-gap-10@L5406",
-        "line": 5406,
+        "locator": "div.modal-actions.xk-modal-gap-10@L5403",
+        "line": 5403,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -6690,8 +6690,8 @@
       },
       {
         "index": 189,
-        "locator": "div.modal-actions@L5427",
-        "line": 5427,
+        "locator": "div.modal-actions@L5424",
+        "line": 5424,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -6703,8 +6703,8 @@
       },
       {
         "index": 190,
-        "locator": "div.xk-modal-gap-8.xk-modal-mb-8@L5442",
-        "line": 5442,
+        "locator": "div.xk-modal-gap-8.xk-modal-mb-8@L5439",
+        "line": 5439,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;",
         "declarations": [
@@ -6728,8 +6728,8 @@
       },
       {
         "index": 191,
-        "locator": "div.xk-modal-gap-8@L5443",
-        "line": 5443,
+        "locator": "div.xk-modal-gap-8@L5440",
+        "line": 5440,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center; flex-wrap:wrap;",
         "declarations": [
@@ -6749,8 +6749,8 @@
       },
       {
         "index": 192,
-        "locator": "label.xk-modal-gap-6@L5444",
-        "line": 5444,
+        "locator": "label.xk-modal-gap-6@L5441",
+        "line": 5441,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center; opacity:.9;",
         "declarations": [
@@ -6770,8 +6770,8 @@
       },
       {
         "index": 193,
-        "locator": "span@L5445",
-        "line": 5445,
+        "locator": "span@L5442",
+        "line": 5442,
         "kind": "presentation-geometry",
         "source": "font-size:12px;",
         "declarations": [
@@ -6784,7 +6784,7 @@
       {
         "index": 194,
         "locator": "#fm-ops-filter",
-        "line": 5446,
+        "line": 5443,
         "kind": "presentation-geometry",
         "source": "height:32px;",
         "declarations": [
@@ -6796,8 +6796,8 @@
       },
       {
         "index": 195,
-        "locator": "div.xk-modal-gap-8@L5454",
-        "line": 5454,
+        "locator": "div.xk-modal-gap-8@L5451",
+        "line": 5451,
         "kind": "presentation-geometry",
         "source": "display:flex; justify-content:flex-end; flex-wrap:wrap;",
         "declarations": [
@@ -6818,7 +6818,7 @@
       {
         "index": 196,
         "locator": "#fm-ops-summary",
-        "line": 5459,
+        "line": 5456,
         "kind": "presentation-geometry",
         "source": "font-size:12px; opacity:.85;",
         "declarations": [
@@ -6834,8 +6834,8 @@
       },
       {
         "index": 197,
-        "locator": "div.xk-modal-gap-10.xk-modal-mb-10@L5473",
-        "line": 5473,
+        "locator": "div.xk-modal-gap-10.xk-modal-mb-10@L5470",
+        "line": 5470,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;",
         "declarations": [
@@ -6859,8 +6859,8 @@
       },
       {
         "index": 198,
-        "locator": "div.xk-modal-gap-8@L5474",
-        "line": 5474,
+        "locator": "div.xk-modal-gap-8@L5471",
+        "line": 5471,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center; flex-wrap:wrap;",
         "declarations": [
@@ -6881,7 +6881,7 @@
       {
         "index": 199,
         "locator": "#fm-volumes-spinner",
-        "line": 5476,
+        "line": 5473,
         "kind": "presentation-geometry",
         "source": "opacity:.85;",
         "declarations": [
@@ -6894,7 +6894,7 @@
       {
         "index": 200,
         "locator": "#fm-volumes-summary",
-        "line": 5478,
+        "line": 5475,
         "kind": "presentation-geometry",
         "source": "font-size:12px; opacity:.85;",
         "declarations": [
@@ -6910,8 +6910,8 @@
       },
       {
         "index": 201,
-        "locator": "div.status.xk-modal-mt-10@L5482",
-        "line": 5482,
+        "locator": "div.status.xk-modal-mt-10@L5479",
+        "line": 5479,
         "kind": "presentation-geometry",
         "source": "opacity:.75;",
         "declarations": [
@@ -6923,8 +6923,8 @@
       },
       {
         "index": 202,
-        "locator": "div.modal-actions@L5547",
-        "line": 5547,
+        "locator": "div.modal-actions@L5544",
+        "line": 5544,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -6936,8 +6936,8 @@
       },
       {
         "index": 203,
-        "locator": "div.xk-editor-workbench-title.xk-modal-gap-2@L5557",
-        "line": 5557,
+        "locator": "div.xk-editor-workbench-title.xk-modal-gap-2@L5554",
+        "line": 5554,
         "kind": "presentation-geometry",
         "source": "display:flex; flex-direction:column;",
         "declarations": [
@@ -6954,7 +6954,7 @@
       {
         "index": 204,
         "locator": "#fm-editor-subtitle",
-        "line": 5559,
+        "line": 5556,
         "kind": "presentation-geometry",
         "source": "font-size: 0.82rem; opacity:0.75;",
         "declarations": [
@@ -6970,8 +6970,8 @@
       },
       {
         "index": 205,
-        "locator": "div.xk-editor-workbench-header-tools.xk-modal-gap-10@L5561",
-        "line": 5561,
+        "locator": "div.xk-editor-workbench-header-tools.xk-modal-gap-10@L5558",
+        "line": 5558,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -6988,7 +6988,7 @@
       {
         "index": 206,
         "locator": "#fm-editor-warning",
-        "line": 5573,
+        "line": 5570,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -7001,7 +7001,7 @@
       {
         "index": 207,
         "locator": "#fm-editor-error",
-        "line": 5574,
+        "line": 5571,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -7013,8 +7013,8 @@
       },
       {
         "index": 208,
-        "locator": "div.xk-editor-workbench-action-group.xk-modal-gap-8@L5579",
-        "line": 5579,
+        "locator": "div.xk-editor-workbench-action-group.xk-modal-gap-8@L5576",
+        "line": 5576,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -7030,8 +7030,8 @@
       },
       {
         "index": 209,
-        "locator": "div.xk-editor-workbench-action-group.xk-modal-gap-8@L5582",
-        "line": 5582,
+        "locator": "div.xk-editor-workbench-action-group.xk-modal-gap-8@L5579",
+        "line": 5579,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -10253,37 +10253,37 @@
         "value": "unknown"
       },
       {
-        "locator": "button.btn-secondary.log-btn.btn-icon@L2467",
+        "locator": "button.btn-secondary.log-btn.btn-icon@L2464",
         "name": "data-xk-restart-log-filter",
         "value": "all"
       },
       {
-        "locator": "button.btn-secondary.log-btn.btn-icon@L2468",
+        "locator": "button.btn-secondary.log-btn.btn-icon@L2465",
         "name": "data-xk-restart-log-filter",
         "value": "errors"
       },
       {
-        "locator": "button.btn-secondary.log-btn.btn-icon@L2469",
+        "locator": "button.btn-secondary.log-btn.btn-icon@L2466",
         "name": "data-xk-restart-log-action",
         "value": "refresh"
       },
       {
-        "locator": "button.btn-secondary.log-btn.btn-icon@L2470",
+        "locator": "button.btn-secondary.log-btn.btn-icon@L2467",
         "name": "data-xk-restart-log-action",
         "value": "clear"
       },
       {
-        "locator": "button.btn-secondary.log-btn.btn-icon@L2471",
+        "locator": "button.btn-secondary.log-btn.btn-icon@L2468",
         "name": "data-xk-restart-log-action",
         "value": "copy"
       },
       {
-        "locator": "div.restart-log-summary@L2474",
+        "locator": "div.restart-log-summary@L2471",
         "name": "data-xk-restart-log-summary",
         "value": "1"
       },
       {
-        "locator": "pre.log-block@L2475",
+        "locator": "pre.log-block@L2472",
         "name": "data-xk-restart-log",
         "value": "1"
       },
@@ -10293,7 +10293,7 @@
         "value": "master-detail"
       },
       {
-        "locator": "div.modal-content.xray-context-modal-content@L2485",
+        "locator": "div.modal-content.xray-context-modal-content@L2482",
         "name": "data-modal-key",
         "value": "xray-log-context"
       },
@@ -10308,7 +10308,7 @@
         "value": "master-detail"
       },
       {
-        "locator": "div.modal-content.xray-devices-modal-content@L2502",
+        "locator": "div.modal-content.xray-devices-modal-content@L2499",
         "name": "data-modal-key",
         "value": "xray-log-devices"
       },
@@ -10343,67 +10343,67 @@
         "value": "confirm-compact-form"
       },
       {
-        "locator": "div.modal-content.xk-modal-width.xk-modal-width-fluid-1440@L2526",
+        "locator": "div.modal-content.xk-modal-width.xk-modal-width-fluid-1440@L2523",
         "name": "data-dns-layout",
         "value": "single"
       },
       {
-        "locator": "details.xk-dns-zone@L2559",
+        "locator": "details.xk-dns-zone@L2556",
         "name": "data-required",
         "value": "1"
       },
       {
-        "locator": "details.xk-dns-zone@L2559",
+        "locator": "details.xk-dns-zone@L2556",
         "name": "data-zone",
         "value": "route"
       },
       {
-        "locator": "span.xk-dns-zone-req@L2562",
+        "locator": "span.xk-dns-zone-req@L2559",
         "name": "data-zone-req",
         "value": "route"
       },
       {
-        "locator": "span.xk-dns-zone-sum@L2563",
+        "locator": "span.xk-dns-zone-sum@L2560",
         "name": "data-zone-sum",
         "value": "route"
       },
       {
-        "locator": "details.xk-dns-zone@L2581",
+        "locator": "details.xk-dns-zone@L2578",
         "name": "data-required",
         "value": "1"
       },
       {
-        "locator": "details.xk-dns-zone@L2581",
+        "locator": "details.xk-dns-zone@L2578",
         "name": "data-zone",
         "value": "servers"
       },
       {
-        "locator": "span.xk-dns-zone-req@L2584",
+        "locator": "span.xk-dns-zone-req@L2581",
         "name": "data-zone-req",
         "value": "servers"
       },
       {
-        "locator": "span.xk-dns-zone-sum@L2585",
+        "locator": "span.xk-dns-zone-sum@L2582",
         "name": "data-zone-sum",
         "value": "servers"
       },
       {
-        "locator": "details.xk-dns-zone@L2612",
+        "locator": "details.xk-dns-zone@L2609",
         "name": "data-zone",
         "value": "home"
       },
       {
-        "locator": "span.xk-dns-zone-sum@L2615",
+        "locator": "span.xk-dns-zone-sum@L2612",
         "name": "data-zone-sum",
         "value": "home"
       },
       {
-        "locator": "details.xk-dns-zone@L2656",
+        "locator": "details.xk-dns-zone@L2653",
         "name": "data-zone",
         "value": "direct"
       },
       {
-        "locator": "span.xk-dns-zone-sum@L2659",
+        "locator": "span.xk-dns-zone-sum@L2656",
         "name": "data-zone-sum",
         "value": "direct"
       },
@@ -10413,62 +10413,62 @@
         "value": "Очистит и адреса DNS, и список доменов — область перестанет использоваться."
       },
       {
-        "locator": "details.xk-dns-zone@L2688",
+        "locator": "details.xk-dns-zone@L2685",
         "name": "data-zone",
         "value": "hosts"
       },
       {
-        "locator": "span.xk-dns-zone-sum@L2691",
+        "locator": "span.xk-dns-zone-sum@L2688",
         "name": "data-zone-sum",
         "value": "hosts"
       },
       {
-        "locator": "details.xk-dns-zone@L2709",
+        "locator": "details.xk-dns-zone@L2706",
         "name": "data-zone",
         "value": "records"
       },
       {
-        "locator": "span.xk-dns-zone-sum@L2712",
+        "locator": "span.xk-dns-zone-sum@L2709",
         "name": "data-zone-sum",
         "value": "records"
       },
       {
-        "locator": "details.xk-dns-zone@L2742",
+        "locator": "details.xk-dns-zone@L2739",
         "name": "data-required",
         "value": "1"
       },
       {
-        "locator": "details.xk-dns-zone@L2742",
+        "locator": "details.xk-dns-zone@L2739",
         "name": "data-zone",
         "value": "devices"
       },
       {
-        "locator": "span.xk-dns-zone-req@L2745",
+        "locator": "span.xk-dns-zone-req@L2742",
         "name": "data-zone-req",
         "value": "devices"
       },
       {
-        "locator": "span.xk-dns-zone-sum@L2746",
+        "locator": "span.xk-dns-zone-sum@L2743",
         "name": "data-zone-sum",
         "value": "devices"
       },
       {
-        "locator": "span@L2752",
+        "locator": "span@L2749",
         "name": "data-verdict",
         "value": "reaches"
       },
       {
-        "locator": "span@L2753",
+        "locator": "span@L2750",
         "name": "data-verdict",
         "value": "intercepted"
       },
       {
-        "locator": "span@L2754",
+        "locator": "span@L2751",
         "name": "data-verdict",
         "value": "unknown"
       },
       {
-        "locator": "span@L2755",
+        "locator": "span@L2752",
         "name": "data-verdict",
         "value": "offline"
       },
@@ -10483,7 +10483,7 @@
         "value": "confirm-compact-form"
       },
       {
-        "locator": "div.modal-content.xk-modal-width.xk-modal-width-760@L2810",
+        "locator": "div.modal-content.xk-modal-width.xk-modal-width-760@L2807",
         "name": "data-modal-key",
         "value": "inbounds-apply"
       },
@@ -10498,47 +10498,47 @@
         "value": "drawer-help"
       },
       {
-        "locator": "div.modal-content.xk-modal-width.xk-modal-width-980@L2858",
+        "locator": "div.modal-content.xk-modal-width.xk-modal-width-980@L2855",
         "name": "data-modal-key",
         "value": "routing-balancer-help"
       },
       {
-        "locator": "a@L2866",
+        "locator": "a@L2863",
         "name": "data-help-target",
         "value": "xk-bhelp-what"
       },
       {
-        "locator": "a@L2867",
+        "locator": "a@L2864",
         "name": "data-help-target",
         "value": "xk-bhelp-quickstart"
       },
       {
-        "locator": "a@L2868",
+        "locator": "a@L2865",
         "name": "data-help-target",
         "value": "xk-bhelp-manual"
       },
       {
-        "locator": "a@L2869",
+        "locator": "a@L2866",
         "name": "data-help-target",
         "value": "xk-bhelp-subscriptions"
       },
       {
-        "locator": "a@L2870",
+        "locator": "a@L2867",
         "name": "data-help-target",
         "value": "xk-bhelp-balancer"
       },
       {
-        "locator": "a@L2871",
+        "locator": "a@L2868",
         "name": "data-help-target",
         "value": "xk-bhelp-rules"
       },
       {
-        "locator": "a@L2872",
+        "locator": "a@L2869",
         "name": "data-help-target",
         "value": "xk-bhelp-forced"
       },
       {
-        "locator": "a@L2873",
+        "locator": "a@L2870",
         "name": "data-help-target",
         "value": "xk-bhelp-troubles"
       },
@@ -10553,7 +10553,7 @@
         "value": "editor-workbench"
       },
       {
-        "locator": "div.modal-content.xk-modal-width.xk-modal-width-980@L3023",
+        "locator": "div.modal-content.xk-modal-width.xk-modal-width-980@L3020",
         "name": "data-modal-key",
         "value": "xray-snapshot-preview"
       },
@@ -10578,7 +10578,7 @@
         "value": "master-detail"
       },
       {
-        "locator": "div.modal-content.xk-modal-width.xk-modal-width-860@L3054",
+        "locator": "div.modal-content.xk-modal-width.xk-modal-width-860@L3051",
         "name": "data-modal-key",
         "value": "routing-templates"
       },
@@ -10623,7 +10623,7 @@
         "value": "confirm-compact-form"
       },
       {
-        "locator": "div.modal-content.xk-modal-width.xk-modal-width-560@L3107",
+        "locator": "div.modal-content.xk-modal-width.xk-modal-width-560@L3104",
         "name": "data-modal-key",
         "value": "routing-template-save"
       },
@@ -10638,7 +10638,7 @@
         "value": "editor-workbench"
       },
       {
-        "locator": "div.modal-content.xk-modal-width.xk-modal-width-860@L3143",
+        "locator": "div.modal-content.xk-modal-width.xk-modal-width-860@L3140",
         "name": "data-modal-key",
         "value": "routing-template-edit"
       },
@@ -10663,7 +10663,7 @@
         "value": "master-detail"
       },
       {
-        "locator": "div.modal-content.xk-gen-modal@L3197",
+        "locator": "div.modal-content.xk-gen-modal@L3194",
         "name": "data-modal-key",
         "value": "outbounds-generator-premium-v1-content"
       },
@@ -10703,7 +10703,7 @@
         "value": "master-detail"
       },
       {
-        "locator": "div.modal-content@L3465",
+        "locator": "div.modal-content@L3462",
         "name": "data-modal-key",
         "value": "outbounds-pool-premium-v2-content"
       },
@@ -10813,57 +10813,57 @@
         "value": "stopped"
       },
       {
-        "locator": "div.terminal-menu-section@L3666",
+        "locator": "div.terminal-menu-section@L3663",
         "name": "data-collapsible",
         "value": "1"
       },
       {
-        "locator": "div.terminal-menu-section@L3666",
+        "locator": "div.terminal-menu-section@L3663",
         "name": "data-section",
         "value": "session"
       },
       {
-        "locator": "div.terminal-menu-section@L3678",
+        "locator": "div.terminal-menu-section@L3675",
         "name": "data-collapsible",
         "value": "1"
       },
       {
-        "locator": "div.terminal-menu-section@L3678",
+        "locator": "div.terminal-menu-section@L3675",
         "name": "data-section",
         "value": "signals"
       },
       {
-        "locator": "button.terminal-signals-item.terminal-pty-only@L3682",
+        "locator": "button.terminal-signals-item.terminal-pty-only@L3679",
         "name": "data-terminal-signal",
         "value": "INT"
       },
       {
-        "locator": "button.terminal-signals-item.terminal-pty-only@L3683",
+        "locator": "button.terminal-signals-item.terminal-pty-only@L3680",
         "name": "data-terminal-signal",
         "value": "TERM"
       },
       {
-        "locator": "button.terminal-signals-item.terminal-pty-only@L3684",
+        "locator": "button.terminal-signals-item.terminal-pty-only@L3681",
         "name": "data-terminal-signal",
         "value": "HUP"
       },
       {
-        "locator": "button.terminal-signals-item.terminal-tool-btn-danger.terminal-pty-only@L3685",
+        "locator": "button.terminal-signals-item.terminal-tool-btn-danger.terminal-pty-only@L3682",
         "name": "data-terminal-signal",
         "value": "KILL"
       },
       {
-        "locator": "button.terminal-signals-item.terminal-pty-only@L3686",
+        "locator": "button.terminal-signals-item.terminal-pty-only@L3683",
         "name": "data-terminal-signal",
         "value": "QUIT"
       },
       {
-        "locator": "div.terminal-menu-section@L3691",
+        "locator": "div.terminal-menu-section@L3688",
         "name": "data-collapsible",
         "value": "1"
       },
       {
-        "locator": "div.terminal-menu-section@L3691",
+        "locator": "div.terminal-menu-section@L3688",
         "name": "data-section",
         "value": "tools"
       },
@@ -10928,12 +10928,12 @@
         "value": "confirm-compact-form"
       },
       {
-        "locator": "button.core-option.xk-core-option@L3960",
+        "locator": "button.core-option.xk-core-option@L3957",
         "name": "data-core",
         "value": "xray"
       },
       {
-        "locator": "button.core-option.xk-core-option@L3969",
+        "locator": "button.core-option.xk-core-option@L3966",
         "name": "data-core",
         "value": "mihomo"
       },
@@ -10978,42 +10978,42 @@
         "value": "confirm-compact-form"
       },
       {
-        "locator": "button.donate-address.xk-tooltip@L4080",
+        "locator": "button.donate-address.xk-tooltip@L4077",
         "name": "data-copy",
         "value": "UQBm03wCEyD99CkEjjrfbtk08WrlgKqfyQGoueAwvhMEYV7L"
       },
       {
-        "locator": "button.donate-address.xk-tooltip@L4080",
+        "locator": "button.donate-address.xk-tooltip@L4077",
         "name": "data-tooltip",
         "value": "Копировать"
       },
       {
-        "locator": "button.donate-address.xk-tooltip@L4088",
+        "locator": "button.donate-address.xk-tooltip@L4085",
         "name": "data-copy",
         "value": "UQBm03wCEyD99CkEjjrfbtk08WrlgKqfyQGoueAwvhMEYV7L"
       },
       {
-        "locator": "button.donate-address.xk-tooltip@L4088",
+        "locator": "button.donate-address.xk-tooltip@L4085",
         "name": "data-tooltip",
         "value": "Копировать"
       },
       {
-        "locator": "button.donate-address.xk-tooltip@L4096",
+        "locator": "button.donate-address.xk-tooltip@L4093",
         "name": "data-copy",
         "value": "bc1quhqk7l53vgmm9djyfktl6sflcvk83wgw0zqka6"
       },
       {
-        "locator": "button.donate-address.xk-tooltip@L4096",
+        "locator": "button.donate-address.xk-tooltip@L4093",
         "name": "data-tooltip",
         "value": "Копировать"
       },
       {
-        "locator": "button.donate-address.xk-tooltip@L4104",
+        "locator": "button.donate-address.xk-tooltip@L4101",
         "name": "data-copy",
         "value": "0x8BA4b535ef7C990B96bc982083f9bFB392134F5e"
       },
       {
-        "locator": "button.donate-address.xk-tooltip@L4104",
+        "locator": "button.donate-address.xk-tooltip@L4101",
         "name": "data-tooltip",
         "value": "Копировать"
       },
@@ -11028,7 +11028,7 @@
         "value": "master-detail"
       },
       {
-        "locator": "div.modal-content.xk-ui-settings-modal-content@L4122",
+        "locator": "div.modal-content.xk-ui-settings-modal-content@L4119",
         "name": "data-modal-key",
         "value": "ui-settings"
       },
@@ -11078,7 +11078,7 @@
         "value": "Проверяет обход на самом роутере: WAN DNS, IPv6 DNS, транзитный перехват и DNS override."
       },
       {
-        "locator": "details.xk-dns-zone.mihomo-dns-route-zone@L4189",
+        "locator": "details.xk-dns-zone.mihomo-dns-route-zone@L4186",
         "name": "data-zone",
         "value": "mihomo-route"
       },
@@ -11118,7 +11118,7 @@
         "value": "editor-workbench"
       },
       {
-        "locator": "div.modal-content.xk-mi-modal@L4314",
+        "locator": "div.modal-content.xk-mi-modal@L4311",
         "name": "data-modal-key",
         "value": "mihomo-import"
       },
@@ -11163,7 +11163,7 @@
         "value": "master-detail"
       },
       {
-        "locator": "div.modal-content.xk-pt-modal.xk-modal-width@L4436",
+        "locator": "div.modal-content.xk-pt-modal.xk-modal-width@L4433",
         "name": "data-modal-key",
         "value": "mihomo-proxy-tools"
       },
@@ -11208,7 +11208,7 @@
         "value": "master-detail"
       },
       {
-        "locator": "button.modal-close@L4594",
+        "locator": "button.modal-close@L4591",
         "name": "data-dismiss",
         "value": "mihomo-validation"
       },
@@ -11218,12 +11218,12 @@
         "value": "0"
       },
       {
-        "locator": "button.btn-primary@L4637",
+        "locator": "button.btn-primary@L4634",
         "name": "data-dismiss",
         "value": "mihomo-validation"
       },
       {
-        "locator": "button.btn-primary@L4637",
+        "locator": "button.btn-primary@L4634",
         "name": "data-operator-dismiss-duplicate",
         "value": "true"
       },
@@ -11233,7 +11233,7 @@
         "value": "editor-workbench"
       },
       {
-        "locator": "div.modal-content.xk-hw-modal.xk-modal-width@L4645",
+        "locator": "div.modal-content.xk-hw-modal.xk-modal-width@L4642",
         "name": "data-modal-key",
         "value": "mihomo-hwid"
       },
@@ -11408,7 +11408,7 @@
         "value": "confirm-compact-form"
       },
       {
-        "locator": "div.status.xk-modal-mt-10@L5308",
+        "locator": "div.status.xk-modal-mt-10@L5305",
         "name": "data-fm-lite-hide",
         "value": "1"
       },
@@ -11468,6 +11468,16 @@
         "value": "drawer-help"
       },
       {
+        "locator": "li@L5516",
+        "name": "data-fm-lite-hide",
+        "value": "1"
+      },
+      {
+        "locator": "li@L5517",
+        "name": "data-fm-lite-hide",
+        "value": "1"
+      },
+      {
         "locator": "li@L5519",
         "name": "data-fm-lite-hide",
         "value": "1"
@@ -11478,32 +11488,22 @@
         "value": "1"
       },
       {
-        "locator": "li@L5522",
+        "locator": "li@L5521",
         "name": "data-fm-lite-hide",
         "value": "1"
       },
       {
-        "locator": "li@L5523",
+        "locator": "li@L5536",
         "name": "data-fm-lite-hide",
         "value": "1"
       },
       {
-        "locator": "li@L5524",
+        "locator": "li@L5537",
         "name": "data-fm-lite-hide",
         "value": "1"
       },
       {
-        "locator": "li@L5539",
-        "name": "data-fm-lite-hide",
-        "value": "1"
-      },
-      {
-        "locator": "li@L5540",
-        "name": "data-fm-lite-hide",
-        "value": "1"
-      },
-      {
-        "locator": "li@L5541",
+        "locator": "li@L5538",
         "name": "data-fm-lite-hide",
         "value": "1"
       },
