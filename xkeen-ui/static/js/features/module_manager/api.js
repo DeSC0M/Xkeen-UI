@@ -52,5 +52,6 @@ export function createModuleLifecycleClient(fetchImpl = fetch) {
     recover: () => request('/recovery', 'POST'),
     restart: () => request('/restart', 'POST'),
     setModuleEnabled: (moduleId, enabled) => request(`/${encodeURIComponent(moduleId)}`, 'PATCH', { enabled }),
+    setEditorVariant: (variant) => request('/editor', 'PATCH', { variant }),
   };
 }

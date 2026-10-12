@@ -342,6 +342,16 @@ PROFILE_PRESETS: dict[str, tuple[str, ...]] = {
 _MAX_LAST_ERROR_CHARS = 1024
 
 
+def module_set_name(module_ids: Any) -> str:
+    """The preset a set of modules amounts to, whatever label is stored."""
+
+    ids = set(module_ids)
+    for name in ("full", "xray-minimal", "mihomo-minimal"):
+        if ids == set(PROFILE_PRESETS[name]):
+            return name
+    return CUSTOM_PROFILE
+
+
 def _editor_default_variant(profile: object) -> str:
     return "full" if str(profile or "").strip().lower() in {LEGACY_FULL_PROFILE, "full"} else "light"
 
@@ -692,10 +702,14 @@ class ModuleRegistry:
                 )
             current_variant = str(state["editor"]["variant"])
             changed = current_variant != normalized_variant
-            baseline_cleared = state.pop(MODULE_SWITCH_BASELINE_KEY, None) is not None
-            state["editor"] = {"variant": normalized_variant}
             if changed:
+                # The variant is a part of what a restart brings into force:
+                # taken back before the restart, it leaves nothing to restart for.
+                baseline = state.setdefault(MODULE_SWITCH_BASELINE_KEY, self._module_switch_baseline(state))
+                baseline.setdefault("editor_variant", current_variant)
+                state["editor"] = {"variant": normalized_variant}
                 state["restart_required"] = True
+                self._restore_switch_baseline_when_unchanged(state)
 
             # Only the light editor lacks files the others need. Anything else
             # is a setting over files that are already there.
@@ -707,7 +721,7 @@ class ModuleRegistry:
                 if installed is not None and installed["editor_variant"] == "light":
                     state[PHYSICAL_REQUEST_KEY] = {**installed, "editor_variant": normalized_variant}
 
-            if changed or normalized or baseline_cleared or state.get(PHYSICAL_REQUEST_KEY) != request_before:
+            if changed or normalized or state.get(PHYSICAL_REQUEST_KEY) != request_before:
                 self._write_state_locked(state)
 
             snapshot = self._snapshot_from_state(state)
@@ -926,6 +940,7 @@ class ModuleRegistry:
                 for module_id in MODULE_IDS
                 if bool(state["modules"][module_id]["enabled"])
             ],
+            "editor_variant": str(state["editor"]["variant"]),
         }
 
     @staticmethod
@@ -939,6 +954,10 @@ class ModuleRegistry:
             if bool(state["modules"][module_id]["enabled"])
         ]
         if current_ids != baseline.get("module_ids"):
+            return False
+        # A baseline written before the variant was kept in it says nothing
+        # about the variant: only the switches are compared then.
+        if baseline.get("editor_variant", state["editor"]["variant"]) != state["editor"]["variant"]:
             return False
         state["profile"] = str(baseline["profile"])
         state["restart_required"] = bool(baseline["restart_required"])
@@ -1180,11 +1199,14 @@ class ModuleRegistry:
             or set(module_ids) - set(MODULE_IDS)
         ):
             return None
-        return {
+        baseline = {
             "profile": profile.strip(),
             "restart_required": restart_required,
             "module_ids": [module_id for module_id in MODULE_IDS if module_id in module_ids],
         }
+        if raw.get("editor_variant") in EDITOR_VARIANTS:
+            baseline["editor_variant"] = raw["editor_variant"]
+        return baseline
 
     @staticmethod
     def _default_state() -> dict[str, Any]:

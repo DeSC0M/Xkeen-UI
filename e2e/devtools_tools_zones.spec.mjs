@@ -6,6 +6,8 @@ async function openTools(page, viewport) {
   await page.route('**/api/modules/installed', (route) => route.fulfill({ json: {
     ok: true,
     profile: 'full',
+    installed_set: 'xray-minimal',
+    enabled_set: 'xray-minimal',
     panel_version: '2.10.0',
     build: { exists: true, version: '2.10.0', repo: 'umarcheh001/Xkeen-UI', channel: 'stable', commit: 'abc1234' },
     lifecycle: { available: true, code: null },
@@ -99,7 +101,8 @@ test.describe('DevTools Tools zones', () => {
     // Карточка обновления стала информационной: сведения о панели и модулях,
     // а команды обновления живут в разделе «Модули и обновления».
     await expect(page.locator('#dt-update-card')).toContainText('Xkeen UI Core');
-    await expect(page.locator('#dt-panel-profile')).toHaveText('full');
+    await expect(page.locator('#dt-panel-installed-set')).toHaveText('только Xray');
+    await expect(page.locator('#dt-panel-enabled-set')).toHaveText('все модули (2 из 2)');
     await expect(page.locator('#dt-panel-modules .dt-panel-module')).toHaveCount(2);
     await expect(page.locator('#dt-panel-modules .dt-panel-module').nth(1)).toContainText('Xray');
     await expect(page.locator('#dt-update-card pre:visible')).toHaveCount(0);

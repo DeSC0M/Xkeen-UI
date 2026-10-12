@@ -20,6 +20,17 @@ const ACTION_LABELS = {
   'profile-transition': 'Применить профиль',
 };
 
+// Each next variant holds everything of the one before it.
+const EDITOR_VARIANTS = [
+  { id: 'light', label: 'Лёгкий', hint: 'CodeMirror и базовая проверка по схеме.' },
+  { id: 'full', label: 'Стандартный', hint: 'CodeMirror, Monaco и сравнение версий.' },
+  { id: 'advanced', label: 'Расширенный', hint: 'всё из стандартного, форматирование Prettier, быстрые исправления и расширенная схема.' },
+];
+
+const MODULE_SET_LABELS = {
+  full: 'полный набор', 'xray-minimal': 'только Xray', 'mihomo-minimal': 'только Mihomo',
+};
+
 const FAILURE_MESSAGES = {
   catalog_unavailable: 'Каталог модулей временно недоступен.',
   catalog_stale: 'Каталог устарел. Загрузите его снова.',
@@ -41,6 +52,8 @@ const FAILURE_MESSAGES = {
   panel_archive_invalid: 'Архив панели не прошёл проверку.',
   panel_version_unsupported: 'Для локальной сборки подписанные операции доступны только после установки release-пакета.',
   profile_payload_unavailable: 'Архив для перехода профиля недоступен.',
+  editor_variant_invalid: 'Такого варианта редакторов нет.',
+  editor_variant_save_failed: 'Не удалось сохранить вариант редакторов.',
 };
 
 export function describeLifecycleFailure({ code } = {}) {
@@ -89,6 +102,58 @@ function appendPanelIdentity(summary, snapshot) {
   }
   if (build.commit) summary.append(node('p', 'modules-build-meta', `Коммит: ${build.commit}`));
   if (build.built_utc) summary.append(node('p', 'modules-build-meta', `Собрано: ${build.built_utc}`));
+}
+
+// Only the light variant lacks files of the others, and a local build
+// has no signed archive to fetch them from.
+function editorVariantsLocked(snapshot) {
+  return snapshot.lifecycle?.available !== true && snapshot.editor?.installed_variant === 'light';
+}
+
+function editorVariantControl(snapshot, current, onEditorVariant, busy) {
+  const side = node('div', 'modules-variant-side');
+  side.append(node('span', 'modules-variant-label', 'Вариант'));
+  const group = node('div', 'modules-variant');
+  group.setAttribute('role', 'group');
+  group.setAttribute('aria-label', 'Вариант редакторов');
+  const locked = editorVariantsLocked(snapshot);
+  for (const variant of EDITOR_VARIANTS) {
+    const selected = variant.id === current.id;
+    const button = node('button', 'modules-variant-option', variant.label);
+    button.type = 'button';
+    button.dataset.variant = variant.id;
+    button.setAttribute('aria-pressed', String(selected));
+    button.disabled = busy || (locked && !selected && variant.id !== 'light');
+    button.addEventListener('click', () => { if (!selected) onEditorVariant(variant.id, button); });
+    group.append(button);
+  }
+  side.append(group);
+  return side;
+}
+
+function moduleSetLabel(name) { return MODULE_SET_LABELS[name] || 'свой набор'; }
+
+function appendSetLine(summary, label, value) {
+  const line = node('p', 'modules-set');
+  line.append(node('span', 'modules-set-label', label), document.createTextNode(` ${value}`));
+  summary.append(line);
+}
+
+// What lies on the storage and what of it runs are two facts: a module
+// switched off keeps its files.
+export function describeModuleSets(snapshot) {
+  const modules = Array.isArray(snapshot?.modules) ? snapshot.modules : [];
+  const enabled = modules.filter((item) => item.enabled === true).length;
+  return {
+    installed: moduleSetLabel(snapshot?.installed_set),
+    enabled: `${enabled === modules.length ? 'все модули' : moduleSetLabel(snapshot?.enabled_set)} (${enabled} из ${modules.length})`,
+  };
+}
+
+function appendModuleSets(summary, snapshot) {
+  const sets = describeModuleSets(snapshot);
+  appendSetLine(summary, 'Установлено:', sets.installed);
+  appendSetLine(summary, 'Включено:', sets.enabled);
 }
 
 function formatCatalogTime(seconds) {
@@ -213,12 +278,13 @@ export function renderInstalled(host, snapshot, onToggle, onPlan = () => {}, bus
   canRestart = false,
   onCheckUpdate = null,
   update = null,
+  onEditorVariant = null,
 } = {}) {
   host.replaceChildren();
   const summary = node('section', 'modules-summary card');
   summary.append(node('h2', '', 'Панель и профиль'));
   appendPanelIdentity(summary, snapshot);
-  summary.append(node('p', '', `Профиль: ${snapshot.profile || 'не указан'}`));
+  appendModuleSets(summary, snapshot);
   if (snapshot.restart_required || canRestart) summary.append(node('p', 'modules-alert', 'Требуется перезапуск'));
   const panelActions = node('div', 'modules-card-actions');
   if (snapshot.lifecycle?.available === false) {
@@ -250,9 +316,20 @@ export function renderInstalled(host, snapshot, onToggle, onPlan = () => {}, bus
     const row = node('article', 'modules-row');
     const body = node('div', 'modules-row-body');
     body.append(node('h3', '', moduleTitle(item)));
-    if (item.description) body.append(node('p', '', item.description));
+    const editorVariant = item.id === 'tool.editor' && item.enabled === true && typeof onEditorVariant === 'function'
+      ? EDITOR_VARIANTS.find((variant) => variant.id === snapshot.editor?.variant)
+      : null;
+    if (editorVariant) {
+      // The row has no switch while an engine is on: say why.
+      body.append(node('p', '', item.can_disable ? 'Редакторы конфигов.' : 'Редакторы конфигов. Нужны, пока включено хотя бы одно ядро.'));
+      body.append(node('p', 'modules-variant-hint', `${editorVariant.label}: ${editorVariant.hint}`));
+      if (editorVariantsLocked(snapshot)) {
+        body.append(node('p', 'modules-variant-hint', 'Стандартный и расширенный варианты докачивают файлы. На локальной сборке докачка недоступна.'));
+      }
+    } else if (item.description) body.append(node('p', '', item.description));
     row.append(body);
     const controls = node('div', 'modules-row-actions');
+    if (editorVariant) controls.append(editorVariantControl(snapshot, editorVariant, onEditorVariant, busy));
     if (item.can_disable) {
       const label = node('label', 'dt-switch xk-switch-bare modules-switch');
       const stateLabel = node(

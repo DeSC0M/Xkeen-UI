@@ -9,7 +9,7 @@ import pytest
 
 from services.module_catalog_client import CatalogTransportError, official_release_asset_url
 from services.module_lifecycle import ModuleLifecycleError, _plan_digest
-from services.module_registry import ModuleRegistry
+from services.module_registry import MODULE_IDS, ModuleRegistry, module_set_name
 from services.module_transactions.plan import build_plan
 from tests.support.module_lifecycle import (
     LaunchRecorder,
@@ -60,6 +60,51 @@ def test_installed_exposes_authoritative_profile_transition_guard(tmp_path):
     registry.set_profile("mihomo-minimal")
     assert service.installed()["transition_required"] is True
     assert service.profile_transition_status()["transition_required"] is True
+
+
+def test_installed_tells_the_editor_variant_on_the_storage_from_the_chosen_one(tmp_path):
+    panel = make_panel(tmp_path)
+    registry = ModuleRegistry(str(panel.state), which=lambda _name: "/bin/tool")
+    service, _ = make_service(panel, make_release(), registry=registry)
+    record = json.loads(panel.path("install-profile.json").read_text(encoding="utf-8"))
+    record["editor_variant"] = "light"
+    panel.path("install-profile.json").write_text(json.dumps(record), encoding="utf-8")
+
+    registry.set_editor_variant("advanced")
+    editor = service.installed()["editor"]
+
+    assert editor["variant"] == "advanced"
+    assert editor["installed_variant"] == "light"
+
+    panel.path("install-profile.json").unlink()
+    assert service.installed()["editor"]["installed_variant"] is None
+
+
+def test_installed_names_the_sets_by_their_modules_not_by_the_stored_label(tmp_path):
+    panel = make_panel(tmp_path)
+    registry = ModuleRegistry(str(panel.state), which=lambda _name: "/bin/tool")
+    service, _ = make_service(panel, make_release(), registry=registry)
+
+    payload = service.installed()
+    assert payload["installed_set"] == "xray-minimal"
+    assert payload["enabled_set"] == "xray-minimal"
+
+    # A switch turns the stored label into "custom" for good; the names do not follow it.
+    registry.set_enabled("engine.xray", False)
+    payload = service.installed()
+    assert payload["installed_set"] == "xray-minimal"
+    assert payload["enabled_set"] == "custom"
+
+    registry.set_enabled("engine.xray", True)
+    payload = service.installed()
+    assert payload["enabled_set"] == "xray-minimal"
+
+
+def test_module_set_name_knows_the_presets_and_nothing_else():
+    assert module_set_name(MODULE_IDS) == "full"
+    assert module_set_name(["tool.editor", "core", "engine.mihomo"]) == "mihomo-minimal"
+    assert module_set_name(["core", "engine.xray", "tool.editor", "tool.terminal"]) == "custom"
+    assert module_set_name([]) == "custom"
 
 
 def test_installed_remains_readable_when_install_manifest_is_missing(tmp_path):

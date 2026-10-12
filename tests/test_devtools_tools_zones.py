@@ -230,7 +230,9 @@ def test_stretched_update_card_keeps_its_slack_at_the_bottom():
 
     card = template[template.index('id="dt-update-card"'): template.index('id="dt-env-card"')]
     assert 'class="dt-panel-summary-grid"' in card
-    assert 'id="dt-panel-profile"' in card
+    assert 'id="dt-panel-installed-set"' in card
+    assert 'id="dt-panel-enabled-set"' in card
+    assert 'id="dt-panel-profile"' not in card
     assert 'id="dt-panel-modules"' in card
     for stale in (
         "dt-update-autocheck-row",
@@ -283,7 +285,9 @@ def test_update_card_is_reduced_to_panel_summary():
     assert ">Сборка панели</h2>" in card
     assert 'class="dt-panel-summary-grid"' in card
     assert '<ul id="dt-panel-modules"' in card
-    assert 'id="dt-panel-profile"' in card
+    assert 'id="dt-panel-installed-set"' in card
+    assert 'id="dt-panel-enabled-set"' in card
+    assert 'id="dt-panel-profile"' not in card
     assert 'id="dt-panel-update-note"' in card
     # Версия печатается один раз, канал подписан своей строкой.
     assert card.count('id="dt-panel-version"') == 1

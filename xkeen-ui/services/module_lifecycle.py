@@ -18,7 +18,7 @@ import uuid
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Mapping, Sequence
 
-from services.module_registry import MODULE_IDS, ModuleRegistry
+from services.module_registry import EDITOR_VARIANTS, MODULE_IDS, ModuleRegistry, module_set_name
 from services.module_transactions.launcher import (
     ensure_restartable,
     launch,
@@ -617,10 +617,18 @@ class ModuleLifecycleService:
             "panel_version": panel_version,
             "build": build,
             "profile": registry.get("profile"),
-            "editor": registry.get("editor"),
+            "editor": self._editor_with_installed_variant(registry.get("editor")),
             "restart_required": bool(registry.get("restart_required")),
             "transition_required": self.profile_transition_status()["transition_required"],
             "installed_module_ids": ordered_ids,
+            # The stored label turns "custom" at the first switch and never
+            # comes back: the window names the sets by what is in them.
+            "installed_set": module_set_name(ordered_ids),
+            "enabled_set": module_set_name(
+                str(item.get("id"))
+                for item in registry.get("modules", [])
+                if item.get("id") in installed_ids and item.get("enabled") is True
+            ),
             # Whether the panel can go back to the release it ran before its
             # last update, and to which one.
             "previous_version": describe_previous_version(self.panel_root),
@@ -636,6 +644,19 @@ class ModuleLifecycleService:
                 if item.get("id") in installed_ids
             ],
             "lifecycle": lifecycle,
+        }
+
+    def _editor_with_installed_variant(self, editor: Any) -> dict[str, Any]:
+        # The chosen variant is a setting; the one on the storage tells
+        # whether the choice still has files to fetch.
+        try:
+            record = json.loads((self.state_dir / "install-profile.json").read_text(encoding="utf-8"))
+            installed_variant = record.get("editor_variant")
+        except (OSError, ValueError, AttributeError):
+            installed_variant = None
+        return {
+            **(editor if isinstance(editor, Mapping) else {}),
+            "installed_variant": installed_variant if installed_variant in EDITOR_VARIANTS else None,
         }
 
     def available(self) -> dict[str, Any]:

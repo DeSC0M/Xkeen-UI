@@ -7,7 +7,9 @@ const installed = {
     exists: true, version: '2.10.0', commit: 'abc123456789abcdef0123456789abcdef012345',
     built_utc: '2026-10-09T09:10:11Z', repo: 'umarcheh001/Xkeen-UI', channel: 'stable',
   },
-  profile: 'full',
+  profile: 'custom',
+  installed_set: 'full',
+  enabled_set: 'custom',
   lifecycle: { available: true, code: null },
   modules: [
     { id: 'core', name: 'Xkeen UI Core', version: '1.0.0', enabled: true, status: 'enabled' },
@@ -43,7 +45,10 @@ test.describe('DevTools panel summary', () => {
     await expect(page.locator('#dt-panel-commit')).toHaveText('(abc123456789)');
     await expect(page.locator('#dt-panel-repo')).toHaveText('umarcheh001/Xkeen-UI');
     await expect(page.locator('#dt-panel-channel')).toHaveText('stable');
-    await expect(page.locator('#dt-panel-profile')).toHaveText('full');
+    // Сохранённая метка профиля не печатается: наборы названы по составу.
+    await expect(page.locator('#dt-panel-installed-set')).toHaveText('полный набор');
+    await expect(page.locator('#dt-panel-enabled-set')).toHaveText('свой набор (2 из 3)');
+    await expect(card).not.toContainText('custom');
 
     const rows = page.locator('#dt-panel-modules .dt-panel-module');
     await expect(rows).toHaveCount(3);

@@ -88,7 +88,7 @@ test.describe('DevTools panel summary boundary', () => {
     await expect(page.locator('[data-dt-main-update-controls]')).toHaveCount(0);
     await expect(page.locator('#xk-update-link')).toHaveCount(0);
     await expect(updateCard).toContainText('2.10.0');
-    await expect(updateCard).toContainText('mihomo-minimal');
+    await expect(page.locator('#dt-panel-enabled-set')).toHaveText('свой набор (1 из 2)');
     await expect(updateCard).toContainText('Xkeen UI Core');
     await expect(updateCard).toContainText('Mihomo');
     const modulesLinks = page.getByRole('link', { name: 'Модули и обновления', exact: true });
@@ -508,7 +508,7 @@ test.describe('Module manager recovery and guards', () => {
     installed = { ...installed, profile: 'full', transition_required: true,
       modules: installed.modules.map((item) => ({ ...item, enabled: true })) };
     await page.evaluate(async () => (await import('/static/js/pages/modules.init.js')).getModulesController().activate());
-    await expect(page.locator('.modules-summary')).toContainText('Профиль: full');
+    await expect(page.locator('.modules-summary')).toContainText('Включено: все модули (2 из 2)');
     await expect(page.getByRole('switch', { name: 'Включить Mihomo' })).toBeChecked();
     await expect(page.getByRole('button', { name: 'Применить профиль' })).toBeEnabled();
     await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toHaveCount(0);
@@ -853,10 +853,10 @@ test.describe('Module manager recovery and guards', () => {
     await expect(row.locator('.modules-switch-state')).toHaveText('Включён');
     await expect(row.locator('.modules-switch-state')).toHaveClass(/is-enabled/);
     await control.locator('..').click();
-    await expect(page.locator('.modules-summary')).toContainText('Профиль: custom');
+    await expect(page.locator('.modules-summary')).toContainText('Включено: свой набор (1 из 2)');
     await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toBeVisible();
     await control.locator('..').click();
-    await expect(page.locator('.modules-summary')).toContainText('Профиль: full');
+    await expect(page.locator('.modules-summary')).toContainText('Включено: все модули (2 из 2)');
     await expect(page.locator('.modules-summary')).not.toContainText('Требуется перезапуск');
     await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toHaveCount(0);
   });
@@ -1602,5 +1602,125 @@ test.describe('Module lifecycle review', () => {
     await page.getByRole('button', { name: 'Обновить панель' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Применить план' }).click();
     await expect(page.getByRole('button', { name: 'Отменить операцию' })).toBeEnabled();
+  });
+});
+
+test.describe('Installed and enabled sets', () => {
+  const nine = ['core', 'engine.xray', 'engine.mihomo', 'tool.editor', 'tool.terminal', 'tool.files', 'tool.backups', 'integration.happ', 'tool.advanced-diagnostics'];
+  const withSets = (off, sets) => ({
+    ...installedSnapshot,
+    profile: 'custom',
+    ...sets,
+    modules: nine.map((id) => ({ id, name: id, version: '1.0.0', enabled: !off.includes(id), can_disable: id !== 'core' })),
+  });
+
+  test('the summary names what is installed and what is enabled instead of the stored label', async ({ page }) => {
+    await installLifecycleRoutes(page, { status: { ok: true, result: null }, installed: withSets([], { installed_set: 'full', enabled_set: 'full' }) });
+    await page.goto('/modules');
+    const summary = page.locator('.modules-summary');
+    await expect(summary).toContainText('Установлено: полный набор');
+    await expect(summary).toContainText('Включено: все модули (9 из 9)');
+    await expect(summary).not.toContainText('custom');
+    await expect(summary).not.toContainText('Профиль:');
+  });
+
+  test('modules switched off change the enabled line only', async ({ page }) => {
+    await installLifecycleRoutes(page, {
+      status: { ok: true, result: null },
+      installed: withSets(['engine.mihomo', 'tool.terminal'], { installed_set: 'full', enabled_set: 'custom' }),
+    });
+    await page.goto('/modules');
+    const summary = page.locator('.modules-summary');
+    await expect(summary).toContainText('Установлено: полный набор');
+    await expect(summary).toContainText('Включено: свой набор (7 из 9)');
+  });
+
+  test('an enabled set equal to a preset is called by its name', async ({ page }) => {
+    const off = nine.filter((id) => !['core', 'engine.xray', 'tool.editor'].includes(id));
+    await installLifecycleRoutes(page, { status: { ok: true, result: null }, installed: withSets(off, { installed_set: 'full', enabled_set: 'xray-minimal' }) });
+    await page.goto('/modules');
+    await expect(page.locator('.modules-summary')).toContainText('Включено: только Xray (3 из 9)');
+  });
+});
+
+test.describe('Editor variant choice', () => {
+  const editorRow = { id: 'tool.editor', name: 'Редакторы', version: '1.0.0', enabled: true, can_disable: false, description: 'CodeMirror, Monaco.' };
+  const withEditor = (editor, extra = {}) => ({
+    ...installedSnapshot,
+    editor: { available_variants: ['light', 'full', 'advanced'], installed_variant: 'full', ...editor },
+    modules: [...installedSnapshot.modules, editorRow],
+    ...extra,
+  });
+
+  test('the Editors row offers three variants in rising order and saves the chosen one', async ({ page }) => {
+    let snapshot = withEditor({ variant: 'full' });
+    const patches = [];
+    await page.route('**/api/modules/installed', (route) => route.fulfill({ json: snapshot }));
+    await page.route('**/api/modules/operations/status', (route) => route.fulfill({ json: { ok: true, result: null } }));
+    await page.route('**/api/modules/editor', (route) => {
+      patches.push(`${route.request().method()} ${route.request().postData()}`);
+      snapshot = withEditor({ variant: 'advanced' }, { restart_required: true });
+      return route.fulfill({ json: { ok: true, changed: true } });
+    });
+
+    await page.goto('/modules');
+    const row = page.locator('.modules-row').filter({ hasText: 'Редакторы' });
+    const options = row.getByRole('group', { name: 'Вариант редакторов' }).getByRole('button');
+    await expect(options).toHaveText(['Лёгкий', 'Стандартный', 'Расширенный']);
+    await expect(options.nth(1)).toHaveAttribute('aria-pressed', 'true');
+    await expect(row).toContainText('Нужны, пока включено хотя бы одно ядро.');
+    await expect(row).toContainText('Стандартный: CodeMirror, Monaco и сравнение версий.');
+    await expect(row.getByRole('switch')).toHaveCount(0);
+
+    await options.nth(2).click();
+
+    await expect(options.nth(2)).toHaveAttribute('aria-pressed', 'true');
+    await expect(options.nth(2)).toBeFocused();
+    await expect(options.nth(1)).toHaveAttribute('aria-pressed', 'false');
+    await expect(row).toContainText('Расширенный: всё из стандартного');
+    await expect(page.getByText('Требуется перезапуск')).toBeVisible();
+    expect(patches).toEqual(['PATCH {"variant":"advanced"}']);
+
+    // The chosen variant is not sent again.
+    await options.nth(2).click();
+    expect(patches).toHaveLength(1);
+  });
+
+  test('a local build with the light editor keeps the variants that need files closed', async ({ page }) => {
+    await installLifecycleRoutes(page, {
+      status: { ok: true, result: null },
+      installed: withEditor({ variant: 'light', installed_variant: 'light' }, {
+        panel_version: null,
+        lifecycle: { available: false, code: 'panel_version_unsupported' },
+      }),
+    });
+
+    await page.goto('/modules');
+    const row = page.locator('.modules-row').filter({ hasText: 'Редакторы' });
+    const options = row.getByRole('group', { name: 'Вариант редакторов' }).getByRole('button');
+    await expect(options.nth(0)).toHaveAttribute('aria-pressed', 'true');
+    await expect(options.nth(1)).toBeDisabled();
+    await expect(options.nth(2)).toBeDisabled();
+    await expect(row).toContainText('На локальной сборке докачка недоступна.');
+  });
+
+  test('the variant buttons read as one control in both themes', async ({ page }) => {
+    await installLifecycleRoutes(page, { status: { ok: true, result: null }, installed: withEditor({ variant: 'full' }) });
+    for (const theme of ['dark', 'light']) {
+      await page.addInitScript((value) => { localStorage.setItem('xkeen-theme', value); }, theme);
+      await page.goto('/modules');
+      const options = page.locator('.modules-variant-option');
+      await expect(options).toHaveCount(3);
+      const look = await options.evaluateAll((buttons) => buttons.map((button) => {
+        const style = getComputedStyle(button);
+        const box = button.getBoundingClientRect();
+        return { radius: style.borderTopLeftRadius, background: style.backgroundColor, color: style.color, top: Math.round(box.top), height: Math.round(box.height) };
+      }));
+      expect(new Set(look.map((item) => item.radius)), theme).toEqual(new Set(['0px']));
+      expect(new Set(look.map((item) => item.top)).size, theme).toBe(1);
+      expect(new Set(look.map((item) => item.height)).size, theme).toBe(1);
+      expect(look[1].background, theme).not.toBe(look[0].background);
+      expect(look[1].color, theme).toBe('rgb(255, 255, 255)');
+    }
   });
 });

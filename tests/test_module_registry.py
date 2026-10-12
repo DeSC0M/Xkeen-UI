@@ -107,6 +107,57 @@ def test_editor_variant_is_backward_compatible_and_persisted_atomically(tmp_path
     assert persisted["modules"]["engine.xray"]["enabled"] is True
 
 
+def test_editor_variant_taken_back_before_restart_asks_for_no_restart(tmp_path):
+    registry = _registry(tmp_path)
+    before = registry.get_registry()
+    assert before["restart_required"] is False
+    variant = before["editor"]["variant"]
+    other = "advanced" if variant != "advanced" else "light"
+
+    assert registry.set_editor_variant(other)[0]["restart_required"] is True
+    back, changed = registry.set_editor_variant(variant)
+
+    assert changed is True
+    assert back["editor"]["variant"] == variant
+    assert back["restart_required"] is False
+
+
+def test_editor_variant_keeps_a_pending_restart_of_another_cause(tmp_path):
+    registry = _registry(tmp_path)
+    variant = registry.get_registry()["editor"]["variant"]
+    registry.set_enabled("tool.terminal", False)
+
+    registry.set_editor_variant("advanced" if variant != "advanced" else "light")
+    back, _ = registry.set_editor_variant(variant)
+
+    assert back["restart_required"] is True
+
+
+def test_editor_variant_leaves_a_module_switch_undoable_without_restart(tmp_path):
+    registry = _registry(tmp_path)
+    before = registry.get_registry()
+    variant = before["editor"]["variant"]
+
+    registry.set_enabled("tool.terminal", False)
+    registry.set_editor_variant("advanced" if variant != "advanced" else "light")
+    registry.set_editor_variant(variant)
+    payload, _ = registry.set_enabled("tool.terminal", True)
+
+    assert payload["restart_required"] is False
+    assert payload["profile"] == before["profile"]
+
+
+def test_module_switch_taken_back_keeps_the_restart_of_a_changed_editor_variant(tmp_path):
+    registry = _registry(tmp_path)
+    variant = registry.get_registry()["editor"]["variant"]
+
+    registry.set_enabled("tool.terminal", False)
+    registry.set_editor_variant("advanced" if variant != "advanced" else "light")
+    payload, _ = registry.set_enabled("tool.terminal", True)
+
+    assert payload["restart_required"] is True
+
+
 def test_editor_variant_rejects_unknown_values(tmp_path):
     registry = _registry(tmp_path)
     registry.get_registry()

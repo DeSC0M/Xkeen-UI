@@ -1,6 +1,7 @@
 import { setDevtoolsNamespaceApi } from '../devtools_namespace.js';
 import { createModuleLifecycleClient } from '../module_manager/api.js';
 import { reconcileModulesUpdateCheck } from '../module_manager/badge.js';
+import { describeModuleSets } from '../module_manager/render.js';
 
 // Справочная карточка «Сборка панели» на вкладке Tools: версия, источник и
 // состав установленных модулей. Сама она ничего не обновляет — команды живут
@@ -69,7 +70,11 @@ import { reconcileModulesUpdateCheck } from '../module_manager/badge.js';
     setText('dt-panel-built', (build.built_utc && (formatDate(build.built_utc) || String(build.built_utc))) || '—');
     setText('dt-panel-repo', build.repo || '—');
     setText('dt-panel-channel', build.channel || '—');
-    setText('dt-panel-profile', (data && data.profile) || '—');
+    // Те же слова, что в разделе «Модули и обновления»: набор называется
+    // по составу модулей, а не по сохранённой метке профиля.
+    const sets = data ? describeModuleSets(data) : null;
+    setText('dt-panel-installed-set', sets ? sets.installed : '—');
+    setText('dt-panel-enabled-set', sets ? sets.enabled : '—');
   }
 
   function renderModules(data) {

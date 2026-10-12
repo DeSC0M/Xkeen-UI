@@ -141,6 +141,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
         canRestart: canRestart(),
         onCheckUpdate: requestUpdateCheck,
         update: state.update,
+        onEditorVariant: changeEditorVariant,
       });
     } else {
       host.textContent = 'Загрузка модулей…';
@@ -390,6 +391,26 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
       showError(error);
     } finally {
       if (active) render();
+    }
+  }
+
+  async function changeEditorVariant(variant, button) {
+    if (mutationsLocked()) return;
+    const focused = document.activeElement === button;
+    button.disabled = true;
+    try {
+      await api.setEditorVariant(variant);
+      state.installed = await api.loadInstalled();
+      reconcileModulesUpdateBadge(state.installed);
+      clearError();
+    } catch (error) {
+      showError(error);
+    } finally {
+      if (active) {
+        render();
+        // The row is drawn anew: the focus goes to the variant in force.
+        if (focused) host.querySelector('.modules-variant-option[aria-pressed="true"]')?.focus();
+      }
     }
   }
 
