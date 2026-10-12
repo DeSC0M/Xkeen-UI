@@ -1665,6 +1665,119 @@ test.describe('Editor variant choice', () => {
   });
 });
 
+test.describe('A screen that is not drawn anew without a reason', () => {
+  const mark = (page) => page.evaluate(() => {
+    document.querySelector('.modules-summary').dataset.drawn = 'before';
+    document.querySelector('.modules-operation').dataset.drawn = 'before';
+  });
+  const drawn = (page, selector) => page.locator(selector).first().getAttribute('data-drawn');
+
+  test('polling a running operation leaves the cards and an unchanged status as they are', async ({ page }) => {
+    await page.clock.install();
+    let status = runningStatus;
+    let polls = 0;
+    await installLifecycleRoutes(page, { status });
+    await page.route('**/api/modules/operations/status', (route) => { polls += 1; return route.fulfill({ json: status }); });
+    await page.goto('/modules');
+    await expect(page.locator('#modules-operation-status')).toContainText('Сейчас: Загрузка архива');
+    await mark(page);
+    const cancel = page.getByRole('button', { name: 'Отменить операцию' });
+    await cancel.focus();
+    const pollsBefore = polls;
+
+    await advanceClock(page, 3500);
+
+    expect(polls).toBeGreaterThanOrEqual(pollsBefore + 3);
+    expect(await drawn(page, '.modules-summary')).toBe('before');
+    // The same words drawn again would be read aloud again.
+    expect(await drawn(page, '.modules-operation')).toBe('before');
+    await expect(cancel).toBeFocused();
+
+    // A new step is news: the block is drawn, the cards and the focus stay.
+    status = server.install_steps.verifying;
+    await advanceClock(page, 1500);
+    await expect(page.locator('#modules-operation-status')).toContainText('Сейчас: Проверка подписи и состава');
+    expect(await drawn(page, '.modules-operation')).toBeNull();
+    expect(await drawn(page, '.modules-summary')).toBe('before');
+    await expect(page.getByRole('button', { name: 'Отменить операцию' })).toBeFocused();
+  });
+
+  test('of two overlapping readings of the state the later one stays on the screen', async ({ page }) => {
+    let installedCalls = 0;
+    let releaseFirst;
+    await installIdleLifecycleRoutes(page);
+    await page.route('**/api/modules/installed', async (route) => {
+      installedCalls += 1;
+      if (installedCalls === 2) {
+        // The first of the two readings is answered last, with what was true before.
+        await new Promise((resolve) => { releaseFirst = resolve; });
+        return route.fulfill({ json: installedSnapshot });
+      }
+      return route.fulfill({ json: installedCalls === 1 ? installedSnapshot : withMihomo(true) });
+    });
+    await page.goto('/modules');
+    await expect(page.getByRole('switch', { name: 'Включить Mihomo' })).not.toBeChecked();
+
+    await page.evaluate(async () => {
+      const controller = (await import('/static/js/pages/modules.init.js')).getModulesController();
+      window.xkReadings = Promise.all([controller.refreshInstalledAfterTerminal(), controller.refreshInstalledAfterTerminal()]);
+    });
+    await expect(page.getByRole('switch', { name: 'Включить Mihomo' })).toBeChecked();
+    await expect.poll(() => Boolean(releaseFirst)).toBe(true);
+    releaseFirst();
+    await page.evaluate(() => window.xkReadings);
+
+    await expect(page.getByRole('switch', { name: 'Включить Mihomo' })).toBeChecked();
+    await expect(page.locator('.modules-summary')).toContainText('Требуется перезапуск');
+    await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeEnabled();
+  });
+
+  test('a switch being saved locks the other actions and keeps the focus', async ({ page }) => {
+    let enabled = false;
+    let releaseSave;
+    let planCalls = 0;
+    await installIdleLifecycleRoutes(page);
+    await page.route('**/api/modules/installed', (route) => route.fulfill({ json: withMihomo(enabled) }));
+    await page.route('**/api/modules/engine.mihomo', async (route) => {
+      await new Promise((resolve) => { releaseSave = resolve; });
+      enabled = route.request().postDataJSON().enabled;
+      return route.fulfill({ json: { ok: true, restart_required: true } });
+    });
+    await page.route('**/api/modules/operations/plan', (route) => { planCalls += 1; return route.fulfill({ json: panelUpdatePlan }); });
+    await page.goto('/modules');
+    const toggle = page.getByRole('switch', { name: 'Включить Mihomo' });
+    await toggle.focus();
+    await page.keyboard.press('Space');
+    await expect.poll(() => Boolean(releaseSave)).toBe(true);
+
+    await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Удалить Mihomo' })).toBeDisabled();
+    await expect(page.getByRole('switch', { name: 'Включить Редакторы' })).toBeDisabled();
+    await page.evaluate(async () => {
+      const controller = (await import('/static/js/pages/modules.init.js')).getModulesController();
+      await controller.requestPlan('panel-update', null);
+    });
+    expect(planCalls).toBe(0);
+
+    releaseSave();
+    await expect(toggle).toBeChecked();
+    await expect(toggle).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeEnabled();
+  });
+
+  test('the update check row holds no rules of a grid it is not', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await installIdleLifecycleRoutes(page);
+    await page.goto('/modules');
+    const row = await page.locator('.modules-update-check').evaluate((node) => {
+      const style = getComputedStyle(node);
+      const button = getComputedStyle(node.querySelector('.modules-update-check-button'));
+      return { display: style.display, columns: style.gridTemplateColumns, self: button.justifySelf };
+    });
+    expect(row).toEqual({ display: 'flex', columns: 'none', self: 'auto' });
+  });
+});
+
 // The stubs here keep the shape the server really sends: seconds with a
 // fraction, the runner's own step names, the four keys of the dependency diff.
 test.describe('What the window says about operations and refusals', () => {
@@ -1849,7 +1962,7 @@ test.describe('What the window says about operations and refusals', () => {
     await page.getByRole('tab', { name: 'Доступные' }).click();
     const host = page.locator('#modules-card-host');
     await expect(host.locator('.modules-alert')).toContainText('Каталог модулей временно недоступен. (catalog_unavailable)');
-    // The running operation redraws the screen every second.
+    // The running operation is asked about every second.
     await advanceClock(page, 3500);
     await expect(host.locator('.modules-alert')).toHaveCount(1);
     await expect(host).not.toContainText('Загрузка каталога');

@@ -56,6 +56,9 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
   let statusChecked = false;
   let statusRefreshPending = false;
   let updateCheckFocusPending = false;
+  let refreshGeneration = 0;
+  let drawnCards = null;
+  let drawnStatus = null;
 
   // An interrupted operation is over: its record is gone and the server
   // has nothing to recover. Only a failed undo leaves the tree to be put back.
@@ -111,7 +114,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     statusChecked = true;
     closePlan({ force: true });
     clearError();
-    if (active) render();
+    if (active) renderAfterStatus();
   }
 
   function waitNotice() {
@@ -129,7 +132,25 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     pollTimer = null;
   }
 
+  // What of the state the cards depend on besides the data they show.
+  function cardsState() {
+    return [state.selectedTab, mutationsLocked(), canRestart(), statusFresh, installedFresh, statusChecked,
+      panelUnreachable, restartWait !== null, busy, statusRefreshPending].join('|');
+  }
+
   function render() {
+    renderCards();
+    renderStatus();
+  }
+
+  // The polling brings a status every second. The cards are drawn anew only
+  // when it changes what they allow: a redraw takes the focus away.
+  function renderAfterStatus() {
+    if (cardsState() === drawnCards) renderStatus();
+    else render();
+  }
+
+  function renderCards() {
     const catalogAvailable = state.installed?.lifecycle?.available === true;
     for (const [name, tab] of Object.entries(tabs)) {
       tab.setAttribute('aria-selected', String(state.selectedTab === name));
@@ -158,25 +179,38 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     } else {
       host.textContent = 'Загрузка модулей…';
     }
-    if (hasOperationStatus(state.status)) renderOperationStatus(statusHost, state.status, {
-      onCancel: requestCancel, onRecovery: requestRecovery,
-      busy: !statusFresh || !installedFresh || busy || cancelPending,
-      names: moduleNames(),
-    });
-    else statusHost.replaceChildren();
-    const notice = waitNotice();
-    if (notice) {
-      const line = document.createElement('p');
-      line.className = 'modules-operation-wait';
-      line.textContent = notice;
-      statusHost.append(line);
-    }
     if (updateCheckFocusPending) {
       const updateButton = host.querySelector('.modules-update-check-button:not(:disabled)');
       if (updateButton) {
         updateCheckFocusPending = false;
         updateButton.focus();
       }
+    }
+    drawnCards = cardsState();
+  }
+
+  function renderStatus() {
+    const shown = hasOperationStatus(state.status) ? state.status : null;
+    const locked = !statusFresh || !installedFresh || busy || cancelPending;
+    const notice = waitNotice();
+    const names = moduleNames();
+    // The block is a live region: the same words drawn again are read aloud again.
+    const drawing = JSON.stringify([shown, locked, notice, shown?.module_id ? names.get(shown.module_id) || null : null]);
+    if (drawing === drawnStatus) return;
+    drawnStatus = drawing;
+    const focused = statusHost.contains(document.activeElement) ? document.activeElement.textContent : null;
+    if (shown) renderOperationStatus(statusHost, shown, {
+      onCancel: requestCancel, onRecovery: requestRecovery, busy: locked, names,
+    });
+    else statusHost.replaceChildren();
+    if (notice) {
+      const line = document.createElement('p');
+      line.className = 'modules-operation-wait';
+      line.textContent = notice;
+      statusHost.append(line);
+    }
+    if (focused !== null) {
+      Array.from(statusHost.querySelectorAll('button:not(:disabled)')).find((button) => button.textContent === focused)?.focus();
     }
   }
 
@@ -226,6 +260,8 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
   }
 
   async function refreshInstalledAfterTerminal({ keepTab = false } = {}) {
+    refreshGeneration += 1;
+    const generation = refreshGeneration;
     stopPolling();
     closePlan({ restoreFocus: false, force: true });
     // Coming back to the screen is not an operation ending: the tab the owner left is theirs.
@@ -240,6 +276,8 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     statusRefreshPending = true;
     if (active) render();
     const [installedResult, statusResult] = await Promise.allSettled([api.loadInstalled(), api.loadStatus()]);
+    // A later reading was started meanwhile: the screen is its to fill.
+    if (generation !== refreshGeneration) return;
     if (statusResult.status === 'fulfilled') {
       state.status = statusResult.value;
       statusFresh = true;
@@ -277,7 +315,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     panelUnreachable = false;
     if (state.status.result !== 'running') cancelPending = false;
     reconcileModulesUpdateStatus(state.status);
-    if (active) render();
+    if (active) renderAfterStatus();
     if (state.status.result === 'running') {
       schedulePoll();
     } else {
@@ -401,7 +439,10 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
 
   async function toggleEnabled(moduleId, enabled, input) {
     if (mutationsLocked()) return;
-    input.disabled = true;
+    const focused = document.activeElement === input;
+    // One change at a time: a plan asked for meanwhile would be built on the old set.
+    busy = true;
+    render();
     try {
       await api.setModuleEnabled(moduleId, enabled);
       state.installed = await api.loadInstalled();
@@ -410,14 +451,22 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     } catch (error) {
       showError(error);
     } finally {
-      if (active) render();
+      busy = false;
+      if (active) {
+        render();
+        // The row is drawn anew: the focus goes back to its switch.
+        if (focused) {
+          Array.from(host.querySelectorAll('input[role="switch"]')).find((control) => control.dataset.moduleId === moduleId)?.focus();
+        }
+      }
     }
   }
 
   async function changeEditorVariant(variant, button) {
     if (mutationsLocked()) return;
     const focused = document.activeElement === button;
-    button.disabled = true;
+    busy = true;
+    render();
     try {
       await api.setEditorVariant(variant);
       state.installed = await api.loadInstalled();
@@ -426,6 +475,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     } catch (error) {
       showError(error);
     } finally {
+      busy = false;
       if (active) {
         render();
         // The row is drawn anew: the focus goes to the variant in force.

@@ -542,6 +542,7 @@ export function renderInstalled(host, snapshot, onToggle, onPlan = () => {}, bus
       input.type = 'checkbox';
       input.setAttribute('role', 'switch');
       input.setAttribute('aria-label', `Включить ${item.name || item.id}`);
+      input.dataset.moduleId = item.id;
       input.checked = item.enabled === true;
       input.disabled = busy;
       input.addEventListener('change', () => onToggle(item.id, input.checked, input));

@@ -541,8 +541,6 @@ body.modules-page .modules-plan-confirm [hidden] { display: none; }
   body.modules-page .modules-row-actions { justify-content: flex-start; }
   body.modules-page .modules-switch { align-self: flex-start; }
   body.modules-page .modules-variant-side { justify-items: start; }
-  body.modules-page .modules-update-check { grid-template-columns: 1fr; }
-  body.modules-page .modules-update-check-button { justify-self: start; }
   body.modules-page .modules-plan-actions { flex-wrap: wrap; }
   body.modules-page .modules-plan-actions button { flex: 1 1 140px; }
 }
