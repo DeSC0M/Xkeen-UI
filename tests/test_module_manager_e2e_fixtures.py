@@ -59,6 +59,8 @@ def test_stored_answers_keep_the_shape_hand_written_stubs_got_wrong():
     assert stored["rollback_failed"]["failed_path"]
     assert stored["installed"]["editor"]["variant"] in stored["installed"]["editor"]["available_variants"]
     assert all(item.get("name") for item in stored["available"]["modules"])
+    assert stored["rolled_back_restart"]["module_id"] not in stored["installed"]["installed_module_ids"]
+    assert stored["installed"]["module_names"][stored["rolled_back_restart"]["module_id"]]
 
 
 def test_browser_tests_read_the_stored_answers():

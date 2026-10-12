@@ -638,6 +638,9 @@ class ModuleLifecycleService:
             # Whether the panel can go back to the release it ran before its
             # last update, and to which one.
             "previous_version": describe_previous_version(self.panel_root),
+            # A status or a plan names modules that are not installed, and the
+            # catalog is read only when asked for: every name this build knows.
+            "module_names": {definition.id: definition.name for definition in MODULE_DEFINITIONS},
             "modules": [
                 {
                     **item,

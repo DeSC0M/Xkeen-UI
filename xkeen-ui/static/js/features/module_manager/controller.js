@@ -80,9 +80,14 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
 
   function clearError() { if (errorHost) errorHost.textContent = ''; }
 
-  // Names for the ids the server speaks in: what is installed and what the catalog offers.
+  // Names for the ids the server speaks in: every module the panel knows,
+  // then what the catalog offers and what is installed.
   function moduleNames() {
     const names = new Map();
+    const known = state.installed?.module_names;
+    for (const [id, name] of Object.entries(known && typeof known === 'object' ? known : {})) {
+      if (typeof name === 'string' && name) names.set(id, name);
+    }
     for (const item of [...(state.catalog?.modules || []), ...(state.installed?.modules || [])]) {
       if (item && typeof item.id === 'string' && item.name) names.set(item.id, String(item.name));
     }

@@ -18,6 +18,7 @@ from tests.support.module_lifecycle import (
     status_record,
 )
 from tests.support.module_tx import (
+    MODULE_ORDER,
     ARCHITECTURE,
     OWNERSHIP,
     VERSION,
@@ -105,6 +106,19 @@ def test_module_set_name_knows_the_presets_and_nothing_else():
     assert module_set_name(["tool.editor", "core", "engine.mihomo"]) == "mihomo-minimal"
     assert module_set_name(["core", "engine.xray", "tool.editor", "tool.terminal"]) == "custom"
     assert module_set_name([]) == "custom"
+
+
+def test_installed_names_every_module_this_build_knows(tmp_path):
+    # A status or a plan speaks of modules that are not installed, and the
+    # catalog is not read until it is asked for: the names come with this answer.
+    service, catalog = make_service(make_panel(tmp_path), make_release())
+
+    payload = service.installed()
+
+    assert payload["module_names"]["tool.terminal"] == "Терминал и команды"
+    assert "tool.terminal" not in payload["installed_module_ids"]
+    assert set(payload["module_names"]) == set(MODULE_ORDER)
+    assert catalog.requested_versions == []
 
 
 def test_installed_remains_readable_when_install_manifest_is_missing(tmp_path):

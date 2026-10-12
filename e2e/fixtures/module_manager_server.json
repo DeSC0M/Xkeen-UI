@@ -44,6 +44,17 @@
       "kept_at": null,
       "size": 0
     },
+    "module_names": {
+      "core": "Xkeen UI Core",
+      "engine.xray": "Xray",
+      "engine.mihomo": "Mihomo",
+      "tool.editor": "Редакторы",
+      "tool.terminal": "Терминал и команды",
+      "tool.files": "Файловый менеджер",
+      "tool.backups": "Резервные копии",
+      "integration.happ": "Утилита ссылок подписок",
+      "tool.advanced-diagnostics": "Расширенная диагностика"
+    },
     "modules": [
       {
         "id": "core",
@@ -906,6 +917,17 @@
       "kept_at": null,
       "size": 0
     },
+    "module_names": {
+      "core": "Xkeen UI Core",
+      "engine.xray": "Xray",
+      "engine.mihomo": "Mihomo",
+      "tool.editor": "Редакторы",
+      "tool.terminal": "Терминал и команды",
+      "tool.files": "Файловый менеджер",
+      "tool.backups": "Резервные копии",
+      "integration.happ": "Утилита ссылок подписок",
+      "tool.advanced-diagnostics": "Расширенная диагностика"
+    },
     "modules": [
       {
         "id": "core",
@@ -1640,6 +1662,17 @@
       "version": null,
       "kept_at": null,
       "size": 0
+    },
+    "module_names": {
+      "core": "Xkeen UI Core",
+      "engine.xray": "Xray",
+      "engine.mihomo": "Mihomo",
+      "tool.editor": "Редакторы",
+      "tool.terminal": "Терминал и команды",
+      "tool.files": "Файловый менеджер",
+      "tool.backups": "Резервные копии",
+      "integration.happ": "Утилита ссылок подписок",
+      "tool.advanced-diagnostics": "Расширенная диагностика"
     },
     "modules": [
       {

@@ -1765,6 +1765,28 @@ test.describe('A screen that is not drawn anew without a reason', () => {
     await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeEnabled();
   });
 
+  test('a module that is not installed is still called by its name', async ({ page }) => {
+    // The installation was undone: the terminal is not among the installed,
+    // and the catalog has not been asked for.
+    let catalogCalls = 0;
+    await installLifecycleRoutes(page, { status: restartStatus });
+    await page.route('**/api/modules/available', (route) => { catalogCalls += 1; return route.fulfill({ json: availableSnapshot }); });
+    await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: {
+      ...panelUpdatePlan, operation: 'profile-transition', affected_module_ids: ['core', 'tool.terminal', 'tool.files'],
+    } }));
+    await page.goto('/modules');
+
+    const block = page.locator('.modules-operation');
+    await expect(block.locator('h2')).toContainText(`Установка модуля «${TERMINAL}» 2.10.0`);
+    await expect(block).not.toContainText('tool.terminal');
+
+    await page.getByRole('button', { name: 'Обновить панель' }).click();
+    const facts = page.getByRole('dialog').locator('.modules-plan-facts');
+    await expect(facts).toContainText(`Xkeen UI Core, ${TERMINAL}, ${installedSnapshot.module_names['tool.files']}`);
+    await expect(facts).not.toContainText('tool.');
+    expect(catalogCalls).toBe(0);
+  });
+
   test('the update check row holds no rules of a grid it is not', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await installIdleLifecycleRoutes(page);
