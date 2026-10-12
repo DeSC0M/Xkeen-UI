@@ -23540,3 +23540,84 @@ html[data-theme="light"] body.panel-page #mihomo-dns-modal :is(.mihomo-dns-geoda
 html[data-theme="light"] body.panel-page #mihomo-dns-modal :is(.mihomo-dns-geodata-toggle, .mihomo-dns-option-switch) .dt-switch-slider::after {
   background: #ffffff !important;
 }
+
+/* Xray subscriptions: keep the master switch as an operator control, not a
+ * blue pill. The source mode is a compact indigo status line rather than a
+ * second badge/chip. */
+body.panel-page #outbounds-subscriptions-modal .xk-sub-master {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 18px;
+  margin: 0 12px 0 auto;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--op-muted) !important;
+  box-shadow: none !important;
+}
+
+body.panel-page #outbounds-subscriptions-modal .xk-sub-master .dt-switch-slider {
+  box-sizing: border-box;
+  width: 30px;
+  min-width: 30px;
+  height: 16px;
+  border: 1px solid var(--op-border-strong) !important;
+  border-radius: 8px;
+  background: var(--op-surface-3) !important;
+  box-shadow: none !important;
+}
+
+body.panel-page #outbounds-subscriptions-modal .xk-sub-master .dt-switch-slider::after {
+  top: 1px;
+  left: 1px;
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 50%;
+  background: #dbe5f2 !important;
+  box-shadow: none !important;
+}
+
+body.panel-page #outbounds-subscriptions-modal .xk-sub-master input:checked + .dt-switch-slider {
+  border-color: var(--op-accent-border) !important;
+  background: var(--op-accent) !important;
+}
+
+body.panel-page #outbounds-subscriptions-modal .xk-sub-master input:checked + .dt-switch-slider::after {
+  transform: translateX(14px) !important;
+  background: #fff !important;
+}
+
+body.panel-page #outbounds-subscriptions-modal .xk-sub-master .xk-sub-switch-label {
+  color: var(--op-muted) !important;
+  font-size: calc(11px * var(--xk-font-scale, 1));
+  font-weight: 560;
+}
+
+body.panel-page #outbounds-subscriptions-modal .xk-sub-mode-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border: 0 !important;
+  border-left: 2px solid var(--op-accent) !important;
+  border-radius: 0 !important;
+  background: var(--op-accent-soft) !important;
+  color: var(--op-accent-hover) !important;
+  font-size: calc(10.5px * var(--xk-font-scale, 1));
+  font-weight: 620;
+  line-height: 1.2;
+  box-shadow: none !important;
+}
+
+html[data-theme="light"] body.panel-page #outbounds-subscriptions-modal .xk-sub-master .dt-switch-slider {
+  border-color: #aeb7c5 !important;
+  background: #e4e8ee !important;
+}
+
+html[data-theme="light"] body.panel-page #outbounds-subscriptions-modal .xk-sub-master .dt-switch-slider::after {
+  background: #ffffff !important;
+}
