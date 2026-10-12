@@ -100,6 +100,53 @@ async function readLogsGeometry(page) {
 
 
 test.describe('Operator Console Stage 4 logs', () => {
+  test('Xray log filter clear icon is centered in its button', async ({ page }) => {
+    await openLogs(page, 'dark', { width: 1440, height: 900 });
+
+    const geometry = await page.locator('#xray-log-filter-clear').evaluate((button) => {
+      const icon = button.querySelector('.xk-action-icon');
+      if (!icon) return null;
+
+      const buttonBox = button.getBoundingClientRect();
+      const iconBox = icon.getBoundingClientRect();
+      return {
+        buttonCenterX: buttonBox.left + buttonBox.width / 2,
+        buttonCenterY: buttonBox.top + buttonBox.height / 2,
+        iconCenterX: iconBox.left + iconBox.width / 2,
+        iconCenterY: iconBox.top + iconBox.height / 2,
+      };
+    });
+
+    expect(geometry).not.toBeNull();
+    expect(Math.abs(geometry.iconCenterX - geometry.buttonCenterX)).toBeLessThanOrEqual(1);
+    expect(Math.abs(geometry.iconCenterY - geometry.buttonCenterY)).toBeLessThanOrEqual(1);
+  });
+
+  test('Xray log more menu renders secondary actions as bordered menu buttons', async ({ page }) => {
+    await openLogs(page, 'dark', { width: 1440, height: 900 });
+    await page.locator('#xray-log-more > summary').click();
+
+    const actions = page.locator(
+      '#xray-log-more .dt-log-menu-panel > :is(#xray-log-copy-selection, #xray-log-download, #xray-log-load-more)',
+    );
+    await expect(actions).toHaveCount(3);
+
+    const appearance = await actions.evaluateAll((buttons) => buttons.map((button) => {
+      const style = getComputedStyle(button);
+      return {
+        borderTopWidth: style.borderTopWidth,
+        backgroundColor: style.backgroundColor,
+        borderRadius: style.borderTopLeftRadius,
+      };
+    }));
+
+    for (const action of appearance) {
+      expect(action.borderTopWidth).toBe('1px');
+      expect(action.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+      expect(Number.parseFloat(action.borderRadius)).toBeGreaterThan(0);
+    }
+  });
+
   test('Xray logs use the compact operator header in desktop and mobile layouts', async ({ page }) => {
     await openLogs(page, 'dark', { width: 1440, height: 900 });
 

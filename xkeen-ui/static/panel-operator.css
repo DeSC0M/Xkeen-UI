@@ -5282,11 +5282,19 @@ body.panel-page #view-xray-logs .xk-log-filter-bar {
 }
 
 body.panel-page #view-xray-logs .xk-log-filter-bar #xray-log-filter-clear {
+  display: inline-grid;
+  place-items: center;
   width: var(--op-control-h);
   min-width: var(--op-control-h);
   padding: 0;
   border: 1px solid var(--op-border) !important;
   border-radius: var(--op-control-radius) !important;
+}
+
+body.panel-page #view-xray-logs .xk-log-filter-bar #xray-log-filter-clear .xk-action-icon {
+  width: 16px;
+  height: 16px;
+  margin: 0;
 }
 
 body.panel-page #view-xray-logs .xray-log-controls {
@@ -5366,7 +5374,21 @@ body.panel-page .xray-line-menu {
   box-shadow: var(--op-shadow-float) !important;
 }
 
-body.panel-page #view-xray-logs .dt-log-menu-panel .dt-log-btn,
+body.panel-page #view-xray-logs #xray-log-more .dt-log-menu-panel > .dt-log-btn {
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 8px;
+  border-color: var(--op-border) !important;
+  border-radius: 5px !important;
+  background: var(--op-surface) !important;
+  text-align: left;
+}
+
+body.panel-page #view-xray-logs #xray-log-more .dt-log-menu-panel > .dt-log-btn:hover {
+  background: var(--op-surface-3) !important;
+}
+
 body.panel-page .xray-line-menu .dt-log-btn {
   justify-content: flex-start;
   width: 100%;
