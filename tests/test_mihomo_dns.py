@@ -534,7 +534,6 @@ def test_build_enabled_config_adds_recommended_fake_ip_profile_by_default():
         "https://geohide.ru/dns-query",
         "quic://dns.comss.one",
         "https://dns.alidns.com/dns-query",
-        "https://xbox-dns.ru/dns-query",
         "https://cloudflare-dns.com/dns-query#Заблок. сервисы&name-cert-verify=cloudflare-dns.com",
         "https://dns.google/dns-query#Заблок. сервисы&name-cert-verify=dns.google",
         "tls://8.8.8.8#Заблок. сервисы&name-cert-verify=dns.google",
@@ -547,7 +546,7 @@ def test_build_enabled_config_adds_recommended_fake_ip_profile_by_default():
         "      - 77.88.8.8\n"
         "      - 77.88.8.1\n"
         "    'rule-set:category-ai@domain':\n"
-        "      - 'https://xbox-dns.ru/dns-query'\n"
+        "      - 'https://dns.comss.one/dns-query'\n"
     ) in content
 
 
