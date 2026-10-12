@@ -1418,6 +1418,11 @@
           "lazy_features": []
         },
         {
+          "path": "static/js/features/module_manager/render.js",
+          "globals": [],
+          "lazy_features": []
+        },
+        {
           "path": "static/js/features/devtools/happ_decryptor.js",
           "globals": [],
           "lazy_features": []
