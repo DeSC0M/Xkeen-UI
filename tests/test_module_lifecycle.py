@@ -183,6 +183,18 @@ def test_available_uses_installed_release_and_exposes_only_stage83_actions(tmp_p
     assert all(item["update_available"] is False for item in modules.values())
 
 
+def test_available_calls_every_known_module_by_its_name(tmp_path):
+    # The signed catalog speaks in ids only; the names are this build's own.
+    service, _ = make_service(make_panel(tmp_path), make_release())
+
+    modules = {item["id"]: item for item in service.available()["modules"]}
+
+    assert "name" not in make_release().catalog["modules"][0]
+    assert modules["tool.terminal"]["name"] == "Терминал и команды"
+    assert modules["tool.terminal"]["description"].startswith("PTY")
+    assert all(item.get("name") for item in modules.values())
+
+
 def test_available_never_offers_install_for_absent_repair_only_editor(tmp_path):
     panel = make_panel(tmp_path, installed=("core",))
     service, _ = make_service(panel, make_release())

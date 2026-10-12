@@ -18,7 +18,13 @@ import uuid
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Mapping, Sequence
 
-from services.module_registry import EDITOR_VARIANTS, MODULE_IDS, ModuleRegistry, module_set_name
+from services.module_registry import (
+    EDITOR_VARIANTS,
+    MODULE_DEFINITIONS,
+    MODULE_IDS,
+    ModuleRegistry,
+    module_set_name,
+)
 from services.module_transactions.launcher import (
     ensure_restartable,
     launch,
@@ -666,11 +672,17 @@ class ModuleLifecycleService:
         except ModuleTransactionError as error:
             _raise_domain(error)
 
+        # The signed catalog speaks in ids only. What a module is called is
+        # known to this build; a module of a later release stays an id.
+        known = {definition.id: definition for definition in MODULE_DEFINITIONS}
         modules: list[dict[str, Any]] = []
         for raw_entry in snapshot.catalog.get("modules", []):
             entry = dict(raw_entry)
             module_id = str(entry.get("id") or "")
             installed = module_id in installed_ids
+            definition = known.get(module_id)
+            if definition is not None:
+                entry.update(name=definition.name, description=definition.description)
             entry.update(
                 installed=installed,
                 lifecycle_actions=_lifecycle_actions(module_id, installed),
