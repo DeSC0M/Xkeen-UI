@@ -272,9 +272,11 @@ test.describe('Module manager recovery and guards', () => {
     const controls = row.locator('.modules-row-actions');
     await expect(controls).toBeVisible();
     await expect(controls.getByRole('switch')).toBeVisible();
-    await expect(controls.getByRole('button', { name: 'Восстановить Mihomo' })).toBeVisible();
+    await expect(row.getByRole('button', { name: 'Восстановить Mihomo' })).toHaveCount(0);
+    await row.getByRole('button', { name: 'Развернуть Mihomo' }).click();
+    await expect(row.getByRole('button', { name: 'Восстановить Mihomo' })).toBeVisible();
     const geometry = await row.evaluate((element) => {
-      const body = element.querySelector('.modules-row-body').getBoundingClientRect();
+      const body = element.querySelector('.modules-module-toggle').getBoundingClientRect();
       const actions = element.querySelector('.modules-row-actions').getBoundingClientRect();
       return { bodyRight: body.right, actionsLeft: actions.left };
     });
@@ -1079,6 +1081,7 @@ test.describe('Module manager loading', () => {
     await expect(page.getByRole('heading', { name: 'Модули и обновления' })).toBeVisible();
     await expect(page.locator('.modules-summary')).toContainText('Xkeen UI 2.10.0');
     await expect(page.locator('.modules-row').first()).toContainText('Xkeen UI Core 1.0.0');
+    await page.getByRole('button', { name: 'Развернуть Mihomo' }).click();
     await expect(page.getByRole('button', { name: 'Восстановить Mihomo' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Удалить Mihomo' })).toBeVisible();
     expect(initialCalls.sort()).toEqual(['installed', 'status']);
@@ -1604,7 +1607,8 @@ test.describe('Editor variant choice', () => {
     });
 
     await page.goto('/modules');
-    const row = page.locator('.modules-row').filter({ hasText: 'Редакторы' });
+    const row = page.locator('.modules-module').filter({ hasText: 'Редакторы 1.0.0' });
+    await row.getByRole('button', { name: 'Развернуть Редакторы' }).click();
     const options = row.getByRole('group', { name: 'Вариант редакторов' }).getByRole('button');
     await expect(options).toHaveText(['Лёгкий', 'Стандартный', 'Расширенный']);
     await expect(options.nth(1)).toHaveAttribute('aria-pressed', 'true');
@@ -1636,7 +1640,8 @@ test.describe('Editor variant choice', () => {
     });
 
     await page.goto('/modules');
-    const row = page.locator('.modules-row').filter({ hasText: 'Редакторы' });
+    const row = page.locator('.modules-module').filter({ hasText: 'Редакторы 1.0.0' });
+    await row.getByRole('button', { name: 'Развернуть Редакторы' }).click();
     const options = row.getByRole('group', { name: 'Вариант редакторов' }).getByRole('button');
     await expect(options.nth(0)).toHaveAttribute('aria-pressed', 'true');
     await expect(options.nth(1)).toBeDisabled();
@@ -1746,6 +1751,7 @@ test.describe('A screen that is not drawn anew without a reason', () => {
     await page.route('**/api/modules/operations/plan', (route) => { planCalls += 1; return route.fulfill({ json: panelUpdatePlan }); });
     await page.goto('/modules');
     const toggle = page.getByRole('switch', { name: 'Включить Mihomo' });
+    await page.getByRole('button', { name: 'Развернуть Mihomo' }).click();
     await toggle.focus();
     await page.keyboard.press('Space');
     await expect.poll(() => Boolean(releaseSave)).toBe(true);

@@ -59,6 +59,10 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
   let refreshGeneration = 0;
   let drawnCards = null;
   let drawnStatus = null;
+  // The manager refreshes its snapshot after switches and lifecycle actions.
+  // Keep disclosure choices across those redraws without storing UI state on
+  // the router or losing the visible switch in the collapsed header.
+  const expandedModules = new Set();
 
   // An interrupted operation is over: its record is gone and the server
   // has nothing to recover. Only a failed undo leaves the tree to be put back.
@@ -180,6 +184,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
         onCheckUpdate: requestUpdateCheck,
         update: state.update,
         onEditorVariant: changeEditorVariant,
+        expandedModules,
       });
     } else {
       host.textContent = 'Загрузка модулей…';
