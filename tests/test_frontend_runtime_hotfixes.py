@@ -432,7 +432,7 @@ def test_xray_live_logs_card_uses_russian_visible_labels():
     logs_panel = panel.split('<div id="view-xray-logs"', 1)[1].split('<!-- Xray log: context modal -->', 1)[0]
 
     assert 'Логи Xray онлайн' in logs_panel
-    assert '<span class="dt-switch-label">Онлайн</span>' in logs_panel
+    assert '<span class="dt-switch-label">Автообновление</span>' in logs_panel
     assert '<span class="dt-log-interval-label">каждые</span>' in logs_panel
     assert '<span class="dt-switch-label">В конец</span>' in logs_panel
     assert "{{ op_icon('pause') }}<span class=\"xk-action-label\">Пауза</span>" in logs_panel

@@ -36,8 +36,8 @@
         "flask"
       ],
       "removable": false,
-      "unit_count": 538,
-      "size_bytes": 7233745,
+      "unit_count": 540,
+      "size_bytes": 7246836,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -49,7 +49,7 @@
         "frontend_feature": 30,
         "frontend_javascript": 37,
         "frontend_runtime": 2,
-        "frontend_test": 49,
+        "frontend_test": 51,
         "frontend_ui": 17,
         "stylesheet": 6,
         "template": 32
@@ -86,7 +86,7 @@
       ],
       "removable": true,
       "unit_count": 137,
-      "size_bytes": 3831397,
+      "size_bytes": 3829212,
       "kind_counts": {
         "backend_route": 13,
         "backend_service": 20,
@@ -3868,7 +3868,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_frontend_runtime_hotfixes.py",
-      "size_bytes": 141825,
+      "size_bytes": 141841,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -10465,7 +10465,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/panel_operator_stage4_logs.spec.mjs",
-      "size_bytes": 10300,
+      "size_bytes": 15485,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -10682,6 +10682,24 @@
     {
       "module_id": "core",
       "kind": "frontend_test",
+      "path": "e2e/ssh_profiles_modal_layout.spec.mjs",
+      "size_bytes": 1518,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_test",
       "path": "e2e/standalone_pages_lazy_monaco.spec.mjs",
       "size_bytes": 2991,
       "depends_on": [],
@@ -10740,6 +10758,24 @@
       "kind": "frontend_test",
       "path": "e2e/subscriptions_pause.spec.mjs",
       "size_bytes": 26016,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_test",
+      "path": "e2e/terminal_quick_commands_menu.spec.mjs",
+      "size_bytes": 4279,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11310,7 +11346,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/panel-operator.css",
-      "size_bytes": 747215,
+      "size_bytes": 749348,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11328,7 +11364,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/styles.css",
-      "size_bytes": 896470,
+      "size_bytes": 896430,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -18619,7 +18655,7 @@
       "module_id": "engine.xray",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/xray_logs.js",
-      "size_bytes": 197900,
+      "size_bytes": 195461,
       "depends_on": [
         "core",
         "tool.editor"
@@ -18892,7 +18928,7 @@
       "module_id": "engine.xray",
       "kind": "template",
       "path": "xkeen-ui/templates/panel/screens/xray_logs.html",
-      "size_bytes": 10072,
+      "size_bytes": 10326,
       "depends_on": [
         "core",
         "tool.editor"
