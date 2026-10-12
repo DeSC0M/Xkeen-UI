@@ -36,12 +36,12 @@
         "flask"
       ],
       "removable": false,
-      "unit_count": 540,
-      "size_bytes": 7266237,
+      "unit_count": 541,
+      "size_bytes": 7307449,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
-        "backend_service": 74,
+        "backend_service": 75,
         "backend_test": 247,
         "configuration": 10,
         "frontend_bundle": 9,
@@ -416,7 +416,7 @@
       "module_id": "core",
       "kind": "app_runtime",
       "path": "xkeen-ui/app_factory.py",
-      "size_bytes": 35461,
+      "size_bytes": 35957,
       "depends_on": [
         "engine.mihomo",
         "engine.xray",
@@ -465,7 +465,7 @@
       "module_id": "core",
       "kind": "app_runtime",
       "path": "xkeen-ui/run_server.py",
-      "size_bytes": 8170,
+      "size_bytes": 8481,
       "depends_on": [
         "tool.terminal",
         "engine.mihomo"
@@ -524,6 +524,7 @@
         "flask"
       ],
       "environment_variables": [
+        "XKEEN_UI_LOCAL_DEMO",
         "XKEEN_UI_PORT",
         "XKEEN_WS_ERROR"
       ],
@@ -533,7 +534,7 @@
       "module_id": "core",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/__init__.py",
-      "size_bytes": 21183,
+      "size_bytes": 21311,
       "depends_on": [
         "tool.files",
         "engine.xray",
@@ -1935,6 +1936,26 @@
     {
       "module_id": "core",
       "kind": "backend_service",
+      "path": "xkeen-ui/services/local_module_demo.py",
+      "size_bytes": 1970,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask"
+      ],
+      "environment_variables": [
+        "XKEEN_UI_LOCAL_DEMO"
+      ],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "backend_service",
       "path": "xkeen-ui/services/log_filter.py",
       "size_bytes": 1927,
       "depends_on": [],
@@ -2080,7 +2101,7 @@
       "module_id": "core",
       "kind": "backend_service",
       "path": "xkeen-ui/services/module_lifecycle.py",
-      "size_bytes": 49657,
+      "size_bytes": 53852,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -2287,7 +2308,7 @@
       "module_id": "core",
       "kind": "backend_service",
       "path": "xkeen-ui/services/module_transactions/plan.py",
-      "size_bytes": 33841,
+      "size_bytes": 34493,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -2298,7 +2319,9 @@
         "python3",
         "flask"
       ],
-      "environment_variables": [],
+      "environment_variables": [
+        "XKEEN_UI_LOCAL_DEMO"
+      ],
       "removable": false
     },
     {
@@ -5105,7 +5128,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_module_lifecycle.py",
-      "size_bytes": 32278,
+      "size_bytes": 33139,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -5116,7 +5139,9 @@
         "python3",
         "flask"
       ],
-      "environment_variables": [],
+      "environment_variables": [
+        "XKEEN_UI_LOCAL_DEMO"
+      ],
       "removable": false
     },
     {
@@ -8751,7 +8776,7 @@
       "module_id": "core",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/module_manager/controller.js",
-      "size_bytes": 25306,
+      "size_bytes": 25594,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -8775,7 +8800,7 @@
       "module_id": "core",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/module_manager/render.js",
-      "size_bytes": 33697,
+      "size_bytes": 38285,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -10193,7 +10218,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/modules_manager.spec.mjs",
-      "size_bytes": 116172,
+      "size_bytes": 116739,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11328,7 +11353,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/modules-manager.css",
-      "size_bytes": 17085,
+      "size_bytes": 44241,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],

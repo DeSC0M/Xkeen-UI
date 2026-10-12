@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import uuid
 from dataclasses import asdict, dataclass
@@ -150,7 +151,21 @@ def read_panel_version(panel_root: Path) -> str:
 
     # Imported here, not at the top: the package contract loads the signature
     # library, and undoing an interrupted operation at boot must not need it.
-    from services.module_package_contract import ModulePackageContractError, validate_semver
+    try:
+        from services.module_package_contract import ModulePackageContractError, validate_semver
+    except ModuleNotFoundError as error:
+        # The local visual-preview environment intentionally has no router
+        # signing stack.  Keep read-only BUILD.json inspection available there.
+        if error.name != "cryptography" or os.environ.get("XKEEN_UI_LOCAL_DEMO") != "1":
+            raise
+
+        class ModulePackageContractError(ValueError):
+            pass
+
+        def validate_semver(value: str, _field: str) -> str:
+            if re.fullmatch(r"0|[1-9]\d*\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?", value):
+                return value
+            raise ModulePackageContractError("invalid semantic version")
 
     try:
         build = json.loads((Path(panel_root) / "BUILD.json").read_text(encoding="utf-8"))

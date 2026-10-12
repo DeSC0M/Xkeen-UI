@@ -160,6 +160,7 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
     from .utils import create_utils_blueprint
     from .xkeen_lists import create_xkeen_lists_blueprint
     from services import panel_service
+    from services.local_module_demo import enabled as local_module_demo_enabled
     from services.module_lifecycle import ModuleLifecycleService
 
     def lifecycle_active_engines() -> frozenset[str]:
@@ -182,6 +183,7 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
         # процесс панели и оборвал бы клиентам интернет.
         restart_cmd=panel_service.panel_restart_command(),
         restart_panel=lambda source: panel_service.restart_panel(source),
+        local_demo=local_module_demo_enabled(),
     )
     app.extensions["xkeen.module_lifecycle"] = lifecycle_service
 

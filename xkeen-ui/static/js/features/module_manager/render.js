@@ -1,3 +1,5 @@
+import { iconHtml } from '../../ui/operator_icons.js';
+
 function node(tag, className, text) {
   const element = document.createElement(tag);
   if (className) element.className = className;
@@ -29,6 +31,32 @@ const ACTION_LABELS = {
   'panel-update': 'Обновить панель', 'panel-rollback': 'Откатить панель',
   'profile-transition': 'Применить профиль',
 };
+
+const MODULE_ICONS = {
+  core: 'settings',
+  'engine.xray': 'tools',
+  'tool.editor': 'edit',
+  'tool.terminal': 'terminal',
+  'tool.files': 'folder-add',
+  'tool.backups': 'archive',
+  'integration.happ': 'subscriptions',
+  'tool.advanced-diagnostics': 'statistics',
+};
+
+function moduleIcon(moduleId) {
+  const icon = node('span', 'modules-module-icon');
+  icon.setAttribute('aria-hidden', 'true');
+  if (moduleId === 'engine.mihomo') {
+    const image = document.createElement('img');
+    image.className = 'modules-mihomo-mark';
+    image.src = '/static/icons/mihomo-cat.svg';
+    image.alt = '';
+    icon.append(image);
+  } else {
+    icon.innerHTML = iconHtml(MODULE_ICONS[moduleId] || 'catalog', 'modules-module-icon-svg');
+  }
+  return icon;
+}
 
 // Each next variant holds everything of the one before it.
 const EDITOR_VARIANTS = [
@@ -173,8 +201,19 @@ function copyCommand(command, button) {
 }
 
 function actionButton(operation, moduleId, label, onPlan, disabled) {
-  const button = node('button', 'btn-secondary', label);
+  const shortLabel = moduleId && ['repair', 'remove'].includes(operation)
+    ? (operation === 'repair' ? 'Восстановить' : 'Удалить')
+    : label;
+  const button = node('button', `btn-secondary modules-action modules-action-${operation}`, shortLabel);
+  const icon = operation === 'repair' ? 'restore' : operation === 'remove' ? 'trash' : null;
+  if (icon) {
+    button.replaceChildren();
+    button.insertAdjacentHTML('afterbegin', iconHtml(icon, 'modules-action-icon'));
+    button.append(document.createTextNode(shortLabel));
+  }
   button.type = 'button';
+  button.setAttribute('aria-label', label);
+  button.title = label;
   button.dataset.operation = operation;
   if (moduleId) button.dataset.moduleId = moduleId;
   button.disabled = disabled;
@@ -479,16 +518,23 @@ export function renderInstalled(host, snapshot, onToggle, onPlan = () => {}, bus
   onCheckUpdate = null,
   update = null,
   onEditorVariant = null,
+  expandedModules = new Set(),
 } = {}) {
   host.replaceChildren();
   const summary = node('section', 'modules-summary card');
-  summary.append(node('h2', '', 'Панель и профиль'));
-  appendPanelIdentity(summary, snapshot);
-  appendModuleSets(summary, snapshot);
-  if (snapshot.restart_required || canRestart) summary.append(node('p', 'modules-warning', 'Требуется перезапуск'));
+  const summaryIntro = node('div', 'modules-summary-intro');
+  summaryIntro.append(node('span', 'modules-section-kicker', 'Состояние панели'));
+  summaryIntro.append(node('h2', '', 'Панель и профиль'));
+  summary.append(summaryIntro);
+  const summaryIdentity = node('div', 'modules-summary-identity');
+  appendPanelIdentity(summaryIdentity, snapshot);
+  appendModuleSets(summaryIdentity, snapshot);
+  summary.append(summaryIdentity);
+  const summaryControls = node('div', 'modules-summary-controls');
+  if (snapshot.restart_required || canRestart) summaryControls.append(node('p', 'modules-warning', 'Требуется перезапуск'));
   const panelActions = node('div', 'modules-card-actions');
   if (snapshot.lifecycle?.available === false) {
-    summary.append(node('p', 'modules-alert', describeLifecycleFailure(snapshot.lifecycle)));
+    summaryControls.append(node('p', 'modules-alert', describeLifecycleFailure(snapshot.lifecycle)));
   } else {
     panelActions.append(actionButton('panel-update', null, ACTION_LABELS['panel-update'], onPlan, busy));
     if (snapshot.previous_version?.available) panelActions.append(actionButton('panel-rollback', null, ACTION_LABELS['panel-rollback'], onPlan, busy));
@@ -501,24 +547,64 @@ export function renderInstalled(host, snapshot, onToggle, onPlan = () => {}, bus
     restart.addEventListener('click', onRestart);
     panelActions.append(restart);
   }
-  if (panelActions.childElementCount) summary.append(panelActions);
-  appendUpdateCheck(summary, update, {
+  if (panelActions.childElementCount) summaryControls.append(panelActions);
+  appendUpdateCheck(summaryControls, update, {
     onCheckUpdate,
     busy,
     lifecycleAvailable: snapshot.lifecycle?.available,
   });
+  summary.append(summaryControls);
   host.append(summary);
   const list = node('section', 'modules-list card');
-  list.append(node('h2', '', 'Установленные модули'));
+  const listHeader = node('div', 'modules-list-header');
+  listHeader.append(
+    node('div', 'modules-list-heading'),
+    node('span', 'modules-list-count', `${Array.isArray(snapshot.modules) ? snapshot.modules.length : 0} модулей`),
+  );
+  listHeader.querySelector('.modules-list-heading').append(node('h2', '', 'Установленные модули'));
+  list.append(listHeader);
   const modules = Array.isArray(snapshot.modules) ? snapshot.modules : [];
   if (!modules.length) list.append(node('p', 'modules-empty', 'Установленных модулей нет.'));
   modules.forEach((item) => {
-    const row = node('article', 'modules-row');
+    const row = node('article', 'modules-row modules-module');
+    const header = node('div', 'modules-module-header');
+    const isCore = item.id === 'core';
+    const expanded = !isCore && expandedModules.has(item.id);
+    const title = node(isCore ? 'div' : 'button', isCore ? 'modules-module-static' : 'modules-module-toggle');
+    if (!isCore) title.type = 'button';
+    const details = node('div', 'modules-module-details');
+    details.id = `modules-details-${String(item.id).replace(/[^a-z0-9-]/gi, '-')}`;
+    details.hidden = !expanded;
+    if (!isCore) {
+      title.setAttribute('aria-expanded', String(expanded));
+      title.setAttribute('aria-label', `${expanded ? 'Свернуть' : 'Развернуть'} ${item.name || item.id}`);
+      title.setAttribute('aria-controls', details.id);
+      title.addEventListener('click', () => {
+        const nextExpanded = !expandedModules.has(item.id);
+        if (nextExpanded) expandedModules.add(item.id);
+        else expandedModules.delete(item.id);
+        title.setAttribute('aria-expanded', String(nextExpanded));
+        title.setAttribute('aria-label', `${nextExpanded ? 'Свернуть' : 'Развернуть'} ${item.name || item.id}`);
+        details.hidden = !nextExpanded;
+      });
+    } else {
+      details.remove();
+    }
+    const titleText = node('span', 'modules-module-title');
+    titleText.append(node('strong', '', moduleTitle(item)));
+    title.append(moduleIcon(item.id), titleText);
+    if (!isCore) {
+      const chevron = node('span', 'modules-module-chevron');
+      chevron.setAttribute('aria-hidden', 'true');
+      chevron.innerHTML = iconHtml('chevron-down', 'modules-module-chevron-svg');
+      title.append(chevron);
+    }
+    header.append(title);
     const body = node('div', 'modules-row-body');
-    body.append(node('h3', '', moduleTitle(item)));
     const editorVariant = item.id === 'tool.editor' && item.enabled === true && typeof onEditorVariant === 'function'
       ? EDITOR_VARIANTS.find((variant) => variant.id === snapshot.editor?.variant)
       : null;
+    if (!isCore && item.description) body.append(node('p', '', item.description));
     if (editorVariant) {
       // The row has no switch while an engine is on: say why.
       body.append(node('p', '', item.can_disable ? 'Редакторы конфигов.' : 'Редакторы конфигов. Нужны, пока включено хотя бы одно ядро.'));
@@ -526,10 +612,19 @@ export function renderInstalled(host, snapshot, onToggle, onPlan = () => {}, bus
       if (editorVariantsLocked(snapshot)) {
         body.append(node('p', 'modules-variant-hint', 'Стандартный и расширенный варианты докачивают файлы. На локальной сборке докачка недоступна.'));
       }
-    } else if (item.description) body.append(node('p', '', item.description));
-    row.append(body);
+    }
+    const facts = node('dl', 'modules-module-facts');
+    facts.append(node('dt', '', 'Идентификатор'), node('dd', '', item.id));
+    if (Array.isArray(item.dependencies) && item.dependencies.length) {
+      facts.append(node('dt', '', 'Зависимости'), node('dd', '', moduleList(item.dependencies, new Map(
+        (snapshot.modules || []).map((module) => [module.id, module.name || module.id]),
+      ))));
+    }
+    if (!isCore) {
+      body.append(facts);
+      details.append(body);
+    }
     const controls = node('div', 'modules-row-actions');
-    if (editorVariant) controls.append(editorVariantControl(snapshot, editorVariant, onEditorVariant, busy));
     if (item.can_disable) {
       const label = node('label', 'dt-switch xk-switch-bare modules-switch');
       const stateLabel = node(
@@ -550,11 +645,18 @@ export function renderInstalled(host, snapshot, onToggle, onPlan = () => {}, bus
       label.append(stateLabel, switchControl);
       controls.append(label);
     }
-    const actions = Array.isArray(item.lifecycle_actions) ? item.lifecycle_actions : [];
-    for (const action of actions) {
-      if (ACTION_LABELS[action]) controls.append(actionButton(action, item.id, `${ACTION_LABELS[action]} ${item.name || item.id}`, onPlan, busy));
+    if (!isCore && controls.childElementCount) header.append(controls);
+    row.append(header);
+    if (!isCore) {
+      const detailControls = node('div', 'modules-module-detail-actions');
+      if (editorVariant) detailControls.append(editorVariantControl(snapshot, editorVariant, onEditorVariant, busy));
+      const actions = Array.isArray(item.lifecycle_actions) ? item.lifecycle_actions : [];
+      for (const action of actions) {
+        if (ACTION_LABELS[action]) detailControls.append(actionButton(action, item.id, `${ACTION_LABELS[action]} ${item.name || item.id}`, onPlan, busy));
+      }
+      if (detailControls.childElementCount) details.append(detailControls);
+      row.append(details);
     }
-    if (controls.childElementCount) row.append(controls);
     list.append(row);
   });
   host.append(list);

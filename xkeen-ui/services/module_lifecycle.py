@@ -323,6 +323,7 @@ class ModuleLifecycleService:
         cancel_operation: Callable[..., None] = request_cancel,
         ensure_restartable_operation: Callable[[Path, Path], None] = ensure_restartable,
         archive_cache_dir: Path | None = None,
+        local_demo: bool = False,
     ) -> None:
         self.module_registry = module_registry
         self.panel_root = Path(panel_root)
@@ -340,6 +341,7 @@ class ModuleLifecycleService:
         self._ensure_restartable = ensure_restartable_operation
         self._archive_cache_dir = None if archive_cache_dir is None else Path(archive_cache_dir)
         self._archive_listing: tuple[tuple[Any, ...], dict[str, Any]] | None = None
+        self.local_demo = bool(local_demo)
         # One request downloads and reads the archive at a time; the others
         # wait and find it ready. While anybody does, nobody clears the cache.
         self._archive_download = threading.Lock()
@@ -519,6 +521,19 @@ class ModuleLifecycleService:
         whole panel: the page asks on every load and every few hours.
         """
 
+        if self.local_demo:
+            return {
+                "ok": True,
+                "source_version": "1.0.0",
+                "target_version": "1.0.0",
+                "update_available": False,
+                "requires_installer": False,
+                "min_updater": None,
+                "freshness": "local",
+                "stale_reason": None,
+                "fetched_at": time.time(),
+            }
+
         self._ensure_profile_settled("panel-update")
         kept_digest: str | None = None
         try:
@@ -669,6 +684,40 @@ class ModuleLifecycleService:
         }
 
     def available(self) -> dict[str, Any]:
+        if self.local_demo:
+            installed_ids = set(read_installed_modules(self.state_dir))
+            modules = []
+            for definition in MODULE_DEFINITIONS:
+                installed = definition.id in installed_ids
+                modules.append(
+                    {
+                        "id": definition.id,
+                        "version": definition.version,
+                        "channel": "local",
+                        "panel_api": "1",
+                        "module_api": "1",
+                        "min_core": "1.0.0",
+                        "architectures": ["local"],
+                        "requires": list(definition.dependencies),
+                        "conflicts": list(definition.conflicts),
+                        "requires_restart": definition.requires_restart,
+                        "name": definition.name,
+                        "description": definition.description,
+                        "installed": installed,
+                        "lifecycle_actions": _lifecycle_actions(definition.id, installed),
+                        "update_available": False,
+                    }
+                )
+            return {
+                "ok": True,
+                "release_version": "1.0.0",
+                "catalog_url": "local://module-demo",
+                "fetched_at": time.time(),
+                "freshness": "local",
+                "stale_reason": None,
+                "modules": modules,
+            }
+
         version, _architecture, _client, snapshot = self._release_context()
         try:
             installed_ids = read_installed_modules(self.state_dir)
@@ -1001,9 +1050,45 @@ class ModuleLifecycleService:
 
     def plan(self, operation: str, module_id: str | None = None) -> dict[str, Any]:
         normalized_operation, _normalized_module = self._validate_operation(operation, module_id)
+        if self.local_demo:
+            return self._local_demo_plan(normalized_operation, _normalized_module)
         self._ensure_profile_settled(normalized_operation)
         _plan, payload = self._plan_and_payload(operation, module_id)
         return payload
+
+    def _local_demo_plan(self, operation: str, module_id: str | None) -> dict[str, Any]:
+        """Return a safe, deterministic plan so confirmation dialogs are testable."""
+
+        installed_ids = list(read_installed_modules(self.state_dir))
+        applicable = operation not in {"panel-update", "panel-rollback"}
+        blockers = (
+            [{"code": "panel_version_current", "message": "Локальная демонстрационная сборка уже актуальна."}]
+            if operation == "panel-update"
+            else []
+        )
+        raw = json.dumps(
+            {"operation": operation, "module_id": module_id, "installed": installed_ids},
+            sort_keys=True,
+        ).encode("utf-8")
+        return {
+            "ok": True,
+            "scope": "module" if module_id else "panel",
+            "operation": operation,
+            "module_id": module_id,
+            "version": "1.0.0",
+            "source_version": "1.0.0",
+            "target_version": "1.0.0",
+            "target_profile": None,
+            "files_add": [],
+            "files_remove": [],
+            "required_free_bytes": 0,
+            "restart_required": False,
+            "installed_after": installed_ids,
+            "dependency_diff": {"requires": [], "missing": [], "conflicts": [], "required_by": []},
+            "blockers": blockers,
+            "applicable": applicable,
+            "plan_id": hashlib.sha256(raw).hexdigest(),
+        }
 
     def _ensure_profile_settled(self, operation: str) -> None:
         # Going back puts the installer records back as they were, a pending
@@ -1033,6 +1118,24 @@ class ModuleLifecycleService:
                 "plan_id must be a lowercase SHA-256 digest",
                 status=400,
             )
+
+        if self.local_demo:
+            return {
+                "ok": True,
+                "operation_id": f"local-demo-{int(time.time())}",
+                "status": {
+                    "ok": True,
+                    "operation_id": f"local-demo-{int(time.time())}",
+                    "operation": operation,
+                    "module_id": module_id,
+                    "step": "committed",
+                    "result": "committed",
+                    "error_code": None,
+                    "error": None,
+                    "log": [],
+                    "restart_required": False,
+                },
+            }
 
         if not self.restart_cmd:
             # Every operation ends with a restart of the panel. Without a
