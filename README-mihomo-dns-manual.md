@@ -315,7 +315,7 @@ dns:
     - 'https://geohide.ru/dns-query'
     - 'quic://dns.comss.one'
     - 'https://dns.alidns.com/dns-query'
-    - 'https://xbox-dns.ru/dns-query'
+    - 'https://dns.comss.one/dns-query'
     - 'https://cloudflare-dns.com/dns-query#<ИМЯ_ГРУППЫ>&name-cert-verify=cloudflare-dns.com'
     - 'https://dns.google/dns-query#<ИМЯ_ГРУППЫ>&name-cert-verify=dns.google'
     - 'tls://8.8.8.8#<ИМЯ_ГРУППЫ>&name-cert-verify=dns.google'
@@ -325,7 +325,7 @@ dns:
       - 77.88.8.8
       - 77.88.8.1
     'rule-set:category-ai@domain':
-      - 'https://xbox-dns.ru/dns-query'
+      - 'https://dns.comss.one/dns-query'
 ```
 
 ### 6.1. Диапазон Fake-IP

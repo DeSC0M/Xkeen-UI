@@ -109,7 +109,6 @@ DEFAULT_FAKE_IP_NAMESERVERS = (
     "https://geohide.ru/dns-query",
     "quic://dns.comss.one",
     "https://dns.alidns.com/dns-query",
-    "https://xbox-dns.ru/dns-query",
 )
 DEFAULT_FAKE_IP_ROUTED_NAMESERVERS = (
     ("https://cloudflare-dns.com/dns-query", "cloudflare-dns.com"),
@@ -119,7 +118,7 @@ DEFAULT_FAKE_IP_ROUTED_NAMESERVERS = (
 )
 DEFAULT_FAKE_IP_DNS_POLICY = {
     "rule-set:category_ru@domain": DEFAULT_FAKE_IP_BOOTSTRAP,
-    "rule-set:category-ai@domain": ("https://xbox-dns.ru/dns-query",),
+    "rule-set:category-ai@domain": ("https://dns.comss.one/dns-query",),
 }
 # The Xray assistant lets the operator choose public, local and direct DNS
 # servers.  Mihomo has the same primitives, but expresses them as
