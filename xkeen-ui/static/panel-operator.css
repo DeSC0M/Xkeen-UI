@@ -16642,7 +16642,7 @@ body.panel-page .xkeen-cm-help-drawer {
   right: 18px;
   border: 1px solid var(--op-border) !important;
   border-radius: var(--op-radius) !important;
-  background: var(--op-surface) !important;
+  background: #dbe5f2 !important;
   box-shadow: var(--op-shadow-float) !important;
   color: var(--op-text) !important;
 }
@@ -23475,4 +23475,68 @@ body.panel-page #ssh-modal :is(#ssh-add-btn, #ssh-delete-selected-btn, #ssh-expo
 
 body.panel-page #ssh-modal :is(#ssh-add-btn, #ssh-delete-selected-btn, #ssh-export-btn, #ssh-import-btn, #ssh-copy-preview-btn, #ssh-run-preview-btn) .xk-action-icon {
   margin: 0;
+}
+
+/* Mihomo DNS form switches use the same compact operator primitive as UI
+ * Settings. The modal used to override it with a larger blue control. */
+body.panel-page #mihomo-dns-modal :is(.mihomo-dns-geodata-toggle, .mihomo-dns-option-switch) {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: auto !important;
+  min-height: 18px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--op-muted);
+}
+
+body.panel-page #mihomo-dns-modal :is(.mihomo-dns-geodata-toggle, .mihomo-dns-option-switch) .dt-switch-slider {
+  box-sizing: border-box;
+  width: 30px;
+  min-width: 30px;
+  height: 16px;
+  border: 1px solid var(--op-border-strong) !important;
+  border-radius: 8px;
+  background: var(--op-surface-3) !important;
+  box-shadow: none !important;
+}
+
+body.panel-page #mihomo-dns-modal :is(.mihomo-dns-geodata-toggle, .mihomo-dns-option-switch) .dt-switch-slider::after {
+  top: 1px;
+  left: 1px;
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 50%;
+  background: #dbe5f2 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+body.panel-page #mihomo-dns-modal :is(.mihomo-dns-geodata-toggle, .mihomo-dns-option-switch) input:checked + .dt-switch-slider {
+  border-color: var(--op-accent-border) !important;
+  background: var(--op-accent) !important;
+}
+
+body.panel-page #mihomo-dns-modal :is(.mihomo-dns-geodata-toggle, .mihomo-dns-option-switch) input:checked + .dt-switch-slider::after {
+  transform: translateX(14px) !important;
+  background: #fff !important;
+}
+
+body.panel-page #mihomo-dns-modal :is(.mihomo-dns-geodata-toggle, .mihomo-dns-option-switch) .dt-switch-label {
+  color: var(--op-muted) !important;
+  font-size: calc(10.5px * var(--xk-font-scale, 1));
+  font-weight: 560;
+}
+
+html[data-theme="light"] body.panel-page #mihomo-dns-modal :is(.mihomo-dns-geodata-toggle, .mihomo-dns-option-switch) .dt-switch-slider {
+  background: #e4e8ee !important;
+  border-color: #aeb7c5 !important;
+}
+
+html[data-theme="light"] body.panel-page #mihomo-dns-modal :is(.mihomo-dns-geodata-toggle, .mihomo-dns-option-switch) .dt-switch-slider::after {
+  background: #ffffff !important;
 }
