@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.support.shared_build import build_once
+from tests.support.shared_build import build_once, drop_additions, tree_state
 
 ROOT =Path(__file__).resolve().parents[1]
 APP_DIR = ROOT / "xkeen-ui"
@@ -80,7 +80,6 @@ TIMING_TEST_FILES = frozenset(
 SPLIT_TEST_FILES = frozenset(
     {
         "test_installer_profiles",
-        "test_modular_panel_ownership_map",
         "test_modular_panel_release_builder",
         "test_module_transactions_cli",
         "test_module_transactions_install_state",
@@ -174,19 +173,38 @@ def isolated_runtime_env(tmp_path, monkeypatch):
     }
 
 
-@pytest.fixture
-def panel_source_root(tmp_path) -> Path:
-    """Copy the Git-visible panel source without local router runtime state."""
+@pytest.fixture(scope="module")
+def _panel_source_copy(tmp_path_factory):
+    root = _copy_panel_source(tmp_path_factory.mktemp("panel-source") / "panel-source")
+    return root, tree_state(root)
 
-    return _copy_panel_source(tmp_path / "panel-source")
+
+@pytest.fixture
+def panel_source_root(_panel_source_copy) -> Path:
+    """Copy the Git-visible panel source without local router runtime state.
+
+    Копия одна на файл тестов, но каждый тест получает её нетронутой: всё, что
+    он дописал, после него убирается само. Если тест изменил или удалил то, что
+    в копии уже лежало, он падает, а копия делается заново — до соседнего теста
+    порча не доходит.
+    """
+
+    root, original = _panel_source_copy
+    yield root
+    if not drop_additions(root, original):
+        shutil.rmtree(root)
+        _copy_panel_source(root)
+        original.clear()
+        original.update(tree_state(root))
+        pytest.fail("the test changed or removed files of the panel source copy; the copy was rebuilt")
 
 
 @pytest.fixture(scope="session")
 def shared_panel_source_root(tmp_path_factory) -> Path:
     """The same copy, made once per run, for tests that only read the tree.
 
-    Копия — это 30 МБ и семь сотен файлов на тест. Тест, который в дерево
-    что-то дописывает, берёт свою через `panel_source_root`.
+    Копия — это 30 МБ и семь сотен файлов. Тест, который в дерево что-то
+    дописывает, берёт `panel_source_root`.
     """
 
     def build(base: Path) -> None:

@@ -36,13 +36,13 @@
         "flask"
       ],
       "removable": false,
-      "unit_count": 541,
-      "size_bytes": 7314965,
+      "unit_count": 542,
+      "size_bytes": 7317756,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
         "backend_service": 75,
-        "backend_test": 247,
+        "backend_test": 248,
         "configuration": 10,
         "frontend_bundle": 9,
         "frontend_entrypoint": 3,
@@ -6829,6 +6829,24 @@
     {
       "module_id": "core",
       "kind": "backend_test",
+      "path": "tests/test_shared_build_support.py",
+      "size_bytes": 2585,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "backend_test",
       "path": "tests/test_shell_access_policy.py",
       "size_bytes": 4166,
       "depends_on": [
@@ -7781,7 +7799,7 @@
       "module_id": "core",
       "kind": "configuration",
       "path": "pyproject.toml",
-      "size_bytes": 153,
+      "size_bytes": 359,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
