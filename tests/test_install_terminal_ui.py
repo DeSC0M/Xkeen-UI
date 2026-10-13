@@ -168,8 +168,20 @@ def test_pty_client_treats_panel_restart_as_a_reconnect():
     pty = (ROOT / "xkeen-ui/static/js/terminal/pty.js").read_text(encoding="utf-8")
 
     assert "Соединение с панелью прервано. Переподключаюсь" in pty
-    assert "if (state.ptyWs === ws) state.ptyWs = null;" in pty
+    assert "if (state.ptyWs === ws) {" in pty
+    assert "state.ptyWs = null;" in pty
     assert "emit('pty:error', { message: 'websocket error' })" not in pty
+
+
+def test_pty_client_queues_keystrokes_until_the_reconnected_pty_is_ready():
+    pty = (ROOT / "xkeen-ui/static/js/terminal/pty.js").read_text(encoding="utf-8")
+
+    assert "const MAX_PENDING_INPUT_BYTES = 64 * 1024;" in pty
+    assert "function queuePendingInput(data)" in pty
+    assert "function flushPendingInput(ws)" in pty
+    assert "state.ptyWsReady = ws;" in pty
+    assert "flushPendingInput(ws);" in pty
+    assert "state.ptyQueueInputUntilReady ? queuePendingInput(data) : false" in pty
 
 
 def test_profile_status_uses_sticky_safe_output_while_progress_ticker_is_active():
