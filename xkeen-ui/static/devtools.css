@@ -76,6 +76,7 @@ details.dt-collapsible:not([open]) .dt-collapsible-icon {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+  padding-top: 4px;
 }
 
 .dt-panel-channel-trigger,
@@ -86,7 +87,9 @@ details.dt-collapsible:not([open]) .dt-collapsible-icon {
   background: var(--op-surface-2, #1a202b);
   color: var(--op-text, #e5e7eb);
   font: inherit;
-  padding: 3px 8px;
+  min-height: 22px;
+  padding: 2px 7px;
+  line-height: 1.25;
 }
 
 .dt-panel-channel-trigger:hover,

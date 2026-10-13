@@ -646,6 +646,12 @@ body.devtools-page :is(.dt-badge, .dt-pill, .dt-custom-css-badge, .dt-log-badge,
   font-weight: 600;
 }
 
+body.devtools-page :is(.dt-panel-channel-trigger, .dt-panel-channel-options button) {
+  min-height: 22px !important;
+  padding: 2px 7px !important;
+  line-height: 1.25;
+}
+
 /* Вердикт — это сообщение, а не бейдж: поля вокруг текста одинаковые, кегль как у
    остального текста карточки. Правило идёт отдельно от бейджей выше, чтобы коды
    репозитория, канала и ветки остались мелкими; вес селекторов равный, решает порядок. */

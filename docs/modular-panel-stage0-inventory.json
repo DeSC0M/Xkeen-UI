@@ -37,7 +37,7 @@
       ],
       "removable": false,
       "unit_count": 543,
-      "size_bytes": 7342455,
+      "size_bytes": 7343882,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -359,7 +359,7 @@
       ],
       "removable": true,
       "unit_count": 23,
-      "size_bytes": 503010,
+      "size_bytes": 503038,
       "kind_counts": {
         "backend_route": 1,
         "backend_service": 7,
@@ -10081,7 +10081,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/devtools_panel_summary.spec.mjs",
-      "size_bytes": 8486,
+      "size_bytes": 9680,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11365,7 +11365,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/devtools-operator.css",
-      "size_bytes": 43667,
+      "size_bytes": 43839,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11383,7 +11383,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/devtools.css",
-      "size_bytes": 75821,
+      "size_bytes": 75882,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -20377,7 +20377,7 @@
       "module_id": "tool.advanced-diagnostics",
       "kind": "template",
       "path": "xkeen-ui/templates/devtools.html",
-      "size_bytes": 51506,
+      "size_bytes": 51534,
       "depends_on": [
         "core"
       ],
@@ -30611,7 +30611,7 @@
         },
         "tool.advanced-diagnostics": {
           "unit_count": 23,
-          "size_bytes": 503010
+          "size_bytes": 503038
         }
       },
       "next_stage": "Этапы 4, 5 и 6."

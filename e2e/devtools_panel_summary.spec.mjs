@@ -106,6 +106,26 @@ test.describe('DevTools panel summary', () => {
     // Карточка справочная: команд обновления в ней нет, плашка ошибки спрятана.
     await expect(card.locator('#dt-panel-channel')).toHaveCount(1);
     await expect(card.locator('[data-channel]')).toHaveCount(2);
+    await expect(card.locator('[data-channel="stable"]')).toHaveText('Стабильный канал');
+    await expect(card.locator('[data-channel="prerelease"]')).toHaveText('Предрелизный канал');
+    const channelGeometry = await card.locator('.dt-panel-channel-cell').evaluate((cell) => {
+      const trigger = cell.querySelector('.dt-panel-channel-trigger');
+      const repo = document.querySelector('#dt-panel-repo');
+      if (!trigger || !repo) return null;
+      const triggerStyle = getComputedStyle(trigger);
+      const repoStyle = getComputedStyle(repo);
+      return {
+        channelCellPaddingTop: Number.parseFloat(getComputedStyle(cell).paddingTop),
+        triggerHeight: trigger.getBoundingClientRect().height,
+        repoHeight: repo.getBoundingClientRect().height,
+        triggerMinHeight: triggerStyle.minHeight,
+        repoMinHeight: repoStyle.minHeight,
+      };
+    });
+    expect(channelGeometry).not.toBeNull();
+    expect(channelGeometry.channelCellPaddingTop).toBeGreaterThanOrEqual(4);
+    expect(channelGeometry.triggerHeight).toBeLessThanOrEqual(channelGeometry.repoHeight + 2);
+    expect(channelGeometry.triggerMinHeight).toBe('22px');
     await expect(page.locator('#dt-panel-status')).toBeHidden();
     await expect(page.locator('#xk-update-link')).toHaveCount(0);
   });
