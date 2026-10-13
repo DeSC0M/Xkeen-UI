@@ -1,7 +1,8 @@
 # Этап 8: менеджер официальных модулей
 
-**Статус:** подэтапы 8.0–8.5 закрыты; 8.6 «UI менеджера» реализован и ожидает итоговой проверки<br>
-**Дата:** 7 октября 2026 года
+**Статус:** подэтапы 8.0–8.6 закрыты; 8.7 имеет готовую основу,
+но Notification center и rollout 8.8 не закрыты<br>
+**Дата:** 13 октября 2026 года
 
 Этот документ фиксирует implementation contract для Этапа 8. Полный roadmap
 остаётся в [`README-modular-panel-plan.md`](../README-modular-panel-plan.md).
@@ -16,9 +17,11 @@
 Ed25519-ключ; catalog и archive проверяются до установки.
 
 Это оставляет текущий единый архив пригодным для bootstrap, обновления core,
-смены профиля и полного rollback, но позволяет обновлять один модуль без
-перезаписи остальных. JSON в репозитории, GitHub Pages, OCI registry и
-произвольные repos не входят в MVP.
+смены профиля и полного rollback, но позволяет делать module-only
+install/repair/remove без перезаписи остальных. Независимого module update на
+новую версию сейчас нет: module package соответствует installed panel release.
+JSON в репозитории, GitHub Pages, OCI registry и произвольные repos не входят
+в MVP.
 
 ## Границы ответственности
 
@@ -101,7 +104,8 @@ health -> commit/rollback`.
 ### Panel update
 
 Единый signed panel archive обновляет весь managed payload текущего профиля.
-Lifecycle plan требует строго более новую stable-версию; apply повторно
+Lifecycle plan требует строго более новую версию выбранного официального
+канала (`stable`/`prerelease`); apply повторно
 проверяет catalog, descriptor, archive и plan digest. До замены journal
 сохраняет каждый затрагиваемый файл и state. После health-check фиксируются
 новая версия и target ownership либо выполняется полный rollback scope
@@ -120,12 +124,16 @@ restart блокируется `profile_transition_required`. Нельзя ма�
 
 ## Уведомления
 
-Core выполняет тихий poll раз в сутки и поддерживает ручную проверку. Последний
-успешный каталог кэшируется; offline и stale показываются явно, но не блокируют
-панель. Новая или обновлённая версия создаёт локальное уведомление с module id,
-версией, размером и требованием restart. `seen/dismissed/snoozed` не позволяют
-повторять одно и то же уведомление. Пакет скачивается только после явного
-действия пользователя.
+**Текущее состояние:** verified catalog cache с TTL 24 часа, ручной
+panel update-check, update note и per-tab panel badge уже есть. TTL не
+запускает scheduler.
+
+**Осталось в 8.7:** core-owned daily poll, общий список уведомлений,
+`seen/dismissed/snoozed`, deduplication по типу/module/version/channel,
+multi-tab/channel reconciliation и module-asset notifications. `/available`
+читает exact-release catalog и поддерживает install/repair/remove, а не
+независимый module update. Ни poll, ни notification не должны скачивать
+archive; явный plan может проверить archive, Apply запускает изменение.
 
 ## Подэтапы и контрольные точки
 
@@ -135,25 +143,30 @@ Core выполняет тихий poll раз в сутки и поддержи
 4. **8.3 Updater:** закрыт; preflight, safe unpack, backup, journal, detached runner и rollback.
 5. **8.4 API:** закрыт; list/plan/apply/status/cancel/recovery/restart и operation log. Контракт: [`modular-panel-stage8-lifecycle-api.md`](modular-panel-stage8-lifecycle-api.md).
 6. **8.5 Panel/profile:** закрыт; signed panel update, physical profile transition и scoped rollback. Контракт: [`modular-panel-stage8-panel-profile.md`](modular-panel-stage8-panel-profile.md).
-7. **8.6 UI:** core-owned `/modules` реализован: installed/available, update badge, dependency diff, progress и restart; итоговая проверка ожидается. Контракт: [`modular-panel-stage8-manager-ui.md`](modular-panel-stage8-manager-ui.md).
-8. **8.7 Notifications:** daily/manual poll, deduplication и stale/error state.
-9. **8.8 Recovery:** failure matrix, legacy migration, stable rollout и rollback runbook.
+7. **8.6 UI:** закрыт 13 октября 2026 года; core-owned `/modules` реализует installed/available, update badge, dependency diff, progress, recovery и restart. Контракт: [`modular-panel-stage8-manager-ui.md`](modular-panel-stage8-manager-ui.md).
+8. **8.7 Notifications:** не закрыт; catalog/check/badge готовы, daily poll и notification state/UI отсутствуют.
+9. **8.8 Recovery:** не закрыт; failure matrix/runbooks и автоматическое покрытие развиты, но сводный signed prerelease/device acceptance и stable rollout не подтверждены отчётом.
 
 Каждая контрольная точка должна иметь тесты и ручной recovery сценарий до
 перехода к следующей. Marketplace, arbitrary repos, delta updates и scripts
 намеренно не входят в критерий MVP.
 
-## Acceptance checklist
+## Acceptance checklist — automatic vs rollout evidence
 
-- [ ] каталог с неизвестным ключом, изменённым checksum или неподдерживаемым API отклонён;
-- [ ] module-only update изменяет только выбранный модуль;
+Наличие автоматического теста не означает подписанную device/rollout-приёмку.
+Источники покрытия и оставшаяся matrix:
+[`modular-panel-remaining-stages-audit.md`](modular-panel-remaining-stages-audit.md).
+
+- [x] каталог с неизвестным ключом, изменённым checksum или неподдерживаемым API отклонён;
+- [x] module-only install/repair/remove изменяют только выбранный модуль и state;
 - [x] panel update сохраняет profile/config/state;
 - [x] profile transition использует отдельный transaction path;
 - [x] crash после restart автоматически возвращает предыдущую версию;
-- [ ] offline использует кэш и не блокирует старт;
+- [x] transport-only offline fallback использует проверенный кэш и не блокирует installed state;
 - [ ] новая версия модуля даёт одно dismissible уведомление;
-- [ ] архив с traversal/symlink/script hook не устанавливается;
-- [ ] stable release можно воспроизвести из CI и откатить документированной командой.
+- [x] архив с traversal/symlink/script hook не устанавливается;
+- [ ] core-owned Notification center сохраняет local notification state без archive download;
+- [ ] signed prerelease/device matrix и stable rollout подтверждены отчётом.
 
 Для локального воспроизводимого прогона:
 

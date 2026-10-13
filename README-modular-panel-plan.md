@@ -1,8 +1,9 @@
 # План модульной архитектуры панели Xkeen UI
 
 **Статус:** Этапы 0, 1, 2, 3, 3R, 3R.1, 4, 5, 6 и 7, а также
-подэтапы 8.0–8.5 закрыты; реализация 8.6 ожидает итоговой проверки<br>
-**Дата:** 7 октября 2026 года
+подэтапы 8.0–8.6 закрыты; следующим остаётся 8.7 Notification center.
+8.7, 8.8, Этапы 9 и 10 частично подготовлены, но не закрыты<br>
+**Дата:** 13 октября 2026 года
 **Область:** облегчение панели, профили установки и официальный каталог модулей
 
 **Текущий прогресс:** Этапы 0–3 и 3R, подэтапы 4.1, 4.2 и 4.3 закрыты;
@@ -18,7 +19,14 @@ manifest и единый `page_context`. Подэтап 4.6 закрепил ser
 Контракты и границы — закрыт 3 октября 2026 года. Подэтап 8.1 — Упаковка и
 release assets — также закрыт 3 октября 2026 года. Подэтап 8.2 — Trust и
 клиент каталога — закрыт 5 октября 2026 года. Подэтапы 8.3 и 8.4 закрыты 6 октября 2026 года. Подэтап 8.5 — Panel update и profile transition — закрыт
-7 октября 2026 года; реализация подэтапа 8.6 ожидает итоговой проверки.
+7 октября 2026 года; подэтап 8.6 — UI менеджера — закрыт 13 октября 2026 года.
+
+**Сверка оставшихся этапов с кодом: 13 октября 2026 года.** Catalog cache,
+update-check, channel selection, badge, recovery engine, профильные тесты и
+lazy loading уже реализованы. Они не означают готовность Notification center,
+завершённый rollout или доказанное снижение RSS/времени запуска.
+Карта доказательств и пробелов:
+[`docs/modular-panel-remaining-stages-audit.md`](docs/modular-panel-remaining-stages-audit.md).
 
 Этап 8 подготовлен как отдельный план после завершения Этапов 6 и 7. Подэтап
 8.0 закрыл статические контракты упаковки и обновления, 8.1 выпустил
@@ -1623,9 +1631,10 @@ immutable-хранилище артефактов:
 
 `core` удалить нельзя.
 
-### Уведомления о новых модулях
+### Уведомления о новых модулях — целевой контракт 8.7
 
-Уведомления принадлежат core, а не advanced diagnostics:
+Будущий Notification center принадлежит core, а не advanced diagnostics.
+Ниже требования, а не описание уже работающего фонового сервиса:
 
 - тихий фоновый poll не чаще одного раза в сутки и ручная кнопка «Проверить
   обновления»;
@@ -1735,34 +1744,119 @@ DevTools справочная, сборку с `main` обновляют уст�
 план:
 `docs/superpowers/plans/2026-10-07-modular-panel-stage8-5-panel-profile.md`.
 
-#### 8.6. UI менеджера
+#### 8.6. UI менеджера — закрыт
+
+**Статус:** закрыт 13 октября 2026 года.
 
 Core-owned экран `/modules` реализует вкладки «Установленные» и «Доступные»,
 badge обновлений, diff зависимостей, явный Apply/Restart, progress/log,
 ошибку подписи/offline и recovery state. UI не импортирует advanced diagnostics.
-Подэтап 8.6 ожидает итоговой проверки; операторский контракт:
+Операторский контракт:
 [`docs/modular-panel-stage8-manager-ui.md`](docs/modular-panel-stage8-manager-ui.md).
+
+Подэтап 8.6 закрыт 13 октября 2026 года. Закрытие подтверждено targeted backend-тестами менеджера и Lifecycle API,
+browser-приёмкой `e2e/modules_manager.spec.mjs` вместе с проверкой ранней
+навигации и обновлением документационного guardrail для Stage 8. Следующий
+незакрытый подэтап Этапа 8 — 8.7 Notification center.
 
 #### 8.7. Notification center
 
-Добавить ежедневный/manual poll, локальные seen/dismissed записи, новую-
-модульную нотификацию и stale/error state. Не скачивать пакет до явного
-действия пользователя.
+**Статус:** частично реализована основа; Notification center не закрыт.
 
-Перед rollout добавлен отдельный выбор официального канала обновлений в
-DevTools: stable остаётся значением по умолчанию, Pre-release включается
-явно и ищет только опубликованные SemVer prerelease в GitHub Releases.
-Каталоги и архивы обоих каналов проходят одинаковую проверку подписи,
-размера, SHA-256 и владения файлами; кэш каналов разделён. Выбор канала
-не устанавливает пакеты и не заменяет задачи Notification center.
+**Уже реализовано и должно переиспользоваться:**
+
+- `services/module_catalog_client.py`: signed catalog, повторная проверка
+  кэша, TTL 24 часа, ограничение ручного refresh интервалом 5 минут и verified
+  stale fallback только при transport failure. TTL — срок годности при
+  запросе, **не ежедневный scheduler**.
+- `services/module_update_channel.py` и `/api/modules/update-channel`:
+  persisted stable/prerelease choice; stable по умолчанию. Каталоги каналов
+  хранятся отдельно, published SemVer prerelease выбирается явно; trust и
+  archive validation не ослаблены.
+- `POST /api/modules/panel/update-check`: проверка версии панели без загрузки
+  архива, `requires_installer`, `freshness`, `stale_reason`, `fetched_at`.
+  `/modules` имеет ручную проверку, DevTools запрашивает ответ с обычным TTL.
+- `features/module_manager/badge.js`: hint об обновлении **панели** в меню
+  и точка на его trigger; запись в `sessionStorage` текущей вкладки
+  согласуется с update-check/plan/status. Это не история уведомлений и не
+  `seen/dismissed/snoozed`; ключ badge пока не включает канал.
+- `/modules` показывает каталог и состояния offline/stale/error. Polling
+  операции раз в секунду относится к текущему runner, не к поиску релизов.
+
+**Осталось реализовать:**
+
+1. Core-owned источник и UI уведомлений, работающие без DevTools; определить
+   место входа, модель записей и API без второго updater.
+2. Тихую проверку не чаще раза в сутки независимо от открытия этих экранов,
+   с backoff/deduplication, без блокировки startup и без фоновой загрузки
+   archives. Ручную проверку связать с тем же источником/refresh policy.
+3. Persisted local `seen/dismissed/snoozed`, миграцию схемы, bounded retention
+   и синхронизацию вкладок. Идентичность записи: тип, `module_id`/panel,
+   версия и канал; переключение канала не должно показывать чужой hint.
+4. Различать новый официальный модуль, новую версию панели и каталог текущего
+   установленного release. Сейчас `/available` читает exact-release catalog,
+   возвращает `update_available=false`, а module lifecycle поддерживает
+   install/repair/remove, **не независимый module update**. Уведомление о
+   модуле будущего release не должно обещать установку без совместимой панели
+   и известного registry id.
+5. Показывать timestamp/stale/error, доступную версию, размер и restart
+   metadata; dependency diff получать через существующий server plan при
+   явном действии. Рендерить недоверенные строки только как текст.
+
+**Критерий закрытия:** daily/manual check, deduplication и локальное состояние
+проверены для reload/restart, нескольких вкладок, смены канала и offline;
+core-only UI не импортирует diagnostics; ни poll, ни badge не скачивают пакет.
+Явный запрос плана может скачать/проверить archive — текущий lifecycle так
+работает; только `Apply` запускает транзакцию. Запрет скачивания «до Apply»
+не соответствует существующему contract.
 
 #### 8.8. Матрица recovery и rollout
 
-Проверить подписи, path traversal, corrupt archive, disk full, missing deps,
-conflicts, active engine, crash после restart, module-only file diff, full
-panel rollback, profile transitions и offline catalog. Сначала испытать
-подписанный pre-release на явно выбранном тестовом канале, затем выпустить
-stable rollout с миграцией legacy layout и документированным rollback.
+**Статус:** recovery engine и большая часть автоматических проверок готовы;
+сводная эксплуатационная приёмка и rollout не закрыты.
+
+Не начинать эти проверки заново: acceptance matrix уже задана в
+`docs/modular-panel-stage8-contract.{json,md}`, а runbooks — в
+`docs/modular-panel-stage8-lifecycle-api.md` и
+`docs/modular-panel-stage8-panel-profile.md`. Есть:
+
+- trust/key/signature, API/architecture compatibility, checksum и archive
+  limits, traversal/symlink/hooks/ownership validation;
+- free-space, missing-dependency/conflict/active-engine blockers, отказ при
+  устаревшем плане или занятом lifecycle lock;
+- detached runner, journal, cancel до/после apply, health-check, interrupted
+  recovery и `rollback_failed` без потери диагностических файлов;
+- install/repair/remove с module-only file diff; panel update и physical
+  profile transition с full-scope rollback и сохранением state/config;
+- локальная previous-version copy, явный `panel-rollback` без сети,
+  восстановление окружения прежней версии и отказ от повреждённой/stale copy;
+- проверенный catalog cache и transport-only stale fallback;
+- UI progress/error/recovery/restart и blocked-action тесты менеджера.
+
+Эти проверки используют локальные деревья/archives, fake transport, runner
+hooks или browser API fixtures. Они не доказывают весь сценарий на Entware,
+реальный disk full, power loss, запуск внешнего proxy core или подписанный
+release на конкретном устройстве.
+
+**Осталось:**
+
+1. Дополнить существующую matrix колонками «тест/уровень покрытия», «код/UI
+   отказа», «изменённые файлы/state», «rollback/restart», «действие оператора»
+   и «результат на стенде». Не путать automatic rollback, interrupted recovery
+   и явный возврат на previous version.
+2. На отдельном стенде пройти signed prerelease: install/repair/remove,
+   panel update, profile transition, interrupted recovery, rollback и offline
+   с/без cache. Измерять место, сохранять логи и checksum пользовательских
+   конфигов; опасные fault injections не делать на рабочем роутере.
+3. Проверить legacy/full, оба minimal и custom, editor variants, отключённые
+   модули, отсутствующие optional tools и несовместимый `min_updater`.
+4. После 8.7 проверить доставку уведомлений без downloads; затем оформить
+   stable rollout, backup/restore инструкцию и stop/go критерии.
+
+**Критерий закрытия:** воспроизводимый отчёт с версией/архитектурой/профилем,
+signed asset identity, результатами всех обязательных строк и путём ручного
+recovery. Успех CI или единичный прогон `install.sh` через PTY не заменяет
+этот отчёт. Публикация stable — отдельное явное действие.
 
 ### Что сознательно отложено
 
@@ -1771,110 +1865,165 @@ stable rollout с миграцией legacy layout и документирова
 - delta/patch updates;
 - автоматическое обновление зависимостей;
 - install/uninstall shell hooks;
-- OCI registry и дополнительные update channels.
+- OCI registry и каналы, кроме уже поддерживаемых `stable`/`prerelease`.
 
 ### Критерий готовности
 
-Пользователь может безопасно установить, обновить, отключить или удалить
-официальный модуль Xkeen UI, получить уведомление о новой версии и
-восстановиться после ошибки. Обновление одного модуля не скачивает и не
-перезаписывает всю панель; обновление панели и смена профиля остаются
-отдельными транзакциями.
+Пользователь может безопасно установить/восстановить/отключить/удалить
+официальный модуль текущего panel release, обновить панель, применить physical
+profile transition, получить уведомление и восстановиться после ошибки.
+Module-only install/repair/remove не заменяют соседние модули; panel update,
+profile transition и panel rollback — отдельные full-scope операции.
+Независимые версии/module-update остаются вне текущей модели релиза и не
+должны подразумеваться в уведомлениях. Этап 8 в целом открыт до закрытия
+Notification center 8.7 и доказательной rollout-приёмки 8.8.
 
 ## Этап 9. Тестирование и миграции
 
-### Backend
+**Статус:** существенная часть тестовой базы и миграций реализована в Этапах
+1–8.6; этап открыт как интеграционная/profile release-приёмка.
 
-Добавить тесты на:
+### 9.1. Существующее покрытие — сохранить, не писать заново
 
-- реестр модулей;
-- миграции конфигурации;
-- зависимости;
-- конфликты;
-- Mihomo-only DNS guard и release при остановке;
-- запрет отключения активного core/engine с кодом `409`;
-- повреждённый `modules.json`;
-- неизвестную версию schema и rollback на старую панель;
-- `is_runtime_active()` против frozen runtime activation;
-- owner mapping для каждого Blueprint, scheduler и WS handler;
-- core-owned self-update, `core.log` и module manager;
-- `integration.happ` в Xray-only subscription flow;
-- Xray-only;
-- Mihomo-only;
-- Full;
-- отключённый terminal;
-- отключённый file manager;
-- недоступный PTY;
-- отсутствующий Mihomo;
-- ошибку инициализации модуля;
-- повторный запуск;
-- rollback.
+| Область | Что уже проверяется | Основные источники |
+| --- | --- | --- |
+| Registry и миграция state | missing state → legacy-full, schema v0 → v1, corrupt/future schema backup, dependencies, profile/editor state, frozen activation | `tests/test_module_registry.py`, `tests/test_modular_panel_stage3r1.py` |
+| Backend isolation | Xray/Mihomo-only gates, optional factory failure, core maintenance, DNS lifecycle, active-core guard и отсутствие half-registered модуля | `tests/test_module_backend_gates.py`, `tests/test_module_capabilities.py`, `tests/test_dns_guard.py` |
+| Профили и физические файлы | full/minimal/custom, повторная установка, source/build import closure, disabled state, сохранение пользовательских данных | `tests/test_installer_profiles.py`, `tests/test_installer_profile_frontend_closure.py`, `tests/test_physical_profile_request.py`, `tests/test_module_packages_over_installer_profiles.py` |
+| Lifecycle и rollback | plan/apply digest, conflicts/locks, free space, install/repair/remove, panel/profile scopes, cancel, health, crash recovery, previous-version rollback | `tests/test_module_lifecycle*.py`, `tests/test_module_transactions_*.py`, `tests/test_panel_profile_transactions.py`, `tests/test_panel_rollback_to_previous_version.py` |
+| Composition и frontend isolation | active-module navigation/roots, allow-listed imports, missing-root no-op, inactive API/WS, lazy editor/terminal/files | `tests/test_modular_panel_stage4_*.py`, `tests/test_modular_panel_stage5_frontend_contract.py`, `e2e/modular_panel_dynamic_loading.spec.mjs` |
+| Manager UI и navigation recovery | stale authority, progress/log, plan/confirmation, restart/recovery, state refresh, early Back, failed lazy load | `tests/test_module_manager_ui.py`, `e2e/modules_manager.spec.mjs`, `e2e/top_level_back_before_bundle_screens.spec.mjs`, `e2e/panel_module_load_recovery.spec.mjs` |
+| Installer/update hygiene | ownership, archive restrictions, `.gz`/stale assets cleanup, init recovery, pycache/environment recovery и PTY reconnect после self-update | `tests/test_installer_*.py`, `tests/test_python_pycache_recovery_contracts.py`, `tests/test_recovery_restores_environment.py`, `tests/test_ws_pty_replay.py` |
 
-### Frontend
+Это неодинаковые уровни доказательства: static contract, unit, реальное
+временное дерево файлов, subprocess и mocked browser API. Не считать каждый
+пункт сквозным испытанием установленного архива на роутере.
 
-Добавить E2E-проверки:
+### 9.2. Release/profile matrix и оставшиеся тесты
 
-- меню соответствует активным модулям;
-- неактивные бандлы не загружаются;
-- отключённый раздел не делает API-запросы;
-- Xray-only и Mihomo-only не загружают чужие screen/module roots;
-- Xray-only и Mihomo-only не регистрируют чужие API-вызовы;
-- переключение профиля требует перезапуск;
-- ошибка модуля не блокирует core;
-- старые установки сохраняют прежнюю навигацию.
+- Зафиксировать матрицу `legacy-full/full`, `xray-minimal`, `mihomo-minimal`,
+  `custom` (в том числе core-only) × editor `light/full/advanced` ×
+  installed/enabled/unavailable/failed state. `core-only` — тестовый/Custom
+  состав, не новый preset установщика.
+- Для каждой строки проверить clean install, повторное обновление,
+  Full ↔ Minimal, добавление/удаление optional tool, physical profile
+  transition и rollback. Enable/disable без удаления файлов, pending
+  physical profile request и применение профиля — разные сценарии.
+- Дополнить existing legacy/schema tests сквозной проверкой обновления
+  старого payload/state и возврата на прежнюю версию. Безопасный fallback
+  неизвестной schema не доказывает сохранение всей семантики downgrade.
+- Добавить тесты нового 8.7: daily/manual poll, локальное
+  `seen/dismissed/snoozed`, multi-tab/channel reconciliation, bounded state,
+  offline и отсутствие archive downloads от уведомлений.
+- Повторить lifecycle boundary в реальном API/runner/installed payload,
+  а не только `route.fulfill`-fixtures. Роутерные fault injections и rollout
+  evidence принадлежат 8.8; Этап 9 связывает их с regression matrix.
 
-### Установщик
+### 9.3. Команды и CI — текущее состояние и пробел
 
-Проверить:
+- `npm run test:py`: полный Python suite с отдельным timing-прогоном.
+  Linux CI выполняет `not timing` через xdist, затем timing через 4 worker.
+- `npm run frontend:verify`: build плюс проверка raw/bridge manifests.
+- `npm run e2e`: весь Playwright suite на текущем fixture-профиле.
+  Это **не** автоматический прогон всех профилей.
+- `e2e/modular_panel_dynamic_loading.spec.mjs` поддерживает
+  `XKEEN_E2E_MODULE_PROFILE=full|xray-minimal|mihomo-minimal|core-only`;
+  каждый профиль нужно запускать отдельно с уникальными port/auth state.
+- `.github/workflows/ci.yml` сейчас запускает Python, frontend verify, Go
+  tests/cross-build и четыре Mihomo Clash E2E specs. Manager/profile/notification
+  acceptance не включены в отдельную CI matrix, полный `npm run e2e` не
+  запускается. Archive workflow выполняет Python/build/package validation,
+  а не всю browser-приёмку.
 
-- чистую установку;
-- обновление старой Full-установки;
-- установку Xray Minimal;
-- установку Mihomo Minimal;
-- переход Minimal → Full;
-- отключение модуля;
-- восстановление после прерванной установки;
-- обновление с удалением отключённых файлов и старых `.gz`;
-- недостаток свободного места;
-- повреждённый архив;
-- неверную или неподписанную подпись release asset;
-- несовместимую версию API.
+Нужно добавить обязательный модульный acceptance slice/profile matrix в CI,
+а полный browser suite оставить доступным отдельным воспроизводимым запуском.
+Не требовать от minimal-профиля Full-only сценариев.
+
+### 9.4. Установщик и граница доверия
+
+Локальные проверки выбора/копирования профиля, нехватки места, quarantine,
+старых `.gz` и прерывания уже есть. Остаётся связать их с `install.sh`,
+реальным init/Entware окружением и сохранением конфигураций в отчёте 8.8.
+
+Не смешивать два пути доставки:
+
+- `tar -xzf xkeen-ui-routing.tar.gz; sh install.sh` — ручной bootstrap/update
+  из доверенного пользователю архива; сам `install.sh` не проверяет Ed25519
+  подпись signed catalog;
+- Lifecycle API — official signed catalog, archive size/SHA-256/API/ownership
+  validation перед изменениями.
+
+Проверки неверной подписи/несовместимого API относятся к signed lifecycle,
+а не обещают такую проверку произвольного вручную распакованного tarball.
+
+**Критерий закрытия Этапа 9:** обязательная matrix имеет актуальные
+автоматические результаты и ссылки на стендовые evidence; legacy migration,
+8.7 и 8.8 не оставляют обязательных дыр. Skipped/unsupported проверки
+отмечены явно, а не выданы за успешный прогон.
 
 ## Этап 10. Оптимизация размера и запуска
 
-После функциональной стабилизации измерить:
+**Статус:** оптимизационная основа реализована, runtime-метрики и доказанная
+эффективность на целевых профилях не закрыты.
 
-- размер установочного архива;
-- размер распакованной панели;
-- время запуска сервиса;
-- RSS-память;
-- количество импортированных Python-модулей;
-- количество frontend-запросов;
-- размер initial HTML;
-- размер загруженного JS;
-- количество фоновых задач.
+### 10.1. Что уже выполнено
 
-Baseline до оптимизации снимается в пункте 3R.1.6 — до подэтапа 4.3
-(исходно планировался параллельно с 3R, но не был снят). Для `legacy-full/full`,
-Xray Minimal и Mihomo Minimal:
+- Structural baseline initial HTML закрыт в 3R.1.6 30 сентября 2026 года:
+  `docs/modular-panel-stage3r1-initial-html-baseline.{json,md}` и
+  `scripts/generate_modular_panel_stage3r1_baseline.py`. Он привязан к
+  историческому commit и описывает composed template/DOM, **не** RSS,
+  Network или HTTP startup. Старое утверждение «baseline не был снят» неверно.
+- Registry gates, active-module server composition и lazy bundles/editor
+  variants уже реализованы. Проверки неактивных views/API/WS и deferred
+  xterm stylesheet есть; заново внедрять эту архитектуру не требуется.
+- Profile installer физически отбирает payload/import closure;
+  packaging предсжимает статику, frontend sync/installer удаляют stale assets.
+- `services/memory_guard.py` и runtime memory-budget settings уже ограничивают
+  pressure/caches. Наличие guard не доказывает уменьшение idle RSS.
+- Stage 0 inventory и `module-sizes.json` считают canonical UTF-8 bytes
+  учтённых source/test units; это metadata, **не** размер распакованного
+  профиля, flash allocation или runtime memory.
 
-- RSS после старта;
-- время до готовности HTTP и frontend shell;
-- количество импортированных Python-модулей;
-- зарегистрированные Blueprint, scheduler и WS handlers;
-- размер initial HTML;
-- network requests и загруженные JS-бандлы.
+### 10.2. Воспроизводимый runtime baseline — ещё нужен
 
-Оптимизацию выполнять по результатам измерений, а не только по размеру архива.
+В tracked scripts нет единого harness/отчёта по всем этим измерениям.
+Снять на одном роутере и одинаковом release/нагрузке для `legacy-full/full`,
+`xray-minimal`, `mihomo-minimal` и репрезентативного custom/core-only:
 
-Ожидаемые эффекты:
+| Метрика | Что измерять |
+| --- | --- |
+| Доставка/flash | размер bootstrap tarball, module assets, selected installed tree: logical bytes и `du`; user state, quarantine и previous-version copy отдельно |
+| Startup | restart → HTTP ready → frontend shell ready; cold/warm несколько повторов |
+| Backend | idle/peak RSS панели и detached runner отдельно, импортированные Python-модули, фактически активные Blueprint/scheduler/WS handlers |
+| Browser | server-rendered initial HTML/DOM, actual transferred и decoded JS/CSS bytes, requests/WS; cold/warm cache и первое открытие editor/terminal/files |
+| Lifecycle | peak RSS/свободное место/время при plan/apply/profile transition/rollback, включая backup/archive cache |
 
-- Xray-only не запускает Mihomo-код;
-- Mihomo-only не загружает Xray UI;
-- terminal и file manager не занимают ресурсы без установки;
-- Monaco и дополнительные редакторные зависимости грузятся лениво;
-- меньше initial HTML и JS;
-- проще диагностика ошибок.
+Записывать hardware/архитектуру, firmware/Entware/Python, commit/build,
+profile/installed/enabled/editor variant, cache state, активный proxy core и
+пользовательские данные. Не публиковать секреты конфигураций.
+Исторический template baseline не переснимать поверх прежнего: сравнивать
+с ним только сопоставимые structural показатели.
+
+### 10.3. Оптимизировать измеренные остаточные связи
+
+- Отделить реальные startup imports от просто сохранённых файлов. Общий
+  bootstrap пока удерживает часть Mihomo/shared source chunks в минимальных
+  профилях через static dependency closure (описано в Stage 7 runbook).
+  Не обещать, что Xray-only вообще не читает ни одной общей Mihomo-зависимости.
+- Runtime production manifest ведёт через thin bridge к canonical source
+  entrypoints. Размер raw Vite chunks сам по себе не равен размеру JS,
+  фактически полученного браузером. Проверять обе цепочки manifests/импортов,
+  не переходить на иной runtime graph только ради меньшего tarball.
+- Оценить общие CSS/vendor assets, Python caches/фоновые workers и peak
+  transaction storage. Один bootstrap архив всё ещё содержит все профили:
+  minimal уменьшает installed tree, но не автоматически download tarball.
+- Оптимизацию не проводить ценой import closure, offline assets, trust,
+  crash recovery, memory guard или runtime capability gates.
+
+**Критерий закрытия Этапа 10:** опубликованы сопоставимые baseline/after
+таблицы и команды; целевые budgets заданы по измерениям; minimal выигрывает
+по relevant startup/RSS/flash/network без функциональной регрессии.
+Числа threshold не выдумывать до стендовых замеров.
 
 ## 7. Рекомендуемый порядок реализации
 
@@ -1896,11 +2045,12 @@ Xray Minimal и Mihomo Minimal:
 12. динамическая загрузка frontend-модулей;
 13. разделение редакторов и вариантов editor light/full;
 14. профили установщика, состав пакета и безопасное обновление;
-15. core-owned менеджер официальных модулей;
-16. удаление/установка и rollback;
-17. тестирование профилей и миграций;
-18. baseline-метрики и оптимизация;
-19. документация и релиз.
+15. core-owned менеджер и transaction/lifecycle UI (8.0–8.6 закрыты);
+16. Notification center (8.7): переиспользовать catalog/check/badge;
+17. recovery/device prerelease acceptance (8.8) и regression/profile matrix
+    (Этап 9) — вести согласованно, без дублирования тестов;
+18. текущие runtime baseline-метрики, затем измеренная оптимизация (Этап 10);
+19. документированный stable rollout после обязательной приёмки.
 
 Нельзя начинать с удаления файлов или с marketplace. Сначала должны появиться:
 
