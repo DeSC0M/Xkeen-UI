@@ -1,5 +1,7 @@
 import { test as base, expect } from '@playwright/test';
 
+import { withPanelServer } from './panel_server.mjs';
+
 
 // The application persists UI preferences server-side. Individual browser tests
 // may switch the editor backend or toggle schema help, but those preferences
@@ -74,6 +76,20 @@ function merge(baseValue, patchValue) {
 
 
 export const test = base.extend({
+  // One panel server per parallel worker: tests in different workers never
+  // share server-side state, so spec files can run side by side.
+  panelServer: [async ({ browser }, use, workerInfo) => {
+    await withPanelServer(browser, workerInfo.parallelIndex, use);
+  }, { scope: 'worker', timeout: 180_000 }],
+
+  baseURL: async ({ panelServer }, use) => {
+    await use(panelServer.baseURL);
+  },
+
+  storageState: async ({ panelServer }, use) => {
+    await use(panelServer.storageState);
+  },
+
   page: async ({ page }, use) => {
     let settings = clone(DEFAULT_UI_SETTINGS);
 

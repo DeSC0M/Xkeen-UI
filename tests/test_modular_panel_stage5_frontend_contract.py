@@ -188,12 +188,11 @@ def test_e2e_fixture_seeds_module_profile_before_flask_starts():
 
 
 def test_playwright_auth_state_is_profile_and_port_scoped():
-    config = (ROOT / "playwright.config.mjs").read_text(encoding="utf-8")
-    setup = (ROOT / "e2e" / "global-setup.mjs").read_text(encoding="utf-8")
+    server = (ROOT / "e2e" / "panel_server.mjs").read_text(encoding="utf-8")
 
-    assert "user-${E2E_PROFILE}-${E2E_PORT}.json" in config
-    assert "function e2eRunNamespace()" in setup
-    assert "user-${e2eRunNamespace()}.json" in setup
+    assert "function e2eRunNamespace(port)" in server
+    assert "return `${moduleProfile()}-${port}`;" in server
+    assert "user-${e2eRunNamespace(port)}.json" in server
 
 
 def test_restart_log_uses_page_runtime_and_module_ownership_before_opening_events_ws():

@@ -37,7 +37,7 @@
       ],
       "removable": false,
       "unit_count": 542,
-      "size_bytes": 7320271,
+      "size_bytes": 7317875,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -320,7 +320,7 @@
       ],
       "removable": true,
       "unit_count": 22,
-      "size_bytes": 316346,
+      "size_bytes": 316344,
       "kind_counts": {
         "backend_route": 1,
         "backend_service": 6,
@@ -3778,7 +3778,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_frontend_build_toolchain.py",
-      "size_bytes": 5610,
+      "size_bytes": 5039,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -4950,7 +4950,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_modular_panel_stage5_frontend_contract.py",
-      "size_bytes": 10441,
+      "size_bytes": 10378,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -7717,7 +7717,7 @@
       "module_id": "core",
       "kind": "configuration",
       "path": ".github/workflows/ci.yml",
-      "size_bytes": 4456,
+      "size_bytes": 3032,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -7759,7 +7759,7 @@
       "module_id": "core",
       "kind": "configuration",
       "path": "package.json",
-      "size_bytes": 3328,
+      "size_bytes": 3152,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -7777,7 +7777,7 @@
       "module_id": "core",
       "kind": "configuration",
       "path": "playwright.config.mjs",
-      "size_bytes": 1464,
+      "size_bytes": 1304,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -7789,8 +7789,6 @@
         "flask"
       ],
       "environment_variables": [
-        "XKEEN_E2E_AUTH_STATE",
-        "XKEEN_E2E_MODULE_PROFILE",
         "XKEEN_E2E_PORT"
       ],
       "removable": false
@@ -10216,7 +10214,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/modular_panel_dynamic_loading.spec.mjs",
-      "size_bytes": 7649,
+      "size_bytes": 7647,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -19480,7 +19478,7 @@
       "module_id": "integration.happ",
       "kind": "frontend_test",
       "path": "e2e/devtools_happ_decryptor.spec.mjs",
-      "size_bytes": 5800,
+      "size_bytes": 5798,
       "depends_on": [
         "core"
       ],

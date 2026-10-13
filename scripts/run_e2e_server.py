@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import _thread
 import os
 import json
+import runpy
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -151,10 +152,53 @@ def _ensure_dirs() -> None:
     _seed_runtime_fixture(profile, active_module_ids)
 
 
+def _exit_when_stdin_closes() -> None:
+    """Tie the server's life to the Playwright worker that started it.
+
+    The worker keeps our stdin open as a pipe.  It closes on a normal stop and
+    also when the worker is killed, so an interrupted run leaves no server
+    listening on the port.
+    """
+    try:
+        sys.stdin.buffer.read()
+    except Exception:
+        pass
+    os._exit(0)
+
+
+def _stop_gevent_closing_child_fds_twice() -> None:
+    """Work around a double close in gevent's Popen on Windows.
+
+    When the program cannot be started (the panel asks for ``pidof``, which
+    Windows does not have), gevent closes the child's descriptors once where
+    the launch failed and once more while cleaning up.  In between it yields,
+    another request opens a static file under the freed number, and the second
+    close cuts that response short.  The standard library marks the
+    descriptors as closed at this point; gevent's Windows path does not.
+    """
+    if os.name != "nt":
+        return
+    try:
+        from gevent import subprocess as gevent_subprocess
+    except ImportError:
+        return
+
+    execute_child = gevent_subprocess.Popen._execute_child
+
+    def _execute_child(self, *args, **kwargs):
+        try:
+            return execute_child(self, *args, **kwargs)
+        except BaseException:
+            self._closed_child_pipe_fds = True
+            raise
+
+    gevent_subprocess.Popen._execute_child = _execute_child
+
+
 def main() -> int:
     _ensure_dirs()
 
-    env = os.environ.copy()
+    env = os.environ
     # This process is exclusively a test server. Override potentially inherited
     # desktop/router variables so no E2E request can reach mutable user state.
     env["HOME"] = str(HOME_DIR)
@@ -181,8 +225,21 @@ def main() -> int:
     env["MIHOMO_ROOT"] = str(MIHOMO_DIR)
     env["PATH"] = str(BIN_DIR) + os.pathsep + str(env.get("PATH") or "")
 
-    cmd = [sys.executable, str(RUN_SERVER)]
-    return subprocess.call(cmd, cwd=str(REPO_ROOT), env=env)
+    if env.get("XKEEN_E2E_EXIT_ON_STDIN_EOF") == "1":
+        # Started before run_server.py lets gevent patch threading, so this
+        # stays a real OS thread and its blocking read cannot stall the server.
+        _thread.start_new_thread(_exit_when_stdin_closes, ())
+
+    _stop_gevent_closing_child_fds_twice()
+
+    # The server runs in this very process.  A separate child would outlive us
+    # on Windows: Node kills its direct children with the worker, but not
+    # their descendants, and the orphan would keep the port.
+    os.chdir(REPO_ROOT)
+    sys.argv = [str(RUN_SERVER)]
+    sys.path.insert(0, str(RUN_SERVER.parent))
+    runpy.run_path(str(RUN_SERVER), run_name="__main__")
+    return 0
 
 
 if __name__ == "__main__":

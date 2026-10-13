@@ -1,44 +1,36 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const E2E_PORT = Number(process.env.XKEEN_E2E_PORT || '18188');
-const BASE_URL = process.env.E2E_BASE_URL || `http://127.0.0.1:${E2E_PORT}`;
-const E2E_PROFILE = String(process.env.XKEEN_E2E_MODULE_PROFILE || 'full').replace(/[^a-z0-9_-]/gi, '-');
-const AUTH_STATE = process.env.XKEEN_E2E_AUTH_STATE || `e2e/.auth/user-${E2E_PROFILE}-${E2E_PORT}.json`;
+// Every worker starts its own panel server on XKEEN_E2E_PORT + its index and
+// signs in there (e2e/fixtures.mjs), so spec files run side by side. An
+// external server (E2E_BASE_URL) is shared and stays serial; `--workers=1`
+// gives the serial run for the local servers.
+const SERIAL = !!process.env.E2E_BASE_URL;
 
 export default defineConfig({
   testDir: './e2e',
   testMatch: ['**/*.spec.mjs'],
-  timeout: 30_000,
+  // Side-by-side workers share the CPU, so the same test takes longer than
+  // in a serial run; the limits leave room for that.
+  timeout: SERIAL ? 30_000 : 45_000,
   expect: {
-    timeout: 10_000,
+    timeout: SERIAL ? 10_000 : 15_000,
   },
   fullyParallel: false,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  // The E2E runtime fixture is shared between tests. Keep runs serial so
-  // remaining filesystem-backed scenarios cannot race one another.
-  workers: 1,
+  // Tests of one file share a server and run in order; only files are spread
+  // across workers.
+  workers: SERIAL ? 1 : 4,
   reporter: [
     ['list'],
     ['html', { open: 'never' }],
   ],
   use: {
-    baseURL: BASE_URL,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
-    storageState: AUTH_STATE,
+    // Recording every test costs a noticeable share of CPU in a parallel
+    // run; the trace and the screenshot already describe a failure.
+    video: 'off',
     viewport: { width: 1440, height: 960 },
   },
-  globalSetup: './e2e/global-setup.mjs',
-  webServer: process.env.E2E_BASE_URL
-    ? undefined
-    : {
-        command: 'node scripts/run_e2e_server.mjs',
-        url: `${BASE_URL}/setup`,
-        reuseExistingServer: !process.env.CI,
-        timeout: 120_000,
-      },
   projects: [
     {
       name: 'chromium',

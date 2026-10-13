@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.mjs';
 
 // DevTools → «Утилита ссылок подписок». The API is mocked: the card must render the
 // three states from the approved mockup and drive install and link check.

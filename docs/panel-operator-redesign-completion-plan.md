@@ -191,7 +191,7 @@
 
 - [ ] Полный `PYTHONPATH=. pytest -q`.
 - [ ] `npm run frontend:verify` и `npm run archive:user`/router archive smoke.
-- [ ] Полный Playwright: panel operator, stage 0–5, viewport scroll, top-level focus, DevTools, generator, DNS, diagnostics, diff и `npm run e2e:mihomo-clash`.
+- [ ] Полный Playwright: panel operator, stage 0–5, viewport scroll, top-level focus, DevTools, generator, DNS, diagnostics, diff и `npx playwright test mihomo_clash`.
 - [ ] Проверить frontend build manifest, generated icon sprite/inventory, Stage 0 inventory и git diff/checks.
 
 На реальном роутере:
@@ -305,7 +305,7 @@ PYTHONPATH=. pytest -q tests/test_panel_operator_stage0_contract.py \
 npm run frontend:verify
 
 # Mihomo targeted E2E
-npm run e2e:mihomo-clash
+npx playwright test mihomo_clash
 
 # Full regression
 PYTHONPATH=. pytest -q
