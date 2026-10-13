@@ -9,7 +9,9 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
+from tests.support.shared_build import build_once
+
+ROOT =Path(__file__).resolve().parents[1]
 APP_DIR = ROOT / "xkeen-ui"
 
 if str(APP_DIR) not in sys.path:
@@ -176,6 +178,30 @@ def isolated_runtime_env(tmp_path, monkeypatch):
 def panel_source_root(tmp_path) -> Path:
     """Copy the Git-visible panel source without local router runtime state."""
 
+    return _copy_panel_source(tmp_path / "panel-source")
+
+
+@pytest.fixture(scope="session")
+def shared_panel_source_root(tmp_path_factory) -> Path:
+    """The same copy, made once per run, for tests that only read the tree.
+
+    Копия — это 30 МБ и семь сотен файлов на тест. Тест, который в дерево
+    что-то дописывает, берёт свою через `panel_source_root`.
+    """
+
+    def build(base: Path) -> None:
+        root = _copy_panel_source(base / "panel-source")
+        # Первое чтение карты владения подгружает из дерева установщик профиля
+        # и оставляет рядом кэш байткода. Пусть он появится до того, как дерево
+        # начнут обходить все потоки разом.
+        from scripts import build_modular_panel_release
+
+        build_modular_panel_release.build_module_ownership(root)
+
+    return build_once(tmp_path_factory, "shared-panel-source", build) / "panel-source"
+
+
+def _copy_panel_source(destination_root: Path) -> Path:
     result = subprocess.run(
         ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", "xkeen-ui"],
         cwd=ROOT,
@@ -185,7 +211,6 @@ def panel_source_root(tmp_path) -> Path:
     if result.returncode != 0:
         raise RuntimeError("cannot list the Git-visible panel source")
 
-    destination_root = tmp_path / "panel-source"
     for raw_path in result.stdout.split(b"\0"):
         if not raw_path:
             continue

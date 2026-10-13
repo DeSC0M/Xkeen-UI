@@ -68,8 +68,8 @@ def test_every_file_belongs_to_exactly_one_module(panel_source_root: Path) -> No
     assert all(files == sorted(files) for files in data["modules"].values())
 
 
-def test_manager_screen_and_controller_are_core_owned(panel_source_root: Path) -> None:
-    ownership = _load_builder().build_module_ownership(panel_source_root)
+def test_manager_screen_and_controller_are_core_owned(shared_panel_source_root: Path) -> None:
+    ownership = _load_builder().build_module_ownership(shared_panel_source_root)
     for path in (
         "templates/modules.html",
         "static/modules-manager.css",
@@ -96,10 +96,10 @@ def test_map_contains_itself_and_full_frontend_manifests(panel_source_root: Path
     assert b"\r\n" not in path.read_bytes()
 
 
-def test_map_without_a_frontend_build_has_empty_manifests(panel_source_root: Path) -> None:
+def test_map_without_a_frontend_build_has_empty_manifests(shared_panel_source_root: Path) -> None:
     builder = _load_builder()
 
-    data = builder.build_ownership_map(panel_source_root)
+    data = builder.build_ownership_map(shared_panel_source_root)
 
     assert data["frontend"] == {"bridge": {}, "build": {}}
 

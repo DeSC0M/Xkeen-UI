@@ -12,11 +12,9 @@ from __future__ import annotations
 
 import importlib.util
 import json
-import os
 import re
 import shutil
 import sys
-import time
 from pathlib import Path
 
 import pytest
@@ -27,6 +25,7 @@ from services.module_transactions.journal import Journal
 from services.module_transactions.plan import build_plan
 from services.module_transactions.state import new_operation_id, read_status
 from tests.support.module_tx import DirectoryTransport, STATE_PATHS, sign_release_directory
+from tests.support.shared_build import build_once
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -105,30 +104,13 @@ def built(tmp_path_factory) -> Built:
     а собранное дерево и релиз никто из них не меняет.
     """
 
-    base = tmp_path_factory.getbasetemp()
-    if os.environ.get("PYTEST_XDIST_WORKER"):
-        base = base.parent
-    base = base / "real-tree-release"
-    ready, failed = base / "built.json", base / "failed"
     installer = _load("module_profile_install", PANEL / "scripts" / "module_profile_install.py")
-    try:
-        base.mkdir()
-    except FileExistsError:
-        deadline = time.monotonic() + 900
-        while not ready.is_file():
-            if failed.exists() or time.monotonic() > deadline:
-                pytest.fail("the shared release was not built by the worker that started it")
-            time.sleep(0.2)
-    else:
-        try:
-            draft = base / "built.json.tmp"
-            draft.write_text(json.dumps(_build_release(base, installer)), encoding="utf-8")
-            os.replace(draft, ready)
-        except BaseException:
-            failed.touch()
-            raise
-
-    data = json.loads(ready.read_text(encoding="utf-8"))
+    base = build_once(
+        tmp_path_factory,
+        "real-tree-release",
+        lambda base: (base / "built.json").write_text(json.dumps(_build_release(base, installer)), encoding="utf-8"),
+    )
+    data = json.loads((base / "built.json").read_text(encoding="utf-8"))
     built = Built()
     built.tree, built.dist, built.installer = Path(data["tree"]), Path(data["dist"]), installer
     built.keyring = {key_id: bytes.fromhex(key) for key_id, key in data["keyring"].items()}

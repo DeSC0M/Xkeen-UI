@@ -74,13 +74,13 @@ def test_engine_files_belong_to_core_for_the_profile_installer() -> None:
     assert installer.owner("module-ownership.json") == "core"
 
 
-def test_engine_files_belong_to_the_core_package(panel_source_root: Path) -> None:
+def test_engine_files_belong_to_the_core_package(shared_panel_source_root: Path) -> None:
     spec = importlib.util.spec_from_file_location("build_modular_panel_release", ROOT / "scripts" / "build_modular_panel_release.py")
     builder = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = builder
     spec.loader.exec_module(builder)
 
-    core = set(builder.build_module_ownership(panel_source_root)["core"])
+    core = set(builder.build_module_ownership(shared_panel_source_root)["core"])
 
     for path in ENGINE_FILES:
         assert path.relative_to(PANEL).as_posix() in core
