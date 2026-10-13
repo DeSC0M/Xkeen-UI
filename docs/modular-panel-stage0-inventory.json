@@ -37,7 +37,7 @@
       ],
       "removable": false,
       "unit_count": 543,
-      "size_bytes": 7341933,
+      "size_bytes": 7342455,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -212,7 +212,7 @@
       ],
       "removable": true,
       "unit_count": 49,
-      "size_bytes": 507050,
+      "size_bytes": 510348,
       "kind_counts": {
         "backend_route": 1,
         "backend_service": 3,
@@ -4235,7 +4235,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_install_terminal_ui.py",
-      "size_bytes": 14849,
+      "size_bytes": 15371,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -23563,7 +23563,7 @@
       "module_id": "tool.terminal",
       "kind": "backend_service",
       "path": "xkeen-ui/services/ws_pty.py",
-      "size_bytes": 24862,
+      "size_bytes": 25289,
       "depends_on": [
         "core"
       ],
@@ -23619,7 +23619,7 @@
       "module_id": "tool.terminal",
       "kind": "backend_test",
       "path": "tests/test_ws_pty_replay.py",
-      "size_bytes": 554,
+      "size_bytes": 832,
       "depends_on": [
         "core"
       ],
@@ -24597,7 +24597,7 @@
       "module_id": "tool.terminal",
       "kind": "frontend_terminal",
       "path": "xkeen-ui/static/js/terminal/pty.js",
-      "size_bytes": 20346,
+      "size_bytes": 22939,
       "depends_on": [
         "core"
       ],
@@ -30603,7 +30603,7 @@
         },
         "tool.terminal": {
           "unit_count": 49,
-          "size_bytes": 507050
+          "size_bytes": 510348
         },
         "tool.files": {
           "unit_count": 85,
