@@ -159,6 +159,9 @@ def _pty_build_env(shell_path: str) -> dict:
     env.setdefault("SHELL", shell_path or "/bin/sh")
     env.setdefault("USER", "root")
     env.setdefault("LOGNAME", env.get("USER") or "root")
+    # install.sh uses this marker to defer the restart that would otherwise
+    # tear down the WebSocket and the PTY while the installer is still active.
+    env["XKEEN_UI_PTY_SESSION"] = "1"
 
     for prof in ("/opt/etc/profile", "/etc/profile"):
         try:
@@ -767,7 +770,10 @@ def handle_pty_request(
             elif t == "close":
                 close_requested = True
                 break
-    except WebSocketError:
+    except (WebSocketError, OSError, EOFError):
+        # The panel may be restarted by the command running in this PTY.
+        # gevent-websocket reports that normal transport teardown using
+        # different exception types depending on where the close occurred.
         pass
     finally:
         if sess is not None and close_requested:

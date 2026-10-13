@@ -482,14 +482,19 @@ function tryMigrateLegacyKey(base) {
     };
 
     ws.onerror = () => {
-      try { safeWriteln(term, '\r\n[PTY] Ошибка WebSocket.'); } catch (e) {}
-      try { emit('pty:error', { message: 'websocket error' }); } catch (e) {}
+      // Browser WebSocket errors carry no useful diagnostics and are normally
+      // followed by onclose. A panel self-update deliberately restarts the
+      // process that owns this socket, so let the close handler drive the
+      // automatic reattach instead of showing a false terminal failure.
     };
 
     ws.onclose = (ev) => {
       stopKeepalive();
       try { if (ev && ev.target && ev.target.__xkeen_manual_close) return; } catch (e) {}
-      safeWriteln(term, '\r\n[PTY] Соединение закрыто.');
+      try {
+        if (state.ptyWs === ws) state.ptyWs = null;
+      } catch (e) {}
+      safeWriteln(term, '\r\n[PTY] Соединение с панелью прервано. Переподключаюсь…');
       try { emit('pty:disconnected', { reason: 'onclose', code: (ev && typeof ev.code === 'number') ? ev.code : null }); } catch (e) {}
     };
 
