@@ -1,6 +1,6 @@
 # Сверка незакрытых подэтапов 8.7–10 с текущим кодом
 
-**Дата сверки:** 13 октября 2026 года  
+**Дата сверки:** 13 октября 2026 года
 **Область:** Notification center, recovery/rollout, testing/migrations,
 runtime performance
 
