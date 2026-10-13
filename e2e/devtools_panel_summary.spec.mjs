@@ -55,12 +55,12 @@ test.describe('DevTools panel summary', () => {
     await page.locator('#dt-panel-channel').click();
     await expect(page.locator('#dt-panel-channel-options')).toBeVisible();
     await page.locator('#dt-panel-channel-options [data-channel="prerelease"]').click();
-    await expect(page.locator('#dt-panel-channel')).toHaveText('Pre-release');
+    await expect(page.locator('#dt-panel-channel')).toHaveText('Предрелиз');
     await expect(page.locator('#dt-panel-update-note')).toContainText('2.11.0-rc.1');
     await page.route('**/api/modules/operations/status', (route) => route.fulfill({ json: { ok: true, result: null } }));
     await page.goto('/modules');
     await expect(page.getByText('Источник: umarcheh001/Xkeen-UI · канал сборки: stable')).toBeVisible();
-    await expect(page.getByText('Канал обновлений: Pre-release')).toBeVisible();
+    await expect(page.getByText('Канал обновлений: Предрелиз')).toBeVisible();
     expect(changes).toEqual(['prerelease']);
   });
 
@@ -75,7 +75,7 @@ test.describe('DevTools panel summary', () => {
     await expect(page.locator('#dt-panel-commit')).toHaveText('(abc123456789)');
     await expect(page.locator('#dt-panel-repo')).toHaveText('umarcheh001/Xkeen-UI');
     await expect(card.locator('dt')).toContainText(['Версия', 'Собрана', 'Источник', 'Канал обновлений', 'Установлено', 'Включено']);
-    await expect(page.locator('#dt-panel-channel')).toHaveText('stable');
+    await expect(page.locator('#dt-panel-channel')).toHaveText('Стабильный');
     // Сохранённая метка профиля не печатается: наборы названы по составу.
     await expect(page.locator('#dt-panel-installed-set')).toHaveText('полный набор');
     await expect(page.locator('#dt-panel-enabled-set')).toHaveText('свой набор (2 из 3)');

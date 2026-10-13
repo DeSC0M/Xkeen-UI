@@ -99,7 +99,7 @@ def test_stage8_contract_generator_covers_boundaries_and_acceptance_matrix(tmp_p
     catalog = payload["catalog"]
     assert catalog["channel_policy"] == {
         "required": "stable",
-        "allowed": ["stable"],
+        "allowed": ["stable", "prerelease"],
         "branch_urls": False,
         "user_urls": False,
         "arbitrary_repositories": False,
@@ -173,12 +173,14 @@ def test_stage8_contract_generator_covers_boundaries_and_acceptance_matrix(tmp_p
         "checksums": "<asset>.sha256",
         "metadata": "release-metadata.json",
         "channel": "stable",
+        "optional_channel": "prerelease",
         "signing_key_id": "release-2026",
     }
     assert payload["trust_client"] == {
         "algorithm": "Ed25519",
         "signature_asset": "catalog.json.sig",
         "discovery": "https://api.github.com/repos/umarcheh001/Xkeen-UI/releases/latest",
+        "prerelease_discovery": "https://api.github.com/repos/umarcheh001/Xkeen-UI/releases?per_page=30",
         "cache_ttl_seconds": 86400,
         "allowed_redirect_hosts": [
             "github.com",

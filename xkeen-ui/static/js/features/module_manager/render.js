@@ -235,7 +235,7 @@ function textList(parent, label, values) {
 
 function appendPanelIdentity(summary, snapshot) {
   const build = snapshot.build && typeof snapshot.build === 'object' ? snapshot.build : {};
-  const updateChannel = snapshot.update_channel === 'prerelease' ? 'Pre-release' : 'Stable';
+  const updateChannel = snapshot.update_channel === 'prerelease' ? 'Предрелиз' : 'Стабильный';
   const releaseVersion = String(snapshot.panel_version || '').trim();
   const buildVersion = String(build.version || '').trim();
   summary.append(node(

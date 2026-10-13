@@ -80,7 +80,7 @@ import { describeModuleSets } from '../module_manager/render.js';
 
   function renderChannel(value) {
     const channel = value === 'prerelease' ? 'prerelease' : 'stable';
-    setText('dt-panel-channel', channel === 'stable' ? 'stable' : 'Pre-release');
+    setText('dt-panel-channel', channel === 'stable' ? 'Стабильный' : 'Предрелиз');
     const options = byId('dt-panel-channel-options');
     if (!options) return;
     options.querySelectorAll('[data-channel]').forEach((button) => {

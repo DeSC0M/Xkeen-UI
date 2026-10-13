@@ -60,12 +60,12 @@ Module archive содержит только `module-manifest.json` и `payload/
 Ownership сначала определяется Stage 7 по имени файла, затем замыкается по графу импортов: файл, который скрипт страницы импортирует статически или Python-файл импортирует на уровне модуля без условия, переносится в самый глубокий пакет, от которого зависят обе стороны (в худшем случае `core`). Dynamic `import()` и импорт под `if`/`try` или внутри функции зависимостью не считаются — так подключаются необязательные модули. Поэтому каждый пакет вместе со своими зависимостями из registry загружается без остальных пакетов.
 Воспроизводимость фиксирует USTAR, POSIX-сортировку путей, uid/gid=0, пустые owner names и `SOURCE_DATE_EPOCH` для tar/gzip.
 CI собирает и статически проверяет `dist/modular-panel/**` на каждом push. На tag build `scripts/sign_modular_panel_catalog.py` добавляет `catalog.json.sig` в `release-metadata.json`; публикация в GitHub Release разрешена только при `startsWith(github.ref, 'refs/tags/v')`. Legacy bootstrap archive `xkeen-ui-routing.tar.gz` сохраняется без изменения имени.
-Версия релиза берётся из тега и обязана быть semver, поэтому теги выпускаются как `vX.Y.Z`, без буквенного суффикса (решение 5 октября 2026 года): на теге вида `v2.9.2a` сборщик останавливается с понятной ошибкой, и релиз не публикуется.
+Версия релиза берётся из тега и обязана быть semver: stable публикуется как `vX.Y.Z`, prerelease — как `vX.Y.Z-rc.N` (или иной допустимый semver-суффикс). Тег вида `v2.9.2a` сборщик отклоняет.
 
 ## Trust и клиент каталога 8.2
 
 Core принимает только raw bytes `catalog.json`, проверенные `Ed25519` envelope `catalog.json.sig` с already-embedded key ID `release-2026`. Private key доступен только tag CI через environment `XKEEN_RELEASE_ED25519_PRIVATE_KEY` и не входит в assets.
-Discovery ограничен `https://api.github.com/repos/umarcheh001/Xkeen-UI/releases/latest`; принимается только published stable `v<semver>` release. Client сам строит immutable GitHub Releases URLs, принимает HTTPS redirects только на `github.com`, `objects.githubusercontent.com`, `release-assets.githubusercontent.com` и отвергает user URLs/branch selectors.
+Stable discovery ограничен `https://api.github.com/repos/umarcheh001/Xkeen-UI/releases/latest`; явный выбор Pre-release использует `https://api.github.com/repos/umarcheh001/Xkeen-UI/releases?per_page=30` и принимает только опубликованный prerelease с `v<semver>` тегом. Кэш каналов разделён; оба проходят ту же проверку подписи. Client сам строит immutable GitHub Releases URLs, принимает HTTPS redirects только на `github.com`, `objects.githubusercontent.com`, `release-assets.githubusercontent.com` и отвергает user URLs/branch selectors.
 Последний проверенный catalog cache хранится atomically с правами `0600`: до `86400` секунд он fresh, а stale fallback разрешён только при transport failures only. `highest verified release version` запрещает downgrade. Archive bytes streamed во temporary file и сверяются по exact size/SHA-256 перед передачей будущему updater; unpack и transaction остаются 8.3.
 
 ## Compatibility и операции
@@ -100,7 +100,7 @@ Cancel передаёт просьбу слушателю самого live runn
 ## Panel update и profile transition 8.5
 
 Подэтап 8.5 закрыт 2026-10-07. Signed catalog теперь содержит обязательный panel descriptor: `archive`, `size`, `sha256`, `version`, `signing_key_id`, `architectures`.
-`panel-update` использует scope `panel`, принимает только строго более новую stable-версию и заменяет весь managed target текущего профиля. `profile-transition` использует scope `profile`, остаётся на установленной версии и материализует профиль, сохранённый через `POST /api/modules/profile`.
+`panel-update` использует scope `panel`, принимает только строго более новую версию выбранного официального канала и заменяет весь managed target текущего профиля. `profile-transition` использует scope `profile`, остаётся на установленной версии и материализует профиль, сохранённый через `POST /api/modules/profile`.
 Обе full-scope операции передают в plan/apply только `operation` и server-generated `plan_id`; `module_id` запрещён. Любое изменение release/profile между review и apply возвращает `operation_plan_stale`.
 Profile response публикует `transition_required` и `transition_target`. Пока физический профиль не совпадает с желаемым, отдельный restart возвращает `profile_transition_required`.
 Panel/profile journal сохраняет каждый заменённый или удалённый managed-файл и state; ошибка после apply вызывает полный rollback своего scope. `rollback_failed` блокирует новые операции до ручного восстановления backup. Module rollback и full-scope transaction rollback не смешиваются.
