@@ -85,6 +85,10 @@ def test_operator_sprite_is_generated_and_committed_with_tabler_license(tmp_path
             str(generated),
             "--license-output",
             str(generated_license),
+            # Without this the generator rewrites the committed manifest in
+            # place, under the tests that read it at the same moment.
+            "--manifest-output",
+            str(tmp_path / "operator_icons_manifest.js"),
         ],
         cwd=ROOT,
         capture_output=True,

@@ -216,8 +216,20 @@ def test_e2e_server_does_not_advertise_websocket_without_a_websocket_server():
 
 def _generate_stage5(tmp_path: Path) -> dict[str, object]:
     output = tmp_path / "modular-panel-stage5-frontend-loading.json"
+    # Both outputs are named: a missing one falls back to the committed file
+    # in docs/ and rewrites it under the tests that run alongside.
+    markdown = tmp_path / "modular-panel-stage5-frontend-loading.md"
     result = subprocess.run(
-        [sys.executable, str(STAGE5_GENERATOR), "--root", str(ROOT), "--json-out", str(output)],
+        [
+            sys.executable,
+            str(STAGE5_GENERATOR),
+            "--root",
+            str(ROOT),
+            "--json-out",
+            str(output),
+            "--markdown-out",
+            str(markdown),
+        ],
         cwd=ROOT,
         capture_output=True,
         text=True,
