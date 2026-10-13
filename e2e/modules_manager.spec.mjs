@@ -182,6 +182,23 @@ test.describe('Modules panel update surface', () => {
   });
 });
 
+test.describe('Modules build time', () => {
+  test.use({ timezoneId: 'Europe/Moscow' });
+
+  test('shows the same local build time as DevTools instead of raw UTC', async ({ page }) => {
+    const snapshot = {
+      ...installedSnapshot,
+      build: { ...installedSnapshot.build, built_utc: '2026-10-13T15:52:13Z' },
+    };
+    await installLifecycleRoutes(page, { installed: snapshot });
+    await page.goto('/modules');
+    await expect(page.getByText('Собрано: 13.10.2026, 18:52:13')).toBeVisible();
+
+    await page.goto('/devtools');
+    await expect(page.locator('#dt-panel-built')).toHaveText('13.10.2026, 18:52:13');
+  });
+});
+
 test.describe('Module manager recovery and guards', () => {
   test('keeps the modules header comfortably inset with a compact theme action', async ({ page }) => {
     await page.setViewportSize({ width: 1800, height: 1300 });

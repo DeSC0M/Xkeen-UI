@@ -248,7 +248,11 @@ function appendPanelIdentity(summary, snapshot) {
   }
   summary.append(node('p', 'modules-build-meta', `Канал обновлений: ${updateChannel}`));
   if (build.commit) summary.append(node('p', 'modules-build-meta', `Коммит: ${build.commit}`));
-  if (build.built_utc) summary.append(node('p', 'modules-build-meta', `Собрано: ${build.built_utc}`));
+  if (build.built_utc) {
+    const built = new Date(build.built_utc);
+    const displayed = Number.isFinite(built.getTime()) ? built.toLocaleString('ru-RU') : String(build.built_utc);
+    summary.append(node('p', 'modules-build-meta', `Собрано: ${displayed}`));
+  }
 }
 
 // Only the light variant lacks files of the others, and a local build
