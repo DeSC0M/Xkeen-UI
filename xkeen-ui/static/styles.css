@@ -30228,8 +30228,8 @@ html[data-theme="light"] #ui-settings-modal .xk-ui-settings-item-meta {
 }
 
 #ui-settings-modal .modal-close {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   flex: 0 0 auto;
 }
 
@@ -30662,8 +30662,8 @@ html[data-theme="light"] #ui-settings-modal .xk-ui-settings-status.error {
   }
 
   #ui-settings-modal .modal-close {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
   }
 
   #ui-settings-modal .xk-ui-settings-body {
