@@ -34,6 +34,32 @@ async function mockPanelSummary(page, { snapshot = installed, check = noUpdate }
 }
 
 test.describe('DevTools panel summary', () => {
+  test('persists the selected prerelease channel and refreshes the update note', async ({ page }) => {
+    let selected = 'stable';
+    const changes = [];
+    await page.route('**/api/modules/installed', (route) => route.fulfill({
+      json: { ...installed, update_channel: selected },
+    }));
+    await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({
+      json: { ...noUpdate, target_version: selected === 'prerelease' ? '2.11.0-rc.1' : '2.10.0', update_available: selected === 'prerelease' },
+    }));
+    await page.route('**/api/modules/update-channel', (route) => {
+      if (route.request().method() === 'POST') {
+        selected = route.request().postDataJSON().channel;
+        changes.push(selected);
+      }
+      return route.fulfill({ json: { ok: true, channel: selected } });
+    });
+    await page.goto('/devtools');
+    await expect(page.locator('#dt-panel-version')).toHaveText('2.10.0');
+    await page.locator('#dt-panel-channel').click();
+    await expect(page.locator('#dt-panel-channel-options')).toBeVisible();
+    await page.locator('#dt-panel-channel-options [data-channel="prerelease"]').click();
+    await expect(page.locator('#dt-panel-channel')).toHaveText('Pre-release');
+    await expect(page.locator('#dt-panel-update-note')).toContainText('2.11.0-rc.1');
+    expect(changes).toEqual(['prerelease']);
+  });
+
   test('lists every module on its own row with version and state', async ({ page }) => {
     const checks = await mockPanelSummary(page);
     await page.goto('/devtools');
@@ -73,7 +99,8 @@ test.describe('DevTools panel summary', () => {
     expect(checks).toEqual([{ force_refresh: false }]);
 
     // Карточка справочная: команд обновления в ней нет, плашка ошибки спрятана.
-    await expect(card.locator('button')).toHaveCount(0);
+    await expect(card.locator('#dt-panel-channel')).toHaveCount(1);
+    await expect(card.locator('[data-channel]')).toHaveCount(2);
     await expect(page.locator('#dt-panel-status')).toBeHidden();
     await expect(page.locator('#xk-update-link')).toHaveCount(0);
   });

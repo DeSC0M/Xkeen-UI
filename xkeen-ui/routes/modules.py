@@ -113,6 +113,17 @@ def create_modules_blueprint(
     def api_modules_installed():
         return lifecycle_response(lambda: lifecycle_service.installed())
 
+    @bp.get("/api/modules/update-channel")
+    def api_modules_update_channel():
+        return lifecycle_response(lambda: lifecycle_service.update_channel())
+
+    @bp.post("/api/modules/update-channel")
+    def api_modules_set_update_channel():
+        payload, failure = lifecycle_body(allowed={"channel"}, required={"channel"})
+        if failure is not None:
+            return failure
+        return lifecycle_response(lambda: lifecycle_service.set_update_channel(payload["channel"]))
+
     @bp.get("/api/modules/available")
     def api_modules_available():
         return lifecycle_response(lambda: lifecycle_service.available())

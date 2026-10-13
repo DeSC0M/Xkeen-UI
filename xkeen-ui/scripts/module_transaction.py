@@ -76,7 +76,12 @@ def _default_client(state_dir: Path, architecture: str, version: str):
     # ``recover`` at boot has to work even when that library is broken.
     from services.module_catalog_client import ModuleCatalogClient
 
-    return ModuleCatalogClient(state_dir, platform_architecture=architecture, core_version=version)
+    return ModuleCatalogClient(
+        state_dir,
+        platform_architecture=architecture,
+        core_version=version,
+        channel="prerelease" if "-" in version else "stable",
+    )
 
 
 def _run(args, *, client_factory, architecture, on_step) -> int:

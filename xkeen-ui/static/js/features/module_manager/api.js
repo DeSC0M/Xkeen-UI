@@ -39,6 +39,8 @@ export function createModuleLifecycleClient(fetchImpl = fetch) {
 
   return {
     loadInstalled: () => request('/installed'),
+    loadUpdateChannel: () => request('/update-channel'),
+    setUpdateChannel: (channel) => request('/update-channel', 'POST', { channel }),
     loadStatus: () => request('/operations/status'),
     loadAvailable: () => request('/available'),
     checkPanelUpdate: (forceRefresh = false) => request(

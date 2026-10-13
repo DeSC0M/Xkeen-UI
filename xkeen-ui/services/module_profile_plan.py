@@ -25,6 +25,7 @@ _USER_FILES = {
     "devtools.env",
     "ui-settings.json",
     "branding.json",
+    "module-update-channel.json",
     *STATE_FILENAMES,
 }
 # Template folders hold the shipped templates next to the ones the user made;

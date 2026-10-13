@@ -237,7 +237,7 @@ def test_the_release_brings_its_own_script_for_the_preparation(tmp_path):
     assert executor.provision_script(journal, staged=False) == installed
 
 
-def test_update_keeps_the_owners_repository_and_channel(tmp_path):
+def test_update_keeps_repository_and_records_installed_release_channel(tmp_path):
     panel = make_panel(tmp_path, version=OLD)
     build = panel.read_json("BUILD.json")
     panel.path("BUILD.json").write_text(
@@ -248,7 +248,7 @@ def test_update_keeps_the_owners_repository_and_channel(tmp_path):
     assert _run(panel, _update_plan(tmp_path, panel, release), release, None) == "committed"
 
     written = panel.read_json("BUILD.json")
-    assert (written["version"], written["repo"], written["channel"]) == (NEW, "someone/fork", "beta")
+    assert (written["version"], written["repo"], written["channel"]) == (NEW, "someone/fork", "stable")
     # Сумма дерева прежней сборки новой не принадлежит.
     assert "tree_sha256" not in written or written["tree_sha256"] is None
 

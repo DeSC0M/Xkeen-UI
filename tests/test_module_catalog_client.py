@@ -13,12 +13,14 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from services.module_catalog_client import (
     CATALOG_REDIRECT_HOSTS,
     LATEST_RELEASE_URL,
+    PRERELEASES_URL,
     CatalogClientError,
     CatalogTransportError,
     FetchPolicy,
     ModuleCatalogClient,
     UrlLibCatalogTransport,
     official_release_asset_url,
+    parse_latest_prerelease,
     parse_latest_release,
     validate_fetch_url,
 )
@@ -91,10 +93,11 @@ def _public_pem(private_key: Ed25519PrivateKey) -> bytes:
 
 
 def _catalog_bytes(version: str, *, archive_bytes: bytes = b"abc", panel_bytes: bytes = b"panel") -> bytes:
+    channel = "prerelease" if "-" in version else "stable"
     document = {
         "schema_version": 1,
         "release_version": version,
-        "channel": "stable",
+        "channel": channel,
         "source_commit": "a" * 40,
         "panel": {
             "archive": f"xkeen-ui-panel-{version}.tar.gz",
@@ -108,7 +111,7 @@ def _catalog_bytes(version: str, *, archive_bytes: bytes = b"abc", panel_bytes: 
             {
                 "id": "tool.files",
                 "version": version,
-                "channel": "stable",
+                "channel": channel,
                 "panel_api": "1",
                 "module_api": "1",
                 "min_core": "1.0.0",
@@ -196,6 +199,79 @@ def test_parse_latest_release_uses_only_stable_semver_tag() -> None:
             "assets": [{"browser_download_url": "https://example.invalid/catalog.json"}],
         }
     ) == "1.2.3"
+
+
+def test_parse_latest_prerelease_uses_highest_published_semver() -> None:
+    assert parse_latest_prerelease([
+        {"tag_name": "v1.4.0-alpha.1", "draft": False, "prerelease": True},
+        {"tag_name": "v1.4.0-beta.2", "draft": False, "prerelease": True},
+        {"tag_name": "v1.3.9", "draft": False, "prerelease": False},
+    ]) == "1.4.0-beta.2"
+    with pytest.raises(CatalogClientError, match="catalog_release_not_found"):
+        parse_latest_prerelease([{"tag_name": "v1.4.0", "draft": False, "prerelease": False}])
+
+
+def test_prerelease_channel_uses_signed_assets_and_separate_cache(tmp_path) -> None:
+    private_key = Ed25519PrivateKey.generate()
+    transport = _CatalogTransport({
+        PRERELEASES_URL: json.dumps([
+            {"tag_name": "v1.4.0-alpha.1", "draft": False, "prerelease": True},
+        ]).encode("utf-8"),
+        **{url: body for url, body in _release_responses(private_key, "1.4.0-alpha.1").items()
+           if url != LATEST_RELEASE_URL},
+    })
+    client = ModuleCatalogClient(
+        tmp_path, transport=transport, channel="prerelease",
+        now=lambda: 100.0, keyring={"release-2026": _public_pem(private_key)},
+    )
+    snapshot = client.get_catalog()
+
+    assert snapshot.release_version == "1.4.0-alpha.1"
+    assert snapshot.catalog["channel"] == "prerelease"
+    assert snapshot.catalog["modules"][0]["channel"] == "prerelease"
+    assert client.get_release_catalog("1.4.0-alpha.1").catalog["channel"] == "prerelease"
+    assert (tmp_path / "module-catalog" / "catalog-cache-prerelease.json").is_file()
+    assert not (tmp_path / "module-catalog" / "catalog-cache.json").exists()
+    assert transport.calls[0] == PRERELEASES_URL
+    stable = ModuleCatalogClient(
+        tmp_path, transport=_CatalogTransport(_release_responses(private_key, "1.3.0")),
+        channel="stable", now=lambda: 100.0,
+        keyring={"release-2026": _public_pem(private_key)},
+    ).get_catalog()
+    assert stable.release_version == "1.3.0"
+    assert stable.catalog["channel"] == "stable"
+    assert (tmp_path / "module-catalog" / "catalog-cache.json").is_file()
+
+
+def test_prerelease_channel_ignores_stable_release_even_if_github_marks_it_prerelease(tmp_path) -> None:
+    transport = _CatalogTransport({
+        PRERELEASES_URL: json.dumps([
+            {"tag_name": "v1.4.0", "draft": False, "prerelease": True},
+        ]).encode("utf-8"),
+    })
+    client = ModuleCatalogClient(tmp_path, transport=transport, channel="prerelease")
+    with pytest.raises(CatalogClientError, match="catalog_release_not_found"):
+        client.get_catalog()
+
+
+def test_prerelease_channel_rejects_invalid_catalog_signature(tmp_path) -> None:
+    private_key = Ed25519PrivateKey.generate()
+    responses = {
+        PRERELEASES_URL: json.dumps([
+            {"tag_name": "v1.4.0-rc.1", "draft": False, "prerelease": True},
+        ]).encode("utf-8"),
+        **{url: body for url, body in _release_responses(private_key, "1.4.0-rc.1").items()
+           if url != LATEST_RELEASE_URL},
+    }
+    responses[official_release_asset_url("1.4.0-rc.1", "catalog.json")] += b"tampered"
+    client = ModuleCatalogClient(
+        tmp_path, transport=_CatalogTransport(responses), channel="prerelease",
+        keyring={"release-2026": _public_pem(private_key)},
+    )
+
+    with pytest.raises(CatalogClientError, match="catalog_signature_invalid"):
+        client.get_catalog()
+    assert not (tmp_path / "module-catalog" / "catalog-cache-prerelease.json").exists()
 
 
 @pytest.mark.parametrize(

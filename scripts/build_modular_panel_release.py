@@ -598,6 +598,7 @@ def build_module_manifest(
     architectures: Sequence[str] = DEFAULT_ARCHITECTURES,
     min_core: str = DEFAULT_MIN_CORE,
     ownership: Mapping[str, Sequence[str]] | None = None,
+    channel: str = "stable",
 ) -> dict[str, Any]:
     """Build the Stage 8.0 manifest for one registry module.
 
@@ -615,7 +616,7 @@ def build_module_manifest(
         "schema_version": 1,
         "id": definition.id,
         "version": str(version),
-        "channel": "stable",
+        "channel": channel,
         "panel_api": "1",
         "module_api": "1",
         "min_core": str(min_core),
@@ -636,6 +637,7 @@ def module_archive_spec(
     architectures: Sequence[str] = DEFAULT_ARCHITECTURES,
     min_core: str = DEFAULT_MIN_CORE,
     ownership: Mapping[str, Sequence[str]] | None = None,
+    channel: str = "stable",
 ) -> ArchiveSpec:
     manifest = build_module_manifest(
         root,
@@ -644,6 +646,7 @@ def module_archive_spec(
         architectures=architectures,
         min_core=min_core,
         ownership=ownership,
+        channel=channel,
     )
     package = Path(root).resolve() / PACKAGE_DIRNAME
     manifest_data = (json.dumps(manifest, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
@@ -712,6 +715,7 @@ def build_module_archive(
     min_core: str,
     epoch: int,
     ownership: Mapping[str, Sequence[str]] | None = None,
+    channel: str = "stable",
 ) -> BuiltAsset:
     """Build one self-describing Stage 8 module tarball."""
 
@@ -722,6 +726,7 @@ def build_module_archive(
         architectures=architectures,
         min_core=min_core,
         ownership=ownership,
+        channel=channel,
     )
     path = Path(output_dir) / spec.filename
     build_deterministic_tar(path, dict(spec.members), epoch=epoch)
@@ -777,6 +782,7 @@ class ReleaseInputs:
     architectures: Sequence[str] = DEFAULT_ARCHITECTURES
     min_core: str = DEFAULT_MIN_CORE
     min_updater: str | None = DEFAULT_MIN_UPDATER
+    channel: str = "stable"
 
 
 @dataclass(frozen=True, slots=True)
@@ -848,6 +854,12 @@ def build_release(
             f"release version must be MAJOR.MINOR.PATCH, got {inputs.version!r}: "
             "tag releases as vX.Y.Z, without a letter suffix"
         )
+    if inputs.channel not in ("stable", "prerelease"):
+        raise ReleaseBuildError("release channel must be stable or prerelease")
+    if inputs.channel == "prerelease" and "-" not in inputs.version:
+        raise ReleaseBuildError("prerelease channel requires a SemVer prerelease tag")
+    if inputs.channel == "stable" and "-" in inputs.version:
+        raise ReleaseBuildError("stable channel requires a final SemVer tag")
     if not str(inputs.source_commit).strip():
         raise ReleaseBuildError("source commit is required")
     if int(inputs.source_date_epoch) < 0:
@@ -868,6 +880,7 @@ def build_release(
             min_core=inputs.min_core,
             epoch=inputs.source_date_epoch,
             ownership=ownership,
+            channel=inputs.channel,
         )
         manifest = build_module_manifest(
             root,
@@ -876,6 +889,7 @@ def build_release(
             architectures=inputs.architectures,
             min_core=inputs.min_core,
             ownership=ownership,
+            channel=inputs.channel,
         )
         modules.append(asset)
         catalog_entries.append(_catalog_entry(manifest, asset))
@@ -886,7 +900,7 @@ def build_release(
         {
             "schema_version": 1,
             "release_version": inputs.version,
-            "channel": "stable",
+            "channel": inputs.channel,
             "source_commit": inputs.source_commit,
             "panel": _panel_catalog_entry(panel, inputs),
             "modules": catalog_entries,
@@ -942,6 +956,7 @@ def parse_args(argv: list[str] | None = None) -> ReleaseInputs:
     parser.add_argument("--version", required=True)
     parser.add_argument("--source-date-epoch", type=int, required=True)
     parser.add_argument("--source-commit", required=True)
+    parser.add_argument("--channel", choices=("stable", "prerelease"), default="stable")
     parser.add_argument(
         "--architecture",
         action="append",
@@ -970,6 +985,7 @@ def parse_args(argv: list[str] | None = None) -> ReleaseInputs:
         architectures=tuple(args.architectures or DEFAULT_ARCHITECTURES),
         min_core=args.min_core,
         min_updater=args.min_updater,
+        channel=args.channel,
     )
 
 

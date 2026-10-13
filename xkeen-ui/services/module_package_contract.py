@@ -165,7 +165,7 @@ def _module_definition(module_id: str):
 
 
 def validate_catalog_source(source: str) -> str:
-    """Validate the immutable HTTPS endpoint for the official stable catalog."""
+    """Validate the immutable HTTPS endpoint for an official release catalog."""
 
     parsed = urlsplit(str(source or ""))
     if parsed.scheme != "https" or parsed.hostname != "github.com":
@@ -187,7 +187,7 @@ def validate_catalog_entry(
     core_version: str | None = None,
     catalog_module_ids: AbstractSet[str] | None = None,
 ) -> dict[str, Any]:
-    """Validate one stable catalog entry without fetching or trusting it.
+    """Validate one official catalog entry without fetching or trusting it.
 
     ``catalog_module_ids`` is given for the catalog of another release: the
     modules it names. Such an entry is not compared with the registry of this
@@ -228,8 +228,8 @@ def validate_catalog_entry(
             _fail("catalog_module_invalid", "module id does not look like a module id", module_id=str(entry["id"]))
         module_id = entry["id"]
     version = validate_semver(entry["version"], "catalog_version")
-    if entry["channel"] != "stable":
-        _fail("catalog_channel_unsupported", "only stable releases are accepted")
+    if entry["channel"] not in ("stable", "prerelease"):
+        _fail("catalog_channel_unsupported", "only official stable or prerelease releases are accepted")
     if entry["panel_api"] != SUPPORTED_PANEL_API or entry["module_api"] != SUPPORTED_MODULE_API:
         _fail("catalog_api_unsupported", "catalog API versions are not supported")
     min_core = validate_semver(entry["min_core"], "catalog_min_core")
@@ -290,7 +290,7 @@ def validate_catalog_entry(
     return {
         "id": module_id,
         "version": version,
-        "channel": "stable",
+        "channel": entry["channel"],
         "panel_api": SUPPORTED_PANEL_API,
         "module_api": SUPPORTED_MODULE_API,
         "min_core": min_core,
@@ -398,7 +398,7 @@ def validate_catalog_document(
     platform_architecture: str | None = None,
     core_version: str | None = None,
 ) -> dict[str, Any]:
-    """Validate one signed stable catalog after its envelope is verified."""
+    """Validate one signed official catalog after its envelope is verified."""
 
     catalog = _mapping(document, "catalog")
     required = ("schema_version", "release_version", "channel", "source_commit", "panel", "modules")
@@ -416,8 +416,10 @@ def validate_catalog_document(
             catalog_release_version=normalized_release,
             expected_release_version=expected_release,
         )
-    if catalog["channel"] != "stable":
-        _fail("catalog_channel_unsupported", "only stable catalog releases are accepted")
+    if catalog["channel"] not in ("stable", "prerelease"):
+        _fail("catalog_channel_unsupported", "only official stable or prerelease catalogs are accepted")
+    if (catalog["channel"] == "prerelease") != ("-" in normalized_release):
+        _fail("catalog_channel_unsupported", "catalog channel must match the release version")
     source_commit = catalog["source_commit"]
     if not isinstance(source_commit, str) or not source_commit.strip():
         _fail("catalog_source_commit_invalid", "catalog source_commit must be a non-empty string")
@@ -458,6 +460,8 @@ def validate_catalog_document(
             core_version=core_version,
             catalog_module_ids=catalog_module_ids,
         )
+        if entry["channel"] != catalog["channel"] or entry["version"] != normalized_release:
+            _fail("catalog_channel_unsupported", "module release identity must match the signed catalog")
         if entry["id"] in seen_module_ids:
             _fail("catalog_module_duplicate", "catalog contains duplicate module IDs", module_id=entry["id"])
         if entry["signing_key_id"] != signing_key_id:
@@ -474,7 +478,7 @@ def validate_catalog_document(
     return {
         "schema_version": 1,
         "release_version": normalized_release,
-        "channel": "stable",
+        "channel": catalog["channel"],
         "source_commit": source_commit.strip(),
         "panel": normalized_panel,
         "modules": normalized_modules,

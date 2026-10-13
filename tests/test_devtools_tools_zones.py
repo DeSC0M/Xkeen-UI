@@ -281,7 +281,9 @@ def test_update_card_is_reduced_to_panel_summary():
     card = card[: card.index('id="dt-env-card"')]
 
     assert "<pre" not in card
-    assert "<button" not in card
+    assert 'id="dt-panel-channel"' in card
+    assert 'data-channel="stable"' in card
+    assert 'data-channel="prerelease"' in card
     assert ">Сборка панели</h2>" in card
     assert 'class="dt-panel-summary-grid"' in card
     assert '<ul id="dt-panel-modules"' in card

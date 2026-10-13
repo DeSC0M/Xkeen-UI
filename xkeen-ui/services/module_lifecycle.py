@@ -25,6 +25,7 @@ from services.module_registry import (
     ModuleRegistry,
     module_set_name,
 )
+from services.module_update_channel import CHANNELS, read_channel, write_channel
 from services.module_transactions.launcher import (
     ensure_restartable,
     launch,
@@ -189,6 +190,7 @@ def _default_catalog_factory(
             state_dir,
             platform_architecture=architecture,
             core_version=version,
+            channel=read_channel(state_dir),
         )
 
     return build
@@ -347,6 +349,26 @@ class ModuleLifecycleService:
         self._archive_download = threading.Lock()
         self._archive_guard = threading.Lock()
         self._archive_users = 0
+
+    def update_channel(self) -> dict[str, Any]:
+        return {"ok": True, "channel": read_channel(self.state_dir)}
+
+    def set_update_channel(self, channel: str) -> dict[str, Any]:
+        if not isinstance(channel, str) or channel not in CHANNELS:
+            raise ModuleLifecycleError("update_channel_invalid", "choose stable or prerelease", status=400)
+        if not self.local_demo:
+            from services.module_transactions.launcher import ensure_idle
+
+            try:
+                ensure_idle(self.panel_root, self.state_dir)
+            except ModuleTransactionError as error:
+                _raise_domain(error)
+        try:
+            write_channel(self.state_dir, channel)
+        except OSError as error:
+            raise ModuleLifecycleError("update_channel_save_failed", "update channel could not be saved", status=500) from error
+        self._drop_archive_cache()
+        return self.update_channel()
 
     @property
     def archive_cache_dir(self) -> Path:
@@ -637,6 +659,7 @@ class ModuleLifecycleService:
             "ok": True,
             "panel_version": panel_version,
             "build": build,
+            "update_channel": read_channel(self.state_dir),
             "profile": registry.get("profile"),
             "editor": self._editor_with_installed_variant(registry.get("editor")),
             "restart_required": bool(registry.get("restart_required")),
@@ -862,7 +885,7 @@ class ModuleLifecycleService:
                 if compare_semver(target_version, source_version) <= 0:
                     raise ModuleTransactionError(
                         "panel_update_not_newer",
-                        "the stable catalog does not contain a newer panel release",
+                        "the selected catalog does not contain a newer panel release",
                         current_version=source_version,
                         target_version=target_version,
                     )

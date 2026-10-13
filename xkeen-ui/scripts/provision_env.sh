@@ -306,7 +306,15 @@ provision_build_json() {
   _pb_channel="$(extract_json_field channel "$_pb_target")"
 
   _pb_repo="${XKEEN_UI_UPDATE_REPO:-${_pb_repo:-umarcheh001/Xkeen-UI}}"
-  _pb_channel="${XKEEN_UI_UPDATE_CHANNEL:-${_pb_channel:-stable}}"
+  # BUILD.json identifies what is installed, not the persisted choice of what
+  # to check next. The selected channel lives in module-update-channel.json.
+  _pb_channel="${XKEEN_UI_UPDATE_CHANNEL:-$(extract_json_field channel "$_pb_stamp")}"
+  if [ -z "$_pb_channel" ]; then
+    case "$_pb_version" in
+      *-*) _pb_channel="prerelease" ;;
+      *) _pb_channel="stable" ;;
+    esac
+  fi
   _pb_version="${XKEEN_UI_VERSION:-$_pb_version}"
   _pb_commit="${XKEEN_UI_COMMIT:-$_pb_commit}"
   case "$_pb_dirty" in

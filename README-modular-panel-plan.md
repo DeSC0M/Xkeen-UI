@@ -1749,12 +1749,20 @@ badge обновлений, diff зависимостей, явный Apply/Rest
 модульную нотификацию и stale/error state. Не скачивать пакет до явного
 действия пользователя.
 
+Перед rollout добавлен отдельный выбор официального канала обновлений в
+DevTools: stable остаётся значением по умолчанию, Pre-release включается
+явно и ищет только опубликованные SemVer prerelease в GitHub Releases.
+Каталоги и архивы обоих каналов проходят одинаковую проверку подписи,
+размера, SHA-256 и владения файлами; кэш каналов разделён. Выбор канала
+не устанавливает пакеты и не заменяет задачи Notification center.
+
 #### 8.8. Матрица recovery и rollout
 
 Проверить подписи, path traversal, corrupt archive, disk full, missing deps,
 conflicts, active engine, crash после restart, module-only file diff, full
-panel rollback, profile transitions и offline catalog. Выпустить сначала
-stable-only rollout с миграцией legacy layout и документированным rollback.
+panel rollback, profile transitions и offline catalog. Сначала испытать
+подписанный pre-release на явно выбранном тестовом канале, затем выпустить
+stable rollout с миграцией legacy layout и документированным rollback.
 
 ### Что сознательно отложено
 

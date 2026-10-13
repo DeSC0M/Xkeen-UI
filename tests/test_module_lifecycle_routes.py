@@ -35,6 +35,12 @@ class LifecycleFake:
     def available(self):
         return self._result(("available",), {"ok": True, "kind": "available"})
 
+    def update_channel(self):
+        return self._result(("update_channel",), {"ok": True, "channel": "stable"})
+
+    def set_update_channel(self, channel):
+        return self._result(("set_update_channel", channel), {"ok": True, "channel": channel})
+
     def panel_update_check(self, *, force_refresh=False):
         return self._result(
             ("panel_update_check", force_refresh),
@@ -107,6 +113,7 @@ def test_lifecycle_read_and_control_routes_delegate_with_no_store(app_with_lifec
     requests = [
         ("get", "/api/modules/installed", None, 200, "installed"),
         ("get", "/api/modules/available", None, 200, "available"),
+        ("get", "/api/modules/update-channel", None, 200, "update_channel"),
         ("get", "/api/modules/operations/status", None, 200, "status"),
         (
             "post",
@@ -125,6 +132,18 @@ def test_lifecycle_read_and_control_routes_delegate_with_no_store(app_with_lifec
         assert response.get_json()["ok"] is True
         assert response.headers["Cache-Control"] == "no-store"
         assert service.calls[-1][0] == call_name
+
+
+def test_update_channel_route_requires_a_single_channel_field(app_with_lifecycle):
+    client, service = app_with_lifecycle
+    response = client.post("/api/modules/update-channel", json={"channel": "prerelease"})
+    assert response.status_code == 200
+    assert response.get_json()["channel"] == "prerelease"
+    assert service.calls[-1] == ("set_update_channel", "prerelease")
+
+    invalid = client.post("/api/modules/update-channel", json={"channel": "stable", "repository": "other"})
+    assert invalid.status_code == 400
+    assert service.calls[-1] == ("set_update_channel", "prerelease")
 
 
 def test_lifecycle_plan_and_apply_routes_validate_and_delegate(app_with_lifecycle):

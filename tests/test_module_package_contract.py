@@ -151,6 +151,21 @@ def test_catalog_document_validates_top_level_and_entry_key_identity() -> None:
     assert normalized["panel"] is not document["panel"]
 
 
+def test_catalog_document_accepts_matching_prerelease_identity() -> None:
+    document = _catalog_document(release_version="1.2.4-alpha.1", channel="prerelease")
+    document["panel"]["version"] = "1.2.4-alpha.1"
+    document["panel"]["archive"] = "xkeen-ui-panel-1.2.4-alpha.1.tar.gz"
+    entry = document["modules"][0]
+    entry["version"] = "1.2.4-alpha.1"
+    entry["channel"] = "prerelease"
+    entry["archive"] = "xkeen-module-tool.files-1.2.4-alpha.1.tar.gz"
+
+    normalized = validate_catalog_document(
+        document, release_version="1.2.4-alpha.1", signing_key_id="release-2026",
+    )
+    assert normalized["channel"] == normalized["modules"][0]["channel"] == "prerelease"
+
+
 @pytest.mark.parametrize(
     ("panel", "code"),
     [
