@@ -32,6 +32,10 @@ def test_xray_subscription_form_exposes_regex_filters_and_payload_fields():
     assert '<option value="subscription-only">Только подписка</option>' in outbounds_src
     assert "const SUB_ROUTING_MODE_SUBSCRIPTION_ONLY = 'subscription-only';" in outbounds_src
     assert "function subsRoutingModeTooltip(autoRuleEnabled) {" in outbounds_src
+    assert "routingModeLabel.removeAttribute('data-tooltip')" in outbounds_src
+    assert "routingModeLabel.removeAttribute('data-tooltip-multiline')" in outbounds_src
+    assert "routingModeLabel.removeAttribute('data-tooltip-placement')" in outbounds_src
+    assert "select.setAttribute('data-tooltip', tooltip)" in outbounds_src
     assert "const SUB_DEFAULT_INTERVAL_HOURS = 24;" in outbounds_src
     assert "xk-sub-interval-note" in outbounds_src
     assert "function subsIntervalSummary(sub) {" in outbounds_src

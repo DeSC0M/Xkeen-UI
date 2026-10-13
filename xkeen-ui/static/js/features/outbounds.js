@@ -4966,9 +4966,12 @@ let outboundsModuleApi = null;
         const caption = routingModeLabel.querySelector ? routingModeLabel.querySelector('.xk-sub-inline-label') : null;
         if (caption) caption.textContent = '\u041f\u0440\u0438\u043c\u0435\u043d\u0435\u043d\u0438\u0435';
         const tooltip = subsRoutingModeTooltip(state.routing_auto_rule);
-        try { routingModeLabel.setAttribute('data-tooltip', tooltip); } catch (e4) {}
-        try { routingModeLabel.setAttribute('data-tooltip-multiline', ''); } catch (e4b) {}
-        try { routingModeLabel.setAttribute('data-tooltip-placement', 'bottom'); } catch (e4a) {}
+        // Keep the explanation attached only to the select.  Attaching it to
+        // the wrapping label makes the same tooltip appear while hovering the
+        // whole row, not just the control it describes.
+        try { routingModeLabel.removeAttribute('data-tooltip'); } catch (e4) {}
+        try { routingModeLabel.removeAttribute('data-tooltip-multiline'); } catch (e4b) {}
+        try { routingModeLabel.removeAttribute('data-tooltip-placement'); } catch (e4a) {}
         const select = $(SUB_IDS.routingMode);
         if (select) {
           try { select.setAttribute('data-tooltip', tooltip); } catch (e5) {}
