@@ -1046,7 +1046,7 @@ body.devtools-page #dt-env-card thead th {
 body.devtools-page #dt-env-card thead th:nth-child(1) { width: 28%; }
 body.devtools-page #dt-env-card thead th:nth-child(2) { width: 21%; }
 body.devtools-page #dt-env-card thead th:nth-child(3) { width: auto; }
-body.devtools-page #dt-env-card thead th:nth-child(4) { width: 156px; }
+body.devtools-page #dt-env-card thead th:nth-child(4) { width: 184px; }
 
 body.devtools-page #dt-env-card tbody :is(th, td) {
   padding: 7px 10px;
@@ -1062,7 +1062,7 @@ body.devtools-page #dt-env-card tbody :is(th, td) {
    buttons stay inside the scroll surface instead of spilling through its
    right edge. */
 body.devtools-page #dt-env-card tbody tr.dt-env-row td:nth-child(4) {
-  width: 156px;
+  width: 184px;
   min-width: 0 !important;
   padding-inline: 7px;
   white-space: nowrap;
