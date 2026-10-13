@@ -8,6 +8,8 @@ import { test, expect } from './fixtures.mjs';
 
 const PREF_KEY = 'xk.routing.dat.prefs.v1';
 const LIST_DELAY_MS = 2500;
+// Longer than the pause the card takes before it asks the router again (300 ms).
+const QUIET_MS = 1000;
 const SAVED = {
   geosite: { dir: '/opt/etc/xray/dat', name: 'geosite_v2fly.dat', url: 'https://example.invalid/old-geosite.dat' },
   geoip: { dir: '/opt/etc/xray/dat', name: 'geoip_v2fly.dat', url: 'https://example.invalid/old-geoip.dat' },
@@ -26,9 +28,18 @@ async function openDatCardWithSlowRouter(page) {
   await page.goto('/');
   await expect(page.locator('#routing-dat-header')).toBeVisible();
   await page.waitForLoadState('networkidle');
+  const link = { seen: 0, pending: 0 };
   await page.route(/\/api\/routing\/dat\/(files|stat)/, async (route) => {
-    await new Promise((resolve) => setTimeout(resolve, LIST_DELAY_MS));
-    await route.continue();
+    link.seen += 1;
+    link.pending += 1;
+    try {
+      await new Promise((resolve) => setTimeout(resolve, LIST_DELAY_MS));
+      await route.fulfill({ response: await route.fetch() });
+    } catch (error) {
+      // The page was reloaded or closed while the answer was held back.
+    } finally {
+      link.pending -= 1;
+    }
   });
   const body = page.locator('#routing-dat-body');
   for (let attempt = 0; attempt < 3 && !(await body.isVisible()); attempt += 1) {
@@ -36,6 +47,22 @@ async function openDatCardWithSlowRouter(page) {
     await page.waitForTimeout(250);
   }
   await expect(body).toBeVisible();
+  return link;
+}
+
+// The card has read the router to the end: every held-back answer has arrived
+// and no new request has followed it. A fixed pause here was either too long
+// or, on a loaded machine, too short.
+async function routerReadFinished(link) {
+  let quietSince = 0;
+  await expect.poll(() => {
+    if (!link.seen || link.pending) {
+      quietSince = 0;
+      return false;
+    }
+    if (!quietSince) quietSince = Date.now();
+    return Date.now() - quietSince >= QUIET_MS;
+  }, { timeout: 40_000, intervals: [100] }).toBe(true);
 }
 
 async function storedPrefs(page) {
@@ -43,34 +70,37 @@ async function storedPrefs(page) {
 }
 
 test.describe('DAT card keeps what the operator typed', () => {
+  // The router is held back on purpose: several answers, 2.5 s each.
+  test.describe.configure({ timeout: 60_000 });
+
   test('an address typed while the card is reading the router is not thrown away', async ({ page }) => {
-    await openDatCardWithSlowRouter(page);
+    const link = await openDatCardWithSlowRouter(page);
     const url = page.locator('#routing-dat-geosite-url');
 
     await url.fill('https://example.invalid/my-own-geosite.dat');
-    await page.waitForTimeout(LIST_DELAY_MS * 2 + 1500);
+    await routerReadFinished(link);
 
     await expect(url).toHaveValue('https://example.invalid/my-own-geosite.dat');
     expect((await storedPrefs(page)).geosite.url).toBe('https://example.invalid/my-own-geosite.dat');
   });
 
   test('a file name typed while the card is reading the router is not put back', async ({ page }) => {
-    await openDatCardWithSlowRouter(page);
+    const link = await openDatCardWithSlowRouter(page);
     const name = page.locator('#routing-dat-geosite-name');
 
     await name.fill('geosite_mine.dat');
-    await page.waitForTimeout(LIST_DELAY_MS * 3 + 2500);
+    await routerReadFinished(link);
 
     await expect(name).toHaveValue('geosite_mine.dat');
     expect((await storedPrefs(page)).geosite.name).toBe('geosite_mine.dat');
   });
 
   test('the typed values are still there after the page is opened again', async ({ page }) => {
-    await openDatCardWithSlowRouter(page);
+    const link = await openDatCardWithSlowRouter(page);
 
     await page.locator('#routing-dat-geoip-url').fill('https://example.invalid/my-own-geoip.dat');
     await page.locator('#routing-dat-geoip-dir').fill('/opt/etc/xray/mydat');
-    await page.waitForTimeout(LIST_DELAY_MS * 3 + 2500);
+    await routerReadFinished(link);
     await page.unroute(/\/api\/routing\/dat\/(files|stat)/);
     await page.reload();
     await page.waitForLoadState('networkidle');

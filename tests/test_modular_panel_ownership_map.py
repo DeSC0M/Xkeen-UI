@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import importlib.util
 import json
 import sys
@@ -10,6 +11,9 @@ ROOT = Path(__file__).resolve().parents[1]
 BUILDER_PATH = ROOT / "scripts" / "build_modular_panel_release.py"
 
 
+# Один сборщик на файл тестов: он помнит, что импортирует каждый уже разобранный
+# файл, и следующая карта владения по тому же дереву строится вчетверо быстрее.
+@functools.cache
 def _load_builder():
     spec = importlib.util.spec_from_file_location("build_modular_panel_release", BUILDER_PATH)
     assert spec is not None and spec.loader is not None

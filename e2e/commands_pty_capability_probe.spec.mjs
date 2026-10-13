@@ -100,13 +100,24 @@ test.describe('Commands: PTY capability probe on a slow link', () => {
   });
 
   test('a failed probe is not remembered as "no PTY"', async ({ page }) => {
+    test.setTimeout(90_000);
     const link = { down: true, delayMs: 0 };
     await mockCapabilities(page, link);
     const inputs = await mockPty(page);
 
     await openCommands(page);
     const row = commandRow(page);
+    // The row is not busy before the press is handled either, and on a loaded
+    // machine the handling starts late. So the press is over only when the row
+    // has been seen busy and is busy no more.
+    await row.evaluate((element) => {
+      window.__xkRowWasBusy = false;
+      new MutationObserver(() => {
+        if (element.getAttribute('aria-busy') === 'true') window.__xkRowWasBusy = true;
+      }).observe(element, { attributes: true, attributeFilter: ['aria-busy'] });
+    });
     await row.locator('.command-item-action').click();
+    await expect.poll(() => page.evaluate(() => window.__xkRowWasBusy), { timeout: 25_000 }).toBe(true);
     await expect(row).not.toHaveAttribute('aria-busy', 'true', { timeout: 25_000 });
     expect(inputs.join('')).toBe('');
 

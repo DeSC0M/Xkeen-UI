@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import functools
 import gzip
 import hashlib
 import importlib.util
@@ -412,6 +413,40 @@ def _dependency_closures(root: Path, module_ids: Sequence[str]) -> dict[str, fro
     return closures
 
 
+# Reading the import graph is most of the cost of an ownership map, and the map
+# is asked for again whenever a file is added to the tree. What a file imports
+# depends on its text alone, so it is worked out once per text.
+@functools.lru_cache(maxsize=4096)
+def _script_specifiers(
+    text: str, from_import: re.Pattern[str], bare_import: re.Pattern[str], dynamic_import: re.Pattern[str]
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Specifiers of the static and of the dynamic imports of a script."""
+
+    return tuple(from_import.findall(text) + bare_import.findall(text)), tuple(dynamic_import.findall(text))
+
+
+@functools.lru_cache(maxsize=4096)
+def _module_level_imports(relative: str, text: str) -> frozenset[str]:
+    """Dotted names a Python file imports by plain module-level statements."""
+
+    tree = ast.parse(text, filename=relative)
+    current = relative.removesuffix("/__init__.py").removesuffix(".py").replace("/", ".")
+    if not relative.endswith("/__init__.py"):
+        current = current.rpartition(".")[0]
+    names: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, ast.Import):
+            names.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            base = node.module or ""
+            if node.level:
+                parts = current.split(".") if current else []
+                base = ".".join(parts[: len(parts) - node.level + 1] + ([base] if base else []))
+            names.add(base)
+            names.update(base + "." + alias.name for alias in node.names if alias.name != "*")
+    return frozenset(names)
+
+
 def _javascript_import_edges(package: Path, owner_of: Mapping[str, str], stage7: Any) -> dict[str, tuple[str, ...]]:
     """Static imports of the scripts a browser actually loads.
 
@@ -430,11 +465,14 @@ def _javascript_import_edges(package: Path, owner_of: Mapping[str, str], stage7:
             raise ReleaseBuildError(f"invalid script payload {relative}: {error}") from error
         static[relative] = set()
         dynamic[relative] = set()
-        for specifier in stage7._JS_FROM_IMPORT.findall(text) + stage7._JS_BARE_IMPORT.findall(text):
+        static_specifiers, dynamic_specifiers = _script_specifiers(
+            text, stage7._JS_FROM_IMPORT, stage7._JS_BARE_IMPORT, stage7._JS_DYNAMIC_IMPORT
+        )
+        for specifier in static_specifiers:
             dependency = stage7._js_dependency(relative, specifier)
             if dependency in owner_of:
                 static[relative].add(dependency)
-        for specifier in stage7._JS_DYNAMIC_IMPORT.findall(text):
+        for specifier in dynamic_specifiers:
             dependency = stage7._js_dependency(relative, specifier)
             if dependency in owner_of:
                 dynamic[relative].add(dependency)
@@ -474,24 +512,10 @@ def _python_import_edges(package: Path, owner_of: Mapping[str, str]) -> dict[str
         if not relative.endswith(".py"):
             continue
         try:
-            tree = ast.parse((package / relative).read_text(encoding="utf-8"), filename=relative)
+            names = _module_level_imports(relative, (package / relative).read_text(encoding="utf-8"))
         except (OSError, UnicodeError, SyntaxError):
             # A placeholder file of a test tree: it imports nothing.
             continue
-        current = relative.removesuffix("/__init__.py").removesuffix(".py").replace("/", ".")
-        if not relative.endswith("/__init__.py"):
-            current = current.rpartition(".")[0]
-        names: set[str] = set()
-        for node in tree.body:
-            if isinstance(node, ast.Import):
-                names.update(alias.name for alias in node.names)
-            elif isinstance(node, ast.ImportFrom):
-                base = node.module or ""
-                if node.level:
-                    parts = current.split(".") if current else []
-                    base = ".".join(parts[: len(parts) - node.level + 1] + ([base] if base else []))
-                names.add(base)
-                names.update(base + "." + alias.name for alias in node.names if alias.name != "*")
         targets = {
             candidate
             for name in names

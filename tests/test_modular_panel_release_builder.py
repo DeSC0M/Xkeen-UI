@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import importlib.util
 import json
 import subprocess
@@ -17,6 +18,9 @@ ROOT = Path(__file__).resolve().parents[1]
 BUILDER_PATH = ROOT / "scripts" / "build_modular_panel_release.py"
 
 
+# Один сборщик на файл тестов: он помнит, что импортирует каждый уже разобранный
+# файл, и следующая карта владения по тому же дереву строится вчетверо быстрее.
+@functools.cache
 def _load_builder():
     assert BUILDER_PATH.is_file()
     spec = importlib.util.spec_from_file_location("build_modular_panel_release", BUILDER_PATH)
@@ -594,8 +598,12 @@ def test_complete_bundle_is_reproducible_and_passes_static_preflight(tmp_path: P
             assert result["id"] == entry["id"]
 
 
-def test_panel_asset_preserves_legacy_bootstrap_entrypoints(tmp_path: Path, shared_panel_source_root: Path) -> None:
+def test_panel_asset_preserves_legacy_bootstrap_entrypoints(
+    tmp_path: Path, shared_panel_source_root: Path, monkeypatch
+) -> None:
     builder = _load_builder()
+    # Здесь важен состав архива, а степень сжатия занимает больше половины сборки.
+    monkeypatch.setattr(builder, "ARCHIVE_COMPRESSLEVEL", 1)
     panel = builder.build_panel_archive(shared_panel_source_root, tmp_path, version="1.0.0", epoch=1_700_000_000)
 
     with tarfile.open(panel.path, "r:gz") as archive:
