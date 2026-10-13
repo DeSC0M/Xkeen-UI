@@ -293,7 +293,7 @@ def test_update_card_is_reduced_to_panel_summary():
     assert 'id="dt-panel-update-note"' in card
     # Версия печатается один раз, канал подписан своей строкой.
     assert card.count('id="dt-panel-version"') == 1
-    assert "<dt>Канал</dt>" in card
+    assert "<dt>Канал обновлений</dt>" in card
     # Плашка состояния появляется только при ошибке загрузки.
     status = card[card.index('id="dt-panel-status"'):]
     assert " hidden>" in status[: status.index(">") + 1]

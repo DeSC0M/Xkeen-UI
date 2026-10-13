@@ -120,7 +120,7 @@ const FAILURE_MESSAGES = {
   module_conflict: 'Обнаружен конфликт модулей.',
   module_required_by: 'Модуль требуется другим модулям.',
   panel_archive_invalid: 'Архив панели не прошёл проверку.',
-  panel_version_unsupported: 'Для локальной сборки подписанные операции доступны только после установки release-пакета.',
+  panel_version_unsupported: 'Для локальной сборки подписанные операции доступны только после установки release-пакета. Выбор канала обновлений этого не меняет.',
   profile_payload_unavailable: 'Архив для перехода профиля недоступен.',
   editor_variant_invalid: 'Такого варианта редакторов нет.',
   operation_environment_failed: 'Роутер не удалось подготовить к новому выпуску.',
@@ -235,6 +235,7 @@ function textList(parent, label, values) {
 
 function appendPanelIdentity(summary, snapshot) {
   const build = snapshot.build && typeof snapshot.build === 'object' ? snapshot.build : {};
+  const updateChannel = snapshot.update_channel === 'prerelease' ? 'Pre-release' : 'Stable';
   const releaseVersion = String(snapshot.panel_version || '').trim();
   const buildVersion = String(build.version || '').trim();
   summary.append(node(
@@ -243,8 +244,9 @@ function appendPanelIdentity(summary, snapshot) {
     releaseVersion ? `Xkeen UI ${releaseVersion}` : (buildVersion ? `Локальная сборка ${buildVersion}` : 'Сборка панели не определена'),
   ));
   if (build.repo || build.channel) {
-    summary.append(node('p', 'modules-build-meta', `Источник: ${build.repo || 'не указан'} · канал: ${build.channel || 'не указан'}`));
+    summary.append(node('p', 'modules-build-meta', `Источник: ${build.repo || 'не указан'} · канал сборки: ${build.channel || 'не указан'}`));
   }
+  summary.append(node('p', 'modules-build-meta', `Канал обновлений: ${updateChannel}`));
   if (build.commit) summary.append(node('p', 'modules-build-meta', `Коммит: ${build.commit}`));
   if (build.built_utc) summary.append(node('p', 'modules-build-meta', `Собрано: ${build.built_utc}`));
 }
