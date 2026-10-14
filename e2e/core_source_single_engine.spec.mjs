@@ -50,6 +50,21 @@ function profiles() {
 
 
 test.describe(`single-engine core source selection: ${PROFILE}`, () => {
+  test('keeps the service menu above the Mihomo editor toolbar', async ({ page }) => {
+    if (ENGINE !== 'mihomo') return;
+
+    await page.goto('/');
+    await selectPanelView(page, VIEW);
+    await page.locator('.xk-brand-service-trigger').click();
+    await expect(page.locator('#xk-mihomo-service-menu')).toBeVisible();
+
+    const layers = await page.evaluate(() => ({
+      menu: Number.parseInt(getComputedStyle(document.querySelector('#xk-mihomo-service-menu')).zIndex, 10),
+      editorToolbar: Number.parseInt(getComputedStyle(document.querySelector('.xkeen-cm-toolbar')).zIndex, 10),
+    }));
+    expect(layers.menu).toBeGreaterThan(layers.editorToolbar);
+  });
+
   test('keeps fork selection reachable when only one engine is installed', async ({ page }) => {
     await page.route(`**/api/${ENGINE}/core-profiles`, async (route) => route.fulfill({
       contentType: 'application/json',

@@ -1467,7 +1467,9 @@ body.panel-page .xk-header-popover {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
-  z-index: 45;
+  /* The editor toolbar uses z-index: 50. Keep the open header menu above it
+   * so Diff and Fullscreen do not visually bleed through the service menu. */
+  z-index: 60;
   display: grid;
   gap: 10px;
   width: 280px;
