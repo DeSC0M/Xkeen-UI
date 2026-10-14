@@ -153,6 +153,37 @@ def test_interrupt_handler_does_not_leave_terminal_echo_disabled():
     assert "trap 'installer_on_interrupt' HUP INT TERM" in text
 
 
+def test_pty_installer_defers_panel_restart_until_after_final_output():
+    text = _text()
+
+    assert 'schedule_terminal_panel_restart() {' in text
+    assert 'XKEEN_UI_PTY_SESSION' in text
+    assert 'while [ -f "$PANEL_RESTART_MARKER" ]; do' in text
+    assert "trap '' HUP" in text
+    assert 'release_terminal_panel_restart' in text
+    assert 'терминал подключится снова автоматически' in text
+
+
+def test_pty_client_treats_panel_restart_as_a_reconnect():
+    pty = (ROOT / "xkeen-ui/static/js/terminal/pty.js").read_text(encoding="utf-8")
+
+    assert "Соединение с панелью прервано. Переподключаюсь" in pty
+    assert "if (state.ptyWs === ws) {" in pty
+    assert "state.ptyWs = null;" in pty
+    assert "emit('pty:error', { message: 'websocket error' })" not in pty
+
+
+def test_pty_client_queues_keystrokes_until_the_reconnected_pty_is_ready():
+    pty = (ROOT / "xkeen-ui/static/js/terminal/pty.js").read_text(encoding="utf-8")
+
+    assert "const MAX_PENDING_INPUT_BYTES = 64 * 1024;" in pty
+    assert "function queuePendingInput(data)" in pty
+    assert "function flushPendingInput(ws)" in pty
+    assert "state.ptyWsReady = ws;" in pty
+    assert "flushPendingInput(ws);" in pty
+    assert "state.ptyQueueInputUntilReady ? queuePendingInput(data) : false" in pty
+
+
 def test_profile_status_uses_sticky_safe_output_while_progress_ticker_is_active():
     text = _text()
 

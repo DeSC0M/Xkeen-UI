@@ -20,6 +20,8 @@ INSTALL_FINISHED=0
 INSTALL_STAGE="Подготовка"
 INSTALL_ERROR_HINT=""
 INSTALL_CURRENT_ACTION="Подготовка"
+PANEL_RESTART_DEFERRED=0
+PANEL_RESTART_MARKER=""
 
 UI_RESET=""
 UI_BOLD=""
@@ -610,9 +612,36 @@ fail_install() {
   exit "${2:-1}"
 }
 
+schedule_terminal_panel_restart() {
+  # The interactive PTY belongs to the panel process. Restarting the service
+  # in the middle of this script closes its PTY master and can interrupt the
+  # installer with a WebSocket disconnect. Let a detached helper restart the
+  # freshly installed panel only after this installer has printed its result.
+  PANEL_RESTART_MARKER="${TMPDIR:-/tmp}/xkeen-ui-restart-after-install.$$"
+  : > "$PANEL_RESTART_MARKER" 2>/dev/null || return 1
+  (
+    trap '' HUP
+    while [ -f "$PANEL_RESTART_MARKER" ]; do
+      sleep 1
+    done
+    # Give the installer a moment to restore the cursor and return to its
+    # shell before stopping the process that owns the PTY master.
+    sleep 1
+    "$INIT_SCRIPT" restart >> "$INSTALL_LOG" 2>&1
+  ) </dev/null >/dev/null 2>&1 &
+  PANEL_RESTART_DEFERRED=1
+  return 0
+}
+
+release_terminal_panel_restart() {
+  [ "$PANEL_RESTART_DEFERRED" -eq 1 ] || return 0
+  rm -f "$PANEL_RESTART_MARKER" 2>/dev/null || true
+}
+
 installer_on_exit() {
   INSTALL_STATUS="$1"
   trap - 0
+  release_terminal_panel_restart
   provision_opkg_cleanup 2>/dev/null || true
   ui_progress_stop
   if [ "$INSTALL_STATUS" -ne 0 ] && [ "$INSTALL_FINISHED" -ne 1 ]; then
@@ -1651,7 +1680,13 @@ fi
 ui_step_done
 ui_step "Запуск сервиса"
 echo "[*] Запускаю сервис..."
-if ! "$INIT_SCRIPT" restart 3>&- || ! "$INIT_SCRIPT" status 3>&-; then
+if [ "${XKEEN_UI_PTY_SESSION:-}" = "1" ]; then
+  # The current process is the old panel. Restart it after the installer
+  # returns to the shell, otherwise closing its PTY master aborts this command.
+  if ! "$INIT_SCRIPT" status 3>&- || ! schedule_terminal_panel_restart; then
+    fail_install "Не удалось запланировать перезапуск Xkeen UI. Проверьте журнал установки панели."
+  fi
+elif ! "$INIT_SCRIPT" restart 3>&- || ! "$INIT_SCRIPT" status 3>&-; then
   fail_install "Сервис Xkeen UI не запустился. Проверьте журнал запуска панели."
 fi
 "$PYTHON_BIN" "$INSTALL_PROFILE_HELPER" commit --transaction "$PROFILE_TRANSACTION"
@@ -1726,3 +1761,7 @@ fi
 
 printf '      %bДиагностика:%b %s\n\n' "$UI_DIM" "$UI_RESET" "$INSTALL_LOG" >&3 2>/dev/null || true
 INSTALL_FINISHED=1
+if [ "$PANEL_RESTART_DEFERRED" -eq 1 ]; then
+  ui_info "Панель перезапустится после завершения команды; терминал подключится снова автоматически."
+  release_terminal_panel_restart
+fi

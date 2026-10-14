@@ -16266,6 +16266,19 @@ body.panel-page .xk-dns-zone[open] .xk-dns-zone-sum { display: none; }
 body.panel-page .xk-dns-zone-head .dt-switch { margin-left: auto; }
 body.panel-page .xk-dns-zone-sum ~ .dt-switch { margin-left: 0; }
 
+/* DNS-over-VLESS uses bare switches in section headers and form rows.  The
+ * generic operator thumb inherits --op-surface, which blends into the dark
+ * OFF track here.  Keep the same high-contrast OFF/ON thumb treatment as UI
+ * Settings, without changing switches outside this modal. */
+body.panel-page #routing-dns-over-vless-modal .dt-switch-slider::after {
+  background: var(--op-text) !important;
+  box-shadow: 0 1px 6px rgba(2, 8, 23, 0.28);
+}
+
+body.panel-page #routing-dns-over-vless-modal .dt-switch input:checked + .dt-switch-slider::after {
+  background: #fff !important;
+}
+
 body.panel-page .xk-dns-zone-body {
   display: grid;
   gap: 6px;

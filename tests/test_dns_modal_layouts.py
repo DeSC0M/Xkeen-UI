@@ -27,3 +27,10 @@ def test_narrow_screens_collapse_to_one_column():
     block = CSS[start:start + 600]
     assert 'data-dns-layout="split"' in block
     assert "grid-template-areas" in block
+
+
+def test_dns_over_vless_switches_keep_a_contrast_thumb():
+    assert "#routing-dns-over-vless-modal .dt-switch-slider::after" in CSS
+    assert "background: var(--op-text) !important;" in CSS
+    assert "#routing-dns-over-vless-modal .dt-switch input:checked + .dt-switch-slider::after" in CSS
+    assert "background: #fff !important;" in CSS

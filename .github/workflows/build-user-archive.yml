@@ -232,6 +232,7 @@ jobs:
             --root package-root \
             --output-dir dist/modular-panel \
             --version "${VERSION}" \
+            --channel "$([[ "${VERSION}" == *-* ]] && echo prerelease || echo stable)" \
             --source-date-epoch "${SOURCE_DATE_EPOCH}" \
             --source-commit "${GITHUB_SHA}"
 
@@ -341,6 +342,10 @@ jobs:
               $(python -c 'import json; from pathlib import Path; print(" ".join("dist/modular-panel/" + item for item in json.loads(Path("dist/modular-panel/release-metadata.json").read_text())["assets"]))') \
               --clobber
           else
+            RELEASE_KIND=()
+            if [[ "${TAG#v}" == *-* ]]; then
+              RELEASE_KIND=(--prerelease)
+            fi
             gh release create "$TAG" \
               dist/xkeen-ui-routing.tar.gz \
               dist/xkeen-ui-routing.tar.gz.sha256 \
@@ -359,5 +364,9 @@ jobs:
               dist/SHA256SUMS \
               $(python -c 'import json; from pathlib import Path; print(" ".join("dist/modular-panel/" + item for item in json.loads(Path("dist/modular-panel/release-metadata.json").read_text())["assets"]))') \
               --title "$TAG" \
+              "${RELEASE_KIND[@]}" \
               --notes "Установочный архив панели, Android-приложение и бинарники вспомогательных утилит."
+          fi
+          if [[ "${TAG#v}" == *-* ]]; then
+            gh release edit "$TAG" --prerelease
           fi

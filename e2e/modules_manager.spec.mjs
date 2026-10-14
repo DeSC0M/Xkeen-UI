@@ -112,6 +112,7 @@ test.describe('Modules panel update surface', () => {
         repo: 'umarcheh001/Xkeen-UI',
         channel: 'stable',
       },
+      update_channel: 'prerelease',
       lifecycle: { available: false, code: 'panel_version_unsupported' },
     };
     await installLifecycleRoutes(page, { installed: localBuild });
@@ -119,6 +120,9 @@ test.describe('Modules panel update surface', () => {
     await page.goto('/modules');
 
     await expect(page.getByText('Локальная сборка d523ffcf')).toBeVisible();
+    await expect(page.getByText('Источник: umarcheh001/Xkeen-UI · канал сборки: stable')).toBeVisible();
+    await expect(page.getByText('Канал обновлений: Предрелиз')).toBeVisible();
+    await expect(page.getByText('Выбор канала обновлений этого не меняет.', { exact: false })).toBeVisible();
     await expect(page.getByText('Версия панели неизвестна')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Проверить обновления' })).toBeDisabled();
   });
@@ -129,7 +133,8 @@ test.describe('Modules panel update surface', () => {
     await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: panelUpdatePlan }));
 
     await page.goto('/modules');
-    await expect(page.getByText('Источник: umarcheh001/Xkeen-UI · канал: stable')).toBeVisible();
+    await expect(page.getByText('Источник: umarcheh001/Xkeen-UI · канал сборки: stable')).toBeVisible();
+    await expect(page.getByText('Канал обновлений: Стабильный')).toBeVisible();
     await page.getByRole('button', { name: 'Проверить обновления' }).click();
     await expect(page.getByText('Доступна версия 2.11.0')).toBeVisible();
     await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem('xkeen.modules.update.v1'))?.targetVersion)).toBe('2.11.0');
@@ -174,6 +179,23 @@ test.describe('Modules panel update surface', () => {
     await expect(check.getByRole('status')).toContainText('Каталог модулей временно недоступен.');
     await expect(check.getByRole('button', { name: 'Проверить обновления' })).toBeFocused();
     await expect.poll(() => page.evaluate(() => sessionStorage.getItem('xkeen.modules.update.v1'))).toBeNull();
+  });
+});
+
+test.describe('Modules build time', () => {
+  test.use({ timezoneId: 'Europe/Moscow' });
+
+  test('shows the same local build time as DevTools instead of raw UTC', async ({ page }) => {
+    const snapshot = {
+      ...installedSnapshot,
+      build: { ...installedSnapshot.build, built_utc: '2026-10-13T15:52:13Z' },
+    };
+    await installLifecycleRoutes(page, { installed: snapshot });
+    await page.goto('/modules');
+    await expect(page.getByText('Собрано: 13.10.2026, 18:52:13')).toBeVisible();
+
+    await page.goto('/devtools');
+    await expect(page.locator('#dt-panel-built')).toHaveText('13.10.2026, 18:52:13');
   });
 });
 

@@ -101,6 +101,19 @@ def test_installed_names_the_sets_by_their_modules_not_by_the_stored_label(tmp_p
     assert payload["enabled_set"] == "xray-minimal"
 
 
+def test_update_channel_defaults_to_stable_and_persists(tmp_path):
+    panel = make_panel(tmp_path)
+    service, _ = make_service(panel, make_release())
+
+    assert service.update_channel()["channel"] == "stable"
+    assert service.set_update_channel("prerelease")["channel"] == "prerelease"
+    assert service.update_channel()["channel"] == "prerelease"
+    assert service.installed()["update_channel"] == "prerelease"
+    assert make_service(panel, make_release())[0].update_channel()["channel"] == "prerelease"
+    with pytest.raises(ModuleLifecycleError, match="choose stable or prerelease"):
+        service.set_update_channel("main")
+
+
 def test_module_set_name_knows_the_presets_and_nothing_else():
     assert module_set_name(MODULE_IDS) == "full"
     assert module_set_name(["tool.editor", "core", "engine.mihomo"]) == "mihomo-minimal"

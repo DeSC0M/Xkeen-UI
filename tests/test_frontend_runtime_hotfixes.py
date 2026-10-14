@@ -1827,6 +1827,16 @@ def test_panel_mobile_second_wave_compacts_file_manager_and_modal_shells():
     assert 'body.panel-page #ui-settings-modal .xk-ui-settings-nav-btn {' in styles
 
 
+def test_ui_settings_close_button_matches_standard_modal_geometry():
+    styles = Path('xkeen-ui/static/styles.css').read_text(encoding='utf-8')
+
+    close_block = styles.rsplit('#ui-settings-modal .modal-close {', 1)[-1].split('}', 1)[0]
+    assert 'width: 32px;' in close_block
+    assert 'height: 32px;' in close_block
+    assert 'width: 40px;' not in close_block
+    assert 'height: 40px;' not in close_block
+
+
 def test_file_manager_active_panel_highlight_stays_subtle():
     styles = Path('xkeen-ui/static/styles.css').read_text(encoding='utf-8')
 

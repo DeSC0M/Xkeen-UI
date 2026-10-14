@@ -12,6 +12,7 @@ import { describeModuleSets } from '../module_manager/render.js';
   const api = createModuleLifecycleClient();
   let _inited = false;
   let _loadSeq = 0;
+  let _channelBusy = false;
 
   const MODULE_STATES = {
     enabled: { tone: 'ok', label: 'включён' },
@@ -69,12 +70,53 @@ import { describeModuleSets } from '../module_manager/render.js';
     setText('dt-panel-commit', commit ? '(' + commit + ')' : '');
     setText('dt-panel-built', (build.built_utc && (formatDate(build.built_utc) || String(build.built_utc))) || '—');
     setText('dt-panel-repo', build.repo || '—');
-    setText('dt-panel-channel', build.channel || '—');
+    renderChannel((data && data.update_channel) || 'stable');
     // Те же слова, что в разделе «Модули и обновления»: набор называется
     // по составу модулей, а не по сохранённой метке профиля.
     const sets = data ? describeModuleSets(data) : null;
     setText('dt-panel-installed-set', sets ? sets.installed : '—');
     setText('dt-panel-enabled-set', sets ? sets.enabled : '—');
+  }
+
+  function renderChannel(value) {
+    const channel = value === 'prerelease' ? 'prerelease' : 'stable';
+    setText('dt-panel-channel', channel === 'stable' ? 'Стабильный' : 'Предрелиз');
+    const options = byId('dt-panel-channel-options');
+    if (!options) return;
+    options.querySelectorAll('[data-channel]').forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.channel === channel));
+    });
+  }
+
+  function wireChannel() {
+    const trigger = byId('dt-panel-channel');
+    const options = byId('dt-panel-channel-options');
+    if (!trigger || !options) return;
+    trigger.addEventListener('click', () => {
+      const open = options.hidden;
+      options.hidden = !open;
+      trigger.setAttribute('aria-expanded', String(open));
+    });
+    options.querySelectorAll('[data-channel]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        if (_channelBusy || button.getAttribute('aria-pressed') === 'true') return;
+        _channelBusy = true;
+        options.querySelectorAll('button').forEach((item) => { item.disabled = true; });
+        try {
+          const result = await api.setUpdateChannel(button.dataset.channel);
+          options.hidden = true;
+          trigger.setAttribute('aria-expanded', 'false');
+          renderChannel(result.channel);
+          // A change of channel has its own verified cache and update check.
+          await load();
+        } catch (error) {
+          setError('Не удалось выбрать канал: ' + ((error && error.message) || 'нет ответа сервера'));
+        } finally {
+          _channelBusy = false;
+          options.querySelectorAll('button').forEach((item) => { item.disabled = false; });
+        }
+      });
+    });
   }
 
   function renderModules(data) {
@@ -171,6 +213,7 @@ import { describeModuleSets } from '../module_manager/render.js';
   function init() {
     if (_inited) return;
     _inited = true;
+    wireChannel();
     load().catch(() => {});
   }
 

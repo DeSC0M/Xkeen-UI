@@ -20,6 +20,7 @@ from urllib.parse import urljoin, urlsplit
 
 from services.io.atomic import _atomic_write_json
 from services.module_catalog_trust import CatalogTrustError, TRUSTED_CATALOG_PUBLIC_KEYS, verify_catalog_signature
+from services.module_update_channel import CHANNELS, read_channel
 from services.module_package_contract import (
     ModulePackageContractError,
     compare_semver,
@@ -33,6 +34,7 @@ from services.module_package_contract import (
 OFFICIAL_REPOSITORY = "umarcheh001/Xkeen-UI"
 OFFICIAL_RELEASE_PATH_PREFIX = f"/{OFFICIAL_REPOSITORY}/releases/download/"
 LATEST_RELEASE_URL = f"https://api.github.com/repos/{OFFICIAL_REPOSITORY}/releases/latest"
+PRERELEASES_URL = f"https://api.github.com/repos/{OFFICIAL_REPOSITORY}/releases?per_page=30"
 CATALOG_REDIRECT_HOSTS = frozenset(
     {
         "github.com",
@@ -280,6 +282,29 @@ def parse_latest_release(payload: Mapping[str, Any]) -> str:
         _fail(error.code, "latest release tag is invalid")
 
 
+def parse_latest_prerelease(payload: object) -> str:
+    """Select the highest published SemVer prerelease from the bounded official list."""
+    if not isinstance(payload, list):
+        _fail("catalog_release_discovery_invalid", "prerelease metadata must be a list")
+    versions: list[str] = []
+    for release in payload:
+        if not isinstance(release, Mapping) or release.get("draft") is not False or release.get("prerelease") is not True:
+            continue
+        tag = release.get("tag_name")
+        if not isinstance(tag, str) or not tag.startswith("v"):
+            continue
+        try:
+            version = validate_semver(tag[1:], "catalog_release_version")
+        except ModulePackageContractError:
+            continue
+        if "-" in version:
+            versions.append(version)
+    if not versions:
+        _fail("catalog_release_not_found", "no published official prerelease is available")
+    from functools import cmp_to_key
+    return max(versions, key=cmp_to_key(compare_semver))
+
+
 @dataclass(frozen=True, slots=True)
 class CatalogSnapshot:
     """A catalog accepted by the trust boundary and ready for a future updater."""
@@ -308,8 +333,15 @@ class ModuleCatalogClient:
         platform_architecture: str | None = None,
         core_version: str | None = None,
         keyring: Mapping[str, bytes] = TRUSTED_CATALOG_PUBLIC_KEYS,
+        channel: str | None = None,
     ) -> None:
-        self._cache_path = Path(ui_state_dir).resolve() / "module-catalog" / "catalog-cache.json"
+        selected = read_channel(Path(ui_state_dir)) if channel is None else channel
+        if selected not in CHANNELS:
+            raise CatalogClientError("catalog_channel_unsupported", "unsupported update channel")
+        self._channel = selected
+        self._cache_path = Path(ui_state_dir).resolve() / "module-catalog" / (
+            "catalog-cache.json" if selected == "stable" else "catalog-cache-prerelease.json"
+        )
         self._transport = transport or UrlLibCatalogTransport()
         self._now = now
         self._cache_ttl_s = float(cache_ttl_s)
@@ -350,6 +382,9 @@ class ModuleCatalogClient:
                 platform_architecture=self._platform_architecture,
                 core_version=self._core_version,
             )
+            expected_channel = "prerelease" if "-" in source_version else "stable"
+            if catalog["channel"] != expected_channel:
+                raise CatalogClientError("catalog_channel_unsupported", "signed catalog channel does not match its release tag")
         except CatalogClientError:
             raise
         except (CatalogTrustError, ModulePackageContractError) as error:
@@ -408,19 +443,22 @@ class ModuleCatalogClient:
                 raise ValueError("invalid cache record")
             catalog_bytes = base64.b64decode(encoded_catalog, validate=True)
             signature_bytes = base64.b64decode(encoded_signature, validate=True)
-            return self._verified_snapshot(
+            snapshot = self._verified_snapshot(
                 catalog_bytes=catalog_bytes,
                 signature_bytes=signature_bytes,
                 release_version=release_version,
                 catalog_url=catalog_url,
                 fetched_at=fetched_at,
             )
+            if cache_path == self._cache_path and snapshot.catalog["channel"] != self._channel:
+                raise CatalogClientError("catalog_channel_unsupported", "cached catalog belongs to another channel")
+            return snapshot
         except (CatalogClientError, KeyError, OSError, TypeError, ValueError) as error:
             raise CatalogClientError("catalog_cache_invalid", "verified catalog cache is invalid") from error
 
     def _fetch_remote(self) -> CatalogSnapshot:
         discovery_bytes = self._transport.fetch_bytes(
-            LATEST_RELEASE_URL,
+            PRERELEASES_URL if self._channel == "prerelease" else LATEST_RELEASE_URL,
             max_bytes=_MAX_DISCOVERY_BYTES,
             policy=_API_POLICY,
         )
@@ -428,7 +466,10 @@ class ModuleCatalogClient:
             discovery = json.loads(discovery_bytes.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError) as error:
             raise CatalogClientError("catalog_release_discovery_invalid", "latest release metadata is invalid") from error
-        release_version = parse_latest_release(discovery)
+        release_version = (
+            parse_latest_prerelease(discovery) if self._channel == "prerelease"
+            else parse_latest_release(discovery)
+        )
         catalog_url = official_release_asset_url(release_version, "catalog.json")
         signature_url = official_release_asset_url(release_version, "catalog.json.sig")
         catalog_bytes = self._transport.fetch_bytes(
@@ -441,13 +482,16 @@ class ModuleCatalogClient:
             max_bytes=_MAX_SIGNATURE_BYTES,
             policy=_RELEASE_POLICY,
         )
-        return self._verified_snapshot(
+        snapshot = self._verified_snapshot(
             catalog_bytes=catalog_bytes,
             signature_bytes=signature_bytes,
             release_version=release_version,
             catalog_url=catalog_url,
             fetched_at=float(self._now()),
         )
+        if snapshot.catalog["channel"] != self._channel:
+            raise CatalogClientError("catalog_channel_unsupported", "release catalog does not match the selected channel")
+        return snapshot
 
     def get_catalog(self, *, force_refresh: bool = False) -> CatalogSnapshot:
         """Return a fresh catalog or a verified stale cache after transport failure."""

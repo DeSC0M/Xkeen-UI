@@ -157,6 +157,45 @@ function tryMigrateLegacyKey(base) {
   try { sessionStorage.removeItem(ptyLegacyKeyPlain(KEY_BASE_SEQ)); } catch (e) {}
 }
 
+  const MAX_PENDING_INPUT_BYTES = 64 * 1024;
+
+  function clearPendingInput() {
+    state.ptyPendingInput = [];
+    state.ptyPendingInputBytes = 0;
+  }
+
+  function queuePendingInput(data) {
+    const payload = String(data == null ? '' : data);
+    if (!payload) return true;
+
+    const queued = Array.isArray(state.ptyPendingInput) ? state.ptyPendingInput : [];
+    const size = Math.max(0, Number(state.ptyPendingInputBytes || 0)) + payload.length;
+    if (size > MAX_PENDING_INPUT_BYTES) return false;
+
+    queued.push(payload);
+    state.ptyPendingInput = queued;
+    state.ptyPendingInputBytes = size;
+    return true;
+  }
+
+  function flushPendingInput(ws) {
+    if (!ws || state.ptyWs !== ws || state.ptyWsReady !== ws || ws.readyState !== WebSocket.OPEN) return;
+
+    const queued = Array.isArray(state.ptyPendingInput) ? state.ptyPendingInput.slice() : [];
+    clearPendingInput();
+
+    for (let index = 0; index < queued.length; index += 1) {
+      try {
+        ws.send(JSON.stringify({ type: 'input', data: queued[index] }));
+      } catch (e) {
+        const remaining = queued.slice(index);
+        state.ptyPendingInput = remaining;
+        state.ptyPendingInputBytes = remaining.reduce((total, item) => total + String(item || '').length, 0);
+        break;
+      }
+    }
+  }
+
   // --------------------
   // UI helpers
   // --------------------
@@ -277,6 +316,11 @@ function tryMigrateLegacyKey(base) {
       try { ws.close(); } catch (e) {}
     }
     state.ptyWs = null;
+    state.ptyWsReady = null;
+    if (!opts.preservePendingInput) {
+      state.ptyQueueInputUntilReady = false;
+      clearPendingInput();
+    }
 
     // dispose subscriptions if any
     try {
@@ -344,7 +388,11 @@ function tryMigrateLegacyKey(base) {
 
     const preserveScreen = !!opts.preserveScreen;
 
-    disconnect({ sendClose: false });
+    // During an automatic reconnect the browser may still be focused on the
+    // xterm textarea. Keep keys typed while a replacement socket is opening;
+    // they are flushed once the server confirms that its new PTY is ready.
+    state.ptyQueueInputUntilReady = true;
+    disconnect({ sendClose: false, preservePendingInput: true });
 
     if (!preserveScreen) {
       try { if (typeof term.clear === 'function') term.clear(); } catch (e) {}
@@ -397,6 +445,7 @@ function tryMigrateLegacyKey(base) {
     }
 
     state.ptyWs = ws;
+    state.ptyWsReady = null;
     state.ptyDisposables = state.ptyDisposables || [];
 
     const sendResize = (colsOverride, rowsOverride) => {
@@ -468,10 +517,24 @@ function tryMigrateLegacyKey(base) {
         } catch (e) {}
         if (msg.shell) safeWriteln(term, '[PTY] Shell: ' + msg.shell);
         if (msg.reused) safeWriteln(term, '[PTY] Reattached to existing session.');
+        // WebSocket.open only confirms the TCP/WebSocket handshake. The
+        // server still has to bind (or spawn) the PTY; sending immediately
+        // after a panel self-update can otherwise lose the first keystrokes.
+        if (state.ptyWs === ws) {
+          state.ptyWsReady = ws;
+          state.ptyQueueInputUntilReady = false;
+          flushPendingInput(ws);
+          try {
+            if (overlayOpen() && term && typeof term.focus === 'function') term.focus();
+          } catch (e) {}
+        }
       } else if (msg.type === 'exit') {
         stopRetry({ silent: true });
         safeWriteln(term, '\r\n[PTY] Завершено (code=' + msg.code + ').');
         clearSessionState();
+        clearPendingInput();
+        state.ptyQueueInputUntilReady = false;
+        state.ptyWsReady = null;
         stopKeepalive();
 
         try { emit('pty:disconnected', { reason: 'exit', code: msg.code }); } catch (e) {}
@@ -482,14 +545,23 @@ function tryMigrateLegacyKey(base) {
     };
 
     ws.onerror = () => {
-      try { safeWriteln(term, '\r\n[PTY] Ошибка WebSocket.'); } catch (e) {}
-      try { emit('pty:error', { message: 'websocket error' }); } catch (e) {}
+      // Browser WebSocket errors carry no useful diagnostics and are normally
+      // followed by onclose. A panel self-update deliberately restarts the
+      // process that owns this socket, so let the close handler drive the
+      // automatic reattach instead of showing a false terminal failure.
     };
 
     ws.onclose = (ev) => {
       stopKeepalive();
       try { if (ev && ev.target && ev.target.__xkeen_manual_close) return; } catch (e) {}
-      safeWriteln(term, '\r\n[PTY] Соединение закрыто.');
+      try {
+        if (state.ptyWs === ws) {
+          state.ptyWs = null;
+          state.ptyWsReady = null;
+          state.ptyQueueInputUntilReady = true;
+        }
+      } catch (e) {}
+      safeWriteln(term, '\r\n[PTY] Соединение с панелью прервано. Переподключаюсь…');
       try { emit('pty:disconnected', { reason: 'onclose', code: (ev && typeof ev.code === 'number') ? ev.code : null }); } catch (e) {}
     };
 
@@ -523,7 +595,9 @@ function tryMigrateLegacyKey(base) {
 
   function sendRaw(data) {
     const ws = state.ptyWs;
-    if (!ws || ws.readyState !== WebSocket.OPEN) return false;
+    if (!ws || ws.readyState !== WebSocket.OPEN || state.ptyWsReady !== ws) {
+      return state.ptyQueueInputUntilReady ? queuePendingInput(data) : false;
+    }
     try {
       ws.send(JSON.stringify({ type: 'input', data: String(data || '') }));
       return true;

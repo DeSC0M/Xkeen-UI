@@ -124,8 +124,14 @@
                   <dd><code id="dt-panel-repo" class="dt-badge dt-badge-info">—</code></dd>
                 </div>
                 <div class="dt-panel-summary-row">
-                  <dt>Канал</dt>
-                  <dd><code id="dt-panel-channel" class="dt-badge dt-badge-muted">—</code></dd>
+                  <dt>Канал обновлений</dt>
+                  <dd class="dt-panel-channel-cell">
+                    <button type="button" id="dt-panel-channel" class="dt-badge dt-badge-muted dt-panel-channel-trigger" aria-expanded="false" aria-controls="dt-panel-channel-options" title="Выбрать канал обновлений">Стабильный</button>
+                    <span id="dt-panel-channel-options" class="dt-panel-channel-options" role="group" aria-label="Канал обновлений" hidden>
+                      <button type="button" data-channel="stable" aria-pressed="true">Стабильный канал</button>
+                      <button type="button" data-channel="prerelease" aria-pressed="false">Предрелизный канал</button>
+                    </span>
+                  </dd>
                 </div>
                 <div class="dt-panel-summary-row">
                   <dt>Установлено</dt>

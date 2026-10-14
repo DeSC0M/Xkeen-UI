@@ -122,6 +122,16 @@ def _pty_replay_cursor(last_seq: int, reused: bool) -> int:
     return cursor if reused else 0
 
 
+def _pty_initial_sequence(last_seq: int, reused: bool) -> int:
+    """Keep a replacement PTY's output sequence above the old session cursor."""
+    if reused:
+        return 0
+    try:
+        return max(0, int(last_seq or 0))
+    except (TypeError, ValueError):
+        return 0
+
+
 def _pty_preexec(slave_fd: int) -> None:
     """Ensure the spawned shell has a controlling TTY."""
     if not PTY_RUNTIME_SUPPORTED:
@@ -159,6 +169,9 @@ def _pty_build_env(shell_path: str) -> dict:
     env.setdefault("SHELL", shell_path or "/bin/sh")
     env.setdefault("USER", "root")
     env.setdefault("LOGNAME", env.get("USER") or "root")
+    # install.sh uses this marker to defer the restart that would otherwise
+    # tear down the WebSocket and the PTY while the installer is still active.
+    env["XKEEN_UI_PTY_SESSION"] = "1"
 
     for prof in ("/opt/etc/profile", "/etc/profile"):
         try:
@@ -509,7 +522,7 @@ def start_cleanup_loop() -> bool:
     return True
 
 
-def _create_session(rows0: int = 0, cols0: int = 0) -> PtySession:
+def _create_session(rows0: int = 0, cols0: int = 0, initial_seq: int = 0) -> PtySession:
     if not PTY_RUNTIME_SUPPORTED:
         raise RuntimeError("pty runtime unavailable on this platform")
     master_fd, slave_fd = os.openpty()
@@ -538,7 +551,13 @@ def _create_session(rows0: int = 0, cols0: int = 0) -> PtySession:
         pass
 
     sid = str(uuid.uuid4())
-    sess = PtySession(session_id=sid, master_fd=master_fd, proc=proc, shell=shell)
+    sess = PtySession(
+        session_id=sid,
+        master_fd=master_fd,
+        proc=proc,
+        shell=shell,
+        seq=_pty_initial_sequence(initial_seq, reused=False),
+    )
     sess.start_reader()
     return sess
 
@@ -627,7 +646,7 @@ def handle_pty_request(
 
         if sess is None:
             try:
-                sess = _create_session(rows0=rows0, cols0=cols0)
+                sess = _create_session(rows0=rows0, cols0=cols0, initial_seq=last_seq)
             except Exception as e:
                 try:
                     ws.send(
@@ -767,7 +786,10 @@ def handle_pty_request(
             elif t == "close":
                 close_requested = True
                 break
-    except WebSocketError:
+    except (WebSocketError, OSError, EOFError):
+        # The panel may be restarted by the command running in this PTY.
+        # gevent-websocket reports that normal transport teardown using
+        # different exception types depending on where the close occurred.
         pass
     finally:
         if sess is not None and close_requested:

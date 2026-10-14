@@ -14,6 +14,10 @@ PLAN = ROOT / "README-modular-panel-plan.md"
 DOCS_INDEX = ROOT / "docs" / "README.md"
 LIFECYCLE_DOC = ROOT / "docs" / "modular-panel-stage8-lifecycle-api.md"
 PANEL_PROFILE_DOC = ROOT / "docs" / "modular-panel-stage8-panel-profile.md"
+MANAGER_UI_DOC = ROOT / "docs" / "modular-panel-stage8-manager-ui.md"
+NOTIFICATION_DOC = ROOT / "docs" / "modular-panel-stage8-notification-center.md"
+RECOVERY_ROLLOUT_DOC = ROOT / "docs" / "modular-panel-stage8-recovery-rollout.md"
+REMAINING_AUDIT_DOC = ROOT / "docs" / "modular-panel-remaining-stages-audit.md"
 
 
 def _generate(tmp_path: Path) -> tuple[dict, str]:
@@ -99,7 +103,7 @@ def test_stage8_contract_generator_covers_boundaries_and_acceptance_matrix(tmp_p
     catalog = payload["catalog"]
     assert catalog["channel_policy"] == {
         "required": "stable",
-        "allowed": ["stable"],
+        "allowed": ["stable", "prerelease"],
         "branch_urls": False,
         "user_urls": False,
         "arbitrary_repositories": False,
@@ -173,12 +177,14 @@ def test_stage8_contract_generator_covers_boundaries_and_acceptance_matrix(tmp_p
         "checksums": "<asset>.sha256",
         "metadata": "release-metadata.json",
         "channel": "stable",
+        "optional_channel": "prerelease",
         "signing_key_id": "release-2026",
     }
     assert payload["trust_client"] == {
         "algorithm": "Ed25519",
         "signature_asset": "catalog.json.sig",
         "discovery": "https://api.github.com/repos/umarcheh001/Xkeen-UI/releases/latest",
+        "prerelease_discovery": "https://api.github.com/repos/umarcheh001/Xkeen-UI/releases?per_page=30",
         "cache_ttl_seconds": 86400,
         "allowed_redirect_hosts": [
             "github.com",
@@ -321,7 +327,7 @@ def test_stage8_lifecycle_document_and_roadmap_are_closed() -> None:
     ):
         assert fragment in lifecycle
     assert "8.3 и 8.4 закрыты 6 октября 2026 года" in plan
-    assert "реализация подэтапа 8.6 ожидает итоговой проверки" in plan
+    assert "Подэтап 8.6 закрыт 13 октября 2026 года" in plan
     assert "modular-panel-stage8-lifecycle-api.md" in docs_index
 
 
@@ -421,5 +427,70 @@ def test_stage8_panel_profile_operator_contract_and_roadmap_are_closed() -> None
         assert fragment in operator
     assert "Подэтап 8.5" in plan
     assert "закрыт 7 октября 2026 года" in plan
-    assert "реализация подэтапа 8.6 ожидает итоговой проверки" in plan
+    assert "Подэтап 8.6 закрыт 13 октября 2026 года" in plan
     assert "modular-panel-stage8-panel-profile.md" in docs_index
+
+
+def test_stage8_manager_ui_documentation_and_roadmap_are_closed() -> None:
+    assert MANAGER_UI_DOC.is_file()
+    manager = MANAGER_UI_DOC.read_text(encoding="utf-8")
+    official = (ROOT / "docs" / "modular-panel-stage8-official-module-manager.md").read_text(encoding="utf-8")
+    plan = PLAN.read_text(encoding="utf-8")
+    docs_index = DOCS_INDEX.read_text(encoding="utf-8")
+
+    for fragment in (
+        "**Статус:** закрыт 13 октября 2026 года.",
+        "`/modules`",
+        "GET /api/modules/installed",
+        "plan",
+        "Apply",
+        "rollback_failed",
+        "advanced diagnostics",
+        "Notification center (8.7)",
+    ):
+        assert fragment in manager
+
+    assert "подэтапы 8.0–8.6 закрыты" in official
+    assert "Подэтап 8.6 закрыт 13 октября 2026 года" in plan
+    assert "modular-panel-stage8-manager-ui.md" in docs_index
+
+
+def test_remaining_stage_audit_matches_the_open_roadmap() -> None:
+    notification = NOTIFICATION_DOC.read_text(encoding="utf-8")
+    recovery = RECOVERY_ROLLOUT_DOC.read_text(encoding="utf-8")
+    audit = REMAINING_AUDIT_DOC.read_text(encoding="utf-8")
+    plan = PLAN.read_text(encoding="utf-8")
+    docs_index = DOCS_INDEX.read_text(encoding="utf-8")
+
+    for fragment in (
+        "частично реализована основа",
+        "24 часа",
+        "sessionStorage",
+        "daily poll",
+        "seen/dismissed/snoozed",
+        "каталог установленного release",
+    ):
+        assert fragment in notification
+
+    for fragment in (
+        "rollout не закрыты",
+        "path traversal",
+        "signed prerelease",
+        "device smoke",
+        "stable rollout",
+    ):
+        assert fragment in recovery
+
+    for fragment in (
+        "## 8.7 Notification center",
+        "## 8.8 Recovery matrix и rollout",
+        "## Этап 9. Тестирование и миграции",
+        "## Этап 10. Оптимизация размера и запуска",
+        "XKEEN_E2E_MODULE_PROFILE",
+        "structural initial-HTML baseline",
+        "Нет единого tracked router harness",
+    ):
+        assert fragment in audit
+
+    assert "8.7, 8.8, Этапы 9 и 10 частично подготовлены, но не закрыты" in plan
+    assert "modular-panel-remaining-stages-audit.md" in docs_index

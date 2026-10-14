@@ -3,8 +3,9 @@
 Штамп сборки лежит в `BUILD.json` архива. Раскладка профиля этот файл не кладёт
 (он не принадлежит ни одному модулю), а установщик читал штамп из уже
 установленной панели — и после установки новой сборки панель продолжала
-называть себя прежней версией. Штамп берётся из архива, а то, что выбрал
-владелец (репозиторий и канал обновлений), — из установленной панели.
+называть себя прежней версией. Штамп берётся из архива; репозиторий остаётся
+выбором владельца, канал сборки относится к архиву, а канал обновлений
+сохраняется отдельно.
 """
 
 from __future__ import annotations
@@ -76,10 +77,10 @@ def test_the_installed_panel_reports_the_build_that_was_installed(tmp_path):
     assert written["built_utc"].endswith("Z")
 
 
-def test_the_owners_repository_and_channel_survive_the_install(tmp_path):
+def test_repository_survives_but_build_channel_follows_installed_archive(tmp_path):
     written = _run(tmp_path, PACKAGED, INSTALLED)
 
-    assert (written["repo"], written["channel"]) == ("someone/fork", "beta")
+    assert (written["repo"], written["channel"]) == ("someone/fork", "stable")
 
 
 def test_a_first_install_gets_the_stamp_and_the_defaults(tmp_path):

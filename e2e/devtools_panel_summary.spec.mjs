@@ -34,6 +34,36 @@ async function mockPanelSummary(page, { snapshot = installed, check = noUpdate }
 }
 
 test.describe('DevTools panel summary', () => {
+  test('persists the selected prerelease channel and refreshes the update note', async ({ page }) => {
+    let selected = 'stable';
+    const changes = [];
+    await page.route('**/api/modules/installed', (route) => route.fulfill({
+      json: { ...installed, update_channel: selected },
+    }));
+    await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({
+      json: { ...noUpdate, target_version: selected === 'prerelease' ? '2.11.0-rc.1' : '2.10.0', update_available: selected === 'prerelease' },
+    }));
+    await page.route('**/api/modules/update-channel', (route) => {
+      if (route.request().method() === 'POST') {
+        selected = route.request().postDataJSON().channel;
+        changes.push(selected);
+      }
+      return route.fulfill({ json: { ok: true, channel: selected } });
+    });
+    await page.goto('/devtools');
+    await expect(page.locator('#dt-panel-version')).toHaveText('2.10.0');
+    await page.locator('#dt-panel-channel').click();
+    await expect(page.locator('#dt-panel-channel-options')).toBeVisible();
+    await page.locator('#dt-panel-channel-options [data-channel="prerelease"]').click();
+    await expect(page.locator('#dt-panel-channel')).toHaveText('Предрелиз');
+    await expect(page.locator('#dt-panel-update-note')).toContainText('2.11.0-rc.1');
+    await page.route('**/api/modules/operations/status', (route) => route.fulfill({ json: { ok: true, result: null } }));
+    await page.goto('/modules');
+    await expect(page.getByText('Источник: umarcheh001/Xkeen-UI · канал сборки: stable')).toBeVisible();
+    await expect(page.getByText('Канал обновлений: Предрелиз')).toBeVisible();
+    expect(changes).toEqual(['prerelease']);
+  });
+
   test('lists every module on its own row with version and state', async ({ page }) => {
     const checks = await mockPanelSummary(page);
     await page.goto('/devtools');
@@ -44,7 +74,8 @@ test.describe('DevTools panel summary', () => {
     // Полный хэш рвал строку надвое: печатается короткий.
     await expect(page.locator('#dt-panel-commit')).toHaveText('(abc123456789)');
     await expect(page.locator('#dt-panel-repo')).toHaveText('umarcheh001/Xkeen-UI');
-    await expect(page.locator('#dt-panel-channel')).toHaveText('stable');
+    await expect(card.locator('dt')).toContainText(['Версия', 'Собрана', 'Источник', 'Канал обновлений', 'Установлено', 'Включено']);
+    await expect(page.locator('#dt-panel-channel')).toHaveText('Стабильный');
     // Сохранённая метка профиля не печатается: наборы названы по составу.
     await expect(page.locator('#dt-panel-installed-set')).toHaveText('полный набор');
     await expect(page.locator('#dt-panel-enabled-set')).toHaveText('свой набор (2 из 3)');
@@ -73,7 +104,28 @@ test.describe('DevTools panel summary', () => {
     expect(checks).toEqual([{ force_refresh: false }]);
 
     // Карточка справочная: команд обновления в ней нет, плашка ошибки спрятана.
-    await expect(card.locator('button')).toHaveCount(0);
+    await expect(card.locator('#dt-panel-channel')).toHaveCount(1);
+    await expect(card.locator('[data-channel]')).toHaveCount(2);
+    await expect(card.locator('[data-channel="stable"]')).toHaveText('Стабильный канал');
+    await expect(card.locator('[data-channel="prerelease"]')).toHaveText('Предрелизный канал');
+    const channelGeometry = await card.locator('.dt-panel-channel-cell').evaluate((cell) => {
+      const trigger = cell.querySelector('.dt-panel-channel-trigger');
+      const repo = document.querySelector('#dt-panel-repo');
+      if (!trigger || !repo) return null;
+      const triggerStyle = getComputedStyle(trigger);
+      const repoStyle = getComputedStyle(repo);
+      return {
+        channelCellPaddingTop: Number.parseFloat(getComputedStyle(cell).paddingTop),
+        triggerHeight: trigger.getBoundingClientRect().height,
+        repoHeight: repo.getBoundingClientRect().height,
+        triggerMinHeight: triggerStyle.minHeight,
+        repoMinHeight: repoStyle.minHeight,
+      };
+    });
+    expect(channelGeometry).not.toBeNull();
+    expect(channelGeometry.channelCellPaddingTop).toBeGreaterThanOrEqual(4);
+    expect(channelGeometry.triggerHeight).toBeLessThanOrEqual(channelGeometry.repoHeight + 2);
+    expect(channelGeometry.triggerMinHeight).toBe('22px');
     await expect(page.locator('#dt-panel-status')).toBeHidden();
     await expect(page.locator('#xk-update-link')).toHaveCount(0);
   });

@@ -83,7 +83,7 @@ def test_devtools_operator_layer_covers_shell_tools_env_logs_modals_and_mobile()
 
     assert "grid-template-columns: minmax(400px, 440px) minmax(0, 1fr);" in css
     assert "#xk-tooltip-portal .xk-tooltip-bubble" in css
-    assert "#dt-env-card thead th:nth-child(4) { width: 156px; }" in css
+    assert "#dt-env-card thead th:nth-child(4) { width: 184px; }" in css
     assert "text-align: right;" in css
     assert ".dt-log-interval" in css
     assert "max-height: calc(100vh - 210px);" in css

@@ -13,6 +13,7 @@
       "repo": "umarcheh001/Xkeen-UI",
       "channel": "stable"
     },
+    "update_channel": "stable",
     "profile": "custom",
     "editor": {
       "variant": "light",
@@ -541,7 +542,7 @@
     "blockers": [
       {
         "code": "panel_version_current",
-        "message": "the stable catalog does not contain a newer panel release",
+        "message": "the selected catalog does not contain a newer panel release",
         "current_version": "2.10.0",
         "target_version": "2.10.0"
       }
@@ -885,6 +886,7 @@
       "repo": "umarcheh001/Xkeen-UI",
       "channel": "stable"
     },
+    "update_channel": "stable",
     "profile": "custom",
     "editor": {
       "variant": "light",
@@ -1632,6 +1634,7 @@
       "repo": "umarcheh001/Xkeen-UI",
       "channel": "stable"
     },
+    "update_channel": "stable",
     "profile": "custom",
     "editor": {
       "variant": "light",

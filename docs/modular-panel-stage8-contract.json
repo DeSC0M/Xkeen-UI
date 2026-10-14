@@ -199,6 +199,7 @@
     "user_files": [
       "branding.json",
       "devtools.env",
+      "module-update-channel.json",
       "secret.key",
       "ui-settings.json"
     ],
@@ -234,7 +235,8 @@
     "channel_policy": {
       "required": "stable",
       "allowed": [
-        "stable"
+        "stable",
+        "prerelease"
       ],
       "branch_urls": false,
       "user_urls": false,
@@ -316,12 +318,14 @@
     "checksums": "<asset>.sha256",
     "metadata": "release-metadata.json",
     "channel": "stable",
+    "optional_channel": "prerelease",
     "signing_key_id": "release-2026"
   },
   "trust_client": {
     "algorithm": "Ed25519",
     "signature_asset": "catalog.json.sig",
     "discovery": "https://api.github.com/repos/umarcheh001/Xkeen-UI/releases/latest",
+    "prerelease_discovery": "https://api.github.com/repos/umarcheh001/Xkeen-UI/releases?per_page=30",
     "cache_ttl_seconds": 86400,
     "allowed_redirect_hosts": [
       "github.com",

@@ -131,18 +131,18 @@ def provision_script(journal: Journal, *, staged: bool) -> Path:
 def _build_stamp(root: Path, version: str, commit: str | None) -> bytes:
     """``BUILD.json`` of the release that was just laid.
 
-    The repository and the channel of updates are the owner's choice and
-    stay; everything that described the previous build goes.
+    The repository is the owner's choice; the installed release's channel
+    follows its signed SemVer identity. The update preference lives separately.
     """
 
     kept: dict[str, Any] = {}
     try:
         previous = json.loads((root / "BUILD.json").read_text(encoding="utf-8"))
         if isinstance(previous, dict):
-            kept = {key: previous[key] for key in ("repo", "channel") if isinstance(previous.get(key), str)}
+            kept = {key: previous[key] for key in ("repo",) if isinstance(previous.get(key), str)}
     except (OSError, ValueError):
         kept = {}
-    return (json.dumps({**kept, "version": version, "commit": commit}, ensure_ascii=False, indent=2) + "\n").encode(
+    return (json.dumps({**kept, "version": version, "channel": "prerelease" if "-" in version else "stable", "commit": commit}, ensure_ascii=False, indent=2) + "\n").encode(
         "utf-8"
     )
 

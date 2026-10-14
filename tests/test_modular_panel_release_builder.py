@@ -497,6 +497,27 @@ def test_catalog_and_release_metadata_publish_every_generated_asset(tmp_path: Pa
     assert bundle.metadata_path.name in metadata["assets"]
 
 
+def test_prerelease_bundle_marks_catalog_and_module_manifest(tmp_path: Path) -> None:
+    builder = _load_builder()
+    package = tmp_path / "xkeen-ui"
+    for relative in ("install.sh", "services/module_registry.py", "static/js/pages/terminal.lazy.entry.js"):
+        path = package / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("payload\n", encoding="utf-8")
+
+    bundle = builder.build_release(builder.ReleaseInputs(
+        root=tmp_path, output_dir=tmp_path / "dist", version="1.2.4-rc.1",
+        source_date_epoch=1_700_000_000, source_commit="a" * 40, channel="prerelease",
+    ))
+    catalog = json.loads(bundle.catalog_path.read_text(encoding="utf-8"))
+    assert catalog["channel"] == "prerelease"
+    assert all(entry["channel"] == "prerelease" for entry in catalog["modules"])
+    import tarfile
+    with tarfile.open(bundle.modules[-1].path, "r:gz") as archive:
+        manifest = json.load(archive.extractfile("module-manifest.json"))
+    assert manifest["channel"] == "prerelease"
+
+
 def test_release_builder_supports_plan_level_function_signature(tmp_path: Path) -> None:
     builder = _load_builder()
     package = tmp_path / "xkeen-ui"

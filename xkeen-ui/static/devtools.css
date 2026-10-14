@@ -71,6 +71,43 @@ details.dt-collapsible:not([open]) .dt-collapsible-icon {
   overflow-wrap: anywhere;
 }
 
+.dt-panel-channel-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.dt-panel-channel-trigger,
+.dt-panel-channel-options button {
+  cursor: pointer;
+  border: 1px solid var(--op-border, #374151);
+  border-radius: 6px;
+  background: var(--op-surface-2, #1a202b);
+  color: var(--op-text, #e5e7eb);
+  font: inherit;
+  min-height: 22px;
+  padding: 2px 7px;
+  line-height: 1.25;
+}
+
+.dt-panel-channel-trigger:hover,
+.dt-panel-channel-options button:hover {
+  border-color: var(--op-accent, #7874e8);
+}
+
+.dt-panel-channel-options:not([hidden]) {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.dt-panel-channel-options button[aria-pressed="true"] {
+  border-color: var(--op-accent, #7874e8);
+  background: var(--op-accent-soft, rgba(120, 116, 232, .18));
+  color: var(--op-accent-hover, #aaa7ff);
+}
+
 .dt-panel-modules-summary {
   margin-top: 16px;
   padding-top: 12px;
