@@ -10,7 +10,7 @@
     "template": "xkeen-ui/templates/panel.html",
     "composition_source": "scripts/panel_template_source.py",
     "inventory": "docs/modular-panel-stage0-inventory.json",
-    "sha256": "f17d8706a0edf702a12ffecdcc2e6db044446770c10e0cf00b73de318233d09f",
+    "sha256": "8f99dd4c99d772d7fb76bced81ae1fa7770fed2af5ab227a9fa34eb1fb2bd4b2",
     "utf8_bytes": 428665,
     "line_count": 5650,
     "id_count": 1352,
