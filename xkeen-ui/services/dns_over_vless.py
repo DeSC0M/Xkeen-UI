@@ -3385,6 +3385,33 @@ def _status_hosts(configs_dir: str, state: Dict[str, Any]) -> tuple[Dict[str, An
         return {}, False
 
 
+def _followed_clone(
+    runtime: Dict[str, Any],
+    routing: Dict[str, Any],
+    state: Dict[str, Any],
+    selection: list[str],
+) -> Optional[Dict[str, Any]]:
+    """The managed clone rebuilt from its source balancer, or None where that is unsafe.
+
+    Reads only, so a forecast can ask the same question about configs that
+    do not exist yet.
+    """
+    if len(selection) != 1 or not _find_managed_clone(routing):
+        return None
+    try:
+        target = _select_target(runtime, selection, routing)
+    except DnsOverVlessError:
+        return None
+    clone = target.get("managed_balancer")
+    if target.get("kind") != "balancer" or not isinstance(clone, dict) or not clone.get("selector"):
+        return None
+    if state.get("pass_non_ip"):
+        live = {item["tag"] for item in _proxy_outbounds(runtime)}
+        if _clean_tag(state.get("pass_non_ip_node")) not in live:
+            return None
+    return clone
+
+
 def follow_source_route(*, configs_dir: str, routing_file: str, ui_state_dir: str) -> Dict[str, Any]:
     """Bring the managed clone in line with the balancer it was copied from.
 
@@ -3415,24 +3442,15 @@ def follow_source_route(*, configs_dir: str, routing_file: str, ui_state_dir: st
         if _find_balancer(runtime, source_tag) and not _route_drift(runtime, routing, source_tag):
             return idle
 
-        manual = {
-            "status": "manual",
-            "message": (
-                f"DNS-over-VLESS остался на прежнем маршруте: балансировщик «{source_tag}» "
-                "больше не подходит для DNS. Откройте окно DNS-over-VLESS и выберите маршрут заново."
-            ),
-        }
-        try:
-            target = _select_target(runtime, selection, routing)
-        except DnsOverVlessError:
-            return manual
-        clone = target.get("managed_balancer")
-        if target.get("kind") != "balancer" or not isinstance(clone, dict) or not clone.get("selector"):
-            return manual
-        if state.get("pass_non_ip"):
-            live = {item["tag"] for item in _proxy_outbounds(runtime)}
-            if _clean_tag(state.get("pass_non_ip_node")) not in live:
-                return manual
+        clone = _followed_clone(runtime, routing, state, selection)
+        if clone is None:
+            return {
+                "status": "manual",
+                "message": (
+                    f"DNS-over-VLESS остался на прежнем маршруте: балансировщик «{source_tag}» "
+                    "больше не подходит для DNS. Откройте окно DNS-over-VLESS и выберите маршрут заново."
+                ),
+            }
 
         result = copy.deepcopy(routing)
         balancers = result["routing"]["balancers"]

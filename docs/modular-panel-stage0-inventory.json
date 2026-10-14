@@ -37,7 +37,7 @@
       ],
       "removable": false,
       "unit_count": 543,
-      "size_bytes": 7358216,
+      "size_bytes": 7363378,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -86,7 +86,7 @@
       ],
       "removable": true,
       "unit_count": 137,
-      "size_bytes": 3828815,
+      "size_bytes": 3829346,
       "kind_counts": {
         "backend_route": 13,
         "backend_service": 20,
@@ -2597,7 +2597,7 @@
       "module_id": "core",
       "kind": "backend_service",
       "path": "xkeen-ui/services/subscription_pause.py",
-      "size_bytes": 25075,
+      "size_bytes": 26908,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -7031,7 +7031,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_subscription_pause_dns.py",
-      "size_bytes": 15949,
+      "size_bytes": 19278,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -16071,7 +16071,7 @@
       "module_id": "engine.xray",
       "kind": "backend_service",
       "path": "xkeen-ui/services/dns_over_vless.py",
-      "size_bytes": 192270,
+      "size_bytes": 192801,
       "depends_on": [
         "core",
         "tool.editor"

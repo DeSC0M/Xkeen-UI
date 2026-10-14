@@ -240,13 +240,33 @@ def _pause_outlook(ui_state_dir: str, xray_configs_dir: str, view: Dict[str, Any
     tags = {item["tag"] for item in usable}
     selection = view["selection"]
     if selection and all(tag in tags for tag in selection):
-        same = _survives(selection, view["state"], runtime, routing)
-        return {"outcome": "keep" if same else "resync", "to": None, "candidates": [], "restarts": 1 if same else 2}
+        if _survives(selection, view["state"], runtime, routing):
+            return {"outcome": "keep", "to": None, "candidates": [], "restarts": 1}
+        # A copied balancer is rebuilt on the spot; anything else needs DNS switched off and on.
+        in_place = dov._followed_clone(runtime, routing, view["state"], selection) is not None
+        return {"outcome": "resync", "to": None, "candidates": [], "restarts": 1 if in_place else 2}
     if not usable:
         return {"outcome": "disable", "to": None, "candidates": [], "restarts": 2}
     if len(usable) == 1:
         return {"outcome": "retarget", "to": usable[0], "candidates": usable, "restarts": 2}
     return {"outcome": "choose", "to": None, "candidates": usable, "restarts": 2}
+
+
+def _follows_resume(view: Dict[str, Any], current: List[Dict[str, str]]) -> bool:
+    """Whether DNS outlives a resume that takes the owner's servers out again.
+
+    Only a forecast.  A route through one balancer keeps it: the balancer
+    stays and its copy is rebuilt on the spot.  A route through the owner's
+    own servers, or non-IP records sent to one, has to move.
+    """
+    selection = view["selection"]
+    kinds = {item["tag"]: item["kind"] for item in current}
+    return (
+        len(selection) == 1
+        and kinds.get(selection[0]) == "balancer"
+        and not view["state"].get("pass_non_ip")
+        and bool(dov._find_managed_clone(view["routing"]))
+    )
 
 
 def _wants_restore(record: Dict[str, Any], view: Dict[str, Any]) -> bool:
@@ -287,7 +307,7 @@ def plan(*, ui_state_dir: str, xray_configs_dir: str, routing_file: str) -> Dict
                 "outcome": "recheck" if takes_own_servers else "keep",
                 "to": None,
                 "candidates": [],
-                "restarts": 2 if takes_own_servers else 1,
+                "restarts": 2 if takes_own_servers and not _follows_resume(view, current) else 1,
             }
     else:
         outlook = _pause_outlook(ui_state_dir, xray_configs_dir, view)
@@ -318,6 +338,21 @@ def _Guard(ui_state_dir: str, xray_configs_dir: str) -> xray_transactions.Memory
             _record_path(ui_state_dir),
         ],
     )
+
+
+def _follow_route(ui_state_dir: str, xray_configs_dir: str, routing_file: str) -> bool:
+    """Rebuild DNS-over-VLESS's copy of the balancer the switch just changed.
+
+    False when there was nothing to rebuild or it could not be done safely:
+    the check that follows then sends the switch the long way round.
+    """
+    try:
+        outcome = dov.follow_source_route(
+            configs_dir=xray_configs_dir, routing_file=routing_file, ui_state_dir=ui_state_dir
+        )
+    except Exception:  # noqa: BLE001 - the long way round still works
+        return False
+    return isinstance(outcome, dict) and outcome.get("status") == "updated"
 
 
 def _restart(restart_xkeen: Callable[..., Any], source: str) -> bool:
@@ -436,16 +471,20 @@ def _switch(
                 "skipped": notes["skipped"],
             }
 
-        # One restart, DNS untouched: nothing to protect, or the route survives.
+        # One restart, DNS left on: nothing to protect, the route survives, or
+        # its copy of a balancer is rebuilt in place.
         dns_idle = not view["enabled"] and not restore
-        if dns_idle or (view["enabled"] and not restore and (not pausing or outlook.get("outcome") == "keep")):
+        if dns_idle or (view["enabled"] and not restore and (not pausing or outlook.get("restarts") == 1)):
             guard = _Guard(ui_state_dir, xray_configs_dir)
             try:
                 _apply_files()
+                followed = False
+                if not dns_idle:
+                    followed = _follow_route(ui_state_dir, xray_configs_dir, routing_file)
                 if dns_idle or _intact(_dns_now(ui_state_dir, xray_configs_dir, routing_file)):
                     _confirm(guard)
                     restarted = _restart(restart_xkeen, source)
-                    return _finish(restarts=1, restarted=restarted, round_trip=False)
+                    return _finish(restarts=1, restarted=restarted, round_trip=followed)
             except Exception:
                 guard.restore()
                 raise

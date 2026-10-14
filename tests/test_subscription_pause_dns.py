@@ -264,6 +264,23 @@ def test_dns_changed_by_hand_during_pause_is_not_moved_back(tmp_path: Path, monk
     assert rig.restarts == ["xray-subscriptions-resume"]
 
 
+def test_resume_that_takes_away_the_dns_server_warns_of_two_restarts(tmp_path: Path, monkeypatch):
+    """«Только подписка» убирает свои серверы: DNS на своём сервере придётся перевести."""
+    rig = Rig(tmp_path, monkeypatch, own=("home-nl",))
+    rig.bench.add("alpha", routing_mode="subscription-only")
+    rig.pause()
+    rig.dns_on("home-nl")
+
+    plan = rig.plan()
+    assert plan["dns"]["outcome"] == "recheck"
+    assert plan["dns"]["restarts"] == 2
+
+    back = rig.resume(dns_target="proxy")
+
+    assert back["dns"]["to"] == ["proxy"]
+    assert len(rig.restarts) == 2
+
+
 def test_plan_changes_nothing(rig: Rig):
     rig.bench.add("alpha")
     rig.dns_on("proxy")
@@ -297,20 +314,86 @@ def test_dns_on_owners_balancer_stays_on_it_and_follows_its_members(tmp_path: Pa
     plan = rig.plan()
     assert plan["dns"]["outcome"] == "resync"
     assert plan["dns"]["from"] == [{"tag": "my-pool", "kind": "balancer"}]
+    assert plan["dns"]["restarts"] == 1
 
     result = rig.pause()
 
     assert result["dns"]["action"] == "resynced"
+    assert rig.restarts == ["xray-subscriptions-pause"]
     assert rig.dns() == {"enabled": True, "selection": ["my-pool"]}
     paused_routing = json.loads(rig.routing.read_text(encoding="utf-8"))
     assert rig.dov._find_managed_clone(paused_routing)["selector"] == ["home-"]
+    rig.restarts.clear()
+    resume_plan = rig.plan()
+    assert resume_plan["dns"]["outcome"] == "recheck"
+    assert resume_plan["dns"]["restarts"] == 1
 
     back = rig.resume()
 
     assert back["dns"]["action"] == "resynced"
+    assert rig.restarts == ["xray-subscriptions-resume"]
     assert rig.dns() == {"enabled": True, "selection": ["my-pool"]}
     assert _meaning(rig.bench.config_files()) == _meaning(active)
 
+
+
+def _shared_pool(rig: Rig) -> None:
+    """Балансировщик на свой сервер и две подписки, DNS-over-VLESS — на его копии."""
+    routing = json.loads(rig.routing.read_text(encoding="utf-8"))
+    routing["routing"]["balancers"] = [
+        {"tag": "pool", "selector": ["home-", "alpha", "beta"], "strategy": {"type": "leastPing"}}
+    ]
+    rig.routing.write_text(json.dumps(routing, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    rig.bench.add("alpha", routing_mode="subscription-only", routing_balancer_tags=["pool"])
+    rig.bench.add("beta", routing_mode="subscription-only", routing_balancer_tags=["pool"])
+    rig.dns_on("pool")
+
+
+def _clone_selector(rig: Rig) -> list:
+    return rig.dov._find_managed_clone(json.loads(rig.routing.read_text(encoding="utf-8")))["selector"]
+
+
+def test_copied_balancer_follows_pause_and_resume_with_one_restart_each(tmp_path: Path, monkeypatch):
+    """Копию балансировщика пауза пересобирает на месте: DNS не выключается, ядро перезапускается один раз."""
+    rig = Rig(tmp_path, monkeypatch, own=("home-nl",))
+    _shared_pool(rig)
+    assert _clone_selector(rig) == ["alpha", "beta"]
+    switched = []
+    monkeypatch.setattr(rig.dov, "apply_action", lambda *a, **k: switched.append(a))
+
+    plan = rig.plan()
+    assert plan["dns"]["outcome"] == "resync"
+    assert plan["dns"]["restarts"] == 1
+
+    result = rig.pause()
+
+    assert result["dns"]["action"] == "resynced"
+    assert rig.restarts == ["xray-subscriptions-pause"]
+    assert _clone_selector(rig) == ["home-"]
+    rig.restarts.clear()
+
+    back = rig.resume()
+
+    assert back["dns"]["action"] == "resynced"
+    assert rig.restarts == ["xray-subscriptions-resume"]
+    assert _clone_selector(rig) == ["alpha", "beta"]
+    assert switched == []
+
+
+def test_copy_that_cannot_be_rebuilt_in_place_goes_the_long_way(tmp_path: Path, monkeypatch):
+    rig = Rig(tmp_path, monkeypatch, own=("home-nl",))
+    _shared_pool(rig)
+
+    def broken(**_kwargs):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(rig.dov, "follow_source_route", broken)
+
+    result = rig.pause()
+
+    assert result["dns"]["action"] == "resynced"
+    assert rig.restarts == ["dns-over-vless", "dns-over-vless"]
+    assert _clone_selector(rig) == ["home-"]
 
 def test_owners_balancer_is_offered_first_when_dns_has_to_move(tmp_path: Path, monkeypatch):
     rig = Rig(tmp_path, monkeypatch, own=("home-nl", "home-de"))
