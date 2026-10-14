@@ -9,13 +9,14 @@
   // Usage:
   //   const ok = await XKeen.ui.confirm({ title, message, okText, cancelText, danger });
 
-  let _bound = false;
   let _resolver = null;
   let _activeOptions = null;
+  let _activeModal = null;
 
-  function el(id) {
-    return document.getElementById(id);
-  }
+  // Expando keys on the dialog element. They are read by every copy of this
+  // module: screens may bring their own copy, and the element is shared.
+  const HOME_KEY = '__xkConfirmHome';
+  const BOUND_KEY = '__xkConfirmBound';
 
   function getModalApi() {
     try {
@@ -40,9 +41,67 @@
     if (!modal) return;
     try {
       if (document.body && modal.parentElement !== document.body) {
+        if (!modal[HOME_KEY]) modal[HOME_KEY] = modal.parentElement;
         document.body.appendChild(modal);
       }
     } catch (e) {}
+  }
+
+  // The panel switches screens without a reload (top_level_screen_host). A
+  // dialog moved to <body> outlived its screen, the next screen brought its
+  // own dialog with the same ids, and the buttons stayed bound to the first
+  // one: only the cross worked, and the old dialog showed through
+  // (45.1, 14.10.2026). Every leftover goes back to its own screen, so the
+  // document holds one dialog — the one of the screen on display.
+  function isOnDisplay(node) {
+    try {
+      return !!(node && node.isConnected && !node.closest('[hidden]'));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function currentConfirmModal() {
+    const all = Array.from(document.querySelectorAll('[id="confirm-modal"]'));
+    const live = [];
+    all.forEach((modal) => {
+      const home = modal[HOME_KEY];
+      if (home && modal.parentElement === document.body && !isOnDisplay(home)) {
+        try { modal.classList.add('hidden'); } catch (e) {}
+        try { home.appendChild(modal); } catch (e2) {}
+        return;
+      }
+      live.push(modal);
+    });
+    // Normally one is left; with more, the latest screen's dialog wins.
+    return live.length ? live[live.length - 1] : null;
+  }
+
+  // Buttons call whichever copy of the module opened the dialog last: it
+  // holds the pending promise.
+  function closeActive(value, meta) {
+    let fn = null;
+    try { fn = window.XKeen && XKeen.ui && XKeen.ui.confirm && XKeen.ui.confirm._closeWith; } catch (e) {}
+    if (typeof fn === 'function') fn(value, meta);
+    else closeWith(value, meta);
+  }
+
+  function closeWith(value, meta) {
+    const details = (meta && typeof meta === 'object') ? meta : {};
+    const modal = _activeModal;
+    _activeModal = null;
+    if (modal) hideModal(modal);
+
+    const active = _activeOptions || null;
+    _activeOptions = null;
+    const r = _resolver;
+    _resolver = null;
+    if (!value && active && !details.silent) {
+      emitConfirmFeedback(active.cancelMessage, active.cancelKind);
+    }
+    if (typeof r === 'function') {
+      try { r(!!value); } catch (e) {}
+    }
   }
 
   function buildConfirmMessageText(opts) {
@@ -105,57 +164,43 @@
   }
 
   function ensureModal() {
-    const modal = el('confirm-modal');
-    const title = el('confirm-modal-title');
-    const message = el('confirm-modal-message');
-    const okBtn = el('confirm-modal-ok-btn');
-    const cancelBtn = el('confirm-modal-cancel-btn');
-    const closeBtn = el('confirm-modal-close-btn');
+    const modal = currentConfirmModal();
+    if (!modal) return null;
+    // Parts are looked up inside this dialog, not by id in the whole document.
+    const part = (id) => modal.querySelector('[id="' + id + '"]');
+    const title = part('confirm-modal-title');
+    const message = part('confirm-modal-message');
+    const okBtn = part('confirm-modal-ok-btn');
+    const cancelBtn = part('confirm-modal-cancel-btn');
+    const closeBtn = part('confirm-modal-close-btn');
 
-    if (!modal || !title || !message || !okBtn || !cancelBtn || !closeBtn) {
+    if (!title || !message || !okBtn || !cancelBtn || !closeBtn) {
       return null;
     }
 
-    if (!_bound) {
-      _bound = true;
-
-      function closeWith(value, meta) {
-        const details = (meta && typeof meta === 'object') ? meta : {};
-        hideModal(modal);
-
-        const active = _activeOptions || null;
-        _activeOptions = null;
-        const r = _resolver;
-        _resolver = null;
-        if (!value && active && !details.silent) {
-          emitConfirmFeedback(active.cancelMessage, active.cancelKind);
-        }
-        if (typeof r === 'function') {
-          try { r(!!value); } catch (e) {}
-        }
-      }
+    if (!modal[BOUND_KEY]) {
+      modal[BOUND_KEY] = true;
 
       okBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        closeWith(true);
+        closeActive(true);
       });
       cancelBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        closeWith(false);
+        closeActive(false);
       });
       closeBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        closeWith(false);
+        closeActive(false);
       });
 
       modal.addEventListener('xkeen:modal-request-close', (e) => {
-        if (typeof _resolver !== 'function') return;
+        let pending = false;
+        try { pending = !!(XKeen.ui.confirm && XKeen.ui.confirm._isPending && XKeen.ui.confirm._isPending()); } catch (err) {}
+        if (!pending) return;
         try { if (e && typeof e.preventDefault === 'function') e.preventDefault(); } catch (err) {}
-        closeWith(false);
+        closeActive(false);
       });
-
-      // Expose for internal use (optional)
-      ensureModal._closeWith = closeWith;
     }
 
     return { modal, title, message, okBtn, cancelBtn };
@@ -173,8 +218,8 @@
     }
 
     // If a confirm is already open, resolve it as cancelled.
-    if (typeof _resolver === 'function' && ensureModal._closeWith) {
-      try { ensureModal._closeWith(false, { silent: true }); } catch (e) {}
+    if (typeof _resolver === 'function') {
+      try { closeWith(false, { silent: true }); } catch (e) {}
     }
 
     const titleText = normalizeText(options.title, 'Подтверждение');
@@ -197,6 +242,7 @@
       ui.okBtn.classList.toggle('btn-danger', !!danger);
     } catch (e) {}
 
+    _activeModal = ui.modal;
     showModal(ui.modal);
 
     // Focus the cancel button by default (safer for destructive operations).
@@ -209,4 +255,14 @@
       _resolver = resolve;
     });
   };
+  XKeen.ui.confirm._closeWith = closeWith;
+  XKeen.ui.confirm._isPending = () => typeof _resolver === 'function';
+
+  // After a screen switch the old screen's dialog goes home at once, so no
+  // other code meets two elements with the same id in the meantime.
+  try {
+    window.addEventListener('xkeen:top-level-route-change', () => {
+      try { currentConfirmModal(); } catch (e) {}
+    });
+  } catch (e) {}
 })();

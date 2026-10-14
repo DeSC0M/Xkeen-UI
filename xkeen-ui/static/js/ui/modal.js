@@ -106,14 +106,22 @@
     const modalId = resolveModalId(modalEl);
     if (!modalEl || !modalId) return noop;
 
+    // The state is kept per id, but screens switched without a reload bring a
+    // new element under the same id (each screen has its own confirm dialog).
+    // A binding left on the old element opened that one, out of sight, while
+    // the dialog on display stayed hidden (45.1, 14.10.2026).
     const existing = _modalBindings.get(modalId);
-    if (typeof existing === 'function') return existing;
+    if (existing && existing.el === modalEl) return existing.unsubscribe;
+    if (existing) {
+      try { existing.unsubscribe(); } catch (e) {}
+      _modalBindings.delete(modalId);
+    }
 
     syncStoreModalState(modalEl, isVisibleModal(modalEl), { source: 'modal_dom_init' });
 
     const api = getUiModalApi();
     if (!api || typeof api.subscribeModal !== 'function') {
-      _modalBindings.set(modalId, noop);
+      _modalBindings.set(modalId, { el: modalEl, unsubscribe: noop });
       return noop;
     }
 
@@ -121,7 +129,7 @@
       applyModalOpenState(modalEl, isOpen, { source: 'modal_store' });
     }, { immediate: true });
 
-    _modalBindings.set(modalId, unsubscribe);
+    _modalBindings.set(modalId, { el: modalEl, unsubscribe });
     return unsubscribe;
   }
 

@@ -358,7 +358,9 @@
             "XKeen.ui",
             "XKeen.ui.confirm",
             "XKeen.ui.modal",
-            "XKeen.ui.toast"
+            "XKeen.ui.confirm._closeWith",
+            "XKeen.ui.toast",
+            "XKeen.ui.confirm._isPending"
           ],
           "lazy_features": []
         },
@@ -549,6 +551,8 @@
         "XKeen.ui.modal",
         "XKeen.ui.dropdownDismissWired",
         "XKeen.ui.sharedPrimitives",
+        "XKeen.ui.confirm._closeWith",
+        "XKeen.ui.confirm._isPending",
         "XKeen.ui.applyTheme",
         "XKeen.ui.initThemeToggle",
         "XKeen.ui.syncThemeToggleButtons",
@@ -1298,7 +1302,9 @@
             "XKeen.ui",
             "XKeen.ui.confirm",
             "XKeen.ui.modal",
-            "XKeen.ui.toast"
+            "XKeen.ui.confirm._closeWith",
+            "XKeen.ui.toast",
+            "XKeen.ui.confirm._isPending"
           ],
           "lazy_features": []
         },
@@ -1538,6 +1544,8 @@
         "XKeen.ui.showGlobalXkeenSpinner",
         "XKeen.ui.hideGlobalXkeenSpinner",
         "XKeen.ui.showXrayPreflightError",
+        "XKeen.ui.confirm._closeWith",
+        "XKeen.ui.confirm._isPending",
         "XKeen.ui.typography",
         "XKeen.ui.layout",
         "XKeen.ui.branding",
@@ -2309,7 +2317,9 @@
             "XKeen.ui",
             "XKeen.ui.confirm",
             "XKeen.ui.modal",
-            "XKeen.ui.toast"
+            "XKeen.ui.confirm._closeWith",
+            "XKeen.ui.toast",
+            "XKeen.ui.confirm._isPending"
           ],
           "lazy_features": []
         },
@@ -2511,6 +2521,8 @@
         "XKeen.core.storage",
         "XKeen.ui.modal",
         "XKeen.ui.confirm",
+        "XKeen.ui.confirm._closeWith",
+        "XKeen.ui.confirm._isPending",
         "XKeen.ui.applyTheme",
         "XKeen.ui.initThemeToggle",
         "XKeen.ui.syncThemeToggleButtons",

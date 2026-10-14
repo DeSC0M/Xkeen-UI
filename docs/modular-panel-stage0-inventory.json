@@ -37,7 +37,7 @@
       ],
       "removable": false,
       "unit_count": 549,
-      "size_bytes": 7391163,
+      "size_bytes": 7391641,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -175,7 +175,7 @@
       ],
       "removable": true,
       "unit_count": 25,
-      "size_bytes": 833048,
+      "size_bytes": 835500,
       "kind_counts": {
         "frontend_javascript": 3,
         "frontend_ui": 22
@@ -11084,7 +11084,7 @@
       "module_id": "core",
       "kind": "frontend_ui",
       "path": "xkeen-ui/static/js/ui/modal.js",
-      "size_bytes": 40384,
+      "size_bytes": 40862,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -20894,7 +20894,7 @@
       "module_id": "tool.editor",
       "kind": "frontend_ui",
       "path": "xkeen-ui/static/js/ui/confirm_modal.js",
-      "size_bytes": 7035,
+      "size_bytes": 9487,
       "depends_on": [
         "core"
       ],
@@ -30719,7 +30719,7 @@
       "evidence": {
         "tool.editor": {
           "unit_count": 25,
-          "size_bytes": 833048
+          "size_bytes": 835500
         },
         "tool.terminal": {
           "unit_count": 49,
