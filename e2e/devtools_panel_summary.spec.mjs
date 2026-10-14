@@ -52,16 +52,60 @@ test.describe('DevTools panel summary', () => {
     });
     await page.goto('/devtools');
     await expect(page.locator('#dt-panel-version')).toHaveText('2.10.0');
-    await page.locator('#dt-panel-channel').click();
-    await expect(page.locator('#dt-panel-channel-options')).toBeVisible();
-    await page.locator('#dt-panel-channel-options [data-channel="prerelease"]').click();
-    await expect(page.locator('#dt-panel-channel')).toHaveText('Предрелиз');
+    const stable = page.locator('#dt-panel-channel [data-channel="stable"]');
+    const prerelease = page.locator('#dt-panel-channel [data-channel="prerelease"]');
+    await expect(stable).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#dt-panel-channel-hint')).toHaveText('Проверенные версии. Выбирайте, если панель просто должна работать.');
+
+    // Тестовые версии — риск: переход спрашивают, отказ ничего не меняет.
+    await prerelease.click();
+    await expect(page.locator('#confirm-modal')).toBeVisible();
+    await expect(page.locator('#confirm-modal-title')).toHaveText('Перейти на предрелизный канал?');
+    await expect(page.locator('#confirm-modal-message')).toContainText('возможны ошибки');
+    await page.locator('#confirm-modal-cancel-btn').click();
+    await expect(page.locator('#confirm-modal')).toBeHidden();
+    await expect(stable).toHaveAttribute('aria-pressed', 'true');
+    expect(changes).toEqual([]);
+
+    await prerelease.click();
+    await page.locator('#confirm-modal-ok-btn').click();
+    await expect(prerelease).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#dt-panel-channel-hint')).toHaveText('Тестовые версии с новыми функциями. Выбирайте, если готовы находить ошибки и сообщать о них.');
     await expect(page.locator('#dt-panel-update-note')).toContainText('2.11.0-rc.1');
     await page.route('**/api/modules/operations/status', (route) => route.fulfill({ json: { ok: true, result: null } }));
     await page.goto('/modules');
     await expect(page.getByText('Источник: umarcheh001/Xkeen-UI · канал сборки: stable')).toBeVisible();
     await expect(page.getByText('Канал обновлений: Предрелиз')).toBeVisible();
     expect(changes).toEqual(['prerelease']);
+  });
+
+  test('going back to the stable channel needs no confirmation', async ({ page }) => {
+    let selected = 'prerelease';
+    const changes = [];
+    await page.route('**/api/modules/installed', (route) => route.fulfill({
+      json: { ...installed, panel_version: '2.11.0-rc.1', build: { ...installed.build, version: '2.11.0-rc.1' }, update_channel: selected },
+    }));
+    await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({
+      json: { ...noUpdate, source_version: '2.11.0-rc.1', target_version: '2.11.0-rc.1' },
+    }));
+    await page.route('**/api/modules/update-channel', (route) => {
+      if (route.request().method() === 'POST') {
+        selected = route.request().postDataJSON().channel;
+        changes.push(selected);
+      }
+      return route.fulfill({ json: { ok: true, channel: selected } });
+    });
+    await page.goto('/devtools');
+    await expect(page.locator('#dt-panel-version')).toHaveText('2.11.0-rc.1');
+    // Установлена тестовая версия — это видно у самой версии.
+    await expect(page.locator('#dt-panel-prerelease-tag')).toBeVisible();
+    await expect(page.locator('#dt-panel-channel [data-channel="prerelease"]')).toHaveAttribute('aria-pressed', 'true');
+
+    await page.locator('#dt-panel-channel [data-channel="stable"]').click();
+
+    await expect(page.locator('#dt-panel-channel [data-channel="stable"]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#confirm-modal')).toBeHidden();
+    expect(changes).toEqual(['stable']);
   });
 
   test('lists every module on its own row with version and state', async ({ page }) => {
@@ -75,7 +119,8 @@ test.describe('DevTools panel summary', () => {
     await expect(page.locator('#dt-panel-commit')).toHaveText('(abc123456789)');
     await expect(page.locator('#dt-panel-repo')).toHaveText('umarcheh001/Xkeen-UI');
     await expect(card.locator('dt')).toContainText(['Версия', 'Собрана', 'Источник', 'Канал обновлений', 'Установлено', 'Включено']);
-    await expect(page.locator('#dt-panel-channel')).toHaveText('Стабильный');
+    await expect(page.locator('#dt-panel-channel [aria-pressed="true"]')).toHaveText('Стабильный');
+    await expect(page.locator('#dt-panel-prerelease-tag')).toBeHidden();
     // Сохранённая метка профиля не печатается: наборы названы по составу.
     await expect(page.locator('#dt-panel-installed-set')).toHaveText('полный набор');
     await expect(page.locator('#dt-panel-enabled-set')).toHaveText('свой набор (2 из 3)');
@@ -104,28 +149,15 @@ test.describe('DevTools panel summary', () => {
     expect(checks).toEqual([{ force_refresh: false }]);
 
     // Карточка справочная: команд обновления в ней нет, плашка ошибки спрятана.
-    await expect(card.locator('#dt-panel-channel')).toHaveCount(1);
-    await expect(card.locator('[data-channel]')).toHaveCount(2);
-    await expect(card.locator('[data-channel="stable"]')).toHaveText('Стабильный канал');
-    await expect(card.locator('[data-channel="prerelease"]')).toHaveText('Предрелизный канал');
-    const channelGeometry = await card.locator('.dt-panel-channel-cell').evaluate((cell) => {
-      const trigger = cell.querySelector('.dt-panel-channel-trigger');
-      const repo = document.querySelector('#dt-panel-repo');
-      if (!trigger || !repo) return null;
-      const triggerStyle = getComputedStyle(trigger);
-      const repoStyle = getComputedStyle(repo);
-      return {
-        channelCellPaddingTop: Number.parseFloat(getComputedStyle(cell).paddingTop),
-        triggerHeight: trigger.getBoundingClientRect().height,
-        repoHeight: repo.getBoundingClientRect().height,
-        triggerMinHeight: triggerStyle.minHeight,
-        repoMinHeight: repoStyle.minHeight,
-      };
+    await expect(card.locator('#dt-panel-channel [data-channel]')).toHaveCount(2);
+    await expect(card.locator('#dt-panel-channel [data-channel="stable"]')).toHaveText('Стабильный');
+    await expect(card.locator('#dt-panel-channel [data-channel="prerelease"]')).toHaveText('Предрелизный');
+    // Подпись строки стоит по центру переключателя с пояснением, а не уезжает вверх.
+    const centers = await card.locator('.dt-panel-summary-row-channel').evaluate((row) => {
+      const mid = (el) => { const r = el.getBoundingClientRect(); return r.top + r.height / 2; };
+      return { label: mid(row.querySelector('dt')), value: mid(row.querySelector('dd')) };
     });
-    expect(channelGeometry).not.toBeNull();
-    expect(channelGeometry.channelCellPaddingTop).toBeGreaterThanOrEqual(4);
-    expect(channelGeometry.triggerHeight).toBeLessThanOrEqual(channelGeometry.repoHeight + 2);
-    expect(channelGeometry.triggerMinHeight).toBe('22px');
+    expect(Math.abs(centers.label - centers.value)).toBeLessThanOrEqual(2);
     await expect(page.locator('#dt-panel-status')).toBeHidden();
     await expect(page.locator('#xk-update-link')).toHaveCount(0);
   });

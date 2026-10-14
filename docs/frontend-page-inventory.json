@@ -1412,7 +1412,9 @@
         },
         {
           "path": "static/js/features/devtools/update.js",
-          "globals": [],
+          "globals": [
+            "XKeen.ui"
+          ],
           "lazy_features": []
         },
         {

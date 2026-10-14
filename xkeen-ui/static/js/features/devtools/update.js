@@ -1,4 +1,4 @@
-import { setDevtoolsNamespaceApi } from '../devtools_namespace.js';
+import { getDevtoolsSharedApi, setDevtoolsNamespaceApi } from '../devtools_namespace.js';
 import { createModuleLifecycleClient } from '../module_manager/api.js';
 import { reconcileModulesUpdateCheck } from '../module_manager/badge.js';
 import { describeModuleSets } from '../module_manager/render.js';
@@ -89,6 +89,9 @@ import { describeModuleSets } from '../module_manager/render.js';
     const version = String(build.version || (data && data.panel_version) || '').trim();
     const commit = shortCommit(build.commit);
     setText('dt-panel-version', version || '—');
+    // Метка о самой установленной версии; выбранный канал виден на переключателе.
+    const tag = byId('dt-panel-prerelease-tag');
+    if (tag) tag.hidden = !/^v?\d+\.\d+\.\d+-/.test(String(version || ''));
     setText('dt-panel-commit', commit ? '(' + commit + ')' : '');
     setText('dt-panel-built', (build.built_utc && (formatDate(build.built_utc) || String(build.built_utc))) || '—');
     setText('dt-panel-repo', build.repo || '—');
@@ -100,34 +103,57 @@ import { describeModuleSets } from '../module_manager/render.js';
     setText('dt-panel-enabled-set', sets ? sets.enabled : '—');
   }
 
+  const CHANNEL_HINTS = {
+    stable: 'Проверенные версии. Выбирайте, если панель просто должна работать.',
+    prerelease: 'Тестовые версии с новыми функциями. Выбирайте, если готовы находить ошибки и сообщать о них.',
+  };
+
   function renderChannel(value) {
     const channel = value === 'prerelease' ? 'prerelease' : 'stable';
-    setText('dt-panel-channel', channel === 'stable' ? 'Стабильный' : 'Предрелиз');
-    const options = byId('dt-panel-channel-options');
-    if (!options) return;
-    options.querySelectorAll('[data-channel]').forEach((button) => {
-      button.setAttribute('aria-pressed', String(button.dataset.channel === channel));
-    });
+    const box = byId('dt-panel-channel');
+    if (box) {
+      box.querySelectorAll('[data-channel]').forEach((button) => {
+        button.setAttribute('aria-pressed', String(button.dataset.channel === channel));
+      });
+    }
+    const hint = byId('dt-panel-channel-hint');
+    if (hint) {
+      hint.textContent = CHANNEL_HINTS[channel];
+      hint.dataset.channel = channel;
+    }
+  }
+
+  // Переход на тестовые версии — решение с риском, его подтверждают; обратно — без вопроса.
+  async function confirmPrerelease() {
+    const options = {
+      title: 'Перейти на предрелизный канал?',
+      message: 'Панель будет обновляться до тестовых версий: новые функции появятся раньше, но возможны ошибки и недоработки.',
+      details: [
+        'Сейчас ничего не устанавливается — канал влияет на следующее обновление.',
+        'Вернуться можно в любой момент: панель останется на установленной версии и перейдёт на стабильную, когда та выйдет новее.',
+      ],
+      okText: 'Перейти на предрелиз',
+      cancelText: 'Остаться на стабильном',
+      danger: false,
+    };
+    const shared = getDevtoolsSharedApi() || {};
+    if (typeof shared.confirmAction === 'function') return !!(await shared.confirmAction(options));
+    const ui = window.XKeen && window.XKeen.ui;
+    if (ui && typeof ui.confirm === 'function') return !!(await ui.confirm(options));
+    return window.confirm(options.message);
   }
 
   function wireChannel() {
-    const trigger = byId('dt-panel-channel');
-    const options = byId('dt-panel-channel-options');
-    if (!trigger || !options) return;
-    trigger.addEventListener('click', () => {
-      const open = options.hidden;
-      options.hidden = !open;
-      trigger.setAttribute('aria-expanded', String(open));
-    });
-    options.querySelectorAll('[data-channel]').forEach((button) => {
+    const box = byId('dt-panel-channel');
+    if (!box) return;
+    box.querySelectorAll('[data-channel]').forEach((button) => {
       button.addEventListener('click', async () => {
         if (_channelBusy || button.getAttribute('aria-pressed') === 'true') return;
         _channelBusy = true;
-        options.querySelectorAll('button').forEach((item) => { item.disabled = true; });
+        box.querySelectorAll('button').forEach((item) => { item.disabled = true; });
         try {
+          if (button.dataset.channel === 'prerelease' && !(await confirmPrerelease())) return;
           const result = await api.setUpdateChannel(button.dataset.channel);
-          options.hidden = true;
-          trigger.setAttribute('aria-expanded', 'false');
           renderChannel(result.channel);
           // A change of channel has its own verified cache and update check.
           await load();
@@ -135,7 +161,7 @@ import { describeModuleSets } from '../module_manager/render.js';
           setError('Не удалось выбрать канал: ' + ((error && error.message) || 'нет ответа сервера'));
         } finally {
           _channelBusy = false;
-          options.querySelectorAll('button').forEach((item) => { item.disabled = false; });
+          box.querySelectorAll('button').forEach((item) => { item.disabled = false; });
         }
       });
     });

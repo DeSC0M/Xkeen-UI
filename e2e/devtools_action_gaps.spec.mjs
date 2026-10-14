@@ -26,8 +26,9 @@ const READY = {
   cmd_override: false,
 };
 
-// Tab strips are a segmented control, not a row of separate buttons.
-const NOT_A_BUTTON_ROW = ['top-tabs', 'dt-tabs'];
+// Tab strips and the update channel switch are segmented controls, not rows of
+// separate buttons.
+const NOT_A_BUTTON_ROW = ['top-tabs', 'dt-tabs', 'dt-panel-channel-switch'];
 
 async function buttonRows(page) {
   return page.evaluate((skip) => {

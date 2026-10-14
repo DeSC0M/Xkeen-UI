@@ -71,41 +71,90 @@ details.dt-collapsible:not([open]) .dt-collapsible-icon {
   overflow-wrap: anywhere;
 }
 
+/* Канал обновлений: переключатель из двух половин и строка о том, кому какой
+   канал подходит. Подпись строки стоит по центру этого блока, а не по первой
+   строке текста — по базовой линии она уезжала вверх. */
+.dt-panel-summary-row.dt-panel-summary-row-channel {
+  align-items: center;
+}
+
 .dt-panel-channel-cell {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.dt-panel-channel-switch {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--op-border, #374151);
+  border-radius: var(--op-radius-sm, 6px);
+  background: var(--op-surface-2, #1a202b);
+}
+
+.dt-panel-channel-switch button {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding-top: 4px;
-}
-
-.dt-panel-channel-trigger,
-.dt-panel-channel-options button {
   cursor: pointer;
-  border: 1px solid var(--op-border, #374151);
-  border-radius: 6px;
-  background: var(--op-surface-2, #1a202b);
-  color: var(--op-text, #e5e7eb);
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--op-muted, #9ca3af);
   font: inherit;
-  min-height: 22px;
-  padding: 2px 7px;
-  line-height: 1.25;
+  line-height: 1.2;
+  padding: 5px 12px;
 }
 
-.dt-panel-channel-trigger:hover,
-.dt-panel-channel-options button:hover {
-  border-color: var(--op-accent, #7874e8);
+.dt-panel-channel-switch button:hover:not([aria-pressed="true"]) {
+  color: var(--op-text, #e5e7eb);
 }
 
-.dt-panel-channel-options:not([hidden]) {
-  display: inline-flex;
-  gap: 3px;
+.dt-panel-channel-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.9;
 }
 
-.dt-panel-channel-options button[aria-pressed="true"] {
-  border-color: var(--op-accent, #7874e8);
-  background: var(--op-accent-soft, rgba(120, 116, 232, .18));
-  color: var(--op-accent-hover, #aaa7ff);
+.dt-panel-channel-switch button[data-channel="stable"][aria-pressed="true"] {
+  background: var(--op-success-soft, rgba(77, 182, 139, .12));
+  color: var(--op-success, #4db68b);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--op-success, #4db68b) 45%, transparent);
+}
+
+.dt-panel-channel-switch button[data-channel="prerelease"][aria-pressed="true"] {
+  background: var(--op-warning-soft, rgba(215, 166, 80, .12));
+  color: var(--op-warning, #d7a650);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--op-warning, #d7a650) 50%, transparent);
+}
+
+.dt-panel-channel-hint {
+  color: var(--op-muted, #9ca3af);
+  font-size: 0.93em;
+}
+
+.dt-panel-channel-hint[data-channel="prerelease"] {
+  color: var(--op-warning, #d7a650);
+}
+
+.dt-panel-prerelease-tag {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--op-warning, #d7a650) 45%, transparent);
+  background: var(--op-warning-soft, rgba(215, 166, 80, .12));
+  color: var(--op-warning, #d7a650);
+  font-size: 0.8em;
+  font-weight: 600;
+  vertical-align: 1px;
+}
+
+.dt-panel-prerelease-tag[hidden] {
+  display: none;
 }
 
 .dt-panel-modules-summary {

@@ -36,8 +36,8 @@
         "flask"
       ],
       "removable": false,
-      "unit_count": 547,
-      "size_bytes": 7377509,
+      "unit_count": 548,
+      "size_bytes": 7387305,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -49,7 +49,7 @@
         "frontend_feature": 30,
         "frontend_javascript": 37,
         "frontend_runtime": 2,
-        "frontend_test": 52,
+        "frontend_test": 53,
         "frontend_ui": 17,
         "stylesheet": 8,
         "template": 32
@@ -359,7 +359,7 @@
       ],
       "removable": true,
       "unit_count": 23,
-      "size_bytes": 505343,
+      "size_bytes": 507435,
       "kind_counts": {
         "backend_route": 1,
         "backend_service": 7,
@@ -3450,7 +3450,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_devtools_tools_zones.py",
-      "size_bytes": 24841,
+      "size_bytes": 25272,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -10060,6 +10060,24 @@
     {
       "module_id": "core",
       "kind": "frontend_test",
+      "path": "e2e/devtools_action_gaps.spec.mjs",
+      "size_bytes": 4572,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_test",
       "path": "e2e/devtools_env_subscriptions_shots.spec.mjs",
       "size_bytes": 3448,
       "depends_on": [],
@@ -10109,7 +10127,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/devtools_panel_summary.spec.mjs",
-      "size_bytes": 11225,
+      "size_bytes": 13600,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11411,7 +11429,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/devtools-operator.css",
-      "size_bytes": 39599,
+      "size_bytes": 40440,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11429,7 +11447,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/devtools.css",
-      "size_bytes": 61378,
+      "size_bytes": 62955,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -20331,7 +20349,7 @@
       "module_id": "tool.advanced-diagnostics",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/devtools/update.js",
-      "size_bytes": 10912,
+      "size_bytes": 12750,
       "depends_on": [
         "core"
       ],
@@ -20459,7 +20477,7 @@
       "module_id": "tool.advanced-diagnostics",
       "kind": "template",
       "path": "xkeen-ui/templates/devtools.html",
-      "size_bytes": 51725,
+      "size_bytes": 51979,
       "depends_on": [
         "core"
       ],
@@ -30693,7 +30711,7 @@
         },
         "tool.advanced-diagnostics": {
           "unit_count": 23,
-          "size_bytes": 505343
+          "size_bytes": 507435
         }
       },
       "next_stage": "Этапы 4, 5 и 6."
