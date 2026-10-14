@@ -563,12 +563,16 @@ def apply_profile(
     if missing_markers:
         raise ProfileInstallError(f"selected modules lack install markers: {missing_markers}")
     old_manifest = target / "install-managed.json"
+    # Without the manifest of the previous install the managed set is a
+    # guess, and quarantine may hold files the panel never put there.
+    guessed = False
     try:
         raw_managed = json.loads(old_manifest.read_text(encoding="utf-8"))["paths"]
         if not isinstance(raw_managed, list) or any(not isinstance(item, str) or not _safe_managed_path(item) for item in raw_managed):
             raise ValueError("invalid managed manifest")
         managed = {item for item in raw_managed if not _user_owned(item)}
     except (OSError, ValueError, KeyError, TypeError):
+        guessed = True
         managed = {
             rel for rel, _ in _files(target, source=False)
             if owner(rel) != "core" or rel.endswith(".gz") or rel.startswith("static/frontend-build/")
@@ -597,7 +601,7 @@ def apply_profile(
             shutil.copy2(destination, copy)
         else:
             absent.append(rel)
-    _write_json(root / "transaction.json", {"target": str(target), "absent": absent, "touched": sorted(touched)})
+    _write_json(root / "transaction.json", {"target": str(target), "absent": absent, "touched": sorted(touched), "guessed": guessed})
     try:
         for rel in sorted(managed - set(source_files) - STATE_FILES):
             destination = target / rel
@@ -651,19 +655,26 @@ def rollback_profile(root: Path):
 
 
 def commit_profile(root: Path):
-    """Drop the rollback copy once the service has started.
+    """Drop the transaction once the service has started.
 
     The copy of the replaced files is a full second panel on the router
-    storage and has no use after a successful start. Quarantine is retained
-    for manual inspection: it holds what the new profile no longer installs.
+    storage and has no use after a successful start. Quarantine holds panel
+    files the new build no longer ships; nothing restores from it, so it goes
+    too. It is kept only when the previous install had no manifest: then the
+    managed set was guessed and quarantine may hold files of the user.
     """
 
     root = Path(root)
+    try:
+        guessed = bool(json.loads((root / "transaction.json").read_text(encoding="utf-8")).get("guessed"))
+    except (OSError, ValueError, AttributeError):
+        guessed = True
+    quarantine = root / "quarantine"
+    if not guessed or not any(path.is_file() for path in quarantine.rglob("*")):
+        shutil.rmtree(root, ignore_errors=True)
+        return root
     shutil.rmtree(root / "backup", ignore_errors=True)
     (root / "transaction.json").unlink(missing_ok=True)
-    quarantine = root / "quarantine"
-    if not any(path.is_file() for path in quarantine.rglob("*")):
-        shutil.rmtree(root, ignore_errors=True)
     return root
 
 

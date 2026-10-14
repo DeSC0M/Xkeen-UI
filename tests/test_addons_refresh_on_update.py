@@ -248,6 +248,45 @@ def test_the_installer_can_ask_how_the_viewer_compares_to_the_release(tmp_path, 
 
 
 @needs_fetcher
+@pytest.mark.skipif(not hasattr(os, "openpty"), reason="нужен pty")
+def test_the_version_check_does_not_ask_on_a_terminal(tmp_path):
+    """14.10.2026, 45.1: install.sh зовёт проверку без XKEEN_GEODAT_INSTALL, а у
+    человека stdin — терминал. Скрипт задавал свой вопрос внутри $(...): установщик
+    висел до Enter, а ответ склеивался с приглашением («Введите Y/n: same»), и
+    вопрос про xk-geodat предлагал «да» при той же версии."""
+    body = b"installed viewer\n"
+    dest = tmp_path / "bin" / "xk-geodat"
+    dest.parent.mkdir(parents=True)
+    dest.write_bytes(body)
+    release = tmp_path / "release"
+    release.mkdir()
+    (release / "SHA256SUMS").write_bytes(_line(body))
+    base = release.as_uri() + "/"
+    leader, follower = os.openpty()
+    try:
+        proc = subprocess.run(
+            ["sh", GEODAT_INSTALLER.as_posix()],
+            stdin=follower,
+            capture_output=True,
+            timeout=30,
+            env={
+                **os.environ,
+                "XKEEN_GEODAT_BIN": dest.as_posix(),
+                "XKEEN_GEODAT_INSTALL": "",
+                "XKEEN_GEODAT_CHECK_ONLY": "1",
+                "XKEEN_GEODAT_ASSET": "xk-geodat-linux-arm64",
+                "XKEEN_GEODAT_URL": base + "xk-geodat-linux-arm64",
+                "XKEEN_GEODAT_SHA256SUMS_URL": base + "SHA256SUMS",
+            },
+        )
+    finally:
+        os.close(leader)
+        os.close(follower)
+
+    assert proc.stdout.decode("utf-8", "replace").strip().splitlines()[-1] == "same", proc.stdout
+
+
+@needs_fetcher
 def test_a_viewer_that_differs_from_the_release_is_fetched(tmp_path):
     body = b"installed viewer\n"
 

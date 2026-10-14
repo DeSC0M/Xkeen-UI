@@ -383,6 +383,22 @@ ui_step_warn() {
 #
 # Ответ, не похожий ни на «да», ни на «нет» (опечатка, буква в другой
 # раскладке), согласием не считается: вопрос задаётся снова.
+#
+# Понимаются y/yes/да и n/no/нет в любом регистре. Одиночные «д» и «н» — нет:
+# на русской раскладке «н» стоит на клавише Y, и нажатие «да» читалось как «нет».
+ui_confirm_kind() {
+  # Печатает yes, no, empty или other.
+  _ui_kind_latin="$(printf '%s' "$1" | tr 'A-Z' 'a-z')"
+  case "$_ui_kind_latin" in
+    '') echo empty ;;
+    y|yes) echo yes ;;
+    n|no) echo no ;;
+    да|дА|Да|ДА) echo yes ;;
+    нет|неТ|нЕт|нЕТ|Нет|НеТ|НЕт|НЕТ) echo no ;;
+    *) echo other ;;
+  esac
+}
+
 ui_confirm() {
   # $1 — вариант по умолчанию (y или n), $2 — вопрос. Итог — в UI_CONFIRM_YES
   # (1 или 0), сам ответ — в UI_CONFIRM_ANSWER.
@@ -400,24 +416,22 @@ ui_confirm() {
     printf '      %s [%b%s%b/%b%s%b]: ' \
       "$_ui_prompt" "$UI_GREEN" "$_ui_y" "$UI_RESET" "$UI_YELLOW" "$_ui_n" "$UI_RESET" >&3 2>/dev/null || true
     IFS= read -r UI_CONFIRM_ANSWER < /dev/tty || UI_CONFIRM_ANSWER=""
+    _ui_kind="$(ui_confirm_kind "$UI_CONFIRM_ANSWER")"
     _ui_understood=1
-    case "$UI_CONFIRM_ANSWER" in
-      y|Y|yes|YES|Yes|д|Д|да|ДА|Да|n|N|no|NO|No|н|Н|нет|НЕТ|Нет|'') ;;
-      *) _ui_understood=0 ;;
-    esac
+    [ "$_ui_kind" = "other" ] && _ui_understood=0
     if [ -n "$UI_RESET" ]; then
       # read already moved to the next line after Enter. Move back, clear that
       # prompt row and write the result in its semantic colour.
       printf '%b[1A\r%b[2K      %s [%b%s%b/%b%s%b]: ' \
         "$UI_ESC" "$UI_ESC" "$_ui_prompt" "$UI_GREEN" "$_ui_y" "$UI_RESET" "$UI_YELLOW" "$_ui_n" "$UI_RESET" >&3 2>/dev/null || true
-      case "$UI_CONFIRM_ANSWER" in
-        y|Y|yes|YES|Yes|д|Д|да|ДА|Да)
+      case "$_ui_kind" in
+        yes)
           printf '%b%s%b' "$UI_GREEN" "$UI_CONFIRM_ANSWER" "$UI_RESET" >&3 2>/dev/null || true
           ;;
-        n|N|no|NO|No|н|Н|нет|НЕТ|Нет)
+        no)
           printf '%b%s%b' "$UI_YELLOW" "$UI_CONFIRM_ANSWER" "$UI_RESET" >&3 2>/dev/null || true
           ;;
-        '')
+        empty)
           if [ "$_ui_default" = "y" ]; then
             printf '%bY%b' "$UI_GREEN" "$UI_RESET" >&3 2>/dev/null || true
           else
@@ -440,13 +454,19 @@ ui_confirm() {
         "$UI_YELLOW" "$_ui_default_word" "$UI_RESET" >&3 2>/dev/null || true
       break
     fi
-    printf '      %bНе понял ответ. Введите y (да) или n (нет); просто Enter — %s.%b\n' \
-      "$UI_YELLOW" "$_ui_default_word" "$UI_RESET" >&3 2>/dev/null || true
+    # Буквы не латиницей — скорее всего, не та раскладка: «н» и «т» на месте y и n.
+    if printf '%s' "$UI_CONFIRM_ANSWER" | LC_ALL=C grep -q '[^ -~]'; then
+      printf '      %bПохоже, включена русская раскладка. Введите y или n, либо «да» или «нет»; просто Enter — %s.%b\n' \
+        "$UI_YELLOW" "$_ui_default_word" "$UI_RESET" >&3 2>/dev/null || true
+    else
+      printf '      %bНе понял ответ. Введите y (да) или n (нет); просто Enter — %s.%b\n' \
+        "$UI_YELLOW" "$_ui_default_word" "$UI_RESET" >&3 2>/dev/null || true
+    fi
   done
 
-  case "$UI_CONFIRM_ANSWER" in
-    y|Y|yes|YES|Yes|д|Д|да|ДА|Да) UI_CONFIRM_YES=1 ;;
-    n|N|no|NO|No|н|Н|нет|НЕТ|Нет) UI_CONFIRM_YES=0 ;;
+  case "$(ui_confirm_kind "$UI_CONFIRM_ANSWER")" in
+    yes) UI_CONFIRM_YES=1 ;;
+    no) UI_CONFIRM_YES=0 ;;
     *) if [ "$_ui_default" = "y" ]; then UI_CONFIRM_YES=1; else UI_CONFIRM_YES=0; fi ;;
   esac
 }
@@ -476,7 +496,7 @@ choose_geodat_option() {
   _geodat_state=""
   if [ -f "$SRC_DIR/scripts/install_xk_geodat.sh" ]; then
     _geodat_state="$(XKEEN_GEODAT_CHECK_ONLY=1 XKEEN_GEODAT_FETCH_TIMEOUT=10 \
-      sh "$SRC_DIR/scripts/install_xk_geodat.sh" 2>/dev/null | tail -n 1)" || _geodat_state=""
+      sh "$SRC_DIR/scripts/install_xk_geodat.sh" </dev/null 2>/dev/null | tail -n 1)" || _geodat_state=""
   fi
   [ "$_geodat_state" = "same" ] && GEODAT_OPTION="0"
   if [ -t 0 ] && [ -r /dev/tty ]; then

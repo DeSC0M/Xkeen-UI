@@ -24,8 +24,8 @@ INSTALLER = ROOT / "xkeen-ui" / "install.sh"
 
 def _confirm_function() -> str:
     text = INSTALLER.read_text(encoding="utf-8")
-    start = text.index("ui_confirm() {")
-    body = text[start:text.index("\n}\n", start) + 3]
+    start = text.index("ui_confirm_kind() {")
+    body = text[start:text.index("\n}\n", text.index("ui_confirm() {", start)) + 3]
     # В проверке ответы приходят со стандартного ввода, а не с терминала.
     assert "< /dev/tty" in body
     return body.replace(" < /dev/tty", "")
@@ -59,12 +59,40 @@ def _ask(tmp_path: Path, answers: str, default: str = "y") -> tuple[str, str, st
     return answer, yes, out
 
 
-@pytest.mark.parametrize("answer", ["y", "Y", "да", "Д", "n", "N", "нет", "Н", ""])
-def test_a_clear_answer_is_taken_at_once(tmp_path, answer):
-    got, _yes, out = _ask(tmp_path, answer + "\n")
+@pytest.mark.parametrize(
+    "answer, yes",
+    [
+        ("y", "1"), ("Y", "1"), ("yes", "1"), ("YES", "1"), ("yEs", "1"),
+        ("да", "1"), ("Да", "1"), ("ДА", "1"),
+        ("n", "0"), ("N", "0"), ("no", "0"), ("No", "0"),
+        ("нет", "0"), ("Нет", "0"), ("НЕТ", "0"),
+        ("", "1"),
+    ],
+)
+def test_a_clear_answer_is_taken_at_once(tmp_path, answer, yes):
+    got, got_yes, out = _ask(tmp_path, answer + "\n")
 
     assert got == answer
+    assert got_yes == yes
     assert out.count("Установить?") == 1
+
+
+@pytest.mark.parametrize("answer", ["н", "Н", "д", "Д", "т"])
+def test_a_single_cyrillic_letter_is_asked_again_with_a_layout_hint(tmp_path, answer):
+    """14.10.2026: на русской раскладке клавиша Y печатает «н», и «да» читалось как «нет»."""
+    got, yes, out = _ask(tmp_path, answer + "\ny\n", default="n")
+
+    assert got == "y"
+    assert yes == "1"
+    assert out.count("Установить?") == 2
+    assert "русская раскладка" in out
+
+
+def test_a_latin_slip_gets_no_layout_hint(tmp_path):
+    _got, _yes, out = _ask(tmp_path, "q\nn\n")
+
+    assert "Не понял ответ" in out
+    assert "раскладка" not in out
 
 
 @pytest.mark.parametrize(
@@ -72,10 +100,10 @@ def test_a_clear_answer_is_taken_at_once(tmp_path, answer):
     [
         ("y", "", "1"),
         ("y", "n", "0"),
-        ("y", "да", "1"),
+        ("y", "ДА", "1"),
         ("n", "", "0"),
         ("n", "y", "1"),
-        ("n", "Д", "1"),
+        ("n", "Да", "1"),
         ("n", "нет", "0"),
     ],
 )

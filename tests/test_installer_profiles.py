@@ -96,6 +96,7 @@ def test_switching_from_full_quarantines_disabled_payload_and_keeps_user_state(t
     (dest / "opt/etc/mihomo/profiles/custom.yaml").write_text("user mihomo profile", encoding="utf-8")
 
     transaction = helper.apply_profile(src, dest, "mihomo-minimal")
+    assert (transaction / "quarantine/routes/routing/blueprint.py").is_file()
     helper.commit_profile(transaction)
 
     assert not (dest / "routes/routing/blueprint.py").exists()
@@ -105,7 +106,7 @@ def test_switching_from_full_quarantines_disabled_payload_and_keeps_user_state(t
     assert (dest / "xray-jsonc/custom.jsonc").read_text(encoding="utf-8") == "user config"
     assert (dest / "opt/etc/mihomo/config.yaml").read_text(encoding="utf-8") == "user mihomo config"
     assert (dest / "opt/etc/mihomo/profiles/custom.yaml").read_text(encoding="utf-8") == "user mihomo profile"
-    assert (transaction / "quarantine/routes/routing/blueprint.py").is_file()
+    assert not transaction.exists()
     assert json.loads((dest / "modules.json").read_text(encoding="utf-8"))["profile"] == "mihomo-minimal"
 
 
@@ -306,7 +307,7 @@ def test_repeated_updates_keep_only_the_latest_transaction(tmp_path):
     second = tmp_path / "xkeen-ui.profile-transaction-202"
     helper.apply_profile(src, dest, "full", transaction_root=second)
     third = tmp_path / "xkeen-ui.profile-transaction-303"
-    helper.commit_profile(helper.apply_profile(src, dest, "xray-minimal", transaction_root=third))
+    helper.apply_profile(src, dest, "xray-minimal", transaction_root=third)
 
     assert not first.exists()
     assert not second.exists()
@@ -328,7 +329,7 @@ def test_rejected_update_keeps_the_previous_transaction(tmp_path, monkeypatch):
     assert (first / "transaction.json").is_file()
 
 
-def test_commit_drops_the_rollback_copy_and_keeps_quarantine(tmp_path):
+def test_commit_drops_the_whole_transaction(tmp_path):
     helper = _module()
     src = _source(tmp_path)
     dest = tmp_path / "installed"
@@ -340,12 +341,31 @@ def test_commit_drops_the_rollback_copy_and_keeps_quarantine(tmp_path):
 
     second = helper.apply_profile(src, dest, "xray-minimal")
     assert (second / "backup/routes/mihomo.py").is_file()
+    assert (second / "quarantine/routes/mihomo.py").is_file()
     helper.commit_profile(second)
 
-    assert not (second / "backup").exists()
-    assert not (second / "transaction.json").exists()
-    assert (second / "quarantine/routes/mihomo.py").is_file()
+    # Quarantine holds only files of the previous build: nothing restores
+    # from it, so a working panel needs no leftovers next to it.
+    assert not second.exists()
+    assert not (dest / "routes/mihomo.py").exists()
     assert (dest / "routes/routing/blueprint.py").is_file()
+
+
+def test_commit_keeps_quarantine_when_previous_install_had_no_manifest(tmp_path):
+    helper = _module()
+    src = _source(tmp_path)
+    dest = tmp_path / "installed"
+    stale = dest / "static/frontend-build/assets/obsolete-shared.js"
+    stale.parent.mkdir(parents=True)
+    stale.write_text("old", encoding="utf-8")
+
+    transaction = helper.apply_profile(src, dest, "xray-minimal")
+    helper.commit_profile(transaction)
+
+    # The managed set was guessed: quarantine may hold files of the user.
+    assert not (transaction / "backup").exists()
+    assert not (transaction / "transaction.json").exists()
+    assert (transaction / "quarantine/static/frontend-build/assets/obsolete-shared.js").is_file()
 
 
 def test_interrupted_copy_restores_prior_files_and_profile(tmp_path, monkeypatch):

@@ -309,7 +309,10 @@ normalize_install_answer() {
   printf '%s' "$1" | sed 'y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/'
 }
 
-if [ -z "$INSTALL" ] && [ -t 0 ]; then
+# Проверка версии ничего не ставит и спрашивать не должна: install.sh читает
+# последнюю строку вывода, а невидимый вопрос подвешивал его до Enter и
+# склеивался с ответом («Введите Y/n: same»).
+if [ -z "$INSTALL" ] && [ "${XKEEN_GEODAT_CHECK_ONLY:-}" != "1" ] && [ -t 0 ]; then
   echo ""
   echo "Установить xk-geodat (включит 'Содержимое' и 'В routing' для DAT GeoIP/GeoSite)?"
   printf "Введите Y/n: "

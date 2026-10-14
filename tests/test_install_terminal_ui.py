@@ -116,6 +116,8 @@ def test_installer_exposes_optional_component_choices_without_child_prompt_noise
     assert 'GEODAT_OPTION="1"' in text
     # Тот же файл, что в релизе, по умолчанию не переустанавливается.
     assert 'XKEEN_GEODAT_CHECK_ONLY=1 XKEEN_GEODAT_FETCH_TIMEOUT=10' in text
+    # The check runs inside $(...): a child prompt there is invisible and waits for Enter.
+    assert 'install_xk_geodat.sh" </dev/null 2>/dev/null | tail -n 1' in text
     assert '[ "$_geodat_state" = "same" ] && GEODAT_OPTION="0"' in text
     assert 'export XKEEN_GEODAT_INSTALL' in text
     assert 'if profile_has_module engine.xray && [ "${GEODAT_OPTION:-1}" = "1" ]; then' in text
