@@ -16,6 +16,9 @@
   const LOCAL_ACTIVE = new Map();
   const LOCAL_ACTIVE_BY_KEY = new Map();
   const LOCAL_RECENT = new Map();
+  // The toast store keeps plain data only, so action handlers of store-backed
+  // toasts live here, next to the rendered entries, keyed by the store uid.
+  const ACTIONS_BY_UID = new Map();
   let storeBindingReady = false;
 
   function ensureContainer() {
@@ -125,7 +128,22 @@
       dedupeKey: opts.dedupeKey ? String(opts.dedupeKey) : '',
       dedupeWindowMs: Number.isFinite(Number(opts.dedupeWindowMs)) ? Math.max(0, Number(opts.dedupeWindowMs)) : 600,
       replace: opts.replace !== false,
+      actions: normalizeActions(opts.actions),
     };
+  }
+
+  // An action is a chip under the message: { label, onClick, primary, busyLabel }.
+  // A handler that returns a promise keeps every chip disabled until it settles.
+  function normalizeActions(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .filter((action) => action && typeof action.onClick === 'function' && String(action.label || '').trim())
+      .map((action) => ({
+        label: String(action.label).trim(),
+        busyLabel: String(action.busyLabel || '').trim(),
+        primary: !!action.primary,
+        onClick: action.onClick,
+      }));
   }
 
   function resolveDedupeKey(opts) {
@@ -307,9 +325,11 @@
     entry.text.textContent = message;
     entry.detail.textContent = detail;
     entry.detail.hidden = !detail;
-    entry.actions.hidden = !detail;
+    entry.copyBtn.hidden = !detail;
     entry.copyText = detail ? message + '\n' + detail : message;
     resetCopyLabel(entry);
+    applyEntryActions(entry, Array.isArray(data.actions) ? data.actions : ACTIONS_BY_UID.get(entry.uid));
+    entry.actions.hidden = !detail && !entry.actionButtons.length;
 
     // A toast that never expires must be closable, and an error is always
     // worth a close affordance even while its timer runs.
@@ -319,6 +339,63 @@
     entry.el.style.transform = '';
     entry.el.setAttribute('role', kind === 'error' ? 'alert' : 'status');
     entry.el.setAttribute('aria-live', kind === 'error' ? 'assertive' : 'polite');
+  }
+
+  function setActionsBusy(entry, busyButton, busy) {
+    entry.actionButtons.forEach((button) => {
+      button.disabled = busy;
+      if (button === busyButton) {
+        button.textContent = busy && button.dataset.busyLabel ? button.dataset.busyLabel : button.dataset.label;
+      }
+    });
+  }
+
+  function runEntryAction(entry, action, button) {
+    if (button.disabled) return;
+    let pending = null;
+    try {
+      pending = action.onClick({ dismiss: () => dismissEntry(entry) });
+    } catch (error) {
+      try { console.error('[XKeen] toast action failed', error); } catch (secondaryError) {}
+      return;
+    }
+    if (!pending || typeof pending.then !== 'function') return;
+
+    const list = entry.actionList;
+    setActionsBusy(entry, button, true);
+    Promise.resolve(pending)
+      .catch((error) => {
+        try { console.error('[XKeen] toast action failed', error); } catch (secondaryError) {}
+      })
+      .then(() => {
+        // The handler may have replaced this toast's actions meanwhile.
+        if (entry.actionList === list) setActionsBusy(entry, button, false);
+      });
+  }
+
+  // The same list arriving again (a store re-render) keeps the chips and their
+  // busy state; a new list replaces them.
+  function applyEntryActions(entry, list) {
+    const next = Array.isArray(list) ? list : [];
+    if (entry.actionList === next || (!next.length && !entry.actionButtons.length)) {
+      entry.actionList = next;
+      return;
+    }
+    entry.actionList = next;
+    entry.actionButtons.forEach((button) => {
+      try { button.remove(); } catch (error) {}
+    });
+    entry.actionButtons = next.map((action) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = action.primary ? 'toast-action toast-action-primary' : 'toast-action';
+      button.textContent = action.label;
+      button.dataset.label = action.label;
+      if (action.busyLabel) button.dataset.busyLabel = action.busyLabel;
+      button.addEventListener('click', () => runEntryAction(entry, action, button));
+      entry.actions.insertBefore(button, entry.copyBtn);
+      return button;
+    });
   }
 
   function createRenderedEntry(container) {
@@ -380,6 +457,8 @@
       text,
       detail,
       actions,
+      actionList: [],
+      actionButtons: [],
       copyBtn,
       copyText: '',
       copyResetTimer: null,
@@ -461,6 +540,7 @@
     Array.from(RENDERED.entries()).forEach(([uid, entry]) => {
       if (nextUids.has(uid)) return;
       RENDERED.delete(uid);
+      ACTIONS_BY_UID.delete(uid);
       removeRenderedEntry(entry);
     });
   }
@@ -648,7 +728,13 @@
       if (!api) return null;
       const entry = api.enqueue(opts, { source: 'toast' });
       if (!entry || !entry.uid) return null;
+      if (opts.actions.length) ACTIONS_BY_UID.set(entry.uid, opts.actions);
+      else ACTIONS_BY_UID.delete(entry.uid);
       const rendered = RENDERED.get(entry.uid);
+      if (rendered) {
+        applyEntryActions(rendered, opts.actions);
+        rendered.actions.hidden = rendered.detail.hidden && !rendered.actionButtons.length;
+      }
       return rendered && rendered.el ? rendered.el : null;
     }
 
@@ -685,6 +771,7 @@
       if (!api) return;
       api.clear({ source: 'toast' });
       renderToastQueue([]);
+      ACTIONS_BY_UID.clear();
       return;
     }
 

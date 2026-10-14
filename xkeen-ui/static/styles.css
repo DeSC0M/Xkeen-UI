@@ -12292,7 +12292,8 @@ div.toast-icon {
   !important border and surface. Toast controls are chips inside a floating
   card, so they opt out explicitly rather than inherit that geometry.
 */
-.toast-copy {
+.toast-copy,
+.toast-action {
   height: 24px;
   min-height: 24px;
   padding: 0 9px;
@@ -12305,9 +12306,22 @@ div.toast-icon {
   cursor: pointer;
 }
 
-.toast-copy:hover {
+.toast-copy:hover,
+.toast-action:hover {
   color: var(--op-text, var(--text, #e8eaf0)) !important;
   border-color: var(--op-border-strong, #3a414d) !important;
+}
+
+/* The action that keeps the reader's work goes first and carries the accent. */
+.toast-action-primary,
+.toast-action-primary:hover {
+  color: var(--op-text, var(--text, #e8eaf0)) !important;
+  border-color: var(--op-accent, #4c8dff) !important;
+}
+
+.toast-action:disabled {
+  cursor: default;
+  opacity: 0.7;
 }
 
 .toast-close {

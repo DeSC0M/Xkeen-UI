@@ -140,7 +140,7 @@
           "accessible_label": "Предупреждение"
         },
         {
-          "location": "xkeen-ui/static/js/ui/toast.js:L64",
+          "location": "xkeen-ui/static/js/ui/toast.js:L67",
           "control_type": "runtime-action",
           "accessible_label": "Предупреждение"
         },
@@ -413,7 +413,7 @@
           "accessible_label": "Подтвердить"
         },
         {
-          "location": "xkeen-ui/static/js/ui/toast.js:L62",
+          "location": "xkeen-ui/static/js/ui/toast.js:L65",
           "control_type": "runtime-action",
           "accessible_label": "Подтвердить"
         },
@@ -1218,7 +1218,7 @@
           "accessible_label": "Скачать"
         },
         {
-          "location": "xkeen-ui/static/js/features/file_manager/editor.js:L1541",
+          "location": "xkeen-ui/static/js/features/file_manager/editor.js:L1553",
           "control_type": "runtime-action",
           "accessible_label": "Скачать"
         },
@@ -1974,7 +1974,7 @@
           "accessible_label": "Информация"
         },
         {
-          "location": "xkeen-ui/static/js/ui/toast.js:L53",
+          "location": "xkeen-ui/static/js/ui/toast.js:L56",
           "control_type": "runtime-action",
           "accessible_label": "Информация"
         },
@@ -2906,7 +2906,7 @@
       "tabler_asset": "replace",
       "usage": [
         {
-          "location": "xkeen-ui/static/js/features/file_manager/editor.js:L1034",
+          "location": "xkeen-ui/static/js/features/file_manager/editor.js:L1046",
           "control_type": "runtime-action",
           "accessible_label": "Заменить"
         },

@@ -3,7 +3,7 @@
 // The server announces only stable bundle keys. Import factories live here so
 // persisted module state can never turn into an executable browser specifier.
 
-import { toastXkeen } from '../features/xkeen_runtime.js';
+import { confirmXkeenAction, getXkeenConfigDirtyApi, toastXkeen } from '../features/xkeen_runtime.js';
 
 const BUNDLE_LOADERS = Object.freeze({
   'panel-core': () => Promise.resolve({}),
@@ -44,9 +44,16 @@ const STYLE_URLS = Object.freeze({
 // restarts, so a bundle that failed to download is asked for again: twice on
 // its own, and then on every later request instead of staying dead until the
 // page is reloaded. A file deeper in the bundle that failed stays failed in
-// the browser, which is why the notice also mentions reloading the page.
+// the browser, which is why the notice also offers reloading the page.
 const LOAD_RETRY_DELAYS_MS = Object.freeze([1500, 4000]);
 const FAILURE_NOTICE_GAP_MS = 8000;
+
+const NOTICE_TEXT = Object.freeze({
+  failed: 'Не удалось загрузить часть панели. Проверьте связь с роутером.',
+  failedAgain: 'Повторить не удалось. Обновите страницу, чтобы загрузить эту часть панели заново.',
+  reloadOnly: 'Не удалось загрузить часть панели. Обновите страницу, чтобы загрузить её заново.',
+  recovered: 'Часть панели загружена.',
+});
 
 const modulePromises = Object.create(null);
 const moduleResults = Object.create(null);
@@ -54,6 +61,9 @@ const reportedFailures = new Set();
 const failureNoticeAt = Object.create(null);
 const loadAttempts = Object.create(null);
 const stylePromises = Object.create(null);
+// Keys being retried from the notice: the retry reports its own outcome and
+// skips the automatic pauses, the reader is waiting on the button.
+const manualRetries = new Set();
 
 function getPageConfig() {
   try {
@@ -113,14 +123,91 @@ function reportFailureOnce(key, error) {
   try { console.error('[XKeen] panel module failed:', normalized, error); } catch (secondaryError) {}
 }
 
-export function notifyPanelLoadFailure(key) {
+function noticeId(key) {
+  return `xk-panel-load:${key}`;
+}
+
+// Reloading drops whatever the editors hold, so it asks first when the shared
+// dirty-state registry knows of unsaved changes.
+async function reloadPanelPage() {
+  let scopes = [];
+  try {
+    const dirty = getXkeenConfigDirtyApi();
+    if (dirty && typeof dirty.getDirtyScopes === 'function') scopes = dirty.getDirtyScopes() || [];
+  } catch (error) {}
+  if (scopes.length) {
+    const names = scopes.map((scope) => scope.label || scope.name).filter(Boolean).join(', ');
+    const confirmed = await confirmXkeenAction({
+      title: 'Несохранённые изменения',
+      message: `Остались несохранённые изменения: ${names}. Если обновить страницу, они пропадут.`,
+      okText: 'Обновить страницу',
+      cancelText: 'Отмена',
+      danger: true,
+    });
+    if (!confirmed) return;
+  }
+  window.location.reload();
+}
+
+function showLoadNotice(key, state, retry) {
+  const actions = [];
+  if (retry) {
+    actions.push({
+      label: 'Повторить',
+      busyLabel: 'Повторяю…',
+      primary: true,
+      onClick: (toast) => retryFromNotice(key, retry, toast),
+    });
+  }
+  actions.push({ label: 'Обновить страницу', onClick: () => reloadPanelPage() });
+  try {
+    toastXkeen(NOTICE_TEXT[state], { kind: 'error', id: noticeId(key), actions });
+  } catch (error) {}
+}
+
+async function retryFromNotice(key, retry, toast) {
+  manualRetries.add(key);
+  let recovered = false;
+  try {
+    recovered = !!(await retry());
+  } catch (error) {
+    recovered = false;
+  } finally {
+    manualRetries.delete(key);
+  }
+  if (recovered) {
+    try { toast.dismiss(); } catch (error) {}
+    try { toastXkeen(NOTICE_TEXT.recovered, 'success'); } catch (error) {}
+    return;
+  }
+  // Code that arrived and broke while starting stays broken until a reload.
+  const broken = moduleResults[key] && moduleResults[key].status === 'failed';
+  showLoadNotice(key, broken ? 'reloadOnly' : 'failedAgain', broken ? null : retry);
+}
+
+// `retry` asks for the part again and resolves to true once it works. Without
+// it the notice offers only a reload: the browser keeps a failed file failed.
+export function notifyPanelLoadFailure(key, options = null) {
   const normalized = String(key || '');
+  if (manualRetries.has(normalized)) return;
   const now = Date.now();
   if (failureNoticeAt[normalized] && (now - failureNoticeAt[normalized]) < FAILURE_NOTICE_GAP_MS) return;
   failureNoticeAt[normalized] = now;
-  try {
-    toastXkeen('Не удалось загрузить часть панели. Проверьте связь с роутером и повторите действие; если не поможет — обновите страницу.', 'error');
-  } catch (error) {}
+  const retry = options && typeof options.retry === 'function' ? options.retry : null;
+  showLoadNotice(normalized, retry ? 'failed' : 'reloadOnly', retry);
+}
+
+function retryPanelModule(key) {
+  return ensurePanelModule(key, 'retry').then((loaded) => {
+    if (!loaded || loaded.status !== 'ready') return false;
+    const descriptor = descriptorFor(key);
+    try {
+      document.dispatchEvent(new CustomEvent('xkeen:panel-module-recovered', {
+        detail: { key, views: descriptor && Array.isArray(descriptor.views) ? descriptor.views.slice() : [] },
+      }));
+    } catch (error) {}
+    return true;
+  });
 }
 
 function wait(delayMs) {
@@ -139,8 +226,9 @@ function importBundle(key, load) {
 
 async function loadWithRetry(key, load) {
   let lastError = null;
-  for (let attempt = 0; attempt <= LOAD_RETRY_DELAYS_MS.length; attempt += 1) {
-    if (attempt > 0) await wait(LOAD_RETRY_DELAYS_MS[attempt - 1]);
+  const delays = manualRetries.has(key) ? [] : LOAD_RETRY_DELAYS_MS;
+  for (let attempt = 0; attempt <= delays.length; attempt += 1) {
+    if (attempt > 0) await wait(delays[attempt - 1]);
     try {
       await ensurePanelModuleStyles(key);
       return await importBundle(key, load);
@@ -247,7 +335,7 @@ export async function ensurePanelModule(key, reason = '') {
     }), (error) => {
       // Nothing was cached, the next request downloads the bundle again.
       reportFailureOnce(normalized, error);
-      notifyPanelLoadFailure(normalized);
+      notifyPanelLoadFailure(normalized, { retry: () => retryPanelModule(normalized) });
       return result('failed', normalized);
     })
     .finally(() => {

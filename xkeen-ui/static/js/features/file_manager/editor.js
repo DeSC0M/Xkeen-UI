@@ -940,6 +940,18 @@ function syncToolbarForEngine(engine) {
     }
   }
 
+  // The panel asks the shared dirty-state registry before it reloads the
+  // page, so unsaved text here is reported there too.
+  function setEditorDirty(value) {
+    STATE.dirty = !!value;
+    try {
+      const registry = XKeen.ui && XKeen.ui.configDirty;
+      if (registry && typeof registry.setDirty === 'function') {
+        registry.setDirty('file-manager', 'editor', STATE.dirty, { scopeLabel: 'Файловый менеджер' });
+      }
+    } catch (e) {}
+  }
+
   function updateDirtyUI() {
     const ctx = STATE.ctx;
     const ui = els();
@@ -947,9 +959,9 @@ function syncToolbarForEngine(engine) {
     const ro = !!(ctx && ctx.readOnly);
     const v = activeText(ui);
     try {
-      STATE.dirty = (ctx && !ro) ? (v !== STATE.lastSaved) : false;
+      setEditorDirty((ctx && !ro) ? (v !== STATE.lastSaved) : false);
     } catch (e) {
-      STATE.dirty = false;
+      setEditorDirty(false);
     }
     try { if (ui.saveBtn) ui.saveBtn.disabled = !STATE.dirty || ro; } catch (e) {}
   }
@@ -1433,7 +1445,7 @@ function syncToolbarForEngine(engine) {
 
     STATE.ctx = ctx || null;
     STATE.lastSaved = String(text || '');
-    STATE.dirty = false;
+    setEditorDirty(false);
 
     try { if (ui.title) ui.title.textContent = String((ctx && ctx.name) || 'Файл'); } catch (e) {}
 
@@ -1514,7 +1526,7 @@ function syncToolbarForEngine(engine) {
     clearViewStateBindings();
 
     try { STATE.ctx = null; } catch (e) {}
-    try { STATE.dirty = false; } catch (e) {}
+    setEditorDirty(false);
     try { STATE.lastSaved = ''; } catch (e) {}
     try { STATE.activeFacade = null; } catch (e) {}
 
@@ -1591,7 +1603,7 @@ function syncToolbarForEngine(engine) {
     }
 
     STATE.lastSaved = text;
-    STATE.dirty = false;
+    setEditorDirty(false);
     setInfo({ err: '' });
     try { toast('Сохранено: ' + (ctx.name || 'файл'), 'success'); } catch (e) {}
 

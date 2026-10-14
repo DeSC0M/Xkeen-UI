@@ -207,10 +207,28 @@ export function bindPanelShellViewRuntime(sharedShell) {
     });
   });
 
-  try {
-    const current = sharedShell && typeof sharedShell.getCurrentView === 'function'
+  const getCurrentView = () => (
+    sharedShell && typeof sharedShell.getCurrentView === 'function'
       ? String(sharedShell.getCurrentView() || '')
-      : '';
+      : ''
+  );
+
+  // A screen whose bundle failed never ran its init; once the notice's retry
+  // brings the bundle in, the open screen is applied again so it renders
+  // without another click.
+  document.addEventListener('xkeen:panel-module-recovered', (event) => {
+    const detail = event && event.detail ? event.detail : {};
+    const views = Array.isArray(detail.views) ? detail.views : [];
+    let current = '';
+    try { current = getCurrentView(); } catch (e) {}
+    if (!current || !views.includes(current)) return;
+    void applyPanelViewRuntime(current).catch((error) => {
+      try { console.error('[XKeen] panel view runtime failed after recovery', error); } catch (e) {}
+    });
+  });
+
+  try {
+    const current = getCurrentView();
     if (current) {
       void applyPanelViewRuntime(current).catch((error) => {
         try { console.error('[XKeen] panel initial view runtime failed', error); } catch (e) {}
