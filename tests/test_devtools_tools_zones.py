@@ -485,13 +485,18 @@ def test_button_rows_breathe_like_the_card_padding():
     card_rule = card_rule[: card_rule.index("}")]
     assert "padding: 11px 12px;" in card_rule
 
-    # Тема оператора ужимает до 5px только сетку действий внутри карточки экспорта;
-    # ряды кнопок карточек живут на общем зазоре.
-    tight = operator[operator.index("body.devtools-page .dt-actions-grid {"):]
-    tight = tight[: tight.index("}")]
-    assert "gap: 5px;" in tight
-    assert ".dt-logging-actions" not in tight
-    assert ".dt-update-actions" not in tight
+    # 15.10.2026: у сетки экспорта было 5px, у кнопок расшифровки — пробел между
+    # тегами; теперь все ряды кнопок живут на одном токене, равном отступу карточки.
+    tokens = (ROOT / "xkeen-ui" / "static" / "operator-tokens.css").read_text(encoding="utf-8")
+    assert "--op-gap-actions: 12px;" in tokens
+    shared = operator[operator.index("body.devtools-page :is(\n  .dt-service-actions,"):]
+    shared = shared[: shared.index("}")]
+    for row in (".dt-update-actions", ".dt-branding-row", ".dt-logging-actions", ".dt-actions-grid", ".dt-log-topbar-actions"):
+        assert row in shared
+    assert "gap: var(--op-gap-actions);" in shared
+    grid = operator[operator.index("body.devtools-page .dt-actions-grid {"):]
+    grid = grid[: grid.index("}")]
+    assert "gap:" not in grid
 
 
 def test_no_card_overrides_the_shared_button_row():

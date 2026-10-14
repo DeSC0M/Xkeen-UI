@@ -55,6 +55,10 @@ body.panel-page {
   --op-control-h: 32px;
   --op-control-compact-h: 28px;
   --op-touch-target: 40px;
+  /* Один зазор на все ряды кнопок и один на ряды мелких плашек (форматы,
+   * метки): ряды разных карточек не должны расходиться на 3–8 px. */
+  --op-gap-actions: 12px;
+  --op-gap-chips: 6px;
   /* Native scrollbars are part of the operator chrome too. Keep one compact
    * treatment for the workspace and every nested list/table while allowing
    * deliberate `scrollbar-width: none` contracts (tabs/toolbars) below to

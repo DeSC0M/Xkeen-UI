@@ -37,7 +37,7 @@
       ],
       "removable": false,
       "unit_count": 547,
-      "size_bytes": 7376199,
+      "size_bytes": 7377509,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -359,7 +359,7 @@
       ],
       "removable": true,
       "unit_count": 23,
-      "size_bytes": 505331,
+      "size_bytes": 505343,
       "kind_counts": {
         "backend_route": 1,
         "backend_service": 7,
@@ -4087,7 +4087,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_happ_links_native_engine.py",
-      "size_bytes": 5816,
+      "size_bytes": 5847,
       "depends_on": [
         "engine.xray"
       ],
@@ -4161,7 +4161,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_install_confirm_reask.py",
-      "size_bytes": 7745,
+      "size_bytes": 7740,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -4241,7 +4241,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_install_terminal_ui.py",
-      "size_bytes": 15864,
+      "size_bytes": 15876,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11411,7 +11411,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/devtools-operator.css",
-      "size_bytes": 38913,
+      "size_bytes": 39599,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11465,7 +11465,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/operator-tokens.css",
-      "size_bytes": 2876,
+      "size_bytes": 3169,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11501,7 +11501,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/panel-operator.css",
-      "size_bytes": 753053,
+      "size_bytes": 753346,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -20459,7 +20459,7 @@
       "module_id": "tool.advanced-diagnostics",
       "kind": "template",
       "path": "xkeen-ui/templates/devtools.html",
-      "size_bytes": 51713,
+      "size_bytes": 51725,
       "depends_on": [
         "core"
       ],
@@ -30693,7 +30693,7 @@
         },
         "tool.advanced-diagnostics": {
           "unit_count": 23,
-          "size_bytes": 505331
+          "size_bytes": 505343
         }
       },
       "next_stage": "Этапы 4, 5 и 6."

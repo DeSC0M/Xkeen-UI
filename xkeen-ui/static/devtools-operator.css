@@ -811,14 +811,31 @@ body.devtools-page #dt-service-card :is(.status, p) {
   margin-bottom: 0;
 }
 
-body.devtools-page .dt-actions-grid {
-  gap: 5px;
+/* Ряды кнопок DevTools: зазор один на все карточки (--op-gap-actions).
+   Новый ряд кнопок добавляйте в этот список — e2e devtools_action_gaps
+   сверяет зазоры каждого ряда на обеих вкладках. */
+body.devtools-page :is(
+  .dt-service-actions,
+  .dt-update-actions,
+  .dt-branding-row,
+  .dt-logging-actions,
+  .dt-actions-grid,
+  .dt-log-topbar-actions
+) {
+  gap: var(--op-gap-actions);
+}
+
+/* Кнопки здесь стояли строкой, и зазором был пробел между тегами. */
+body.devtools-page .dt-update-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 body.devtools-page .dt-happ-formats {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--op-gap-chips);
   vertical-align: middle;
 }
 

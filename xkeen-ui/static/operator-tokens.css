@@ -35,6 +35,10 @@
   --op-control-h: 32px;
   --op-control-compact-h: 28px;
   --op-touch-target: 40px;
+  /* Один зазор на все ряды кнопок и один на ряды мелких плашек (форматы,
+   * метки): ряды разных карточек не должны расходиться на 3–8 px. */
+  --op-gap-actions: 12px;
+  --op-gap-chips: 6px;
   --op-scrollbar-size: 12px;
   --op-scrollbar-track: color-mix(in srgb, var(--op-surface) 72%, var(--op-bg));
   --op-scrollbar-thumb: color-mix(in srgb, var(--op-border-strong) 90%, var(--op-accent) 10%);

@@ -125,7 +125,7 @@ def test_installer_exposes_optional_component_choices_without_child_prompt_noise
     assert 'Расшифровка подписок' in text
     assert 'Компоненты загрузятся с GitHub.' in text
     happ = text[text.index('choose_happ_option() {'):text.index('\n}\n', text.index('choose_happ_option() {'))]
-    # Утилиту ссылок ставят только явным «да»: Enter и установка без терминала — «нет».
+    # Расшифровку подписок ставят только явным «да»: Enter и установка без терминала — «нет».
     assert 'ui_confirm n "Установить?"' in happ
     assert 'HAPP_OPTION="0"\n  if [ -t 0 ]' in happ
     assert 'HAPP_OPTION="$UI_CONFIRM_YES"' in happ
