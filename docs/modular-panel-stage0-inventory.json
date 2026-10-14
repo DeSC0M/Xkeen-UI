@@ -36,13 +36,13 @@
         "flask"
       ],
       "removable": false,
-      "unit_count": 546,
-      "size_bytes": 7365886,
+      "unit_count": 547,
+      "size_bytes": 7371655,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
         "backend_service": 76,
-        "backend_test": 248,
+        "backend_test": 249,
         "configuration": 10,
         "frontend_bundle": 9,
         "frontend_entrypoint": 3,
@@ -86,7 +86,7 @@
       ],
       "removable": true,
       "unit_count": 137,
-      "size_bytes": 3829077,
+      "size_bytes": 3829758,
       "kind_counts": {
         "backend_route": 13,
         "backend_service": 20,
@@ -359,7 +359,7 @@
       ],
       "removable": true,
       "unit_count": 23,
-      "size_bytes": 504682,
+      "size_bytes": 505345,
       "kind_counts": {
         "backend_route": 1,
         "backend_service": 7,
@@ -1811,7 +1811,7 @@
       "module_id": "core",
       "kind": "backend_service",
       "path": "xkeen-ui/services/happ_links.py",
-      "size_bytes": 25349,
+      "size_bytes": 26374,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -1827,6 +1827,7 @@
         "XKEEN_HAPP_DECRYPTOR_REMOTE_URL",
         "XKEEN_HAPP_DECRYPTOR_TIMEOUT",
         "XKEEN_HAPP_HELPER_CMD",
+        "XKEEN_HAPP_HELPER_REQUEST_HEADERS",
         "XKEEN_HAPP_HELPER_TIMEOUT"
       ],
       "removable": false
@@ -4040,7 +4041,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_happ_helper_contracts.py",
-      "size_bytes": 1267,
+      "size_bytes": 1786,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -4058,6 +4059,8 @@
         "XKEEN_HAPP_HELPER_CMD",
         "XKEEN_HAPP_HELPER_HWID",
         "XKEEN_HAPP_HELPER_TIMEOUT",
+        "XKEEN_MIHOMO_HWID",
+        "XKEEN_SUBSCRIPTION_HAPP_FALLBACK",
         "XKEEN_SUBSCRIPTION_HAPP_USER_AGENT"
       ],
       "removable": false
@@ -7048,6 +7051,27 @@
         "flask"
       ],
       "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "backend_test",
+      "path": "tests/test_subscription_profile_reaches_happ_helper.py",
+      "size_bytes": 4225,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask"
+      ],
+      "environment_variables": [
+        "XKEEN_HAPP_HELPER_HWID",
+        "XKEEN_SUBSCRIPTION_HAPP_USER_AGENT"
+      ],
       "removable": false
     },
     {
@@ -16537,7 +16561,7 @@
       "module_id": "engine.xray",
       "kind": "backend_service",
       "path": "xkeen-ui/services/xray_subscriptions.py",
-      "size_bytes": 331354,
+      "size_bytes": 332002,
       "depends_on": [
         "core",
         "tool.editor",
@@ -17431,7 +17455,7 @@
       "module_id": "engine.xray",
       "kind": "backend_test",
       "path": "tests/test_xray_subscription_request_profiles.py",
-      "size_bytes": 4539,
+      "size_bytes": 4572,
       "depends_on": [
         "core",
         "tool.editor"
@@ -19731,7 +19755,7 @@
       "module_id": "tool.advanced-diagnostics",
       "kind": "backend_service",
       "path": "xkeen-ui/services/devtools/env.py",
-      "size_bytes": 30275,
+      "size_bytes": 30296,
       "depends_on": [
         "core",
         "integration.happ",
@@ -19786,7 +19810,6 @@
         "XKEEN_HAPP_DECRYPTOR_REMOTE_URL",
         "XKEEN_HAPP_DECRYPTOR_TIMEOUT",
         "XKEEN_HAPP_HELPER_CMD",
-        "XKEEN_HAPP_HELPER_HWID",
         "XKEEN_HAPP_HELPER_TIMEOUT",
         "XKEEN_HAPP_KEYS_MANIFEST_URL",
         "XKEEN_INIT_SCRIPT",
@@ -19840,6 +19863,7 @@
         "XKEEN_SUBSCRIPTIONS_SNAPSHOT",
         "XKEEN_SUBSCRIPTION_ALLOW_HTTP",
         "XKEEN_SUBSCRIPTION_ALLOW_PRIVATE_HOSTS",
+        "XKEEN_SUBSCRIPTION_HAPP_FALLBACK",
         "XKEEN_SUBSCRIPTION_HAPP_USER_AGENT",
         "XKEEN_TRASH_DIR",
         "XKEEN_TRASH_MAX_BYTES",
@@ -20067,7 +20091,7 @@
       "module_id": "tool.advanced-diagnostics",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/devtools/env.js",
-      "size_bytes": 79768,
+      "size_bytes": 80410,
       "depends_on": [
         "core"
       ],
@@ -20132,7 +20156,6 @@
         "XKEEN_HAPP_DECRYPTOR_REMOTE_URL",
         "XKEEN_HAPP_DECRYPTOR_TIMEOUT",
         "XKEEN_HAPP_HELPER_CMD",
-        "XKEEN_HAPP_HELPER_HWID",
         "XKEEN_HAPP_HELPER_TIMEOUT",
         "XKEEN_HAPP_KEYS_MANIFEST_URL",
         "XKEEN_INIT_SCRIPT",
@@ -20195,6 +20218,7 @@
         "XKEEN_SUBSCRIPTION_",
         "XKEEN_SUBSCRIPTION_ALLOW_HTTP",
         "XKEEN_SUBSCRIPTION_ALLOW_PRIVATE_HOSTS",
+        "XKEEN_SUBSCRIPTION_HAPP_FALLBACK",
         "XKEEN_SUBSCRIPTION_HAPP_USER_AGENT",
         "XKEEN_TRASH_",
         "XKEEN_TRASH_DIR",
@@ -30669,7 +30693,7 @@
         },
         "tool.advanced-diagnostics": {
           "unit_count": 23,
-          "size_bytes": 504682
+          "size_bytes": 505345
         }
       },
       "next_stage": "Этапы 4, 5 и 6."

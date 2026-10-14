@@ -51,8 +51,8 @@ ENV_WHITELIST: Tuple[str, ...] = (
     "XKEEN_HAPP_DECRYPTOR_RELEASE_URL",
     "XKEEN_HAPP_KEYS_MANIFEST_URL",
     "XKEEN_HAPP_DECRYPTOR_ALLOW_CUSTOM_URLS",
-    "XKEEN_HAPP_HELPER_HWID",
     "XKEEN_SUBSCRIPTION_HAPP_USER_AGENT",
+    "XKEEN_SUBSCRIPTION_HAPP_FALLBACK",
     # Subscriptions: URL policy + background auto-refresh (Xray and Mihomo)
     "XKEEN_SUBSCRIPTION_ALLOW_HTTP",
     "XKEEN_SUBSCRIPTION_ALLOW_PRIVATE_HOSTS",
@@ -374,10 +374,10 @@ def _default_effective_value(
         return happ_keys.DEFAULT_MANIFEST_URL
     if k == "XKEEN_HAPP_DECRYPTOR_ALLOW_CUSTOM_URLS":
         return "0"
-    if k == "XKEEN_HAPP_HELPER_HWID":
-        return ""
     if k == "XKEEN_SUBSCRIPTION_HAPP_USER_AGENT":
         return "Happ/3.18.3/Android/17771400994551771562"
+    if k == "XKEEN_SUBSCRIPTION_HAPP_FALLBACK":
+        return "1"
 
     # Subscription URL policy (services/xray_subscriptions.py::_subscription_policy).
     if k == "XKEEN_SUBSCRIPTION_ALLOW_HTTP":

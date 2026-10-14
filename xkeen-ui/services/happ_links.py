@@ -20,6 +20,9 @@ HAPP_HELPER_CMD_ENV = "XKEEN_HAPP_HELPER_CMD"
 HAPP_DECRYPTOR_CMD_ENV = "XKEEN_HAPP_DECRYPTOR_CMD"
 HAPP_DECRYPTOR_REMOTE_URL_ENV = "XKEEN_HAPP_DECRYPTOR_REMOTE_URL"
 HAPP_HELPER_TIMEOUT_ENV = "XKEEN_HAPP_HELPER_TIMEOUT"
+# Internal: headers of a subscription with its own request profile, as JSON.
+# The helper downloads the landing page itself and must send them too.
+HAPP_HELPER_REQUEST_HEADERS_ENV = "XKEEN_HAPP_HELPER_REQUEST_HEADERS"
 HAPP_DECRYPTOR_TIMEOUT_ENV = "XKEEN_HAPP_DECRYPTOR_TIMEOUT"
 HAPP_RESOLVED_HEADER = "x-xkeen-happ-resolved"
 HAPP_LINK_HEADER = "x-xkeen-happ-link"
@@ -469,7 +472,13 @@ def _normalize_helper_output(text: Any) -> Dict[str, Any] | None:
     return {"kind": "text", "value": raw, "headers": {}}
 
 
-def _run_command(parts: List[str], link: str, *, error_prefix: str) -> Dict[str, Any]:
+def _run_command(
+    parts: List[str],
+    link: str,
+    *,
+    error_prefix: str,
+    extra_env: Dict[str, str] | None = None,
+) -> Dict[str, Any]:
     if not str(link or "").strip():
         raise RuntimeError(f"{error_prefix}invalid_input")
     if not parts:
@@ -484,6 +493,7 @@ def _run_command(parts: List[str], link: str, *, error_prefix: str) -> Dict[str,
             text=True,
             timeout=timeout,
             check=False,
+            env={**os.environ, **extra_env} if extra_env else None,
         )
     except FileNotFoundError as exc:
         raise RuntimeError(f"{error_prefix}missing:" + str(exc)) from exc
@@ -507,8 +517,11 @@ def _run_command(parts: List[str], link: str, *, error_prefix: str) -> Dict[str,
     return parsed
 
 
-def run_helper(link: str) -> Dict[str, Any]:
-    return _run_command(helper_command_parts(), link, error_prefix="happ_helper_")
+def run_helper(link: str, *, request_headers: Dict[str, str] | None = None) -> Dict[str, Any]:
+    extra_env = None
+    if request_headers:
+        extra_env = {HAPP_HELPER_REQUEST_HEADERS_ENV: json.dumps(dict(request_headers), ensure_ascii=False)}
+    return _run_command(helper_command_parts(), link, error_prefix="happ_helper_", extra_env=extra_env)
 
 
 _UNKNOWN_KEY_MARKER_RE = re.compile(r'marker "([A-Za-z0-9+/=_-]{8})"')
@@ -649,7 +662,18 @@ def _resolve_candidates(
     return None, last_error
 
 
-def resolve_source(url: str, *, body: Any = None, content_type: Any = None) -> Dict[str, Any] | None:
+def resolve_source(
+    url: str,
+    *,
+    body: Any = None,
+    content_type: Any = None,
+    helper_headers: Dict[str, str] | None = None,
+) -> Dict[str, Any] | None:
+    """Turn a Happ link or landing page into a subscription source.
+
+    ``helper_headers`` are the headers of a subscription that sets its own
+    HWID and User-Agent: the helper fetches the landing page with them.
+    """
     raw_url = normalize_happ_deep_link(url)
     if not raw_url and body is None:
         return None
@@ -688,8 +712,13 @@ def resolve_source(url: str, *, body: Any = None, content_type: Any = None) -> D
 
     last_error: RuntimeError | None = None
 
+    helper = run_helper
+    if helper_headers:
+        def helper(link: str) -> Dict[str, Any]:
+            return run_helper(link, request_headers=helper_headers)
+
     if helper_inputs and helper_configured():
-        parsed, last_error = _resolve_candidates(helper_inputs, run_helper, via="helper")
+        parsed, last_error = _resolve_candidates(helper_inputs, helper, via="helper")
         if parsed:
             return parsed
 
@@ -708,7 +737,7 @@ def resolve_source(url: str, *, body: Any = None, content_type: Any = None) -> D
             return parsed
 
     if candidates and helper_env_configured():
-        parsed, last_error = _resolve_candidates(candidates, run_helper, via="helper")
+        parsed, last_error = _resolve_candidates(candidates, helper, via="helper")
         if parsed:
             return parsed
 

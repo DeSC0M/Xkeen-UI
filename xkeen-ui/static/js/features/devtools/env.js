@@ -214,8 +214,8 @@ import { iconHtml } from '../../ui/operator_icons.js';
   ENV_HELP.XKEEN_HAPP_DECRYPTOR_RELEASE_URL = 'Откуда DevTools → «Утилита ссылок подписок» и install.sh скачивают движок `happ-decrypt-universal-linux-<arch>` вместе с `SHA256SUMS`. По умолчанию — последний релиз Xkeen-UI на GitHub. Меняйте только для своего зеркала релизов; адреса не на GitHub дополнительно требуют `XKEEN_HAPP_DECRYPTOR_ALLOW_CUSTOM_URLS=1`.';
   ENV_HELP.XKEEN_HAPP_KEYS_MANIFEST_URL = 'Адрес манифеста ключей Happ: коммит LeeeeT/happ-decryptor и sha256 файлов, без самих ключей. По умолчанию — копия из репозитория Xkeen-UI на GitHub; если она недоступна, панель берёт манифест, встроенный в свою версию.';
   ENV_HELP.XKEEN_HAPP_DECRYPTOR_ALLOW_CUSTOM_URLS = 'Разрешить DevTools → «Утилита ссылок подписок» и install.sh скачивать движок и манифест ключей с public URL вне allow-list GitHub — например, из своего зеркала в `XKEEN_HAPP_DECRYPTOR_RELEASE_URL`. По умолчанию 0. Контрольные суммы проверяются в любом случае.';
-  ENV_HELP.XKEEN_HAPP_HELPER_HWID = 'Необязательный ручной HWID для bundled Happ helper. Обычно оставьте пустым: helper возьмёт HWID роутера автоматически.';
-  ENV_HELP.XKEEN_SUBSCRIPTION_HAPP_USER_AGENT = 'User-Agent для bundled Happ helper и Happ fallback-запросов. По умолчанию: Happ/3.18.3/Android/17771400994551771562.';
+  ENV_HELP.XKEEN_SUBSCRIPTION_HAPP_USER_AGENT = 'User-Agent Happ для подписок в режиме профиля «Авто»: с ним панель повторяет запрос, если провайдер отдал пустую подписку или заглушку, и с ним встроенный помощник открывает страницы-обёртки Happ. Подписка со своим профилем запроса шлёт свой User-Agent. По умолчанию: Happ/3.18.3/Android/17771400994551771562.';
+  ENV_HELP.XKEEN_SUBSCRIPTION_HAPP_FALLBACK = 'Повторять запрос подписки с User-Agent Happ, если провайдер отдал пустую подписку или заглушку. Только для подписок в режиме профиля «Авто». По умолчанию 1; 0 — не повторять. Применяется к следующей загрузке подписки без перезапуска панели.';
   ENV_HELP.XKEEN_SUBSCRIPTION_ALLOW_HTTP = 'Разрешить подписки по plain HTTP. По умолчанию 1: провайдеры до сих пор часто публикуют публичные фиды по HTTP. Значение 0 требует HTTPS. Private- и локальные адреса блокируются отдельно, независимо от этой настройки. Применяется к следующей загрузке подписки без перезапуска панели.';
   ENV_HELP.XKEEN_SUBSCRIPTION_ALLOW_PRIVATE_HOSTS = 'Разрешить подписки с локальных/private адресов, в том числе через редиректы. По умолчанию 0. Включайте только если фид действительно раздаётся внутри вашей сети. Применяется к следующей загрузке подписки без перезапуска панели.';
   ENV_HELP.XKEEN_SUBSCRIPTIONS_SCHEDULER = 'Фоновое автообновление Xray-подписок. По умолчанию 1 (включено). Значение 0 полностью отключает планировщик: подписки обновляются только вручную. Требует перезапуска панели.';
@@ -392,8 +392,8 @@ import { iconHtml } from '../../ui/operator_icons.js';
   ENV_NO_RESTART_KEYS.add('XKEEN_HAPP_DECRYPTOR_RELEASE_URL');
   ENV_NO_RESTART_KEYS.add('XKEEN_HAPP_KEYS_MANIFEST_URL');
   ENV_NO_RESTART_KEYS.add('XKEEN_HAPP_DECRYPTOR_ALLOW_CUSTOM_URLS');
-  ENV_NO_RESTART_KEYS.add('XKEEN_HAPP_HELPER_HWID');
   ENV_NO_RESTART_KEYS.add('XKEEN_SUBSCRIPTION_HAPP_USER_AGENT');
+  ENV_NO_RESTART_KEYS.add('XKEEN_SUBSCRIPTION_HAPP_FALLBACK');
   ENV_NO_RESTART_KEYS.add('XKEEN_XRAY_TEST_TIMEOUT');
   ENV_NO_RESTART_KEYS.add('XKEEN_SUBSCRIPTION_ALLOW_HTTP');
   ENV_NO_RESTART_KEYS.add('XKEEN_SUBSCRIPTION_ALLOW_PRIVATE_HOSTS');
@@ -432,8 +432,8 @@ import { iconHtml } from '../../ui/operator_icons.js';
   ENV_RESTART_KEYS.delete('XKEEN_HAPP_DECRYPTOR_RELEASE_URL');
   ENV_RESTART_KEYS.delete('XKEEN_HAPP_KEYS_MANIFEST_URL');
   ENV_RESTART_KEYS.delete('XKEEN_HAPP_DECRYPTOR_ALLOW_CUSTOM_URLS');
-  ENV_RESTART_KEYS.delete('XKEEN_HAPP_HELPER_HWID');
   ENV_RESTART_KEYS.delete('XKEEN_SUBSCRIPTION_HAPP_USER_AGENT');
+  ENV_RESTART_KEYS.delete('XKEEN_SUBSCRIPTION_HAPP_FALLBACK');
   ENV_RESTART_KEYS.delete('XKEEN_XRAY_TEST_TIMEOUT');
   ENV_RESTART_KEYS.delete('XKEEN_SUBSCRIPTION_ALLOW_HTTP');
   ENV_RESTART_KEYS.delete('XKEEN_SUBSCRIPTION_ALLOW_PRIVATE_HOSTS');
@@ -533,8 +533,8 @@ import { iconHtml } from '../../ui/operator_icons.js';
         'XKEEN_HAPP_DECRYPTOR_RELEASE_URL',
         'XKEEN_HAPP_KEYS_MANIFEST_URL',
         'XKEEN_HAPP_DECRYPTOR_ALLOW_CUSTOM_URLS',
-        'XKEEN_HAPP_HELPER_HWID',
         'XKEEN_SUBSCRIPTION_HAPP_USER_AGENT',
+        'XKEEN_SUBSCRIPTION_HAPP_FALLBACK',
       ],
       prefixes: [],
     },

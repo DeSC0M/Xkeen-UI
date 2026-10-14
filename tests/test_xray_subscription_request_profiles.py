@@ -68,7 +68,7 @@ def test_custom_profile_is_sent_without_auto_retry(monkeypatch):
 
     calls = []
 
-    def fake_fetch(url, request_headers=None):
+    def fake_fetch(url, request_headers=None, **_kwargs):
         calls.append(dict(request_headers or {}))
         return "vless://id@example.test:443", {}
 
@@ -88,7 +88,7 @@ def test_disabled_profile_does_not_use_detected_fallback(monkeypatch):
 
     calls = []
 
-    def fake_fetch(url, request_headers=None):
+    def fake_fetch(url, request_headers=None, **_kwargs):
         calls.append(dict(request_headers or {}))
         return "", {"x-hwid-not-supported": "true"}
 
@@ -108,7 +108,7 @@ def test_auto_profile_keeps_adaptive_retry(monkeypatch):
 
     calls = []
 
-    def fake_fetch(url, request_headers=None):
+    def fake_fetch(url, request_headers=None, **_kwargs):
         headers = dict(request_headers or {})
         calls.append(headers)
         if headers.get("x-hwid") == "ROUTER":

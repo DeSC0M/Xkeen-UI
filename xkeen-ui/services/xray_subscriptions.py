@@ -1490,6 +1490,7 @@ def _resolve_happ_subscription_source(
     body: str | None = None,
     headers: Dict[str, str] | None = None,
     request_headers: Dict[str, str] | None = None,
+    profile_headers: bool = False,
 ) -> Dict[str, Any] | None:
     content_type = (headers or {}).get("content-type") if isinstance(headers, dict) else None
     body_text = str(body or "")
@@ -1502,7 +1503,14 @@ def _resolve_happ_subscription_source(
             or happ_links.extract_happ_links_from_url(url_s)
         ):
             return None
-    resolved = happ_links.resolve_source(url_s, body=body_text, content_type=content_type)
+    resolved = happ_links.resolve_source(
+        url_s,
+        body=body_text,
+        content_type=content_type,
+        # A subscription's own HWID and User-Agent go to the helper too: it
+        # downloads the landing page by itself.
+        helper_headers=dict(request_headers or {}) if profile_headers else None,
+    )
     if not resolved:
         return None
     kind = str(resolved.get("kind") or "").strip().lower()
@@ -1520,6 +1528,7 @@ def _resolve_happ_subscription_source(
         fetched_body, fetched_headers = fetch_subscription_body(
             target,
             request_headers=merged_headers,
+            profile_headers=profile_headers,
             _happ_depth=1,
         )
         return {
@@ -1538,13 +1547,17 @@ def fetch_subscription_body(
     url: str,
     request_headers: Dict[str, str] | None = None,
     *,
+    profile_headers: bool = False,
     _happ_depth: int = 0,
 ) -> Tuple[str, Dict[str, str]]:
+    """Download a subscription; ``profile_headers`` marks headers the owner set."""
     url_s = happ_links.normalize_happ_deep_link(url)
     if _happ_depth > 2:
         raise RuntimeError("happ_helper_resolution_loop")
     if happ_links.is_happ_deep_link(url_s):
-        resolved = _resolve_happ_subscription_source(url_s, request_headers=request_headers)
+        resolved = _resolve_happ_subscription_source(
+            url_s, request_headers=request_headers, profile_headers=profile_headers
+        )
         if resolved:
             return str(resolved.get("body") or ""), dict(resolved.get("headers") or {})
         raise RuntimeError("happ_helper_empty")
@@ -1570,6 +1583,7 @@ def fetch_subscription_body(
             resolved = _resolve_happ_subscription_source(
                 location,
                 request_headers=request_headers,
+                profile_headers=profile_headers,
             )
             if resolved:
                 return str(resolved.get("body") or ""), dict(resolved.get("headers") or {})
@@ -1588,6 +1602,7 @@ def fetch_subscription_body(
             body=body,
             headers=headers,
             request_headers=request_headers,
+            profile_headers=profile_headers,
         )
     except RuntimeError as exc:
         if happ_links.extract_happ_links(body):
@@ -2014,7 +2029,9 @@ def fetch_subscription_body_for_xray(
         selected_headers = (
             request_headers_for_profile(profile) if profile_mode == "custom" else {}
         )
-        body, headers = fetch_subscription_body(url, request_headers=selected_headers)
+        body, headers = fetch_subscription_body(
+            url, request_headers=selected_headers, profile_headers=profile_mode == "custom"
+        )
         hwid_headers = _subscription_hwid_response_headers(headers)
         warnings = _subscription_happ_resolution_warnings(headers)
         warnings.extend(_subscription_hwid_warning_messages(hwid_headers))

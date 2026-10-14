@@ -19,6 +19,8 @@ from services.mihomo_hwid_sub import get_device_info
 
 DEFAULT_HAPP_UA = "Happ/3.18.3/Android/17771400994551771562"
 DEFAULT_TIMEOUT = 20.0
+# Set by the panel for a subscription with its own HWID and User-Agent.
+REQUEST_HEADERS_ENV = "XKEEN_HAPP_HELPER_REQUEST_HEADERS"
 
 
 def _normalize_input(value: str) -> str:
@@ -44,19 +46,34 @@ def _decode_base64(text: str) -> str:
         return ""
 
 
+def _subscription_headers() -> dict[str, str]:
+    try:
+        data = json.loads(os.environ.get(REQUEST_HEADERS_ENV) or "{}")
+    except ValueError:
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    return {str(k).strip(): str(v).strip() for k, v in data.items() if str(k).strip() and str(v).strip()}
+
+
 def _build_happ_headers() -> tuple[dict[str, str], str]:
+    own = _subscription_headers()
+    lowered = {key.lower(): value for key, value in own.items()}
     info = get_device_info()
-    hwid = str(os.environ.get("XKEEN_HAPP_HELPER_HWID") or info.get("hwid") or "").strip()
+    # XKEEN_HAPP_HELPER_HWID is no longer offered in the panel; an env file
+    # that still sets it keeps working.
+    hwid = str(lowered.get("x-hwid") or os.environ.get("XKEEN_HAPP_HELPER_HWID") or info.get("hwid") or "").strip()
     if not hwid:
         raise RuntimeError("missing_hwid")
-    ua = str(os.environ.get("XKEEN_SUBSCRIPTION_HAPP_USER_AGENT") or DEFAULT_HAPP_UA).strip()
+    ua = str(lowered.get("user-agent") or os.environ.get("XKEEN_SUBSCRIPTION_HAPP_USER_AGENT") or DEFAULT_HAPP_UA).strip()
     headers = {
-        "User-Agent": ua,
-        "X-HWID": hwid,
         "Accept": "application/json, text/plain, */*",
         "Cache-Control": "no-cache",
         "Pragma": "no-cache",
     }
+    headers.update({key: value for key, value in own.items() if key.lower() not in {"user-agent", "x-hwid"}})
+    headers["User-Agent"] = ua
+    headers["X-HWID"] = hwid
     return headers, hwid
 
 
