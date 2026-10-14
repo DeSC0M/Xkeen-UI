@@ -36,8 +36,8 @@
         "flask"
       ],
       "removable": false,
-      "unit_count": 549,
-      "size_bytes": 7391641,
+      "unit_count": 550,
+      "size_bytes": 7396238,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -49,7 +49,7 @@
         "frontend_feature": 30,
         "frontend_javascript": 37,
         "frontend_runtime": 2,
-        "frontend_test": 54,
+        "frontend_test": 55,
         "frontend_ui": 17,
         "stylesheet": 8,
         "template": 32
@@ -10061,7 +10061,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/core_source_single_engine.spec.mjs",
-      "size_bytes": 3489,
+      "size_bytes": 3622,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -10985,6 +10985,24 @@
     {
       "module_id": "core",
       "kind": "frontend_test",
+      "path": "e2e/top_level_confirm_modal.spec.mjs",
+      "size_bytes": 3998,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_test",
       "path": "e2e/top_level_screen_focus.spec.mjs",
       "size_bytes": 3586,
       "depends_on": [],
@@ -11539,7 +11557,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/panel-operator.css",
-      "size_bytes": 753715,
+      "size_bytes": 754181,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],

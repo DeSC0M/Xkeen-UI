@@ -58,7 +58,8 @@ test.describe(`single-engine core source selection: ${PROFILE}`, () => {
     const configTab = page.locator('#mihomo-clash-tab-config');
     if (await configTab.count()) {
       await configTab.click();
-      await expect(page.locator('.xkeen-cm-toolbar')).toBeAttached();
+      // Two editors carry a toolbar; the one that competes with the menu is Mihomo's.
+      await expect(page.locator('.xk-mihomo-toolbarhost .xkeen-cm-toolbar')).toBeAttached();
     }
     await page.locator('.xk-brand-service-trigger').click();
     await expect(page.locator('#xk-mihomo-service-menu')).toBeVisible();
@@ -66,7 +67,7 @@ test.describe(`single-engine core source selection: ${PROFILE}`, () => {
     const layers = await page.evaluate(() => ({
       menu: Number.parseInt(getComputedStyle(document.querySelector('#xk-mihomo-service-menu')).zIndex, 10),
       header: Number.parseInt(getComputedStyle(document.querySelector('.panel-header-shell')).zIndex, 10),
-      editorToolbar: Number.parseInt(getComputedStyle(document.querySelector('.xkeen-cm-toolbar')).zIndex, 10),
+      editorToolbar: Number.parseInt(getComputedStyle(document.querySelector('.xk-mihomo-toolbarhost .xkeen-cm-toolbar')).zIndex, 10),
     }));
     expect(layers.header).toBeGreaterThan(layers.editorToolbar);
     expect(layers.menu).toBeGreaterThan(layers.editorToolbar);
