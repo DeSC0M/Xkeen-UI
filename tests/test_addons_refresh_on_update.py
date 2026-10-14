@@ -178,6 +178,7 @@ def _geodat(
     sums: bytes | None,
     mode: str = "1",
     published: bytes = b"not a binary, the test stops before running it\n",
+    check_only: bool = False,
 ):
     dest = tmp_path / "bin" / "xk-geodat"
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -197,7 +198,8 @@ def _geodat(
             **os.environ,
             "XKEEN_GEODAT_BIN": dest.as_posix(),
             "XKEEN_GEODAT_INSTALL": "1",
-            "XKEEN_GEODAT_ONLY_IF_CHANGED": mode,
+            "XKEEN_GEODAT_ONLY_IF_CHANGED": "" if check_only else mode,
+            "XKEEN_GEODAT_CHECK_ONLY": "1" if check_only else "",
             "XKEEN_GEODAT_ASSET": "xk-geodat-linux-arm64",
             "XKEEN_GEODAT_URL": base + "xk-geodat-linux-arm64",
             "XKEEN_GEODAT_SHA256SUMS_URL": base + "SHA256SUMS",
@@ -224,6 +226,25 @@ def test_a_viewer_equal_to_the_release_is_not_downloaded(tmp_path):
 
     assert "downloading" not in out, out
     assert dest.read_bytes() == body
+
+
+@needs_fetcher
+@pytest.mark.parametrize(
+    "installed, sums, verdict",
+    [
+        (b"installed viewer\n", _line(b"installed viewer\n"), "same"),
+        (b"installed viewer\n", _line(b"another build\n"), "differs"),
+        (None, _line(b"another build\n"), "missing"),
+        (b"installed viewer\n", None, "unknown"),
+    ],
+)
+def test_the_installer_can_ask_how_the_viewer_compares_to_the_release(tmp_path, installed, sums, verdict):
+    """Установщик спрашивает до вопроса человеку: ответ — последнее слово, ничего не качается."""
+    out, dest = _geodat(tmp_path, installed=installed, sums=sums, check_only=True)
+
+    assert out.strip().splitlines()[-1] == verdict, out
+    assert "downloading" not in out, out
+    assert dest.exists() == (installed is not None)
 
 
 @needs_fetcher

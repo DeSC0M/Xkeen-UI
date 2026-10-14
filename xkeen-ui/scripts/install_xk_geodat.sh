@@ -97,10 +97,20 @@ fetch_url() {
   URL="$1"
   OUT="$2"
 
+  # XKEEN_GEODAT_FETCH_TIMEOUT: установщик сверяется с релизом до вопроса
+  # человеку и не должен висеть, если GitHub не отвечает.
   if command -v curl >/dev/null 2>&1; then
-    curl -fL -o "$OUT" "$URL"
+    if [ -n "${XKEEN_GEODAT_FETCH_TIMEOUT:-}" ]; then
+      curl -fL --max-time "$XKEEN_GEODAT_FETCH_TIMEOUT" -o "$OUT" "$URL"
+    else
+      curl -fL -o "$OUT" "$URL"
+    fi
   elif command -v wget >/dev/null 2>&1; then
-    wget -O "$OUT" "$URL"
+    if [ -n "${XKEEN_GEODAT_FETCH_TIMEOUT:-}" ]; then
+      wget -T "$XKEEN_GEODAT_FETCH_TIMEOUT" -O "$OUT" "$URL"
+    else
+      wget -O "$OUT" "$URL"
+    fi
   else
     return 127
   fi
@@ -404,6 +414,10 @@ fi
 #                                  установленный файл сверяется с релизом по
 #                                  контрольной сумме и качается, только если
 #                                  в релизе он другой
+#   XKEEN_GEODAT_CHECK_ONLY=1      -> так его зовёт install.sh перед вопросом:
+#                                  ничего не ставит, последней строкой
+#                                  печатает same / differs / missing / unknown
+#   XKEEN_GEODAT_FETCH_TIMEOUT     -> предел скачивания в секундах
 if [ -n "${XKEEN_GEODAT_ASSET:-}" ]; then
   ASSET="$XKEEN_GEODAT_ASSET"
 fi
@@ -471,30 +485,52 @@ else
   SUMS_URL="${URL%/*}/SHA256SUMS"
 fi
 
-if [ "${XKEEN_GEODAT_ONLY_IF_CHANGED:-}" = "1" ]; then
-  # Сам файл весит мегабайты, список сумм — сотни байт: сначала спрашиваем
-  # релиз, тот ли у нас файл. Не удалось узнать — оставляем как есть:
-  # обновление панели от дополнения не зависит.
+# Сам файл весит мегабайты, список сумм — сотни байт: сначала спрашиваем
+# релиз, тот ли у нас файл. Печатает same / differs / missing / unknown.
+installed_vs_release() {
   if [ ! -f "$DEST" ]; then
-    echo "xk-geodat: не установлен — пропуск"
-    exit 0
+    echo "missing"
+    return 0
   fi
-  if ! have_hash_tool || ! fetch_url "$SUMS_URL" "$SUMS_TMP" 2>/dev/null; then
-    echo "xk-geodat: релиз не сообщил версию — оставлен как есть"
+  if ! have_hash_tool || ! fetch_url "$SUMS_URL" "$SUMS_TMP" >/dev/null 2>&1; then
     rm -f "$SUMS_TMP" 2>/dev/null || true
-    exit 0
+    echo "unknown"
+    return 0
   fi
   EXPECTED="$(grep -E "[[:space:]\*/]${ASSET}\$" "$SUMS_TMP" | awk '{print $1}' | head -n1 || true)"
   rm -f "$SUMS_TMP" 2>/dev/null || true
   ACTUAL="$(file_sha256 "$DEST" 2>/dev/null || true)"
   if [ -z "$EXPECTED" ] || [ -z "$ACTUAL" ]; then
-    echo "xk-geodat: релиз не сообщил версию — оставлен как есть"
-    exit 0
+    echo "unknown"
+  elif [ "$ACTUAL" = "$EXPECTED" ]; then
+    echo "same"
+  else
+    echo "differs"
   fi
-  if [ "$ACTUAL" = "$EXPECTED" ]; then
-    echo "xk-geodat: уже той же версии, что в релизе"
-    exit 0
-  fi
+}
+
+if [ "${XKEEN_GEODAT_CHECK_ONLY:-}" = "1" ]; then
+  installed_vs_release
+  exit 0
+fi
+
+if [ "${XKEEN_GEODAT_ONLY_IF_CHANGED:-}" = "1" ]; then
+  # Не удалось узнать — оставляем как есть: обновление панели от дополнения
+  # не зависит.
+  case "$(installed_vs_release)" in
+    missing)
+      echo "xk-geodat: не установлен — пропуск"
+      exit 0
+      ;;
+    unknown)
+      echo "xk-geodat: релиз не сообщил версию — оставлен как есть"
+      exit 0
+      ;;
+    same)
+      echo "xk-geodat: уже той же версии, что в релизе"
+      exit 0
+      ;;
+  esac
   echo "xk-geodat: в релизе другая версия — обновляю"
 fi
 

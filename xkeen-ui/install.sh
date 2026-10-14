@@ -383,14 +383,22 @@ ui_step_warn() {
 #
 # Ответ, не похожий ни на «да», ни на «нет» (опечатка, буква в другой
 # раскладке), согласием не считается: вопрос задаётся снова.
-ui_confirm_default_yes() {
-  _ui_prompt="$1"
+ui_confirm() {
+  # $1 — вариант по умолчанию (y или n), $2 — вопрос. Итог — в UI_CONFIRM_YES
+  # (1 или 0), сам ответ — в UI_CONFIRM_ANSWER.
+  _ui_default="$1"
+  _ui_prompt="$2"
+  if [ "$_ui_default" = "y" ]; then
+    _ui_y="Y"; _ui_n="n"; _ui_default_word="да"
+  else
+    _ui_y="y"; _ui_n="N"; _ui_default_word="нет"
+  fi
   UI_CONFIRM_ANSWER=""
   _ui_slips=0
 
   while :; do
-    printf '      %s [%bY%b/%bn%b]: ' \
-      "$_ui_prompt" "$UI_GREEN" "$UI_RESET" "$UI_YELLOW" "$UI_RESET" >&3 2>/dev/null || true
+    printf '      %s [%b%s%b/%b%s%b]: ' \
+      "$_ui_prompt" "$UI_GREEN" "$_ui_y" "$UI_RESET" "$UI_YELLOW" "$_ui_n" "$UI_RESET" >&3 2>/dev/null || true
     IFS= read -r UI_CONFIRM_ANSWER < /dev/tty || UI_CONFIRM_ANSWER=""
     _ui_understood=1
     case "$UI_CONFIRM_ANSWER" in
@@ -400,8 +408,8 @@ ui_confirm_default_yes() {
     if [ -n "$UI_RESET" ]; then
       # read already moved to the next line after Enter. Move back, clear that
       # prompt row and write the result in its semantic colour.
-      printf '%b[1A\r%b[2K      %s [%bY%b/%bn%b]: ' \
-        "$UI_ESC" "$UI_ESC" "$_ui_prompt" "$UI_GREEN" "$UI_RESET" "$UI_YELLOW" "$UI_RESET" >&3 2>/dev/null || true
+      printf '%b[1A\r%b[2K      %s [%b%s%b/%b%s%b]: ' \
+        "$UI_ESC" "$UI_ESC" "$_ui_prompt" "$UI_GREEN" "$_ui_y" "$UI_RESET" "$UI_YELLOW" "$_ui_n" "$UI_RESET" >&3 2>/dev/null || true
       case "$UI_CONFIRM_ANSWER" in
         y|Y|yes|YES|Yes|д|Д|да|ДА|Да)
           printf '%b%s%b' "$UI_GREEN" "$UI_CONFIRM_ANSWER" "$UI_RESET" >&3 2>/dev/null || true
@@ -410,7 +418,11 @@ ui_confirm_default_yes() {
           printf '%b%s%b' "$UI_YELLOW" "$UI_CONFIRM_ANSWER" "$UI_RESET" >&3 2>/dev/null || true
           ;;
         '')
-          printf '%bY%b' "$UI_GREEN" "$UI_RESET" >&3 2>/dev/null || true
+          if [ "$_ui_default" = "y" ]; then
+            printf '%bY%b' "$UI_GREEN" "$UI_RESET" >&3 2>/dev/null || true
+          else
+            printf '%bN%b' "$UI_YELLOW" "$UI_RESET" >&3 2>/dev/null || true
+          fi
           ;;
         *)
           printf '%b%s%b' "$UI_YELLOW" "$UI_CONFIRM_ANSWER" "$UI_RESET" >&3 2>/dev/null || true
@@ -424,13 +436,19 @@ ui_confirm_default_yes() {
     if [ "$_ui_slips" -ge 3 ]; then
       # Спрашивать без конца нельзя, но и молча выбирать за человека — тоже.
       UI_CONFIRM_ANSWER=""
-      printf '      %bОтвет не распознан — оставляю вариант по умолчанию: да.%b\n' \
-        "$UI_YELLOW" "$UI_RESET" >&3 2>/dev/null || true
+      printf '      %bОтвет не распознан — оставляю вариант по умолчанию: %s.%b\n' \
+        "$UI_YELLOW" "$_ui_default_word" "$UI_RESET" >&3 2>/dev/null || true
       break
     fi
-    printf '      %bНе понял ответ. Введите y (да) или n (нет); просто Enter — да.%b\n' \
-      "$UI_YELLOW" "$UI_RESET" >&3 2>/dev/null || true
+    printf '      %bНе понял ответ. Введите y (да) или n (нет); просто Enter — %s.%b\n' \
+      "$UI_YELLOW" "$_ui_default_word" "$UI_RESET" >&3 2>/dev/null || true
   done
+
+  case "$UI_CONFIRM_ANSWER" in
+    y|Y|yes|YES|Yes|д|Д|да|ДА|Да) UI_CONFIRM_YES=1 ;;
+    n|N|no|NO|No|н|Н|нет|НЕТ|Нет) UI_CONFIRM_YES=0 ;;
+    *) if [ "$_ui_default" = "y" ]; then UI_CONFIRM_YES=1; else UI_CONFIRM_YES=0; fi ;;
+  esac
 }
 
 choose_geodat_option() {
@@ -452,14 +470,26 @@ choose_geodat_option() {
   esac
 
   # Preserve the historical behavior for unattended installs: xk-geodat is on.
+  # Unless the router already has the very file the release offers: then
+  # reinstalling it is just a download, and the default turns to "no".
   GEODAT_OPTION="1"
+  _geodat_state=""
+  if [ -f "$SRC_DIR/scripts/install_xk_geodat.sh" ]; then
+    _geodat_state="$(XKEEN_GEODAT_CHECK_ONLY=1 XKEEN_GEODAT_FETCH_TIMEOUT=10 \
+      sh "$SRC_DIR/scripts/install_xk_geodat.sh" 2>/dev/null | tail -n 1)" || _geodat_state=""
+  fi
+  [ "$_geodat_state" = "same" ] && GEODAT_OPTION="0"
   if [ -t 0 ] && [ -r /dev/tty ]; then
     printf '  %bДополнение%b   Просмотрщик DAT-файлов\n' "$UI_BOLD" "$UI_RESET" >&3 2>/dev/null || true
     ui_info "Показывает содержимое GeoIP/GeoSite и помогает добавлять теги."
-    ui_confirm_default_yes "Установить xk-geodat?"
-    case "$UI_CONFIRM_ANSWER" in
-      n|N|no|NO|No|н|Н|нет|НЕТ|Нет) GEODAT_OPTION="0" ;;
-    esac
+    if [ "$_geodat_state" = "same" ]; then
+      ui_info "Уже установлен, в релизе новее нет."
+      _geodat_default="n"
+    else
+      _geodat_default="y"
+    fi
+    ui_confirm "$_geodat_default" "Установить xk-geodat?"
+    GEODAT_OPTION="$UI_CONFIRM_YES"
   fi
   XKEEN_GEODAT_INSTALL="$GEODAT_OPTION"
   export XKEEN_GEODAT_INSTALL
@@ -483,15 +513,15 @@ choose_happ_option() {
       ;;
   esac
 
-  HAPP_OPTION="1"
+  # Ставится только явным «да»: ни Enter, ни непонятный ответ, ни установка
+  # без терминала его не включают.
+  HAPP_OPTION="0"
   if [ -t 0 ] && [ -r /dev/tty ]; then
     printf '  %bДополнение%b   Режим разработчика для подписок\n' "$UI_BOLD" "$UI_RESET" >&3 2>/dev/null || true
     ui_info "Расширенная обработка ссылок при импорте подписок."
     ui_info "Компоненты загрузятся с GitHub."
-    ui_confirm_default_yes "Установить?"
-    case "$UI_CONFIRM_ANSWER" in
-      n|N|no|NO|No|н|Н|нет|НЕТ|Нет) HAPP_OPTION="0" ;;
-    esac
+    ui_confirm n "Установить?"
+    HAPP_OPTION="$UI_CONFIRM_YES"
   fi
   XKEEN_HAPP_DECRYPTOR_INSTALL="$HAPP_OPTION"
   export XKEEN_HAPP_DECRYPTOR_INSTALL
