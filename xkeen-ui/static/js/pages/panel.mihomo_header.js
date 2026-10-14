@@ -196,7 +196,15 @@ export function initPanelOperatorHeader() {
       const count = byId('mihomo-clash-groups-count');
       if (count) mihomoView.querySelector('.xk-mihomo-workspace-head').append(count);
       function syncSubview() {
-        closeMenus();
+        // A runtime-state mutation is also observed below. Do not close the
+        // global service menu while the Mihomo facade changes state: the core
+        // management button lives there, and closing it makes the underlying
+        // workspace intercept the next click. Only the local parameters menu
+        // needs to reset when the active Mihomo subview changes.
+        if (!params.content.hidden) {
+          params.content.hidden = true;
+          params.trigger.setAttribute('aria-expanded', 'false');
+        }
         const control = byId('mihomo-clash-tab-control')?.getAttribute('aria-selected') === 'true';
         const configuration = config?.getAttribute('aria-selected') === 'true';
         const diagnostics = byId('mihomo-clash-tab-diagnostics')?.getAttribute('aria-selected') === 'true';
