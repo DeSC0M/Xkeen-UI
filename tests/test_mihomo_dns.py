@@ -561,7 +561,8 @@ def test_mobile_bs_preset_adds_provider_policy_and_fake_ip_exception():
     content, _ = dns.build_enabled_config(BASE, mode="fake-ip", mobile_bs=True)
 
     assert "whitelist-yota:" in content
-    assert "url: https://raw.githubusercontent.com/tobedeclared/mihomo/rules/domains/whitelist-yota.mrs" in content
+    assert "url: https://raw.githubusercontent.com/tobedeclared/mihomo/main/domains/whitelist.yaml" in content
+    assert "format: yaml" in content
     assert "- 'rule-set:whitelist-yota'" in content
     assert "'rule-set:whitelist-yota':" in content
     assert "tls://77.88.8.88#DIRECT&name-cert-verify=safe.dot.dns.yandex.net" in content
