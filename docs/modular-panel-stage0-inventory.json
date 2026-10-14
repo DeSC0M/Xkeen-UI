@@ -37,7 +37,7 @@
       ],
       "removable": false,
       "unit_count": 543,
-      "size_bytes": 7358570,
+      "size_bytes": 7358216,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -7377,7 +7377,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_uninstall_is_clean.py",
-      "size_bytes": 16983,
+      "size_bytes": 17447,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -9994,7 +9994,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/commands_pty_capability_probe.spec.mjs",
-      "size_bytes": 5929,
+      "size_bytes": 4689,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -10005,9 +10005,7 @@
         "python3",
         "flask"
       ],
-      "environment_variables": [
-        "XKEEN_ALLOW_SHELL"
-      ],
+      "environment_variables": [],
       "removable": false
     },
     {
@@ -10483,7 +10481,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/panel_operator_stage3_routing_cards.spec.mjs",
-      "size_bytes": 18012,
+      "size_bytes": 18293,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -10847,7 +10845,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/terminal_quick_commands_menu.spec.mjs",
-      "size_bytes": 4279,
+      "size_bytes": 4420,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],

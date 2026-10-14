@@ -1,4 +1,5 @@
 import { test, expect, selectPanelView } from './fixtures.mjs';
+import { mockPty, mockPtyCapabilities } from './pty_terminal_mock.mjs';
 
 
 const QUICK_COMMANDS = [
@@ -12,12 +13,13 @@ const QUICK_COMMANDS = [
 ];
 
 
+// The menus under test are PTY-only: the lite terminal hides them by design.
 async function openTerminal(page) {
+  await mockPtyCapabilities(page);
+  await mockPty(page);
   await page.goto('/');
   await selectPanelView(page, 'commands');
-  const openButton = page.locator(
-    '#terminal-open-shell-btn:visible:not([disabled]), #terminal-open-pty-btn:visible:not([disabled])',
-  ).first();
+  const openButton = page.locator('#terminal-open-pty-btn:visible:not([disabled])');
   await expect(openButton).toBeVisible();
   await openButton.click();
   await expect(page.locator('#terminal-overlay')).toBeVisible();

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import time
 from pathlib import Path
 
 import pytest
@@ -159,6 +160,16 @@ class Router:
 
     def python_calls(self) -> list[str]:
         return self.calls.read_text(encoding="utf-8").splitlines() if self.calls.is_file() else []
+
+    def wait_for_python_calls(self, timeout: float = 10.0) -> list[str]:
+        """The detached part is started in the background and the script exits
+        without waiting for it, so its call may land a moment later."""
+        deadline = time.monotonic() + timeout
+        while True:
+            calls = self.python_calls()
+            if calls or time.monotonic() >= deadline:
+                return calls
+            time.sleep(0.05)
 
 
 def _text(proc: subprocess.CompletedProcess) -> str:
@@ -326,7 +337,7 @@ def test_started_from_the_panels_own_terminal_it_carries_on_apart_from_the_panel
     assert "продолжится само" in _text(proc)
     # Сам он ничего не удалил: работу продолжает отдельный процесс в своём сеансе.
     assert router.files() - {"tmp/xkeen-ui-uninstall.sh", "tmp/xkeen-ui-uninstall.log"} == before
-    (call,) = router.python_calls()
+    (call,) = router.wait_for_python_calls()
     assert "os.setsid()" in call
     assert call.rstrip().endswith("tmp/xkeen-ui-uninstall.sh --force")
 

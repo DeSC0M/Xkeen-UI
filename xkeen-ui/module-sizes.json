@@ -2,7 +2,7 @@
   "schema_version": 1,
   "generated_from": "docs/modular-panel-stage0-inventory.json",
   "modules": {
-    "core": 7358570,
+    "core": 7358216,
     "engine.xray": 3828815,
     "engine.mihomo": 3070141,
     "tool.editor": 833048,

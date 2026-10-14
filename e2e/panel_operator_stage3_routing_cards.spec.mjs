@@ -165,6 +165,10 @@ async function openPanel(page, theme) {
     localStorage.setItem('xkeen_inbounds_open', '0');
     localStorage.setItem('xkeen_outbounds_open', '0');
     localStorage.setItem('xk.routing.scenario.open.v1', '0');
+    // A stored '0' without this mark is an old closed state, and the panel
+    // opens the scenario card once on its own, a moment after the routing
+    // view shows: that raced the accordion checks below.
+    localStorage.setItem('xk.routing.scenario.visibility.fix.v1', '1');
     localStorage.setItem('xk.routing.dat.open.v3', '0');
     localStorage.setItem('xk.routing.backups.open.v1', '0');
     localStorage.setItem('xk.routing.help.open.v1', '0');
