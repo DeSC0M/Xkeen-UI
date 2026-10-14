@@ -40,8 +40,8 @@ def _wants_install(env, stdin, out) -> bool:
         return False
 
     print("", file=out)
-    print("Установить режим разработчика для подписок?", file=out)
-    print("Расширенная обработка ссылок при импорте подписок. Компоненты загрузятся с GitHub.", file=out)
+    print("Установить расшифровку подписок?", file=out)
+    print("Импорт подписок с зашифрованными ссылками. Компоненты загрузятся с GitHub.", file=out)
     out.write("Введите y/N: ")
     out.flush()
     answer = (stdin.readline() or "").strip().lower()
@@ -123,7 +123,7 @@ def main(argv=None, *, env=None, stdin=None, out=None, installer=None, bin_path=
         if HappDecryptorError is not None and isinstance(exc, HappDecryptorError):
             _say(out, f"не установлен: {exc.hint}")
         else:
-            _say(out, f"не удалось установить утилиту ссылок ({type(exc).__name__}) — пропуск")
+            _say(out, f"не удалось установить расшифровку подписок ({type(exc).__name__}) — пропуск")
     return 0
 
 

@@ -122,7 +122,7 @@ def test_installer_exposes_optional_component_choices_without_child_prompt_noise
     assert 'export XKEEN_GEODAT_INSTALL' in text
     assert 'if profile_has_module engine.xray && [ "${GEODAT_OPTION:-1}" = "1" ]; then' in text
     assert 'choose_happ_option() {' in text
-    assert 'Режим разработчика для подписок' in text
+    assert 'Расшифровка подписок' in text
     assert 'Компоненты загрузятся с GitHub.' in text
     happ = text[text.index('choose_happ_option() {'):text.index('\n}\n', text.index('choose_happ_option() {'))]
     # Утилиту ссылок ставят только явным «да»: Enter и установка без терминала — «нет».

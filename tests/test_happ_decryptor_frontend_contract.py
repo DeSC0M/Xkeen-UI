@@ -1,4 +1,4 @@
-"""DevTools card «Утилита ссылок подписок» and the links to it from subscription errors."""
+"""DevTools card «Расшифровка подписок» and the links to it from subscription errors."""
 
 from __future__ import annotations
 

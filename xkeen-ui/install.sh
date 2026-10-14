@@ -521,14 +521,14 @@ choose_happ_option() {
       HAPP_OPTION="1"
       XKEEN_HAPP_DECRYPTOR_INSTALL="$HAPP_OPTION"
       export XKEEN_HAPP_DECRYPTOR_INSTALL
-      printf '  %bДополнение:%b  режим разработчика для подписок включён\n' "$UI_DIM" "$UI_RESET" >&3 2>/dev/null || true
+      printf '  %bДополнение:%b  расшифровка подписок будет установлена\n' "$UI_DIM" "$UI_RESET" >&3 2>/dev/null || true
       return 0
       ;;
     0)
       HAPP_OPTION="0"
       XKEEN_HAPP_DECRYPTOR_INSTALL="$HAPP_OPTION"
       export XKEEN_HAPP_DECRYPTOR_INSTALL
-      printf '  %bДополнение:%b  режим разработчика для подписок пропущен\n' "$UI_DIM" "$UI_RESET" >&3 2>/dev/null || true
+      printf '  %bДополнение:%b  расшифровка подписок пропущена\n' "$UI_DIM" "$UI_RESET" >&3 2>/dev/null || true
       return 0
       ;;
   esac
@@ -537,8 +537,8 @@ choose_happ_option() {
   # без терминала его не включают.
   HAPP_OPTION="0"
   if [ -t 0 ] && [ -r /dev/tty ]; then
-    printf '  %bДополнение%b   Режим разработчика для подписок\n' "$UI_BOLD" "$UI_RESET" >&3 2>/dev/null || true
-    ui_info "Расширенная обработка ссылок при импорте подписок."
+    printf '  %bДополнение%b   Расшифровка подписок\n' "$UI_BOLD" "$UI_RESET" >&3 2>/dev/null || true
+    ui_info "Импорт подписок с зашифрованными ссылками."
     ui_info "Компоненты загрузятся с GitHub."
     ui_confirm n "Установить?"
     HAPP_OPTION="$UI_CONFIRM_YES"
@@ -1806,7 +1806,7 @@ if [ "$GEODAT_VERDICT" = "off" ]; then
   ui_warning "xk-geodat не установился; основная панель продолжит работать."
 fi
 if [ "${HAPP_OPTION:-0}" = "1" ] && [ ! -x "$UI_DIR/bin/happ-decrypt-universal" ]; then
-  ui_warning "Режим разработчика для подписок не установился; его можно добавить позже из DevTools."
+  ui_warning "Расшифровка подписок не установилась; её можно добавить позже из DevTools."
 fi
 
 printf '      %bДиагностика:%b %s\n\n' "$UI_DIM" "$UI_RESET" "$INSTALL_LOG" >&3 2>/dev/null || true

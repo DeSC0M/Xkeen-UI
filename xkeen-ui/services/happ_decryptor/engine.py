@@ -368,7 +368,7 @@ def check_link(bin_path: str, link: str, run: Run) -> dict[str, str]:
     if not link.lower().startswith("happ://"):
         raise HappDecryptorError("bad_link", "Вставьте ссылку вида happ://crypt….")
     if detect_kind(bin_path) != "native":
-        raise HappDecryptorError("not_installed", "Движок не установлен — сначала установите утилиту.")
+        raise HappDecryptorError("not_installed", "Движок не установлен — сначала установите его.")
 
     _rc, out, _err = _safe_run(run, [bin_path, "-json", "-assets", assets_dir_for(bin_path), link])
     try:

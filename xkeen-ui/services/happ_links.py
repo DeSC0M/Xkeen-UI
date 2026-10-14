@@ -33,7 +33,7 @@ _DEFAULT_DECRYPTOR_TIMEOUT_SECONDS = 45.0
 # happ-decrypt-universal answers in well under a second even on a router.
 _NATIVE_DECRYPTOR_TIMEOUT_SECONDS = 15.0
 # Where messages send the user to install the decryptor or update its keys.
-HAPP_DECRYPTOR_CARD_LABEL = "DevTools → «Утилита ссылок подписок»"
+HAPP_DECRYPTOR_CARD_LABEL = "DevTools → «Расшифровка подписок»"
 _MAX_TIMEOUT_SECONDS = 120.0
 _HTML_LANDING_RE = re.compile(r"(?is)^\s*(?:<!doctype html|<html\b)")
 # Accept the escaped scheme emitted by some provider panels/JSON exports
@@ -561,7 +561,7 @@ def decryptor_failure_message(reason: Any) -> str | None:
     text = str(reason or "").lower()
     card = HAPP_DECRYPTOR_CARD_LABEL
     if "happ_decryptor_not_configured" in text:
-        return f"Для ссылок happ://crypt… нужна утилита ссылок подписок. Установите её: {card}."
+        return f"Для ссылок happ://crypt… нужна расшифровка подписок. Установите её: {card}."
     if "happ_decryptor_" not in text:
         return None
     if "unknown_key" in text:
@@ -571,10 +571,10 @@ def decryptor_failure_message(reason: Any) -> str | None:
     if "bad_link" in text or "corrupt" in text:
         return "Ссылка повреждена или обрезана — скопируйте её заново."
     if "happ_decryptor_timeout" in text:
-        return f"Утилита ссылок не ответила вовремя. Проверьте её: {card}."
+        return f"Движок расшифровки не ответил вовремя. Проверьте его: {card}."
     if "happ_decryptor_missing" in text:
-        return f"Утилита ссылок не найдена. Установите её: {card}."
-    return f"Утилита ссылок не смогла расшифровать ссылку. Проверьте её: {card}."
+        return f"Движок расшифровки не найден. Установите его: {card}."
+    return f"Не удалось расшифровать ссылку. Проверьте движок: {card}."
 
 
 def run_remote_decryptor(link: str) -> Dict[str, Any]:

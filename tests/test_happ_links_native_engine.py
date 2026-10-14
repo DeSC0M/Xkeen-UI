@@ -99,14 +99,14 @@ def test_decryptor_timeout_keeps_the_long_budget_for_script_decryptors(tmp_path,
 @pytest.mark.parametrize(
     "reason,expected",
     [
-        ("happ_decryptor_not_configured", "нужна утилита ссылок подписок"),
+        ("happ_decryptor_not_configured", "нужна расшифровка подписок"),
         ('happ_decryptor_failed:happ-decrypt-universal: unknown_key: crypt5 marker "vdQx7r2p" is not in crypt5-keys.json', "нет ключа"),
         ("happ_decryptor_failed:happ-decrypt-universal: no_keys: legacy_keys.json is not installed", "Ключи не установлены"),
         ("happ_decryptor_failed:happ-decrypt-universal: bad_link: crypt5 payload is too short", "повреждена"),
         ("happ_decryptor_failed:happ-decrypt-universal: corrupt: crypt5 authentication failed", "повреждена"),
         ("happ_decryptor_timeout", "не ответил"),
         ("happ_decryptor_missing:[Errno 2] No such file", "не найден"),
-        ("happ_decryptor_failed:Error: unexpected", "не смог"),
+        ("happ_decryptor_failed:Error: unexpected", "Не удалось расшифровать"),
     ],
     ids=["not-configured", "unknown-key", "no-keys", "bad-link", "corrupt", "timeout", "missing", "other"],
 )

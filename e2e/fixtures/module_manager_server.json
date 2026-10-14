@@ -53,7 +53,7 @@
       "tool.terminal": "Терминал и команды",
       "tool.files": "Файловый менеджер",
       "tool.backups": "Резервные копии",
-      "integration.happ": "Утилита ссылок подписок",
+      "integration.happ": "Расшифровка подписок",
       "tool.advanced-diagnostics": "Расширенная диагностика"
     },
     "modules": [
@@ -317,8 +317,8 @@
         "size": 4096,
         "sha256": "b4669b46fc5289314e45806280bee3327d339aa93972e43b9c991cb1b423dc87",
         "signing_key_id": "release-2026",
-        "name": "Утилита ссылок подписок",
-        "description": "Установка и проверка утилиты ссылок подписок, HWID-подписки.",
+        "name": "Расшифровка подписок",
+        "description": "Импорт подписок с зашифрованными ссылками, HWID-подписки.",
         "installed": false,
         "lifecycle_actions": [
           "install"
@@ -927,7 +927,7 @@
       "tool.terminal": "Терминал и команды",
       "tool.files": "Файловый менеджер",
       "tool.backups": "Резервные копии",
-      "integration.happ": "Утилита ссылок подписок",
+      "integration.happ": "Расшифровка подписок",
       "tool.advanced-diagnostics": "Расширенная диагностика"
     },
     "modules": [
@@ -1247,8 +1247,8 @@
         "size": 4096,
         "sha256": "b4669b46fc5289314e45806280bee3327d339aa93972e43b9c991cb1b423dc87",
         "signing_key_id": "release-2026",
-        "name": "Утилита ссылок подписок",
-        "description": "Установка и проверка утилиты ссылок подписок, HWID-подписки.",
+        "name": "Расшифровка подписок",
+        "description": "Импорт подписок с зашифрованными ссылками, HWID-подписки.",
         "installed": false,
         "lifecycle_actions": [
           "install"
@@ -1674,7 +1674,7 @@
       "tool.terminal": "Терминал и команды",
       "tool.files": "Файловый менеджер",
       "tool.backups": "Резервные копии",
-      "integration.happ": "Утилита ссылок подписок",
+      "integration.happ": "Расшифровка подписок",
       "tool.advanced-diagnostics": "Расширенная диагностика"
     },
     "modules": [

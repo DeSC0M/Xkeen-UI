@@ -1,6 +1,6 @@
 import { getDevtoolsSharedApi, setDevtoolsNamespaceApi } from '../devtools_namespace.js';
 
-// DevTools → «Утилита ссылок подписок»: engine and key status, install, key update,
+// DevTools → «Расшифровка подписок»: engine and key status, install, key update,
 // manual upload (engine or key files) and a link check.
 (() => {
   'use strict';
@@ -213,7 +213,7 @@ import { getDevtoolsSharedApi, setDevtoolsNamespaceApi } from '../devtools_names
 
     const install = byId('dt-happ-install');
     if (install) {
-      install.textContent = installed ? 'Переустановить движок' : 'Установить утилиту';
+      install.textContent = installed ? 'Переустановить движок' : 'Установить движок';
       install.className = installed ? 'btn-secondary' : 'xkeen-ctrl-btn';
     }
     const updateKeys = byId('dt-happ-update-keys');
@@ -275,11 +275,11 @@ import { getDevtoolsSharedApi, setDevtoolsNamespaceApi } from '../devtools_names
         renderStatus(data.status);
         if (!quiet) setStatusLine('Статус обновлён.', 'ok');
       } else if (!quiet) {
-        setStatusLine(String((data && data.hint) || 'Не удалось получить статус утилиты.'), 'bad');
+        setStatusLine(String((data && data.hint) || 'Не удалось получить статус расшифровки.'), 'bad');
       }
       return data;
     } catch (error) {
-      if (!quiet) setStatusLine('Не удалось получить статус утилиты: ' + String((error && error.message) || error), 'bad');
+      if (!quiet) setStatusLine('Не удалось получить статус расшифровки: ' + String((error && error.message) || error), 'bad');
       return null;
     }
   }
@@ -287,7 +287,7 @@ import { getDevtoolsSharedApi, setDevtoolsNamespaceApi } from '../devtools_names
   async function install() {
     const installed = !!(state.status && state.status.installed);
     const confirmed = await confirmAction({
-      title: installed ? 'Переустановить движок' : 'Установить утилиту ссылок',
+      title: installed ? 'Переустановить движок' : 'Установить расшифровку подписок',
       message: installed
         ? 'Скачать движок заново из релиза Xkeen-UI? Текущий файл сохранится как .bak, ключи останутся на месте.'
         : 'Скачать движок из релиза Xkeen-UI и ключи из открытого репозитория на GitHub?',

@@ -859,7 +859,7 @@ def test_optional_module_metadata_is_neutral_and_registry_owns_runtime_boundarie
     ).lower()
     assert "happ" not in visible
     assert "decrypt" not in visible
-    assert integration.name == "Утилита ссылок подписок"
+    assert integration.name == "Расшифровка подписок"
     assert "update" not in metadata["tool.advanced-diagnostics"].description.lower()
 
 

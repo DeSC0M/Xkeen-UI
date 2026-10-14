@@ -288,8 +288,8 @@ MODULE_DEFINITIONS: tuple[ModuleDefinition, ...] = (
     ),
     ModuleDefinition(
         id="integration.happ",
-        name="Утилита ссылок подписок",
-        description="Установка и проверка утилиты ссылок подписок, HWID-подписки.",
+        name="Расшифровка подписок",
+        description="Импорт подписок с зашифрованными ссылками, HWID-подписки.",
         version=REGISTRY_VERSION,
         dependencies=("core",),
         conflicts=(),

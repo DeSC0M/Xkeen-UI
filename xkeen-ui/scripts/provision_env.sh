@@ -1330,7 +1330,7 @@ provision_sysmon_utils() {
 
 provision_addons() {
   # Дополнения, которые владелец уже поставил: просмотрщик DAT-файлов и
-  # утилита ссылок подписок. Каждое сверяется с релизом по контрольной сумме
+  # расшифровка подписок. Каждое сверяется с релизом по контрольной сумме
   # и скачивается, только если в релизе оно другое. Не установленное сюда не
   # попадает, а любая неудача — только строка в журнале.
   _pd_tag=""
@@ -1353,15 +1353,15 @@ provision_addons() {
   _pd_script="$UI_DIR/scripts/install_happ_decryptor.py"
   if provision_has_module integration.happ && [ -f "$UI_DIR/bin/happ-decrypt-universal" ] && [ -f "$_pd_script" ] \
       && grep -q -- '--refresh' "$_pd_script" 2>/dev/null; then
-    echo "[*] Сверяю утилиту ссылок подписок с релизом..."
+    echo "[*] Сверяю расшифровку подписок с релизом..."
     if [ -n "$_pd_tag" ]; then
       provision_run_limited "$_pd_limit" env \
         XKEEN_HAPP_DECRYPTOR_RELEASE_URL="https://github.com/umarcheh001/Xkeen-UI/releases/download/$_pd_tag/" \
         "$PYTHON_BIN" "$_pd_script" --refresh \
-        || echo "[*] Утилиту ссылок подписок сверить не удалось; обновление продолжается."
+        || echo "[*] Расшифровку подписок сверить не удалось; обновление продолжается."
     else
       provision_run_limited "$_pd_limit" "$PYTHON_BIN" "$_pd_script" --refresh \
-        || echo "[*] Утилиту ссылок подписок сверить не удалось; обновление продолжается."
+        || echo "[*] Расшифровку подписок сверить не удалось; обновление продолжается."
     fi
   fi
   return 0

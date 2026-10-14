@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures.mjs';
 
-// DevTools → «Утилита ссылок подписок». The API is mocked: the card must render the
+// DevTools → «Расшифровка подписок». The API is mocked: the card must render the
 // three states from the approved mockup and drive install and link check.
 
 const ARM64 = 'happ-decrypt-universal-linux-arm64';

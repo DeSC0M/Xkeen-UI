@@ -102,7 +102,7 @@
     },
     {
       "id": "integration.happ",
-      "name": "Утилита ссылок подписок",
+      "name": "Расшифровка подписок",
       "version": "1.0.0",
       "dependencies": [
         "core"
