@@ -91,7 +91,7 @@ test('panel navigation style survives generator and DevTools round trips', async
   await page.locator('.panel-header .xk-header-btn-devtools').click();
   await expect(page).toHaveURL(/\/devtools$/);
   await expect(page.locator('body')).toHaveClass(/\bdevtools-page\b/);
-  await page.locator('.dt-header-btn-back').click();
+  await page.locator('.xk-header-btn-back').click();
 
   await expect(page).toHaveURL(/\/$/);
   await expect(page.locator('body')).toHaveClass(/\bpanel-page\b/);

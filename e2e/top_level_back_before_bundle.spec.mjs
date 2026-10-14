@@ -40,7 +40,7 @@ async function openPanelReadyForInPlaceNavigation(page) {
 
 async function enterDevtools(page) {
   await page.evaluate(() => document.querySelector('a.xk-header-btn-devtools').click());
-  const back = page.locator('.dt-header-btn-back');
+  const back = page.locator('.xk-header-btn-back');
   await expect(back).toBeVisible();
   return back;
 }

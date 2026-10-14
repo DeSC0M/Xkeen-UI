@@ -9,6 +9,7 @@ os.replace, а в худшем случае публиковал наполов�
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 import threading
@@ -159,3 +160,26 @@ def test_write_survives_a_stale_temp_file(tmp_path):
 
     _atomic_write_text(path, "свежие настройки\n")
     assert Path(path).read_text(encoding="utf-8") == "свежие настройки\n"
+
+
+@pytest.mark.skipif(os.name != "nt", reason="занятый чужим процессом файл — особенность Windows")
+def test_a_file_held_open_for_a_moment_is_still_replaced(tmp_path):
+    """Антивирус или индексатор держит только что записанный файл открытым.
+
+    Windows не даёт подменить открытый файл и отвечает «отказано в доступе»;
+    сторож test_atomic_write_single_source ловил это как плавающее падение.
+    Запись должна переждать такую короткую блокировку.
+    """
+    target = tmp_path / "settings.json"
+    _atomic_write_json(str(target), {"v": 1})
+    holder = open(target, "rb")  # noqa: SIM115 - открыт нарочно, как чужим процессом
+    releaser = threading.Timer(0.15, holder.close)
+    releaser.start()
+    try:
+        _atomic_write_json(str(target), {"v": 2})
+    finally:
+        releaser.join()
+        holder.close()
+
+    assert json.loads(target.read_text(encoding="utf-8")) == {"v": 2}
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["settings.json"]

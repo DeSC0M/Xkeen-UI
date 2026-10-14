@@ -19,6 +19,8 @@ ICONS = {
     "archive": "archive",
     "back": "arrow-left",
     "broom": "custom:broom",
+    "engine-mihomo": "custom:mihomo",
+    "engine-xray": "custom:xray",
     "bookmark": "bookmark",
     "catalog": "folder-open",
     "chevron-down": "chevron-down",
@@ -111,6 +113,23 @@ CUSTOM_ICON_BODIES = {
 <path d="M5 14h6l3 6h-11z" />
 <path d="M5 17h7" />
 <path d="M4 20h8" />
+""",
+    # Engine marks are filled shapes, not outlines: the fill is set on the
+    # shapes so the outline style of the surrounding <svg> does not apply.
+    # Mihomo: the cat drawn on a 64x64 grid, scaled into the 24x24 one.
+    "custom:mihomo": """
+<g transform="scale(0.375)">
+<path fill="currentColor" stroke="none" d="M12 15.5 25.4 11 32 17.5 38.6 11 52 15.5v29.3l-13.8-3.6V29.5l-6.8 5.7-6.8-5.7v11.7L12 44.8V15.5Z" />
+<path fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" d="M20 49.2h24M16.5 55l9.6-3.4M47.5 55l-9.6-3.4" />
+<path fill="currentColor" stroke="none" d="M29.4 46.4h5.2l-2.6 4-2.6-4Z" />
+</g>
+""",
+    # Xray: the Project X four-pointed star split by a thin cross.
+    "custom:xray": """
+<path fill="currentColor" stroke="none" d="M11.4 1L11.4 11.4L1 11.4L9.3 9.3Z" />
+<path fill="currentColor" stroke="none" d="M12.6 1L14.7 9.3L23 11.4L12.6 11.4Z" />
+<path fill="currentColor" stroke="none" d="M12.6 23L12.6 12.6L23 12.6L14.7 14.7Z" />
+<path fill="currentColor" stroke="none" d="M11.4 23L9.3 14.7L1 12.6L11.4 12.6Z" />
 """,
 }
 

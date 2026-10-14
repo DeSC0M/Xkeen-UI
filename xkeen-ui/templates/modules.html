@@ -1,4 +1,5 @@
 <!doctype html>
+{% from "panel/macros.html" import op_icon %}
 <html lang="ru">
 <head>
   <meta charset="utf-8">
@@ -15,14 +16,16 @@
   </script>
   {% include '_top_level_host_theme_bootstrap.html' %}
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css', v='20260907a') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='operator-tokens.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='modules-manager.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='page-shell.css') }}">
 </head>
 <body class="modules-page" data-xk-top-level-screen="modules">
   {% set top_level_spinner_text = 'Выполняется операция с модулями…' %}
   {% include '_top_level_global_spinner.html' %}
 
-  <div class="container container-wide" id="xk-modules-manager">
-    <header class="panel-header modules-header">
+  <div class="container container-wide xk-page-container" id="xk-modules-manager">
+    <header class="panel-header modules-header xk-page-header">
       <div class="modules-header-main">
         <h1>Модули и обновления</h1>
         <div class="header-actions">
@@ -30,8 +33,8 @@
             <span class="xk-global-header-activity__icon" aria-hidden="true"></span>
             <span class="xk-visually-hidden" data-xk-global-spinner-text>Операция выполняется…</span>
           </div>
-          <button type="button" id="theme-toggle-btn" class="theme-toggle-btn theme-toggle-header xk-header-btn xk-header-btn-theme" aria-label="Переключить тему"><span class="theme-toggle-icon" aria-hidden="true">☀</span><span class="theme-toggle-text">Светлая тема</span></button>
-          <a href="{{ url_for('index') }}" class="service-core-text xk-header-btn" data-xk-top-nav="1">← Назад</a>
+          <button type="button" id="theme-toggle-btn" class="theme-toggle-btn theme-toggle-header xk-header-btn xk-header-btn-theme" aria-label="Переключить тему">{{ op_icon('sun', 'theme-toggle-icon') }}<span class="theme-toggle-text">Светлая тема</span></button>
+          <a href="{{ url_for('index') }}" class="service-core-text xk-header-btn xk-header-btn-back" data-xk-top-nav="1">{{ op_icon('back') }}<span class="xk-action-label">Назад</span></a>
           {% if ui_endpoint_available('devtools_page') %}
           <a href="{{ url_for('devtools_page') }}" class="service-core-text xk-header-btn" data-xk-top-nav="1">DevTools</a>
           {% endif %}

@@ -75,67 +75,6 @@ body.modules-page .modules-header {
   padding: 10px 18px 0 !important;
 }
 
-body.modules-page .container-wide {
-  box-sizing: border-box;
-  max-width: min(1680px, 96vw);
-}
-body.modules-page .modules-header-main .header-actions { min-width: 0; max-width: 100%; }
-body.modules-page .modules-header .modules-header-main .header-actions .xk-header-btn {
-  box-sizing: border-box;
-  height: 30px;
-  min-height: 30px;
-  border-radius: 5px !important;
-  border: 1px solid var(--border-color, #2a2f38) !important;
-  background: var(--header-btn-bg, #181b21) !important;
-  color: var(--header-btn-text, #e5e7eb) !important;
-  box-shadow: none !important;
-  font-size: calc(11px * var(--xk-font-scale, 1));
-  font-weight: 600;
-}
-body.modules-page .modules-header .modules-header-main .header-actions .theme-toggle-btn.xk-header-btn-theme {
-  box-sizing: border-box;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 30px;
-  min-width: 30px;
-  height: 30px;
-  min-height: 30px;
-  max-height: 30px;
-  padding: 0;
-  flex: 0 0 30px;
-  gap: 0;
-  transform: none !important;
-}
-body.modules-page .modules-header .modules-header-main .header-actions .theme-toggle-btn.xk-header-btn-theme::before,
-body.modules-page .modules-header .modules-header-main .header-actions .theme-toggle-btn.xk-header-btn-theme::after {
-  content: none !important;
-  display: none !important;
-}
-html[data-theme] body.modules-page .modules-header .modules-header-main .header-actions .theme-toggle-btn.xk-header-btn-theme {
-  min-width: 30px;
-  padding: 0;
-}
-body.modules-page .modules-header-main .theme-toggle-text {
-  display: none;
-}
-body.modules-page .modules-header-main .theme-toggle-icon {
-  display: block !important;
-  margin: 0 !important;
-  width: 16px !important;
-  height: 16px !important;
-  flex: 0 0 16px;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  color: currentColor !important;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.75;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
 body.modules-page .modules-tabs {
   display: flex;
   align-items: center;
@@ -531,19 +470,6 @@ body.modules-page .modules-plan-confirm [hidden] { display: none; }
 
 @media (max-width: 600px) {
   body.modules-page .modules-header { padding: 12px 16px !important; }
-  body.modules-page .modules-header .modules-header-main .header-actions .xk-header-btn {
-    height: 29px;
-    min-height: 29px;
-  }
-  body.modules-page .modules-header .modules-header-main .header-actions .theme-toggle-btn.xk-header-btn-theme {
-    width: 29px;
-    min-width: 29px;
-    height: 29px;
-    min-height: 29px;
-    max-height: 29px;
-    flex-basis: 29px;
-  }
-  body.modules-page .modules-header-main .header-actions { width: 100%; justify-content: flex-start; }
   body.modules-page .modules-row { flex-direction: column; align-items: stretch; }
   body.modules-page .modules-row-actions { justify-content: flex-start; }
   body.modules-page .modules-switch { align-self: flex-start; }
@@ -561,44 +487,31 @@ body.modules-page .modules-plan-confirm [hidden] { display: none; }
  * as one calm operator workspace: one accent for focus, green for healthy
  * state, amber/red only for attention and destructive actions.
  * ========================================================================== */
+/* The screen's own names for the shared Operator palette (operator-tokens.css):
+ * both themes come from there, so this page cannot drift from DevTools. */
 body.modules-page {
-  --modules-bg: #0d0f13;
-  --modules-surface: #14171c;
-  --modules-surface-raised: #1a1e25;
-  --modules-border: #2a2f38;
-  --modules-border-strong: #3a414d;
-  --modules-text: #e8eaf0;
-  --modules-muted: #969da9;
-  --modules-faint: #6e7581;
-  --modules-accent: #7477e8;
-  --modules-accent-hover: #8588f2;
-  --modules-accent-soft: rgba(116, 119, 232, 0.14);
+  --modules-bg: var(--op-bg);
+  --modules-surface: var(--op-surface);
+  --modules-surface-raised: var(--op-surface-2);
+  --modules-border: var(--op-border);
+  --modules-border-strong: var(--op-border-strong);
+  --modules-text: var(--op-text);
+  --modules-muted: var(--op-muted);
+  --modules-faint: var(--op-faint);
+  --modules-accent: var(--op-accent);
+  --modules-accent-hover: var(--op-accent-hover);
+  --modules-accent-soft: var(--op-accent-soft);
+  /* Readable on small labels; the shared palette has no such green. */
   --modules-success: #6fd3a8;
-  --modules-success-soft: rgba(77, 182, 139, 0.12);
-  --modules-danger: #df727b;
-  --modules-danger-soft: rgba(223, 114, 123, 0.10);
+  --modules-success-soft: var(--op-success-soft);
+  --modules-danger: var(--op-danger);
+  --modules-danger-soft: var(--op-danger-soft);
   background: var(--modules-bg) !important;
   color: var(--modules-text);
 }
 
 html[data-theme="light"] body.modules-page {
-  --modules-bg: #f1f2f5;
-  --modules-surface: #ffffff;
-  --modules-surface-raised: #f7f8fa;
-  --modules-border: #d8dde5;
-  --modules-border-strong: #c2c9d3;
-  --modules-text: #1f2937;
-  --modules-muted: #667085;
-  --modules-faint: #8a94a3;
-  --modules-accent: #5f62d8;
-  --modules-accent-hover: #4f52c6;
-  --modules-accent-soft: rgba(95, 98, 216, 0.10);
   --modules-success: #2f996d;
-  --modules-success-soft: rgba(47, 153, 109, 0.10);
-  --modules-danger: #bd5360;
-  --modules-danger-soft: rgba(189, 83, 96, 0.08);
-  background: var(--modules-bg) !important;
-  color: var(--modules-text);
 }
 
 html[data-theme="light"] body.modules-page .modules-header,
@@ -611,7 +524,6 @@ html[data-theme="light"] body.modules-page .modules-operation {
   box-shadow: 0 1px 2px rgba(31, 41, 55, 0.05);
 }
 
-html[data-theme="light"] body.modules-page .modules-header .modules-header-main .header-actions .xk-header-btn,
 html[data-theme="light"] body.modules-page .modules-card-actions button,
 html[data-theme="light"] body.modules-page .modules-row-actions button,
 html[data-theme="light"] body.modules-page .modules-update-check-button,
@@ -620,17 +532,11 @@ html[data-theme="light"] body.modules-page .modules-plan-actions button {
   color: var(--modules-text) !important;
 }
 
-html[data-theme="light"] body.modules-page .modules-header .modules-header-main .header-actions .xk-header-btn:hover:not(:disabled),
 html[data-theme="light"] body.modules-page .modules-card-actions button:hover:not(:disabled),
 html[data-theme="light"] body.modules-page .modules-row-actions button:hover:not(:disabled),
 html[data-theme="light"] body.modules-page .modules-update-check-button:hover:not(:disabled),
 html[data-theme="light"] body.modules-page .modules-plan-actions button:hover:not(:disabled) {
   background: #eef0f5 !important;
-}
-
-body.modules-page .container-wide {
-  width: min(1440px, calc(100vw - 48px));
-  max-width: none;
 }
 
 body.modules-page .modules-header,
@@ -654,7 +560,6 @@ body.modules-page .modules-header-main h1 {
   letter-spacing: -0.015em;
 }
 
-body.modules-page .modules-header .modules-header-main .header-actions .xk-header-btn,
 body.modules-page .modules-card-actions button,
 body.modules-page .modules-row-actions button,
 body.modules-page .modules-update-check-button,
@@ -668,10 +573,6 @@ body.modules-page .modules-plan-actions button {
   transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
 }
 
-body.modules-page .modules-header .modules-header-main .header-actions .xk-header-btn {
-  min-height: 30px;
-}
-
 body.modules-page .modules-card-actions button,
 body.modules-page .modules-row-actions button,
 body.modules-page .modules-update-check-button,
@@ -679,7 +580,6 @@ body.modules-page .modules-plan-actions button {
   min-height: 32px;
 }
 
-body.modules-page .modules-header .modules-header-main .header-actions .xk-header-btn:hover:not(:disabled),
 body.modules-page .modules-card-actions button:hover:not(:disabled),
 body.modules-page .modules-row-actions button:hover:not(:disabled),
 body.modules-page .modules-update-check-button:hover:not(:disabled),
@@ -687,10 +587,6 @@ body.modules-page .modules-plan-actions button:hover:not(:disabled) {
   border-color: var(--modules-accent) !important;
   background: #20252d !important;
   color: #ffffff !important;
-}
-
-body.modules-page .modules-header .modules-header-main .header-actions .theme-toggle-btn.xk-header-btn-theme {
-  background: var(--modules-surface-raised) !important;
 }
 
 body.modules-page .modules-tabs {
@@ -915,17 +811,6 @@ body.modules-page .modules-module-chevron-svg {
   stroke-width: 1.7;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-body.modules-page .modules-mihomo-mark {
-  display: block;
-  width: 22px;
-  height: 22px;
-  color: currentColor;
-}
-
-html[data-theme="dark"] body.modules-page .modules-mihomo-mark {
-  filter: invert(1) brightness(0.78);
 }
 
 body.modules-page .modules-module-title {
@@ -1534,9 +1419,6 @@ html[data-theme="light"] body.modules-page .modules-module-detail-actions .modul
 }
 
 @media (max-width: 600px) {
-  body.modules-page .container-wide {
-    width: calc(100vw - 24px);
-  }
 
   body.modules-page .modules-summary,
   body.modules-page .modules-list {

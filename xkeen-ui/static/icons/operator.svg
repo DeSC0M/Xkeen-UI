@@ -139,6 +139,19 @@
       <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" />
       <path d="M10 18l5 -5a1.414 1.414 0 0 0 -2 -2l-5 5v2h2" />
     </symbol>
+    <symbol id="xk-engine-mihomo" viewBox="0 0 24 24">
+      <g transform="scale(0.375)">
+      <path fill="currentColor" stroke="none" d="M12 15.5 25.4 11 32 17.5 38.6 11 52 15.5v29.3l-13.8-3.6V29.5l-6.8 5.7-6.8-5.7v11.7L12 44.8V15.5Z" />
+      <path fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" d="M20 49.2h24M16.5 55l9.6-3.4M47.5 55l-9.6-3.4" />
+      <path fill="currentColor" stroke="none" d="M29.4 46.4h5.2l-2.6 4-2.6-4Z" />
+      </g>
+    </symbol>
+    <symbol id="xk-engine-xray" viewBox="0 0 24 24">
+      <path fill="currentColor" stroke="none" d="M11.4 1L11.4 11.4L1 11.4L9.3 9.3Z" />
+      <path fill="currentColor" stroke="none" d="M12.6 1L14.7 9.3L23 11.4L12.6 11.4Z" />
+      <path fill="currentColor" stroke="none" d="M12.6 23L12.6 12.6L23 12.6L14.7 14.7Z" />
+      <path fill="currentColor" stroke="none" d="M11.4 23L9.3 14.7L1 12.6L11.4 12.6Z" />
+    </symbol>
     <symbol id="xk-export" viewBox="0 0 24 24">
       <path d="M14 3v4a1 1 0 0 0 1 1h4" />
       <path d="M11.5 21h-4.5a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v5m-5 6h7m-3 -3l3 3l-3 3" />

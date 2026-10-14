@@ -25,6 +25,8 @@ const OPERATOR_ICON_NAMES = Object.freeze([
   "drag",
   "duplicate",
   "edit",
+  "engine-mihomo",
+  "engine-xray",
   "export",
   "file-add",
   "folder-add",

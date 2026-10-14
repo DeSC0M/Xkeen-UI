@@ -90,7 +90,12 @@ def test_modules_uses_the_panel_shell_and_stable_devtools_pointer_is_compact():
     devtools_css = (ROOT / "xkeen-ui/static/devtools.css").read_text(encoding="utf-8")
 
     assert 'class="modules-workspace"' in template
-    assert "body.modules-page .container-wide" in manager_css
+    # Ширина и кнопки шапки — общие с DevTools и генератором Mihomo.
+    assert "container container-wide xk-page-container" in template
+    assert "xk-page-header" in template
+    assert "filename='page-shell.css'" in template
+    assert "body.modules-page .container-wide" not in manager_css
+    assert ".modules-header-main .header-actions" not in manager_css
     assert "body.modules-page.panel-page" not in manager_css
     assert "createModuleLifecycleClient" in devtools_update
     assert "dt-panel-summary-grid" in devtools_css

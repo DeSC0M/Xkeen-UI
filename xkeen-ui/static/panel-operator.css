@@ -8305,13 +8305,6 @@ body.panel-page.mihomo-generator-page {
   color: var(--op-text) !important;
 }
 
-body.panel-page.mihomo-generator-page .container.container-wide {
-  width: min(calc(100% - 28px), 1680px) !important;
-  max-width: 1680px !important;
-  margin: 0 auto !important;
-  padding: 0 !important;
-}
-
 body.panel-page.mihomo-generator-page .container.container-wide > header.generator-page-header {
   min-height: 52px;
   margin: 12px 0 !important;
@@ -8333,34 +8326,6 @@ body.panel-page.mihomo-generator-page .generator-header-title h1 {
   color: var(--op-text-strong) !important;
   font-size: clamp(19px, 2vw, 26px) !important;
   letter-spacing: -0.025em !important;
-}
-
-html[data-theme] body.panel-page.mihomo-generator-page header.generator-page-header .header-actions .xk-header-btn,
-html[data-theme] body.panel-page.mihomo-generator-page header.generator-page-header .header-actions .theme-toggle-btn.xk-header-btn-theme {
-  min-height: var(--op-control-compact-h) !important;
-  padding: 0 10px !important;
-  border-width: 1px !important;
-  border-style: solid !important;
-  border-color: var(--op-border) !important;
-  border-radius: var(--op-control-radius) !important;
-  background-color: var(--op-surface-2) !important;
-  background-image: none !important;
-  color: var(--op-text) !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  transform: none !important;
-}
-
-body.panel-page.mihomo-generator-page .xk-header-btn::before,
-body.panel-page.mihomo-generator-page .theme-toggle-btn.xk-header-btn-theme::before {
-  content: none !important;
-}
-
-html[data-theme] body.panel-page.mihomo-generator-page header.generator-page-header .header-actions .xk-header-btn-logout:hover {
-  border-color: var(--op-danger) !important;
-  background-color: var(--op-danger-soft) !important;
-  color: var(--op-danger) !important;
 }
 
 body.panel-page.mihomo-generator-page .generator-layout {
@@ -17075,9 +17040,6 @@ body.panel-page :is(#json-editor-modal, #fm-editor-modal) :is(#json-editor-save-
 }
 
 @media (max-width: 820px) {
-  body.panel-page.mihomo-generator-page .container.container-wide {
-    width: calc(100% - 14px) !important;
-  }
 
   body.panel-page.mihomo-generator-page .container.container-wide > header.generator-page-header {
     align-items: stretch;

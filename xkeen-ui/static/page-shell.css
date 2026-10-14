@@ -1,0 +1,151 @@
+/*
+ * XKeen — оболочка отдельных страниц: DevTools, «Модули и обновления»,
+ * генератор Mihomo.
+ *
+ * Одна ширина контейнера (следует настройке ширины панели) и одни кнопки
+ * шапки на всех трёх страницах. Разметка: контейнер `.xk-page-container`,
+ * шапка `.xk-page-header`, кнопки `.xk-header-btn` (+ `-theme`, `-back`,
+ * `-logout`). Цвета — палитра --op-*: operator-tokens.css (DevTools, модули)
+ * или panel-operator.css (генератор).
+ *
+ * Файл подключается последним: старые правила styles.css для тех же кнопок
+ * перекрываются здесь, пока старый синий дизайн не вынесен целиком. Самые
+ * цепкие из них (`html[data-theme="dark"] body.panel-page header
+ * .header-actions .xk-header-btn.xk-header-btn-ui`, с !important) сильнее
+ * обычного селектора на один тег, поэтому здесь :root и header.
+ */
+
+html body .container.xk-page-container {
+  box-sizing: border-box;
+  width: 100% !important;
+  max-width: var(--xk-container-max-width, 100%) !important;
+  margin: 0 auto !important;
+  padding: clamp(10px, 1vw, 18px) clamp(10px, 1.2vw, 22px) 24px !important;
+}
+
+:root body header.xk-page-header .header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+
+:root[data-theme] body header.xk-page-header .header-actions :is(.xk-header-btn, .theme-toggle-btn.xk-header-btn-theme) {
+  position: relative;
+  isolation: auto;
+  box-sizing: border-box;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px;
+  flex: 0 0 auto;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  min-height: 30px !important;
+  margin: 0 !important;
+  padding: 0 9px !important;
+  overflow: visible;
+  border: 1px solid var(--op-border) !important;
+  border-radius: var(--op-radius-sm) !important;
+  background: var(--op-surface-2) !important;
+  color: var(--op-muted) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  font-size: calc(11px * var(--xk-font-scale, 1)) !important;
+  font-weight: 600 !important;
+  letter-spacing: normal !important;
+  line-height: 1 !important;
+  text-decoration: none !important;
+  text-shadow: none !important;
+  white-space: nowrap;
+  transform: none !important;
+  cursor: pointer;
+}
+
+:root[data-theme] body header.xk-page-header .header-actions :is(.xk-header-btn, .theme-toggle-btn.xk-header-btn-theme)::before,
+:root[data-theme] body header.xk-page-header .header-actions :is(.xk-header-btn, .theme-toggle-btn.xk-header-btn-theme)::after {
+  content: none !important;
+  display: none !important;
+}
+
+:root[data-theme] body header.xk-page-header .header-actions :is(.xk-header-btn, .theme-toggle-btn.xk-header-btn-theme):hover {
+  border-color: var(--op-border-strong) !important;
+  background: var(--op-surface-3) !important;
+  color: var(--op-text) !important;
+}
+
+:root[data-theme] body header.xk-page-header .header-actions :is(.xk-header-btn, .theme-toggle-btn.xk-header-btn-theme):focus-visible {
+  outline: 2px solid var(--op-accent-border);
+  outline-offset: 1px;
+}
+
+:root[data-theme] body header.xk-page-header .header-actions .xk-header-btn-logout:hover {
+  border-color: color-mix(in srgb, var(--op-danger) 52%, var(--op-border)) !important;
+  background: var(--op-danger-soft) !important;
+  color: var(--op-danger) !important;
+}
+
+:root body header.xk-page-header .header-actions .theme-toggle-btn .theme-toggle-icon {
+  display: block !important;
+  flex: 0 0 16px;
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+:root body header.xk-page-header .header-actions .theme-toggle-btn .theme-toggle-text {
+  display: inline !important;
+}
+
+:root body header.xk-page-header .header-actions .xk-header-btn > .xk-action-icon:not(.theme-toggle-icon) {
+  display: block;
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+:root body header.xk-page-header .header-actions .xk-global-header-activity {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--op-border);
+  border-radius: var(--op-radius-sm);
+  background: var(--op-surface-2);
+  box-shadow: none;
+}
+
+@media (max-width: 720px) {
+  html body .container.xk-page-container {
+    padding: 7px 7px 16px !important;
+  }
+
+  :root body header.xk-page-header .header-actions {
+    justify-content: flex-start;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  :root body header.xk-page-header .header-actions::-webkit-scrollbar {
+    display: none;
+  }
+}

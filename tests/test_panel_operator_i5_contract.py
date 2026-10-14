@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 
@@ -22,8 +23,16 @@ def test_i5_css_publishes_accessibility_and_forced_colors_contract():
     ):
         assert fragment in css
 
-    assert 'fill="' not in SPRITE.read_text(encoding="utf-8")
-    assert 'stroke="' not in SPRITE.read_text(encoding="utf-8")
+    # Контурные значки красятся только из CSS. Исключение — знаки движков
+    # Xray и Mihomo: это сплошные фигуры, и заливка задана в них самих, тоже
+    # через currentColor, поэтому в режиме высокой контрастности они тоже следуют цвету.
+    sprite = re.sub(r'<symbol id="xk-engine-[^"]+".*?</symbol>', "", SPRITE.read_text(encoding="utf-8"), flags=re.DOTALL)
+    assert 'fill="' not in sprite
+    assert 'stroke="' not in sprite
+    engines = re.findall(r'<symbol id="xk-engine-[^"]+".*?</symbol>', SPRITE.read_text(encoding="utf-8"), flags=re.DOTALL)
+    assert len(engines) == 2
+    for symbol in engines:
+        assert set(re.findall(r'(?:fill|stroke)="([^"]+)"', symbol)) <= {"currentColor", "none"}
 
 
 def test_i5_chromium_contract_covers_themes_zoom_forced_colors_and_snapshots():

@@ -200,7 +200,7 @@ test.describe('Modules build time', () => {
 });
 
 test.describe('Module manager recovery and guards', () => {
-  test('keeps the modules header comfortably inset with a compact theme action', async ({ page }) => {
+  test('keeps the modules header comfortably inset with the shared theme action', async ({ page }) => {
     await page.setViewportSize({ width: 1800, height: 1300 });
     await installIdleLifecycleRoutes(page);
     await page.goto('/modules');
@@ -215,27 +215,27 @@ test.describe('Module manager recovery and guards', () => {
       return {
         titleInset: titleRect.left - headerRect.left,
         logoutInset: headerRect.right - logoutRect.right,
-        themeWidth: themeRect.width,
         themeHeight: themeRect.height,
+        themeLabel: theme.querySelector('.theme-toggle-text').getBoundingClientRect().width,
         backHeight: backRect.height,
       };
     });
 
     expect(geometry.titleInset, JSON.stringify(geometry)).toBeGreaterThanOrEqual(18);
     expect(geometry.logoutInset, JSON.stringify(geometry)).toBeGreaterThanOrEqual(18);
-    expect(geometry.themeWidth, JSON.stringify(geometry)).toBeGreaterThanOrEqual(30);
-    expect(geometry.themeWidth, JSON.stringify(geometry)).toBeLessThanOrEqual(34);
-    expect(Math.abs(geometry.themeWidth - geometry.themeHeight), JSON.stringify(geometry)).toBeLessThanOrEqual(2);
+    // Same theme action as DevTools and the generator: icon and label.
+    expect(geometry.themeLabel, JSON.stringify(geometry)).toBeGreaterThan(0);
     expect(Math.abs(geometry.themeHeight - geometry.backHeight), JSON.stringify(geometry)).toBeLessThanOrEqual(2);
   });
 
-  test('centers the theme icon and uses the compact settings switch geometry', async ({ page }) => {
+  test('puts the theme icon before its label and uses the compact settings switch geometry', async ({ page }) => {
     await installIdleLifecycleRoutes(page);
     await page.goto('/modules');
 
     const layout = await page.locator('header.modules-header').evaluate((header) => {
       const theme = header.querySelector('#theme-toggle-btn');
       const icon = theme.querySelector('.theme-toggle-icon');
+      const label = theme.querySelector('.theme-toggle-text');
       const slider = document.querySelector('.modules-switch .dt-switch-slider');
       const state = document.querySelector('.modules-switch-state');
       const themeRect = theme.getBoundingClientRect();
@@ -243,7 +243,8 @@ test.describe('Module manager recovery and guards', () => {
       const sliderRect = slider.getBoundingClientRect();
       const stateRect = state.getBoundingClientRect();
       return {
-        iconCenterOffset: (iconRect.left + iconRect.width / 2) - (themeRect.left + themeRect.width / 2),
+        iconMiddleOffset: (iconRect.top + iconRect.height / 2) - (themeRect.top + themeRect.height / 2),
+        iconBeforeLabel: iconRect.right <= label.getBoundingClientRect().left,
         sliderWidth: sliderRect.width,
         sliderHeight: sliderRect.height,
         stateFontSize: Number.parseFloat(getComputedStyle(state).fontSize),
@@ -252,7 +253,8 @@ test.describe('Module manager recovery and guards', () => {
       };
     });
 
-    expect(Math.abs(layout.iconCenterOffset), JSON.stringify(layout)).toBeLessThanOrEqual(1);
+    expect(Math.abs(layout.iconMiddleOffset), JSON.stringify(layout)).toBeLessThanOrEqual(1);
+    expect(layout.iconBeforeLabel, JSON.stringify(layout)).toBe(true);
     expect(layout.sliderWidth, JSON.stringify(layout)).toBeLessThanOrEqual(30);
     expect(layout.sliderHeight, JSON.stringify(layout)).toBeLessThanOrEqual(16);
     expect(layout.stateFontSize, JSON.stringify(layout)).toBeLessThanOrEqual(10.5);
@@ -381,16 +383,13 @@ test.describe('Module manager recovery and guards', () => {
         buttonWidth: buttonRect.width,
         updateWidth: updateRect.width,
         updateBackground: updateStyle.backgroundColor,
-        updateBorder: updateStyle.borderTopColor,
         headerBackground: headerStyle.backgroundColor,
-        headerBorder: headerStyle.borderTopColor,
         switchGap: sliderRect.top - stateRect.bottom,
       };
     });
 
     expect(layout.buttonWidth, JSON.stringify(layout)).toBeLessThan(layout.updateWidth / 2);
     expect(layout.updateBackground, JSON.stringify(layout)).toBe(layout.headerBackground);
-    expect(layout.updateBorder, JSON.stringify(layout)).toBe(layout.headerBorder);
     expect(layout.switchGap, JSON.stringify(layout)).toBeGreaterThanOrEqual(3);
 
     await page.getByRole('button', { name: 'Выйти' }).hover();
@@ -614,7 +613,7 @@ test.describe('Module manager recovery and guards', () => {
 
     await page.goto('/modules');
     await expect(page.locator('.modules-summary')).toBeVisible();
-    await page.getByRole('link', { name: '← Назад' }).click();
+    await page.getByRole('link', { name: 'Назад' }).click();
 
     // The browser reads the import map from the first loaded page only;
     // without it the editor bundle cannot resolve "@codemirror/state".

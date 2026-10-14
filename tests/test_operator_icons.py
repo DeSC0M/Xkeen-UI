@@ -151,6 +151,8 @@ def test_every_operator_use_reference_is_resolved_and_names_are_allowlisted():
             continue
         source = path.read_text(encoding="utf-8", errors="replace")
         references.extend((path, name) for name in _direct_operator_use_names(source))
+        # Шаблоны берут значки и через общий макрос panel/macros.html.
+        references.extend((path, name) for name in re.findall(r"op_icon\(\s*'([a-z0-9-]+)'", source))
     assert references
     assert (ROOT / "xkeen-ui/templates/devtools.html", "sun") in references
     assert all(name != "modules-manager" for _, name in references)

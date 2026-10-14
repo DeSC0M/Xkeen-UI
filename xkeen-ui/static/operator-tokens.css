@@ -1,0 +1,74 @@
+/*
+ * XKeen — общая палитра Operator для DevTools и «Модулей и обновлений».
+ *
+ * Основная панель и генератор Mihomo берут те же значения из
+ * panel-operator.css: тот файл грузится на главной странице отдельным
+ * слоем, и лишний запрос там нежелателен.
+ */
+:is(body.devtools-page, body.modules-page) {
+  --op-bg: #0d0f13;
+  --op-surface: #14171c;
+  --op-surface-2: #1a1e25;
+  --op-surface-3: #20252d;
+  --op-editor: #0d0f13;
+  --op-border: #2a2f38;
+  --op-border-strong: #3a414d;
+  --op-text: #e8eaf0;
+  --op-text-strong: #f7f7f9;
+  --op-muted: #969da9;
+  --op-faint: #6e7581;
+  --op-accent: #7477e8;
+  --op-accent-hover: #8588f2;
+  --op-accent-soft: rgba(116, 119, 232, 0.14);
+  --op-accent-border: rgba(133, 136, 242, 0.42);
+  --op-success: #4db68b;
+  --op-success-soft: rgba(77, 182, 139, 0.12);
+  --op-warning: #d7a650;
+  --op-warning-soft: rgba(215, 166, 80, 0.12);
+  --op-danger: #df727b;
+  --op-danger-soft: rgba(223, 114, 123, 0.12);
+  --op-radius-sm: 6px;
+  --op-radius: 9px;
+  --op-radius-lg: 12px;
+  --op-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+  --op-shadow-float: 0 14px 36px rgba(0, 0, 0, 0.34);
+  --op-control-h: 32px;
+  --op-control-compact-h: 28px;
+  --op-touch-target: 40px;
+  --op-scrollbar-size: 12px;
+  --op-scrollbar-track: color-mix(in srgb, var(--op-surface) 72%, var(--op-bg));
+  --op-scrollbar-thumb: color-mix(in srgb, var(--op-border-strong) 90%, var(--op-accent) 10%);
+  --op-scrollbar-thumb-hover: color-mix(in srgb, var(--op-accent) 72%, var(--op-border-strong));
+  --op-scrollbar-thumb-active: var(--op-accent-hover);
+  --op-scrollbar-radius: 999px;
+}
+
+html[data-theme="light"] :is(body.devtools-page, body.modules-page) {
+  --op-bg: #f1f2f5;
+  --op-surface: #ffffff;
+  --op-surface-2: #f7f7f9;
+  --op-surface-3: #eceef2;
+  --op-editor: #f1f2f5;
+  --op-border: #d9dce3;
+  --op-border-strong: #c1c6d0;
+  --op-text: #30333a;
+  --op-text-strong: #17191e;
+  --op-muted: #6e7480;
+  --op-faint: #9298a3;
+  --op-accent: #5b5fc7;
+  --op-accent-hover: #4d51b7;
+  --op-accent-soft: rgba(91, 95, 199, 0.1);
+  --op-accent-border: rgba(91, 95, 199, 0.34);
+  --op-success: #2c8966;
+  --op-success-soft: rgba(44, 137, 102, 0.1);
+  --op-warning: #9d6a12;
+  --op-warning-soft: rgba(157, 106, 18, 0.1);
+  --op-danger: #bd4f5a;
+  --op-danger-soft: rgba(189, 79, 90, 0.09);
+  --op-shadow: 0 1px 2px rgba(25, 28, 35, 0.06);
+  --op-shadow-float: 0 14px 36px rgba(25, 28, 35, 0.14);
+  --op-scrollbar-track: color-mix(in srgb, var(--op-surface) 78%, var(--op-bg));
+  --op-scrollbar-thumb: color-mix(in srgb, var(--op-border-strong) 92%, var(--op-accent) 8%);
+  --op-scrollbar-thumb-hover: color-mix(in srgb, var(--op-accent) 72%, var(--op-border-strong));
+  --op-scrollbar-thumb-active: var(--op-accent-hover);
+}

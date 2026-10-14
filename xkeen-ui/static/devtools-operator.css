@@ -13,41 +13,6 @@
  * 1. TOKENS
  * ========================================================================== */
 body.devtools-page {
-  --op-bg: #0d0f13;
-  --op-surface: #14171c;
-  --op-surface-2: #1a1e25;
-  --op-surface-3: #20252d;
-  --op-editor: #0d0f13;
-  --op-border: #2a2f38;
-  --op-border-strong: #3a414d;
-  --op-text: #e8eaf0;
-  --op-text-strong: #f7f7f9;
-  --op-muted: #969da9;
-  --op-faint: #6e7581;
-  --op-accent: #7477e8;
-  --op-accent-hover: #8588f2;
-  --op-accent-soft: rgba(116, 119, 232, 0.14);
-  --op-accent-border: rgba(133, 136, 242, 0.42);
-  --op-success: #4db68b;
-  --op-success-soft: rgba(77, 182, 139, 0.12);
-  --op-warning: #d7a650;
-  --op-warning-soft: rgba(215, 166, 80, 0.12);
-  --op-danger: #df727b;
-  --op-danger-soft: rgba(223, 114, 123, 0.12);
-  --op-radius-sm: 6px;
-  --op-radius: 9px;
-  --op-radius-lg: 12px;
-  --op-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
-  --op-shadow-float: 0 14px 36px rgba(0, 0, 0, 0.34);
-  --op-control-h: 32px;
-  --op-control-compact-h: 28px;
-  --op-touch-target: 40px;
-  --op-scrollbar-size: 12px;
-  --op-scrollbar-track: color-mix(in srgb, var(--op-surface) 72%, var(--op-bg));
-  --op-scrollbar-thumb: color-mix(in srgb, var(--op-border-strong) 90%, var(--op-accent) 10%);
-  --op-scrollbar-thumb-hover: color-mix(in srgb, var(--op-accent) 72%, var(--op-border-strong));
-  --op-scrollbar-thumb-active: var(--op-accent-hover);
-  --op-scrollbar-radius: 999px;
 
   /* Global tooltip runtime is shared with the main panel and mounts its
      portal directly under <body>. Bridge it explicitly so DevTools cannot
@@ -235,8 +200,6 @@ body.devtools-page .dt-tabs::before,
 body.devtools-page .dt-tabs::after,
 body.devtools-page .dt-top-tab::before,
 body.devtools-page .dt-top-tab::after,
-body.devtools-page .dt-header-btn::before,
-body.devtools-page .dt-header-btn::after,
 body.devtools-page .dt-tools-left > :is(section, details) > h2::before,
 body.devtools-page .dt-tools-left > details > summary h2::before,
 body.devtools-page .dt-zone > :is(section, details) > h2::before,
@@ -349,10 +312,6 @@ body.devtools-page :is(.dt-k, .dt-sub, .dt-logging-label, .dt-switch-label, .dt-
 body.devtools-page .dt-container {
   position: relative;
   z-index: 1;
-  width: 100%;
-  max-width: var(--xk-container-max-width, 100%) !important;
-  margin: 0 auto;
-  padding: clamp(10px, 1vw, 18px) clamp(10px, 1.2vw, 22px) 24px;
 }
 
 body.devtools-page .dt-page-header {
@@ -389,82 +348,10 @@ body.devtools-page .dt-page-header h1 {
   letter-spacing: -0.025em;
 }
 
-body.devtools-page .header-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 7px;
-  min-width: 0;
-  flex-wrap: nowrap;
-}
-
-body.devtools-page header.dt-page-header .header-actions :is(
-  .dt-header-btn,
-  .theme-toggle-btn.dt-header-btn-theme.theme-toggle-header
-) {
-  position: relative;
-  isolation: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  min-height: 30px;
-  padding: 0 9px;
-  overflow: visible;
-  border: 1px solid var(--op-border) !important;
-  border-radius: var(--op-radius-sm) !important;
-  background: var(--op-surface-2) !important;
-  color: var(--op-muted) !important;
-  box-shadow: none !important;
-  font-size: calc(11px * var(--xk-font-scale, 1));
-  font-weight: 600;
-  transform: none !important;
-}
-
-body.devtools-page header.dt-page-header .header-actions :is(
-  .dt-header-btn,
-  .theme-toggle-btn.dt-header-btn-theme.theme-toggle-header
-):hover {
-  border-color: var(--op-border-strong) !important;
-  background: var(--op-surface-3) !important;
-  color: var(--op-text) !important;
-  text-decoration: none;
-}
-
 /* DevTools gets the same monochrome Tabler/SVG icon contract as the main
  * panel.  The legacy theme styles give this element a circular badge and
  * leave the SVG unpainted, which makes the sun/moon read as a dot in the
  * header. */
-body.devtools-page .theme-toggle-icon.xk-action-icon {
-  display: block !important;
-  flex: 0 0 16px;
-  width: 16px !important;
-  height: 16px !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.75;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  pointer-events: none;
-}
-
-body.devtools-page header.dt-page-header .header-actions .dt-header-btn-logout:hover {
-  border-color: color-mix(in srgb, var(--op-danger) 52%, var(--op-border));
-  background: var(--op-danger-soft) !important;
-  color: var(--op-danger) !important;
-}
-
-body.devtools-page .xk-global-header-activity {
-  width: 30px;
-  height: 30px;
-  border: 1px solid var(--op-border);
-  border-radius: var(--op-radius-sm);
-  background: var(--op-surface-2);
-  box-shadow: none;
-}
 
 body.devtools-page .dt-tabs {
   display: flex;
@@ -1362,33 +1249,6 @@ body.devtools-page .dt-env-help-table thead th {
  * 7. LIGHT THEME — token overrides only
  * ========================================================================== */
 html[data-theme="light"] body.devtools-page {
-  --op-bg: #f1f2f5;
-  --op-surface: #ffffff;
-  --op-surface-2: #f7f7f9;
-  --op-surface-3: #eceef2;
-  --op-editor: #f1f2f5;
-  --op-border: #d9dce3;
-  --op-border-strong: #c1c6d0;
-  --op-text: #30333a;
-  --op-text-strong: #17191e;
-  --op-muted: #6e7480;
-  --op-faint: #9298a3;
-  --op-accent: #5b5fc7;
-  --op-accent-hover: #4d51b7;
-  --op-accent-soft: rgba(91, 95, 199, 0.1);
-  --op-accent-border: rgba(91, 95, 199, 0.34);
-  --op-success: #2c8966;
-  --op-success-soft: rgba(44, 137, 102, 0.1);
-  --op-warning: #9d6a12;
-  --op-warning-soft: rgba(157, 106, 18, 0.1);
-  --op-danger: #bd4f5a;
-  --op-danger-soft: rgba(189, 79, 90, 0.09);
-  --op-shadow: 0 1px 2px rgba(25, 28, 35, 0.06);
-  --op-shadow-float: 0 14px 36px rgba(25, 28, 35, 0.14);
-  --op-scrollbar-track: color-mix(in srgb, var(--op-surface) 78%, var(--op-bg));
-  --op-scrollbar-thumb: color-mix(in srgb, var(--op-border-strong) 92%, var(--op-accent) 8%);
-  --op-scrollbar-thumb-hover: color-mix(in srgb, var(--op-accent) 72%, var(--op-border-strong));
-  --op-scrollbar-thumb-active: var(--op-accent-hover);
   background: var(--op-bg) !important;
   color-scheme: light;
 }
@@ -1425,10 +1285,6 @@ html[data-theme="light"] body.devtools-page {
     font-size: calc(12.5px * var(--xk-font-scale, 1));
   }
 
-  body.devtools-page .dt-container {
-    padding: 7px 7px 16px;
-  }
-
   body.devtools-page .dt-page-header {
     border-radius: var(--op-radius) var(--op-radius) 0 0 !important;
   }
@@ -1442,21 +1298,6 @@ html[data-theme="light"] body.devtools-page {
 
   body.devtools-page .dt-page-header h1 {
     font-size: calc(16px * var(--xk-font-scale, 1));
-  }
-
-  body.devtools-page .header-actions {
-    justify-content: flex-start;
-    width: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  body.devtools-page .header-actions::-webkit-scrollbar {
-    display: none;
-  }
-
-  body.devtools-page .header-actions > * {
-    flex: 0 0 auto;
   }
 
   body.devtools-page .dt-tabs {

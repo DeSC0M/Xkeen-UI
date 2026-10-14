@@ -17,6 +17,7 @@ import json
 import os
 import tempfile
 import threading
+import time
 from typing import Any, Callable, Dict
 
 
@@ -35,6 +36,22 @@ def _path_lock(path: str) -> threading.Lock:
             lock = threading.Lock()
             _PATH_LOCKS[key] = lock
         return lock
+
+
+# Windows не даёт подменить файл, который кто-то держит открытым: антивирус
+# или индексатор заглядывает в только что записанный файл на доли секунды.
+# Такую блокировку пережидаем; на роутере (Linux) подмена проходит сразу.
+_REPLACE_RETRY_DELAYS = (0.02, 0.05, 0.1, 0.2, 0.3, 0.5)
+
+
+def _replace(src: str, dst: str) -> None:
+    for delay in _REPLACE_RETRY_DELAYS if os.name == "nt" else ():
+        try:
+            os.replace(src, dst)
+            return
+        except PermissionError:
+            time.sleep(delay)
+    os.replace(src, dst)
 
 
 def _sync_dir(path: str) -> None:
@@ -81,7 +98,7 @@ def _write_and_replace(path: str, write_body: Callable[[Any], None], mode: int, 
                 os.chmod(tmp, mode)
             except Exception:
                 pass
-            os.replace(tmp, path)
+            _replace(tmp, path)
         except BaseException:
             # Мусор рядом с настройками переживает перезагрузку и потом путает
             # и людей, и файловый менеджер панели.

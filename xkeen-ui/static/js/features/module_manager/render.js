@@ -34,7 +34,8 @@ const ACTION_LABELS = {
 
 const MODULE_ICONS = {
   core: 'settings',
-  'engine.xray': 'tools',
+  'engine.xray': 'engine-xray',
+  'engine.mihomo': 'engine-mihomo',
   'tool.editor': 'edit',
   'tool.terminal': 'terminal',
   'tool.files': 'folder-add',
@@ -46,15 +47,7 @@ const MODULE_ICONS = {
 function moduleIcon(moduleId) {
   const icon = node('span', 'modules-module-icon');
   icon.setAttribute('aria-hidden', 'true');
-  if (moduleId === 'engine.mihomo') {
-    const image = document.createElement('img');
-    image.className = 'modules-mihomo-mark';
-    image.src = '/static/icons/mihomo-cat.svg';
-    image.alt = '';
-    icon.append(image);
-  } else {
-    icon.innerHTML = iconHtml(MODULE_ICONS[moduleId] || 'catalog', 'modules-module-icon-svg');
-  }
+  icon.innerHTML = iconHtml(MODULE_ICONS[moduleId] || 'catalog', 'modules-module-icon-svg');
   return icon;
 }
 

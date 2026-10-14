@@ -52,7 +52,9 @@ test.describe('DevTools Operator Console theme', () => {
       await openDevtools(page, theme, { width: 1440, height: 900 });
       const geometry = await readOperatorGeometry(page);
 
-      expect(geometry.lastStylesheet).toContain('/static/devtools-operator.css');
+      // The page shell shared with the modules screen and the Mihomo generator
+      // comes last, right after the DevTools operator layer.
+      expect(geometry.lastStylesheet).toContain('/static/page-shell.css');
       expect(geometry.pageOverflow).toBeLessThanOrEqual(1);
       expect(geometry.headerHeight).toBeLessThanOrEqual(54);
       expect(geometry.headerRadius).toBe('12px 12px 0px 0px');

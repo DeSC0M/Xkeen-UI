@@ -7,6 +7,8 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE = ROOT / "xkeen-ui/templates/devtools.html"
 CSS = ROOT / "xkeen-ui/static/devtools-operator.css"
+# Палитра общая с «Модулями и обновлениями» и лежит отдельно.
+TOKENS_CSS = ROOT / "xkeen-ui/static/operator-tokens.css"
 LEGACY_CSS = ROOT / "xkeen-ui/static/devtools.css"
 PLAN = ROOT / "docs/panel-operator-redesign-completion-plan.md"
 DOC = ROOT / "docs/devtools-operator-theme.md"
@@ -36,6 +38,10 @@ def test_devtools_operator_stylesheet_is_isolated_and_loaded_last():
 
 def test_devtools_operator_layer_uses_panel_tokens_and_flat_chrome():
     css = CSS.read_text(encoding="utf-8")
+    tokens = TOKENS_CSS.read_text(encoding="utf-8")
+    template = TEMPLATE.read_text(encoding="utf-8")
+    assert template.index("filename='operator-tokens.css'") < template.index("filename='devtools-operator.css'")
+    assert "--op-" not in re.sub(r"var\(--op-[\w-]+", "", re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL))
 
     for token in (
         "--op-bg: #0d0f13;",
@@ -47,7 +53,7 @@ def test_devtools_operator_layer_uses_panel_tokens_and_flat_chrome():
         "--op-bg: #f1f2f5;",
         "--op-accent: #5b5fc7;",
     ):
-        assert token in css
+        assert token in tokens
 
     assert not re.search(
         r"(?:linear|radial|conic|repeating-linear|repeating-radial)-gradient\(",

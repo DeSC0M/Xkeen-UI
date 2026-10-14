@@ -1,4 +1,5 @@
 <!doctype html>
+{% from "panel/macros.html" import op_icon %}
 <html lang="ru">
 <head>
   <meta charset="utf-8">
@@ -36,15 +37,17 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='devtools.css', v='20260517a') }}">
   {# Flat Operator Console presentation. Keep it last: DevTools still ships the
      legacy component layer above for runtime compatibility. #}
+  <link rel="stylesheet" href="{{ url_for('static', filename='operator-tokens.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='devtools-operator.css', v='20260907c') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='page-shell.css') }}">
   {# Global Custom CSS (DevTools) — last in order so it can override everything. #}
 </head>
 <body class="devtools-page">
   {% set top_level_spinner_text = 'Выполняем действие…' %}
   {% include '_top_level_global_spinner.html' %}
 
-  <div class="container container-wide dt-container">
-    <header class="dt-page-header">
+  <div class="container container-wide dt-container xk-page-container">
+    <header class="dt-page-header xk-page-header">
       <div class="actions dt-page-actions dt-page-header-bar" style="justify-content: space-between; align-items: center;">
         <div class="dt-page-title-group">
           <h1>DevTools</h1>
@@ -65,12 +68,12 @@
           <button
             type="button"
             id="theme-toggle-btn"
-            class="theme-toggle-btn theme-toggle-header dt-header-btn dt-header-btn-theme"
+            class="theme-toggle-btn theme-toggle-header xk-header-btn xk-header-btn-theme"
             aria-label="Переключить тему" title="Переключить светлую/тёмную тему"
-          ><svg class="xk-action-icon theme-toggle-icon" aria-hidden="true" focusable="false"><use href="{{ url_for('static', filename='icons/operator.svg') }}#xk-sun"></use></svg><span class="theme-toggle-text">Светлая тема</span></button>
-          <a href="{{ url_for('index') }}" class="btn-link dt-header-btn dt-header-btn-back" data-xk-top-nav="1">← Назад</a>
-          <a href="{{ url_for('modules_page') }}" class="btn-link dt-header-btn" data-xk-top-nav="1">Модули и обновления<span data-xk-modules-update-badge hidden></span></a>
-          {% set logout_button_class = 'btn-link dt-header-btn dt-header-btn-logout' %}
+          >{{ op_icon('sun', 'theme-toggle-icon') }}<span class="theme-toggle-text">Светлая тема</span></button>
+          <a href="{{ url_for('index') }}" class="btn-link xk-header-btn xk-header-btn-back" data-xk-top-nav="1">{{ op_icon('back') }}<span class="xk-action-label">Назад</span></a>
+          <a href="{{ url_for('modules_page') }}" class="btn-link xk-header-btn" data-xk-top-nav="1">Модули и обновления<span data-xk-modules-update-badge hidden></span></a>
+          {% set logout_button_class = 'btn-link xk-header-btn xk-header-btn-logout' %}
           {% include '_logout_button.html' %}
         </div>
       </div>
