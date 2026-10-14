@@ -142,6 +142,34 @@ test.describe('DevTools panel summary', () => {
     await expect(note).toHaveAttribute('data-tone', 'warn');
   });
 
+  test('says the core is missing instead of calling an installed module unavailable', async ({ page }) => {
+    await mockPanelSummary(page, {
+      snapshot: {
+        ...installed,
+        modules: [
+          {
+            id: 'engine.mihomo', name: 'Mihomo', version: '1.0.0', enabled: true, status: 'unavailable',
+            reason: 'system_requirements_unmet', missing_requirement_ids: ['mihomo'], unavailable_dependency_ids: [],
+          },
+          {
+            id: 'tool.terminal', name: 'Терминал и команды', version: '1.0.0', enabled: true, status: 'unavailable',
+            reason: 'dependency_unavailable', missing_requirement_ids: [], unavailable_dependency_ids: ['core'],
+          },
+        ],
+      },
+    });
+    await page.goto('/devtools');
+
+    const rows = page.locator('#dt-panel-modules .dt-panel-module');
+    await expect(rows).toHaveCount(2);
+    await expect(rows.nth(0)).toHaveAttribute('data-state', 'off');
+    await expect(rows.nth(0).locator('.dt-panel-module-state')).toHaveText('нет ядра');
+    await expect(rows.nth(0)).toHaveAttribute('data-tooltip', 'Модуль установлен, но ядро Mihomo на роутере не найдено.');
+    await expect(rows.nth(1)).toHaveAttribute('data-state', 'warn');
+    await expect(rows.nth(1).locator('.dt-panel-module-state')).toHaveText('недоступен');
+    await expect(rows.nth(1)).toHaveAttribute('data-tooltip', 'Не работает модуль, от которого он зависит: core.');
+  });
+
   test('a local build does not ask the catalog and shows no update line', async ({ page }) => {
     const checks = await mockPanelSummary(page, {
       snapshot: { ...installed, panel_version: null, lifecycle: { available: false, code: 'panel_version_unsupported' } },

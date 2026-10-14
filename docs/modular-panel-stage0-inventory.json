@@ -37,7 +37,7 @@
       ],
       "removable": false,
       "unit_count": 543,
-      "size_bytes": 7363378,
+      "size_bytes": 7368879,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -86,7 +86,7 @@
       ],
       "removable": true,
       "unit_count": 137,
-      "size_bytes": 3829346,
+      "size_bytes": 3829077,
       "kind_counts": {
         "backend_route": 13,
         "backend_service": 20,
@@ -359,7 +359,7 @@
       ],
       "removable": true,
       "unit_count": 23,
-      "size_bytes": 503038,
+      "size_bytes": 504504,
       "kind_counts": {
         "backend_route": 1,
         "backend_service": 7,
@@ -10078,7 +10078,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/devtools_panel_summary.spec.mjs",
-      "size_bytes": 9680,
+      "size_bytes": 11225,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -10535,7 +10535,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/panel_operator_stage4_logs.spec.mjs",
-      "size_bytes": 15485,
+      "size_bytes": 18096,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11180,7 +11180,7 @@
       "module_id": "core",
       "kind": "frontend_ui",
       "path": "xkeen-ui/static/js/ui/shared_primitives.js",
-      "size_bytes": 8500,
+      "size_bytes": 9845,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -17798,7 +17798,7 @@
       "module_id": "engine.xray",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/routing.js",
-      "size_bytes": 234338,
+      "size_bytes": 233824,
       "depends_on": [
         "core",
         "tool.editor"
@@ -18725,7 +18725,7 @@
       "module_id": "engine.xray",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/xray_logs.js",
-      "size_bytes": 195461,
+      "size_bytes": 195706,
       "depends_on": [
         "core",
         "tool.editor"
@@ -20170,7 +20170,7 @@
       "module_id": "tool.advanced-diagnostics",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/devtools/logs.js",
-      "size_bytes": 108753,
+      "size_bytes": 108601,
       "depends_on": [
         "core",
         "engine.xray"
@@ -20246,7 +20246,7 @@
       "module_id": "tool.advanced-diagnostics",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/devtools/update.js",
-      "size_bytes": 9294,
+      "size_bytes": 10912,
       "depends_on": [
         "core"
       ],
@@ -30608,7 +30608,7 @@
         },
         "tool.advanced-diagnostics": {
           "unit_count": 23,
-          "size_bytes": 503038
+          "size_bytes": 504504
         }
       },
       "next_stage": "Этапы 4, 5 и 6."

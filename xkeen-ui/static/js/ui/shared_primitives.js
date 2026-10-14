@@ -219,6 +219,42 @@
     return wired;
   }
 
+  // Выпадающие меню и подсказки на <details> сами закрываются только своей
+  // кнопкой. Клик мимо и Escape закрывают их во всей панели одинаково.
+  const DROPDOWN_DETAILS = [
+    'details.dt-log-menu',
+    'details.outbounds-tag-menu',
+    'details.outbounds-help-popover',
+    'details.xk-card-help-popover',
+  ].join(', ');
+
+  function openDropdowns() {
+    try { return Array.from(document.querySelectorAll(DROPDOWN_DETAILS)).filter((node) => node.open); } catch (e) { return []; }
+  }
+
+  function wireDropdownDismiss() {
+    if (XK.ui.dropdownDismissWired) return;
+    XK.ui.dropdownDismissWired = true;
+    document.addEventListener('pointerdown', (event) => {
+      const target = event && event.target;
+      openDropdowns().forEach((node) => {
+        if (target && node.contains(target)) return;
+        node.open = false;
+      });
+    }, true);
+    document.addEventListener('keydown', (event) => {
+      if (!event || event.key !== 'Escape') return;
+      openDropdowns().forEach((node) => {
+        const hadFocus = node.contains(document.activeElement);
+        node.open = false;
+        if (!hadFocus) return;
+        try { node.querySelector('summary').focus(); } catch (e) {}
+      });
+    });
+  }
+
+  wireDropdownDismiss();
+
   XK.ui.sharedPrimitives = {
     byId,
     toast,

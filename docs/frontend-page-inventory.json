@@ -336,6 +336,7 @@
             "XKeen.ui.toast",
             "XKeen.ui.confirm",
             "XKeen.ui.modal",
+            "XKeen.ui.dropdownDismissWired",
             "XKeen.ui.sharedPrimitives"
           ],
           "lazy_features": []
@@ -546,6 +547,7 @@
         "XKeen.core.storage",
         "XKeen.ui.confirm",
         "XKeen.ui.modal",
+        "XKeen.ui.dropdownDismissWired",
         "XKeen.ui.sharedPrimitives",
         "XKeen.ui.applyTheme",
         "XKeen.ui.initThemeToggle",
@@ -1246,6 +1248,7 @@
             "XKeen.ui.toast",
             "XKeen.ui.confirm",
             "XKeen.ui.modal",
+            "XKeen.ui.dropdownDismissWired",
             "XKeen.ui.sharedPrimitives"
           ],
           "lazy_features": []
@@ -1525,6 +1528,7 @@
         "XKeen.core.storage",
         "XKeen.ui.confirm",
         "XKeen.ui.modal",
+        "XKeen.ui.dropdownDismissWired",
         "XKeen.ui.sharedPrimitives",
         "XKeen.ui.applyTheme",
         "XKeen.ui.initThemeToggle",

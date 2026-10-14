@@ -223,6 +223,66 @@ test.describe('Operator Console Stage 4 logs', () => {
     await expect(menu).toHaveAttribute('open', '');
   });
 
+  test('closes the more menu on an outside click and on Escape', async ({ page }) => {
+    await openLogs(page, 'dark', { width: 1440, height: 900 });
+    const menu = page.locator('#xray-log-more');
+    const summary = page.locator('#xray-log-more > summary');
+
+    await summary.click();
+    await expect(menu).toHaveAttribute('open', '');
+    await page.locator('#xray-log-interval').selectOption('5000');
+    await expect(menu).toHaveAttribute('open', '');
+    await page.locator('#xray-log-output').click();
+    await expect(menu).not.toHaveAttribute('open', '');
+
+    await summary.click();
+    await expect(menu).toHaveAttribute('open', '');
+    await page.keyboard.press('Escape');
+    await expect(menu).not.toHaveAttribute('open', '');
+    await expect(summary).toBeFocused();
+
+    await summary.click();
+    await summary.click();
+    await expect(menu).not.toHaveAttribute('open', '');
+  });
+
+  test('restores the more menu values after a reload', async ({ page }) => {
+    let stored = {};
+    const merge = (target, patch) => {
+      for (const [key, value] of Object.entries(patch || {})) {
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          target[key] = merge(target[key] && typeof target[key] === 'object' ? target[key] : {}, value);
+        } else {
+          target[key] = value;
+        }
+      }
+      return target;
+    };
+    await page.route('**/api/ui-settings', async (route) => {
+      if (route.request().method() === 'PATCH') {
+        stored = merge(stored, route.request().postDataJSON());
+      }
+      await route.fulfill({ json: { ok: true, settings: stored } });
+    });
+    await openLogs(page, 'dark', { width: 1440, height: 900 });
+
+    await page.locator('#xray-log-more > summary').click();
+    await page.locator('#xray-log-interval').selectOption('5000');
+    await page.locator('#xray-log-more .xray-log-menu-switch:has(#xray-log-follow)').click();
+    await page.locator('#xray-log-lines').fill('1200');
+    await page.locator('#xray-log-lines').dispatchEvent('change');
+    await expect.poll(() => stored?.logs?.view?.maxLines).toBe(1200);
+    await expect.poll(() => stored?.logs?.view?.pollMs).toBe(5000);
+    await expect.poll(() => stored?.logs?.view?.follow).toBe(false);
+
+    await page.reload();
+    await selectPanelView(page, 'xray-logs');
+    await page.locator('#xray-log-more > summary').click();
+    await expect(page.locator('#xray-log-interval')).toHaveValue('5000');
+    await expect(page.locator('#xray-log-follow')).not.toBeChecked();
+    await expect(page.locator('#xray-log-lines')).toHaveValue('1200');
+  });
+
   test('Xray logs use the compact operator header in desktop and mobile layouts', async ({ page }) => {
     await openLogs(page, 'dark', { width: 1440, height: 900 });
 

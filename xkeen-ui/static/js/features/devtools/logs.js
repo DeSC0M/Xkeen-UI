@@ -2634,13 +2634,7 @@ function _wireLogLineActions() {
           try { moreMenu.open = false; } catch (e2) {}
         }
       });
-
-      // Close on outside click.
-      document.addEventListener('click', (ev) => {
-        try {
-          if (moreMenu.open && ev && ev.target && !moreMenu.contains(ev.target)) moreMenu.open = false;
-        } catch (e) {}
-      }, true);
+      // Outside click and Escape are handled for every dropdown in shared_primitives.js.
     }
 
     // Sync persisted state -> controls

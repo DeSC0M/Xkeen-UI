@@ -49,10 +49,32 @@ import { describeModuleSets } from '../module_manager/render.js';
     return Number.isFinite(date.getTime()) ? date.toLocaleString('ru-RU', options) : '';
   }
 
+  const CORE_REQUIREMENTS = { xray: 'Xray', mihomo: 'Mihomo' };
+
   function moduleState(module) {
     const known = MODULE_STATES[String(module && module.status ? module.status : '')];
     if (known) return known;
     return module && module.enabled === false ? MODULE_STATES.disabled : MODULE_STATES.enabled;
+  }
+
+  // «Недоступен» читалось как «модуля нет», хотя чаще он установлен, а на
+  // роутере нет его ядра. Причина — словом в строке или в подсказке.
+  function moduleStateWithReason(module, names) {
+    const state = moduleState(module);
+    if (state !== MODULE_STATES.unavailable) return { ...state, hint: '' };
+    const missing = Array.isArray(module.missing_requirement_ids) ? module.missing_requirement_ids : [];
+    const core = missing.map((id) => CORE_REQUIREMENTS[id]).find(Boolean);
+    if (core) {
+      return { tone: 'off', label: 'нет ядра', hint: 'Модуль установлен, но ядро ' + core + ' на роутере не найдено.' };
+    }
+    if (missing.length) {
+      return { ...state, hint: 'На роутере не хватает: ' + missing.join(', ') + '.' };
+    }
+    const deps = Array.isArray(module.unavailable_dependency_ids) ? module.unavailable_dependency_ids : [];
+    if (deps.length) {
+      return { ...state, hint: 'Не работает модуль, от которого он зависит: ' + deps.map((id) => names[id] || id).join(', ') + '.' };
+    }
+    return { ...state, hint: '' };
   }
 
   function setError(message) {
@@ -128,11 +150,19 @@ import { describeModuleSets } from '../module_manager/render.js';
       host.append(node('li', 'dt-panel-modules-empty', 'Нет данных об установленных модулях.'));
       return;
     }
+    const names = {};
     modules.forEach((module) => {
-      const state = moduleState(module);
+      if (module && module.id) names[module.id] = module.name || module.id;
+    });
+    modules.forEach((module) => {
+      const state = moduleStateWithReason(module || {}, names);
       const row = node('li', 'dt-panel-module');
       row.dataset.moduleId = String((module && module.id) || '');
       row.dataset.state = state.tone;
+      if (state.hint) {
+        row.title = state.hint;
+        row.setAttribute('data-tooltip', state.hint);
+      }
       const dot = node('span', 'dt-panel-module-dot');
       dot.setAttribute('aria-hidden', 'true');
       row.append(

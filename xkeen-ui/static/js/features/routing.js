@@ -4699,18 +4699,7 @@ function closeHelp() {
           // For any button click, close the menu.
           try { details.open = false; } catch (e2) {}
         });
-        // Клик мимо меню и Escape закрывают его: раньше закрыть можно было
-        // только повторным нажатием на саму кнопку.
-        document.addEventListener('pointerdown', (e) => {
-          if (!details.open) return;
-          if (e.target && details.contains(e.target)) return;
-          details.open = false;
-        }, true);
-        document.addEventListener('keydown', (e) => {
-          if (!details.open || e.key !== 'Escape') return;
-          details.open = false;
-          try { details.querySelector('summary').focus(); } catch (e2) {}
-        });
+        // Клик мимо меню и Escape закрывают его общим обработчиком в shared_primitives.js.
         if (details.dataset) details.dataset.xkAutoClose = '1';
       }
     } catch (e) {}

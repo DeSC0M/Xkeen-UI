@@ -131,7 +131,6 @@ let xrayLogsModuleApi = null;
   let _applyLevelTimer = null;
 
   let _saveTimer = null;
-  let _resizeObserver = null;
 
   // Fullscreen for the Xray logs card is implemented as a CSS class on the card.
   // (Same UX approach as File Manager / Terminal).
@@ -4898,14 +4897,18 @@ function copyXrayContextModal() {
     });
   }
 
-  // Persist log window height (user-resizable via CSS resize:vertical)
-  if (outputEl && !_resizeObserver && typeof ResizeObserver !== 'undefined') {
-    try {
-      _resizeObserver = new ResizeObserver(() => {
+  // Persist log window height once the user has dragged its resize grip.
+  // A ResizeObserver also fired when the screen was merely shown, and that
+  // save wrote the template defaults over the menu choices kept on the server.
+  if (outputEl && !outputEl.dataset.resizeBound) {
+    outputEl.dataset.resizeBound = '1';
+    outputEl.addEventListener('pointerdown', () => {
+      const before = outputEl.style.height;
+      window.addEventListener('pointerup', () => {
+        if (outputEl.style.height === before) return;
         try { scheduleSaveUiState(); } catch (e) {}
-      });
-      _resizeObserver.observe(outputEl);
-    } catch (e) {}
+      }, { once: true });
+    });
   }
 
   if (outputEl) {
