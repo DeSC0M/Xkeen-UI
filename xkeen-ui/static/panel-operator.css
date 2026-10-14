@@ -606,7 +606,10 @@ body.panel-page:not(.mihomo-generator-page):is(.modal-open, .xk-no-scroll) {
 
 :is(body.panel-page, html[data-theme="light"] body.panel-page) .panel-header {
   position: relative;
-  z-index: 20;
+  /* The editor toolbar has its own z-index: 50. The header must establish a
+   * higher stacking context or the service popover cannot cover the toolbar
+   * even when the popover itself has a larger z-index. */
+  z-index: 60;
   display: flex;
   flex-direction: column;
   gap: 0;
