@@ -36,8 +36,8 @@
         "flask"
       ],
       "removable": false,
-      "unit_count": 547,
-      "size_bytes": 7376325,
+      "unit_count": 548,
+      "size_bytes": 7380183,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -49,7 +49,7 @@
         "frontend_feature": 30,
         "frontend_javascript": 37,
         "frontend_runtime": 2,
-        "frontend_test": 52,
+        "frontend_test": 53,
         "frontend_ui": 17,
         "stylesheet": 8,
         "template": 32
@@ -130,7 +130,7 @@
       ],
       "removable": true,
       "unit_count": 128,
-      "size_bytes": 3062974,
+      "size_bytes": 3063483,
       "kind_counts": {
         "app_runtime": 4,
         "backend_route": 2,
@@ -10060,6 +10060,26 @@
     {
       "module_id": "core",
       "kind": "frontend_test",
+      "path": "e2e/core_source_single_engine.spec.mjs",
+      "size_bytes": 3489,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask"
+      ],
+      "environment_variables": [
+        "XKEEN_E2E_MODULE_PROFILE"
+      ],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_test",
       "path": "e2e/devtools_env_subscriptions_shots.spec.mjs",
       "size_bytes": 3448,
       "depends_on": [],
@@ -11501,7 +11521,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/panel-operator.css",
-      "size_bytes": 753053,
+      "size_bytes": 753422,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -15163,7 +15183,7 @@
       "module_id": "engine.mihomo",
       "kind": "frontend_javascript",
       "path": "xkeen-ui/static/js/pages/panel.mihomo_header.js",
-      "size_bytes": 14160,
+      "size_bytes": 14669,
       "depends_on": [
         "core",
         "tool.editor"

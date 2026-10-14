@@ -14,7 +14,7 @@
 - UTF-8 размер: `428665` байт;
 - строк: `5650`;
 - статических `id`: `1352`, дубликатов: `0`;
-- SHA-256 текущего baseline: `f17d8706a0edf702a12ffecdcc2e6db044446770c10e0cf00b73de318233d09f`.
+- SHA-256 текущего baseline: `8f99dd4c99d772d7fb76bced81ae1fa7770fed2af5ab227a9fa34eb1fb2bd4b2`.
 
 ## Правила composition
 
