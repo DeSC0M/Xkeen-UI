@@ -36,8 +36,8 @@
         "flask"
       ],
       "removable": false,
-      "unit_count": 552,
-      "size_bytes": 7417211,
+      "unit_count": 554,
+      "size_bytes": 7429446,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -46,10 +46,10 @@
         "configuration": 10,
         "frontend_bundle": 9,
         "frontend_entrypoint": 3,
-        "frontend_feature": 30,
+        "frontend_feature": 31,
         "frontend_javascript": 37,
         "frontend_runtime": 2,
-        "frontend_test": 56,
+        "frontend_test": 57,
         "frontend_ui": 17,
         "stylesheet": 8,
         "template": 32
@@ -359,7 +359,7 @@
       ],
       "removable": true,
       "unit_count": 23,
-      "size_bytes": 507435,
+      "size_bytes": 504891,
       "kind_counts": {
         "backend_route": 1,
         "backend_service": 7,
@@ -5222,7 +5222,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_module_manager_ui.py",
-      "size_bytes": 6109,
+      "size_bytes": 6266,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -7334,7 +7334,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_ui_settings_profile_visibility.py",
-      "size_bytes": 665,
+      "size_bytes": 905,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -8872,7 +8872,7 @@
       "module_id": "core",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/module_manager/controller.js",
-      "size_bytes": 25594,
+      "size_bytes": 26275,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -8896,7 +8896,7 @@
       "module_id": "core",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/module_manager/render.js",
-      "size_bytes": 38555,
+      "size_bytes": 40443,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -8998,6 +8998,30 @@
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/ui_prefs_io.js",
       "size_bytes": 18551,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [
+        "devtools-page",
+        "mihomo-generator-page",
+        "modules-page",
+        "panel-core",
+        "xkeen-page"
+      ],
+      "system_requirements": [
+        "python3",
+        "flask"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_feature",
+      "path": "xkeen-ui/static/js/features/update_channel.js",
+      "size_bytes": 2892,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -9298,8 +9322,10 @@
       "module_id": "core",
       "kind": "frontend_javascript",
       "path": "xkeen-ui/static/js/pages/modules.screen.bootstrap.js",
-      "size_bytes": 1125,
-      "depends_on": [],
+      "size_bytes": 1183,
+      "depends_on": [
+        "tool.editor"
+      ],
       "starts_background_task": false,
       "background_markers": [],
       "registers_routes": false,
@@ -10367,6 +10393,26 @@
     {
       "module_id": "core",
       "kind": "frontend_test",
+      "path": "e2e/modules_update_channel_visibility.spec.mjs",
+      "size_bytes": 1665,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask"
+      ],
+      "environment_variables": [
+        "XKEEN_E2E_MODULE_PROFILE"
+      ],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_test",
       "path": "e2e/monaco_context_menu_paste.spec.mjs",
       "size_bytes": 4025,
       "depends_on": [],
@@ -11058,7 +11104,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/ui_settings_profile_visibility.spec.mjs",
-      "size_bytes": 2004,
+      "size_bytes": 2672,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11299,7 +11345,7 @@
       "module_id": "core",
       "kind": "frontend_ui",
       "path": "xkeen-ui/static/js/ui/settings_panel.js",
-      "size_bytes": 56425,
+      "size_bytes": 57900,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11541,7 +11587,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/modules-manager.css",
-      "size_bytes": 40398,
+      "size_bytes": 41913,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11739,7 +11785,7 @@
       "module_id": "core",
       "kind": "template",
       "path": "xkeen-ui/templates/modules.html",
-      "size_bytes": 4532,
+      "size_bytes": 5528,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -20467,7 +20513,7 @@
       "module_id": "tool.advanced-diagnostics",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/devtools/update.js",
-      "size_bytes": 12750,
+      "size_bytes": 10206,
       "depends_on": [
         "core"
       ],
@@ -27272,7 +27318,7 @@
     {
       "id": "panel-core",
       "root": "xkeen-ui/static/js/pages/panel.entry.js",
-      "file_count": 278,
+      "file_count": 279,
       "module_ids": [
         "core",
         "engine.mihomo",
@@ -27416,6 +27462,7 @@
         "xkeen-ui/static/js/features/terminal_debug.js",
         "xkeen-ui/static/js/features/typography.js",
         "xkeen-ui/static/js/features/ui_prefs_io.js",
+        "xkeen-ui/static/js/features/update_channel.js",
         "xkeen-ui/static/js/features/xkeen_runtime.js",
         "xkeen-ui/static/js/features/xkeen_texts.js",
         "xkeen-ui/static/js/features/xray_log_domain_hints.js",
@@ -27925,7 +27972,7 @@
     {
       "id": "devtools-page",
       "root": "xkeen-ui/static/js/pages/devtools.entry.js",
-      "file_count": 278,
+      "file_count": 279,
       "module_ids": [
         "core",
         "engine.mihomo",
@@ -28069,6 +28116,7 @@
         "xkeen-ui/static/js/features/terminal_debug.js",
         "xkeen-ui/static/js/features/typography.js",
         "xkeen-ui/static/js/features/ui_prefs_io.js",
+        "xkeen-ui/static/js/features/update_channel.js",
         "xkeen-ui/static/js/features/xkeen_runtime.js",
         "xkeen-ui/static/js/features/xkeen_texts.js",
         "xkeen-ui/static/js/features/xray_log_domain_hints.js",
@@ -28221,7 +28269,7 @@
     {
       "id": "xkeen-page",
       "root": "xkeen-ui/static/js/pages/xkeen.entry.js",
-      "file_count": 278,
+      "file_count": 279,
       "module_ids": [
         "core",
         "engine.mihomo",
@@ -28365,6 +28413,7 @@
         "xkeen-ui/static/js/features/terminal_debug.js",
         "xkeen-ui/static/js/features/typography.js",
         "xkeen-ui/static/js/features/ui_prefs_io.js",
+        "xkeen-ui/static/js/features/update_channel.js",
         "xkeen-ui/static/js/features/xkeen_runtime.js",
         "xkeen-ui/static/js/features/xkeen_texts.js",
         "xkeen-ui/static/js/features/xray_log_domain_hints.js",
@@ -28517,7 +28566,7 @@
     {
       "id": "mihomo-generator-page",
       "root": "xkeen-ui/static/js/pages/mihomo_generator.entry.js",
-      "file_count": 278,
+      "file_count": 279,
       "module_ids": [
         "core",
         "engine.mihomo",
@@ -28661,6 +28710,7 @@
         "xkeen-ui/static/js/features/terminal_debug.js",
         "xkeen-ui/static/js/features/typography.js",
         "xkeen-ui/static/js/features/ui_prefs_io.js",
+        "xkeen-ui/static/js/features/update_channel.js",
         "xkeen-ui/static/js/features/xkeen_runtime.js",
         "xkeen-ui/static/js/features/xkeen_texts.js",
         "xkeen-ui/static/js/features/xray_log_domain_hints.js",
@@ -28813,7 +28863,7 @@
     {
       "id": "modules-page",
       "root": "xkeen-ui/static/js/pages/modules.entry.js",
-      "file_count": 278,
+      "file_count": 279,
       "module_ids": [
         "core",
         "engine.mihomo",
@@ -28957,6 +29007,7 @@
         "xkeen-ui/static/js/features/terminal_debug.js",
         "xkeen-ui/static/js/features/typography.js",
         "xkeen-ui/static/js/features/ui_prefs_io.js",
+        "xkeen-ui/static/js/features/update_channel.js",
         "xkeen-ui/static/js/features/xkeen_runtime.js",
         "xkeen-ui/static/js/features/xkeen_texts.js",
         "xkeen-ui/static/js/features/xray_log_domain_hints.js",
@@ -29524,7 +29575,7 @@
       {
         "from": "core",
         "to": "tool.editor",
-        "unit_count": 10,
+        "unit_count": 11,
         "examples": [
           "xkeen-ui/static/js/pages/panel.editor.bundle.js",
           "xkeen-ui/static/js/pages/panel.editor.codemirror.bundle.js",
@@ -29533,7 +29584,7 @@
           "xkeen-ui/static/js/pages/panel.editor.monaco.bundle.js",
           "xkeen-ui/static/js/pages/panel.shared_compat.bundle.js",
           "xkeen-ui/static/js/pages/config_shell.shared.js",
-          "xkeen-ui/static/js/pages/xkeen.screen.bootstrap.js"
+          "xkeen-ui/static/js/pages/modules.screen.bootstrap.js"
         ]
       },
       {
@@ -29993,7 +30044,7 @@
       {
         "from": "core",
         "to": "tool.editor",
-        "unit_count": 10,
+        "unit_count": 11,
         "examples": [
           "xkeen-ui/static/js/pages/panel.editor.bundle.js",
           "xkeen-ui/static/js/pages/panel.editor.codemirror.bundle.js",
@@ -30002,7 +30053,7 @@
           "xkeen-ui/static/js/pages/panel.editor.monaco.bundle.js",
           "xkeen-ui/static/js/pages/panel.shared_compat.bundle.js",
           "xkeen-ui/static/js/pages/config_shell.shared.js",
-          "xkeen-ui/static/js/pages/xkeen.screen.bootstrap.js"
+          "xkeen-ui/static/js/pages/modules.screen.bootstrap.js"
         ]
       },
       {
@@ -30457,7 +30508,7 @@
       {
         "from": "core",
         "to": "tool.editor",
-        "unit_count": 10,
+        "unit_count": 11,
         "examples": [
           "xkeen-ui/static/js/pages/panel.editor.bundle.js",
           "xkeen-ui/static/js/pages/panel.editor.codemirror.bundle.js",
@@ -30466,7 +30517,7 @@
           "xkeen-ui/static/js/pages/panel.editor.monaco.bundle.js",
           "xkeen-ui/static/js/pages/panel.shared_compat.bundle.js",
           "xkeen-ui/static/js/pages/config_shell.shared.js",
-          "xkeen-ui/static/js/pages/xkeen.screen.bootstrap.js"
+          "xkeen-ui/static/js/pages/modules.screen.bootstrap.js"
         ]
       },
       {
@@ -30575,7 +30626,7 @@
       {
         "from": "core",
         "to": "tool.editor",
-        "unit_count": 10,
+        "unit_count": 11,
         "examples": [
           "xkeen-ui/static/js/pages/panel.editor.bundle.js",
           "xkeen-ui/static/js/pages/panel.editor.codemirror.bundle.js",
@@ -30584,7 +30635,7 @@
           "xkeen-ui/static/js/pages/panel.editor.monaco.bundle.js",
           "xkeen-ui/static/js/pages/panel.shared_compat.bundle.js",
           "xkeen-ui/static/js/pages/config_shell.shared.js",
-          "xkeen-ui/static/js/pages/xkeen.screen.bootstrap.js"
+          "xkeen-ui/static/js/pages/modules.screen.bootstrap.js"
         ]
       },
       {
@@ -30751,7 +30802,7 @@
         {
           "from": "core",
           "to": "tool.editor",
-          "unit_count": 10,
+          "unit_count": 11,
           "examples": [
             "xkeen-ui/static/js/pages/panel.editor.bundle.js",
             "xkeen-ui/static/js/pages/panel.editor.codemirror.bundle.js",
@@ -30760,7 +30811,7 @@
             "xkeen-ui/static/js/pages/panel.editor.monaco.bundle.js",
             "xkeen-ui/static/js/pages/panel.shared_compat.bundle.js",
             "xkeen-ui/static/js/pages/config_shell.shared.js",
-            "xkeen-ui/static/js/pages/xkeen.screen.bootstrap.js"
+            "xkeen-ui/static/js/pages/modules.screen.bootstrap.js"
           ]
         },
         {
@@ -30829,7 +30880,7 @@
         },
         "tool.advanced-diagnostics": {
           "unit_count": 23,
-          "size_bytes": 507435
+          "size_bytes": 504891
         }
       },
       "next_stage": "Этапы 4, 5 и 6."
