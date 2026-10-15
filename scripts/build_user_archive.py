@@ -442,10 +442,17 @@ def write_module_ownership_map(package_root: Path, *, strict: bool = False) -> O
         return None
 
 
-def refresh_entware_mirrors(package_root: Path) -> list[str]:
+def refresh_entware_mirrors(package_root: Path, *, count_silent_days: bool = False, **probe_overrides) -> list[str]:
     """Положить в дерево панели свежий список зеркал Entware (scripts/entware_mirrors.py).
 
     Без сети в архив идёт список из репозитория: сборка из-за зеркал не падает.
+    count_silent_days — вести локальный счётчик дней молчания (.tmp/): только
+    в локальной сборке, в CI он не переживает запуск.
+
+    Возвращает то, что требует внимания собирающего (молчащие и убранные
+    зеркала, изменившийся список) вместе с правилом семи дней: локальная
+    сборка печатает это итогом в конце, в CI — предупреждениями GitHub,
+    которые видны в сводке запуска.
     """
 
     import importlib.util
@@ -456,7 +463,34 @@ def refresh_entware_mirrors(package_root: Path) -> list[str]:
     mirrors = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = mirrors
     spec.loader.exec_module(mirrors)
-    return mirrors.refresh(package_root, PROJECT_ROOT / mirrors.LIST_RELATIVE)
+    notices: list[str] = []
+
+    def log(line: str) -> None:
+        print(line, flush=True)
+        if line.startswith("[!]") or "изменился" in line:
+            notices.append(line)
+
+    mirrors.refresh(
+        package_root,
+        PROJECT_ROOT / mirrors.LIST_RELATIVE,
+        log=log,
+        state_path=mirrors.STATE_PATH if count_silent_days else None,
+        **probe_overrides,
+    )
+    if notices:
+        notices.append(mirrors.RULE_NOTE)
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            for line in notices:
+                print(f"::warning title=Зеркала Entware::{line}", flush=True)
+    return notices
+
+
+def print_entware_mirror_notices(notices: list[str]) -> None:
+    if not notices:
+        return
+    print("[!] Зеркала Entware — нужно внимание собирающего:")
+    for line in notices:
+        print(f"    {line}")
 
 
 def write_build_json(dst_root: Path, *, stamp: BuildStamp, update_url: str) -> None:
@@ -551,7 +585,7 @@ def main() -> int:
         )
         if text_normalized:
             print(f"[*] line endings normalized to LF in {text_normalized} text file(s)")
-        refresh_entware_mirrors(package_root)
+        mirror_notices = refresh_entware_mirrors(package_root, count_silent_days=True)
         packed = precompress_static_assets(package_root)
         if packed.files:
             saved = packed.original_bytes - packed.compressed_bytes
@@ -598,6 +632,8 @@ def main() -> int:
     if stamp.dirty:
         print("[*] рабочее дерево впереди коммита — BUILD.json не называет коммит,")
         print("    сборку опознаёт tree_sha256 внутри архива.")
+    # В конце, а не посреди журнала сборки: иначе собирающий их не увидит.
+    print_entware_mirror_notices(mirror_notices)
     return 0
 
 

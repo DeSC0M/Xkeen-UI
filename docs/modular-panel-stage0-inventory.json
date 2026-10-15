@@ -37,7 +37,7 @@
       ],
       "removable": false,
       "unit_count": 559,
-      "size_bytes": 7469050,
+      "size_bytes": 7474013,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -3700,7 +3700,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_entware_mirrors.py",
-      "size_bytes": 5742,
+      "size_bytes": 10705,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
