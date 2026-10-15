@@ -442,17 +442,15 @@ def write_module_ownership_map(package_root: Path, *, strict: bool = False) -> O
         return None
 
 
-def refresh_entware_mirrors(package_root: Path, *, count_silent_days: bool = False, **probe_overrides) -> list[str]:
+def refresh_entware_mirrors(package_root: Path, **probe_overrides) -> list[str]:
     """Положить в дерево панели свежий список зеркал Entware (scripts/entware_mirrors.py).
 
     Без сети в архив идёт список из репозитория: сборка из-за зеркал не падает.
-    count_silent_days — вести локальный счётчик дней молчания (.tmp/): только
-    в локальной сборке, в CI он не переживает запуск.
 
-    Возвращает то, что требует внимания собирающего (молчащие и убранные
-    зеркала, изменившийся список) вместе с правилом семи дней: локальная
-    сборка печатает это итогом в конце, в CI — предупреждениями GitHub,
-    которые видны в сводке запуска.
+    Возвращает то, что требует внимания собирающего (молчащие, убранные и
+    ожившие зеркала, изменившийся файл наблюдения) вместе с правилом семи
+    дней: локальная сборка печатает это итогом в конце, в CI —
+    предупреждениями GitHub, которые видны в сводке запуска.
     """
 
     import importlib.util
@@ -467,16 +465,10 @@ def refresh_entware_mirrors(package_root: Path, *, count_silent_days: bool = Fal
 
     def log(line: str) -> None:
         print(line, flush=True)
-        if line.startswith("[!]") or "изменился" in line:
+        if line.startswith("[!]"):
             notices.append(line)
 
-    mirrors.refresh(
-        package_root,
-        PROJECT_ROOT / mirrors.LIST_RELATIVE,
-        log=log,
-        state_path=mirrors.STATE_PATH if count_silent_days else None,
-        **probe_overrides,
-    )
+    mirrors.refresh(package_root, PROJECT_ROOT / mirrors.LIST_RELATIVE, log=log, **probe_overrides)
     if notices:
         notices.append(mirrors.RULE_NOTE)
         if os.environ.get("GITHUB_ACTIONS") == "true":
@@ -585,7 +577,7 @@ def main() -> int:
         )
         if text_normalized:
             print(f"[*] line endings normalized to LF in {text_normalized} text file(s)")
-        mirror_notices = refresh_entware_mirrors(package_root, count_silent_days=True)
+        mirror_notices = refresh_entware_mirrors(package_root)
         packed = precompress_static_assets(package_root)
         if packed.files:
             saved = packed.original_bytes - packed.compressed_bytes

@@ -1,9 +1,10 @@
 """Список зеркал Entware собирается при сборке архива, а не на роутере.
 
 Зеркала берутся со страницы проекта Entware при каждой сборке, чтобы новые
-попадали в архив сами. В архив идут только адреса, по которым зеркало ответило;
-без сети — список, сохранённый в репозитории. Сеть здесь не нужна: страница и
-проверка зеркал подставные.
+попадали в архив сами. Молчащее зеркало убирается не сразу: дата, с которой оно
+молчит, лежит в общем файле наблюдения (его видят все, кто собирает), и только
+после 7 календарных дней молчания зеркало уходит из архива — до первого ответа.
+Сеть здесь не нужна: страница и проверка зеркал подставные.
 """
 
 from __future__ import annotations
@@ -29,6 +30,9 @@ PAGE = """<html><body>
 <ul class="contact-list"><li><a href="https://entware.net/feed.xml">feed</a></li></ul>
 </body></html>"""
 
+ONE = "http://mirrors.one.example/entware"
+TLS = "https://tls-only.example"
+
 
 def _load(name: str, path: Path):
     spec = importlib.util.spec_from_file_location(name, path)
@@ -43,13 +47,23 @@ def mirrors():
     return _load("entware_mirrors", ROOT / "scripts" / "entware_mirrors.py")
 
 
-def _check(alive: set[str], calls: list[str] | None = None):
-    def check(url: str) -> bool:
-        if calls is not None:
-            calls.append(url)
-        return url in alive
+def _check(alive: set[str]):
+    return lambda url: url in alive
 
-    return check
+
+@pytest.fixture
+def bench(mirrors, tmp_path):
+    """Сборка в заданный день: что ушло в архив, что сказано собирающему."""
+    saved = tmp_path / "saved.txt"
+    saved.write_text(mirrors.render([ONE, TLS]), encoding="utf-8")
+    watch = tmp_path / "watch.json"
+
+    def build(day: str, alive: set[str], page: str = PAGE):
+        lines: list[str] = []
+        urls = mirrors.refresh(tmp_path / "pkg", saved, lambda: page, _check(alive), lines.append, watch, day)
+        return urls, lines
+
+    return build, watch
 
 
 def test_only_the_mirror_list_is_read_from_the_page(mirrors):
@@ -60,30 +74,87 @@ def test_only_the_mirror_list_is_read_from_the_page(mirrors):
     ]
 
 
-def test_each_mirror_is_kept_by_the_schemes_it_answers(mirrors):
-    alive = {"http://mirrors.one.example/entware", "https://mirrors.one.example/entware", "https://tls-only.example"}
-    lines: list[str] = []
-
-    urls = mirrors.collect(lambda: PAGE, _check(alive), lines.append)
-
-    assert urls == [
-        "http://mirrors.one.example/entware",
-        "https://mirrors.one.example/entware",
-        "https://tls-only.example",
-    ]
-    assert any("mirrors.dead.example" in line for line in lines)
-
-
-def test_a_single_timeout_does_not_drop_a_mirror(mirrors):
+def test_a_single_timeout_does_not_count_as_silence(mirrors):
     seen: dict[str, int] = {}
 
     def flaky(url: str) -> bool:
         seen[url] = seen.get(url, 0) + 1
-        return url == "https://tls-only.example" and seen[url] > 1
+        return url == TLS and seen[url] > 1
 
-    urls = mirrors.collect(lambda: PAGE, flaky, lambda _line: None)
+    _listed, alive = mirrors.survey(lambda: PAGE, flaky, lambda _line: None)
 
-    assert urls == ["https://tls-only.example"]
+    assert alive == [TLS]
+
+
+def test_a_mirror_that_never_answered_does_not_get_in(bench):
+    build, watch = bench
+
+    urls, lines = build("2026-10-01", {ONE, TLS})
+
+    assert urls == [ONE, TLS]
+    assert any("mirrors.dead.example" in line and "новое" in line for line in lines)
+    assert not watch.exists()
+
+
+def test_a_silent_mirror_stays_for_seven_calendar_days_then_goes(bench):
+    build, watch = bench
+
+    urls, _ = build("2026-10-01", {TLS})
+    assert urls == [ONE, TLS]
+    assert json.loads(watch.read_text(encoding="utf-8")) == {ONE: "2026-10-01"}
+
+    # Считаются календарные дни от первого молчания, а не число сборок.
+    assert ONE in build("2026-10-07", {TLS})[0]
+    urls, lines = build("2026-10-08", {TLS})
+    assert ONE not in urls
+    assert any("убрано" in line and ONE in line for line in lines)
+    # Дата не сдвигается от повторных сборок.
+    assert json.loads(watch.read_text(encoding="utf-8")) == {ONE: "2026-10-01"}
+
+
+def test_a_removed_mirror_comes_back_when_it_answers(bench):
+    build, watch = bench
+    build("2026-10-01", {TLS})
+    assert ONE not in build("2026-10-09", {TLS})[0]
+
+    urls, lines = build("2026-10-10", {ONE, TLS})
+
+    assert urls == [ONE, TLS]
+    assert any("снова отвечает" in line for line in lines)
+    assert json.loads(watch.read_text(encoding="utf-8")) == {}
+
+
+def test_an_answer_from_anyone_clears_the_silence(bench):
+    # Один собирал через VPN и записал молчание, другой собрал без VPN —
+    # зеркало ответило, и счёт снят: убрано будет, только если неделю его не
+    # услышал никто.
+    build, _watch = bench
+    build("2026-10-01", {TLS})
+    build("2026-10-03", {ONE, TLS})
+
+    assert ONE in build("2026-10-09", {TLS})[0]
+
+
+def test_the_watch_file_is_written_only_when_something_changes(bench):
+    build, watch = bench
+    build("2026-10-01", {TLS})
+    before = watch.stat().st_mtime_ns
+
+    _urls, lines = build("2026-10-02", {TLS})
+
+    assert watch.stat().st_mtime_ns == before
+    assert not any("закоммитить" in line for line in lines)
+
+
+def test_a_mirror_gone_from_the_page_is_forgotten(bench):
+    build, watch = bench
+    build("2026-10-01", {TLS})
+    page = PAGE.replace('<li><a href="https://mirrors.one.example/entware/">https://mirrors.one.example/entware/</a></li>', "")
+
+    urls, _ = build("2026-10-02", {TLS}, page)
+
+    assert urls == [TLS]
+    assert json.loads(watch.read_text(encoding="utf-8")) == {}
 
 
 def test_without_network_the_saved_list_goes_into_the_archive(mirrors, tmp_path):
@@ -93,139 +164,12 @@ def test_without_network_the_saved_list_goes_into_the_archive(mirrors, tmp_path)
     def offline() -> str:
         raise OSError("network is unreachable")
 
-    urls = mirrors.refresh(tmp_path / "pkg", saved, offline, _check(set()), lambda _line: None)
+    urls = mirrors.refresh(tmp_path / "pkg", saved, offline, _check(set()), lambda _l: None, tmp_path / "w.json")
 
     assert urls == ["http://kept.example/entware"]
-    assert mirrors.read_list(tmp_path / "pkg" / mirrors.LIST_RELATIVE) == urls
-
-
-def test_a_known_mirror_that_is_silent_at_build_time_is_kept(mirrors, tmp_path):
-    # VPN на машине сборщика отрезал китайские зеркала, и в архив ушло одно.
-    # Проверенное раньше зеркало из-за сети сборщика не выпадает; новое без
-    # ответа не попадает; пропавшее со страницы уходит.
-    saved = tmp_path / "saved.txt"
-    saved.write_text(
-        mirrors.render(["http://mirrors.one.example/entware", "http://gone.example/entware"]), encoding="utf-8"
-    )
-    lines: list[str] = []
-
-    urls = mirrors.refresh(tmp_path / "pkg", saved, lambda: PAGE, _check({"https://tls-only.example"}), lines.append)
-
-    assert urls == ["http://mirrors.one.example/entware", "https://tls-only.example"]
-    assert any("оставлено" in line and "mirrors.one.example" in line for line in lines)
-
-
-def test_a_known_mirror_is_dropped_after_seven_silent_days(mirrors, tmp_path):
-    saved = tmp_path / "saved.txt"
-    saved.write_text(mirrors.render(["http://mirrors.one.example/entware"]), encoding="utf-8")
-    state = tmp_path / "state.json"
-    silent = _check({"https://tls-only.example"})
-
-    def build(day: str) -> list[str]:
-        return mirrors.refresh(tmp_path / "pkg", saved, lambda: PAGE, silent, lambda _l: None, state, day)
-
-    # Несколько сборок в один день — один день молчания.
-    for _ in range(3):
-        assert "http://mirrors.one.example/entware" in build("2026-10-01")
-    for day in range(2, 7):
-        assert "http://mirrors.one.example/entware" in build(f"2026-10-0{day}")
-    assert "http://mirrors.one.example/entware" not in build("2026-10-07")
-
-
-def test_one_answer_starts_the_count_over(mirrors, tmp_path):
-    saved = tmp_path / "saved.txt"
-    saved.write_text(mirrors.render(["http://mirrors.one.example/entware"]), encoding="utf-8")
-    state = tmp_path / "state.json"
-    silent = _check(set())
-    answers = _check({"http://mirrors.one.example/entware"})
-
-    def build(day: str, check) -> list[str]:
-        return mirrors.refresh(tmp_path / "pkg", saved, lambda: PAGE, check, lambda _l: None, state, day)
-
-    for day in range(1, 7):
-        build(f"2026-10-0{day}", silent)
-    build("2026-10-07", answers)
-    assert "http://mirrors.one.example/entware" in build("2026-10-08", silent)
-
-
-def _builder():
-    return _load("build_user_archive_for_mirrors", ROOT / "scripts" / "build_user_archive.py")
-
-
-def _saved_urls() -> list[str]:
-    return [line.strip() for line in SAVED.read_text(encoding="utf-8").splitlines() if line.strip() and not line.startswith("#")]
-
-
-def test_the_builder_tells_what_needs_attention_and_the_rule(tmp_path, monkeypatch, capsys):
-    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
-    builder = _builder()
-
-    notices = builder.refresh_entware_mirrors(
-        tmp_path, page=lambda: PAGE, check=_check({"https://tls-only.example"})
-    )
-    builder.print_entware_mirror_notices(notices)
-    out = capsys.readouterr().out
-
-    assert "нужно внимание" in out
-    assert "7 разных дней" in out
-    assert "npm run mirrors:entware" in out
-    assert "::warning" not in out
-
-
-def test_in_ci_the_notices_become_github_warnings(tmp_path, monkeypatch, capsys):
-    monkeypatch.setenv("GITHUB_ACTIONS", "true")
-    builder = _builder()
-
-    builder.refresh_entware_mirrors(tmp_path, page=lambda: PAGE, check=_check({"https://tls-only.example"}))
-    warnings = [line for line in capsys.readouterr().out.splitlines() if line.startswith("::warning")]
-
-    assert warnings and all(line.startswith("::warning title=Зеркала Entware::") for line in warnings)
-    assert any("7 разных дней" in line for line in warnings)
-
-
-def test_a_quiet_build_says_nothing_extra(tmp_path, monkeypatch, capsys):
-    monkeypatch.setenv("GITHUB_ACTIONS", "true")
-    builder = _builder()
-    # Страница перечисляет те же зеркала, что и сохранённый список, и отвечают
-    # ровно сохранённые адреса: менять нечего, говорить не о чем.
-    saved = _saved_urls()
-    hosts = list(dict.fromkeys(url.split("://", 1)[1] for url in saved))
-    page = "<ul>" + "".join(f'<li><a href="https://{host}/">x</a></li>' for host in hosts) + "</ul>"
-
-    notices = builder.refresh_entware_mirrors(tmp_path, page=lambda: page, check=_check(set(saved)))
-
-    assert notices == []
-    assert "::warning" not in capsys.readouterr().out
-
-
-def test_the_explicit_refresh_follows_the_same_rule(mirrors):
-    # `npm run mirrors:entware` через VPN не должен стереть живые зеркала.
-    main = (ROOT / "scripts" / "entware_mirrors.py").read_text(encoding="utf-8").split("def main()", 1)[1]
-    assert "choose(" in main and "collect(" not in main
-
-
-def test_when_no_mirror_answers_the_saved_list_is_used_too(mirrors, tmp_path):
-    saved = tmp_path / "saved.txt"
-    saved.write_text(mirrors.render(["http://kept.example/entware"]), encoding="utf-8")
-
-    urls = mirrors.refresh(tmp_path / "pkg", saved, lambda: PAGE, _check(set()), lambda _line: None)
-
-    assert urls == ["http://kept.example/entware"]
-
-
-def test_a_fresh_list_replaces_the_saved_one_in_the_archive_only(mirrors, tmp_path):
-    saved = tmp_path / "saved.txt"
-    before = mirrors.render(["http://kept.example/entware"])
-    saved.write_text(before, encoding="utf-8")
-    lines: list[str] = []
-
-    urls = mirrors.refresh(tmp_path / "pkg", saved, lambda: PAGE, _check({"https://tls-only.example"}), lines.append)
-
-    assert urls == ["https://tls-only.example"]
     written = (tmp_path / "pkg" / mirrors.LIST_RELATIVE).read_bytes()
     assert b"\r" not in written
-    assert saved.read_text(encoding="utf-8") == before
-    assert any("npm run mirrors:entware" in line for line in lines)
+    assert mirrors.read_list(tmp_path / "pkg" / mirrors.LIST_RELATIVE) == urls
 
 
 def test_the_saved_list_is_in_the_repository_and_well_formed(mirrors):
@@ -236,6 +180,109 @@ def test_the_saved_list_is_in_the_repository_and_well_formed(mirrors):
     assert SAVED.read_text(encoding="utf-8").startswith(mirrors.HEADER)
 
 
+def test_the_watch_file_is_shared_through_git_and_not_shipped(mirrors):
+    # Общий для всех, кто собирает, — значит в git; на роутере он не нужен.
+    assert mirrors.WATCH_PATH == ROOT / "scripts" / "entware_mirrors_watch.json"
+    assert mirrors.WATCH_PATH.is_file()
+    assert isinstance(json.loads(mirrors.WATCH_PATH.read_text(encoding="utf-8")), dict)
+
+
+def test_a_vpn_is_bypassed_when_a_mirror_does_not_answer(mirrors, monkeypatch):
+    # Happ ставит системный прокси и TUN на весь интернет: не ответившее
+    # зеркало проверяется ещё раз напрямую — с адреса каждого адаптера.
+    asked: list[str] = []
+
+    def ask(opener, url, timeout):
+        source = getattr(opener, "_xk_source", None)
+        asked.append(source or "usual")
+        return source == "192.168.45.2"
+
+    original = mirrors._direct_opener
+
+    def direct_opener(source):
+        opener = original(source)
+        opener._xk_source = source
+        return opener
+
+    monkeypatch.setattr(mirrors, "_ask", ask)
+    monkeypatch.setattr(mirrors, "_direct_opener", direct_opener)
+    monkeypatch.setattr(mirrors, "local_addresses", lambda: ["10.6.7.1", "192.168.45.2"])
+
+    assert mirrors.probe(ONE) is True
+    assert asked == ["usual", "10.6.7.1", "192.168.45.2"]
+
+
+def test_the_direct_path_ignores_the_system_proxy(mirrors, monkeypatch):
+    # Системный прокси Happ (127.0.0.1:10809) urllib берёт сам; прямой путь — без него.
+    happ = {"http": "http://127.0.0.1:10809", "https": "http://127.0.0.1:10809"}
+    monkeypatch.setattr(mirrors.urllib.request, "getproxies", lambda: happ)
+
+    def proxied(opener) -> bool:
+        return any(isinstance(h, mirrors.urllib.request.ProxyHandler) and h.proxies for h in opener.handlers)
+
+    assert proxied(mirrors.urllib.request.build_opener(mirrors._NoRedirect))
+    assert not proxied(mirrors._direct_opener("192.168.45.2"))
+
+
+def test_local_addresses_skip_loopback_and_autoconfig(mirrors, monkeypatch):
+    found = [(2, 1, 6, "", (ip, 0)) for ip in ("127.0.0.1", "169.254.1.1", "192.168.45.2", "10.6.7.1", "192.168.45.2")]
+    monkeypatch.setattr(mirrors.socket, "getaddrinfo", lambda *_a, **_k: found)
+
+    assert mirrors.local_addresses() == ["192.168.45.2", "10.6.7.1"]
+
+
+def _builder():
+    return _load("build_user_archive_for_mirrors", ROOT / "scripts" / "build_user_archive.py")
+
+
+def test_the_builder_tells_what_needs_attention_and_the_rule(tmp_path, monkeypatch, capsys):
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    builder = _builder()
+
+    notices = builder.refresh_entware_mirrors(
+        tmp_path, page=lambda: PAGE, check=_check({TLS}), watch_path=tmp_path / "watch.json"
+    )
+    builder.print_entware_mirror_notices(notices)
+    out = capsys.readouterr().out
+
+    assert "нужно внимание" in out
+    assert "7 календарных дней" in out
+    assert "закоммитить" in out
+    assert "::warning" not in out
+
+
+def test_in_ci_the_notices_become_github_warnings(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    builder = _builder()
+
+    builder.refresh_entware_mirrors(tmp_path, page=lambda: PAGE, check=_check({TLS}), watch_path=tmp_path / "w.json")
+    warnings = [line for line in capsys.readouterr().out.splitlines() if line.startswith("::warning")]
+
+    assert warnings and all(line.startswith("::warning title=Зеркала Entware::") for line in warnings)
+    assert any("7 календарных дней" in line for line in warnings)
+
+
+def test_a_quiet_build_says_nothing_extra(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    builder = _builder()
+    saved = [line.strip() for line in SAVED.read_text(encoding="utf-8").splitlines() if line.strip() and not line.startswith("#")]
+    hosts = list(dict.fromkeys(url.split("://", 1)[1] for url in saved))
+    page = "<ul>" + "".join(f'<li><a href="https://{host}/">x</a></li>' for host in hosts) + "</ul>"
+
+    notices = builder.refresh_entware_mirrors(
+        tmp_path, page=lambda: page, check=_check(set(saved)), watch_path=tmp_path / "w.json"
+    )
+
+    assert notices == []
+    assert "::warning" not in capsys.readouterr().out
+
+
+def test_the_explicit_refresh_follows_the_same_rule():
+    # `npm run mirrors:entware` через VPN не должен стереть живые зеркала.
+    main = (ROOT / "scripts" / "entware_mirrors.py").read_text(encoding="utf-8").split("def main()", 1)[1]
+    assert "_apply(" in main
+
+
 def test_both_the_local_and_the_release_build_refresh_the_list():
     builder = (ROOT / "scripts" / "build_user_archive.py").read_text(encoding="utf-8")
     workflow = (ROOT / ".github" / "workflows" / "build-user-archive.yml").read_text(encoding="utf-8")
@@ -243,6 +290,6 @@ def test_both_the_local_and_the_release_build_refresh_the_list():
 
     main = builder.split("def main()", 1)[1]
     # До штампа: tree_sha256 должен описывать архив вместе со списком.
-    assert main.index("refresh_entware_mirrors(package_root, count_silent_days=True)") < main.index("write_build_json(")
+    assert main.index("refresh_entware_mirrors(package_root)") < main.index("write_build_json(")
     assert workflow.index("builder.refresh_entware_mirrors(root)") < workflow.index("builder.write_build_json(")
     assert scripts["mirrors:entware"] == "node scripts/run_python.mjs scripts/entware_mirrors.py"

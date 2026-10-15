@@ -2,18 +2,24 @@
 
 Список берётся при каждой сборке архива со страницы проекта Entware, поэтому
 новые зеркала попадают в архив сами. Каждое зеркало проверяется по http и по
-https: в архив идут только адреса, по которым оно отдало список пакетов. На
-роутере страницу никто не читает — установщик перебирает то, что лежит в архиве.
+https. На роутере страницу никто не читает — установщик перебирает то, что
+лежит в архиве.
 
-Если страница или все зеркала недоступны (сборка без сети), в архив идёт список,
-сохранённый в репозитории. Обновить его: `npm run mirrors:entware`. Зеркало из
-сохранённого списка, не ответившее при сборке, убирается только после 7 разных
-дней молчания: при сборке молчать может сеть сборщика (VPN), а не зеркало.
+Молчащее зеркало убирается не сразу. Дата, с которой оно молчит, записывается в
+общий файл наблюдения (scripts/entware_mirrors_watch.json, он в git — его видят
+все, кто собирает архив). Ответило хоть при одной сборке — запись снимается.
+Молчит 7 календарных дней — уходит из архива, пока снова не ответит.
+
+Если страница недоступна (сборка без сети), в архив идёт список, сохранённый в
+репозитории. Обновить его: `npm run mirrors:entware`.
 """
 
 from __future__ import annotations
 
+import functools
+import http.client
 import json
+import socket
 import sys
 import urllib.error
 import urllib.request
@@ -30,19 +36,17 @@ LIST_RELATIVE = Path("scripts") / "entware_mirrors.txt"
 PROBE_PATH = "aarch64-k3.10/Packages.gz"
 TIMEOUT_S = 15
 ATTEMPTS = 2
-# Сколько разных дней сборок зеркало из сохранённого списка может молчать,
-# прежде чем его уберут. Счётчик локальный, вне git.
+# Сколько календарных дней зеркало из списка может молчать, прежде чем его уберут.
 SILENT_DAYS_LIMIT = 7
 REPO_ROOT = Path(__file__).resolve().parents[1]
-STATE_PATH = REPO_ROOT / ".tmp" / "entware_mirrors_state.json"
+WATCH_PATH = REPO_ROOT / "scripts" / "entware_mirrors_watch.json"
 # Объяснение для того, кто собирает архив: печатается вместе с предупреждениями.
 RULE_NOTE = (
-    f"Правило: зеркало из сохранённого списка, не ответившее при сборке, остаётся в архиве, "
-    f"пока не промолчит при сборках в {SILENT_DAYS_LIMIT} разных дней (молчать может сеть сборщика, "
-    f"например VPN), потом убирается. Ответило хоть раз — счёт заново. Счёт дней ведёт только "
-    f"локальная сборка (.tmp/entware_mirrors_state.json), в CI сохранённое зеркало остаётся. "
-    f"Сохранить список в репозиторий: npm run mirrors:entware и закоммитить "
-    f"xkeen-ui/scripts/entware_mirrors.txt."
+    f"Правило: зеркало, не ответившее при сборке, записывается в scripts/entware_mirrors_watch.json "
+    f"с датой, с которой молчит. Ответило при любой сборке (у кого угодно) — запись снимается. "
+    f"Молчит {SILENT_DAYS_LIMIT} календарных дней — уходит из архива, пока снова не ответит. "
+    f"Файл наблюдения общий: изменился — закоммитить его, чтобы счёт видели остальные. "
+    f"VPN на машине сборщика (Happ) обходится: зеркало, не ответившее через него, проверяется напрямую."
 )
 
 HEADER = """# Зеркала Entware — запасные источники пакетов для установщика.
@@ -98,14 +102,58 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
-def probe(url: str, timeout: float = TIMEOUT_S) -> bool:
+def _direct_opener(source: str) -> urllib.request.OpenerDirector:
+    """Мимо VPN: без системного прокси и с исходящим адресом сетевого адаптера.
+
+    Happ ставит системный прокси и TUN-адаптер с маршрутами на весь интернет;
+    соединение, привязанное к адресу Wi-Fi, уходит мимо TUN (так же, как
+    `curl --noproxy '*' --interface 192.168.45.2`).
+    """
+    bind = (source, 0)
+
+    class Http(urllib.request.HTTPHandler):
+        def http_open(self, req):
+            return self.do_open(functools.partial(http.client.HTTPConnection, source_address=bind), req)
+
+    class Https(urllib.request.HTTPSHandler):
+        def https_open(self, req):
+            return self.do_open(
+                functools.partial(http.client.HTTPSConnection, source_address=bind), req, context=self._context
+            )
+
+    return urllib.request.build_opener(urllib.request.ProxyHandler({}), Http, Https, _NoRedirect)
+
+
+def local_addresses() -> list[str]:
+    """Адреса IPv4 этой машины, кроме петли и автонастройки (169.254.*)."""
+    try:
+        found = socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET)
+    except OSError:
+        return []
+    addresses: list[str] = []
+    for *_rest, sockaddr in found:
+        address = sockaddr[0]
+        if address.startswith(("127.", "169.254.")) or address in addresses:
+            continue
+        addresses.append(address)
+    return addresses
+
+
+def _ask(opener: urllib.request.OpenerDirector, url: str, timeout: float) -> bool:
     request = urllib.request.Request(f"{url}/{PROBE_PATH}", headers={"Range": "bytes=0-0", "User-Agent": "xkeen-ui-build"})
-    opener = urllib.request.build_opener(_NoRedirect)
     try:
         with opener.open(request, timeout=timeout) as response:
             return response.status in (200, 206)
     except (urllib.error.URLError, OSError, ValueError):
         return False
+
+
+def probe(url: str, timeout: float = TIMEOUT_S) -> bool:
+    if _ask(urllib.request.build_opener(_NoRedirect), url, timeout):
+        return True
+    # Не ответило обычным путём — возможно, его режет VPN на машине сборщика.
+    # Пробуем напрямую с каждого адреса: у кого VPN нет, сюда почти не доходят.
+    return any(_ask(_direct_opener(source), url, timeout) for source in local_addresses())
 
 
 def fetch_page(url: str = PAGE_URL, timeout: float = TIMEOUT_S) -> str:
@@ -115,7 +163,7 @@ def fetch_page(url: str = PAGE_URL, timeout: float = TIMEOUT_S) -> str:
 
 
 def _alive(url: str, check: Callable[[str], bool]) -> bool:
-    # Разовый таймаут — не повод выкинуть зеркало из выпуска.
+    # Разовый таймаут — не повод записывать зеркало в молчащие.
     return any(check(url) for _ in range(ATTEMPTS))
 
 
@@ -142,17 +190,64 @@ def survey(
     return urls, [url for url, ok in zip(urls, alive) if ok]
 
 
-def collect(
-    page: Callable[[], str] = fetch_page,
-    check: Callable[[str], bool] = probe,
-    log: Callable[[str], None] = print,
+def load_watch(path: Path) -> dict[str, str]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    return {str(url): str(since) for url, since in data.items()}
+
+
+def save_watch(path: Path, watch: dict[str, str]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(watch, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
+
+
+def _silent_days(since: str, today: str) -> int:
+    try:
+        return (date.fromisoformat(today) - date.fromisoformat(since)).days
+    except ValueError:
+        return 0
+
+
+def choose(
+    listed: list[str],
+    alive: list[str],
+    known: list[str],
+    watch: dict[str, str],
+    today: str,
+    log: Callable[[str], None],
 ) -> list[str]:
-    """Только ответившие адреса — для явного обновления сохранённого списка."""
-    urls, alive = survey(page, check, log)
-    for url in urls:
-        if url not in alive:
-            log(f"[*] не отвечает: {url}")
-    return alive
+    """Какие адреса идут в список; watch правится на месте.
+
+    Ответил — идёт, запись о молчании снимается (так убранное зеркало
+    возвращается). Ни разу не отвечавший (нет в known) — не идёт. Известный
+    молчащий — получает дату, с которой молчит, и идёт, пока не пройдёт
+    SILENT_DAYS_LIMIT календарных дней. Пропавшее со страницы забывается.
+    """
+    urls: list[str] = []
+    for url in listed:
+        if url in alive:
+            if watch.pop(url, None) is not None:
+                log(f"[!] зеркало Entware снова отвечает, молчание снято: {url}")
+            urls.append(url)
+            continue
+        if url not in known and url not in watch:
+            log(f"[*] новое зеркало Entware не отвечает и в список не идёт: {url}")
+            continue
+        since = watch.setdefault(url, today)
+        days = _silent_days(since, today)
+        if days >= SILENT_DAYS_LIMIT:
+            log(f"[!] зеркало Entware молчит с {since} ({days} дн.) — убрано, вернётся, когда ответит: {url}")
+        else:
+            log(f"[!] зеркало Entware молчит с {since} ({days} из {SILENT_DAYS_LIMIT} дн.), пока оставлено: {url}")
+            urls.append(url)
+    for url in list(watch):
+        if url not in listed:
+            watch.pop(url)
+    return urls
 
 
 def render(urls: Iterable[str]) -> str:
@@ -167,68 +262,26 @@ def read_list(path: Path) -> list[str]:
     return [line.strip() for line in text.splitlines() if line.strip() and not line.startswith("#")]
 
 
-def load_state(path: Optional[Path]) -> dict[str, list[str]]:
-    if path is None:
-        return {}
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return {}
-    if not isinstance(data, dict):
-        return {}
-    return {str(url): sorted({str(day) for day in days}) for url, days in data.items() if isinstance(days, list)}
-
-
-def save_state(path: Optional[Path], state: dict[str, list[str]]) -> None:
-    if path is None:
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-
-
-def choose(
-    listed: list[str],
-    alive: list[str],
-    kept: list[str],
-    state: Optional[dict[str, list[str]]],
-    today: str,
+def _apply(
+    saved: Path,
+    watch_path: Path,
+    page: Callable[[], str],
+    check: Callable[[str], bool],
     log: Callable[[str], None],
-) -> list[str]:
-    """Какие адреса идут в список.
-
-    Ответивший — идёт. Новый без ответа — нет. Зеркало из сохранённого списка
-    без ответа остаётся, пока не промолчит при сборках в SILENT_DAYS_LIMIT
-    разных дней: молчать может сеть сборщика (VPN на машине разработчика
-    отрезал китайские зеркала), а не само зеркало. Ответило хоть раз — счёт
-    заново. Пропавшее со страницы уходит. Без счётчика (state=None, сборка в
-    CI, где он не переживает запуск) сохранённое зеркало остаётся всегда.
-    """
-    urls: list[str] = []
-    for url in listed:
-        if url in alive:
-            if state is not None:
-                state.pop(url, None)
-            urls.append(url)
-            continue
-        if url not in kept:
-            log(f"[*] новое зеркало Entware не отвечает и в список не идёт: {url}")
-            continue
-        if state is None:
-            log(f"[!] зеркало Entware не ответило, но оставлено (есть в сохранённом списке): {url}")
-            urls.append(url)
-            continue
-        days = sorted(set(state.get(url, [])) | {today})
-        state[url] = days
-        if len(days) >= SILENT_DAYS_LIMIT:
-            log(f"[!] зеркало Entware молчит {len(days)} дн. сборок с {days[0]} — убрано: {url}")
-        else:
-            log(f"[!] зеркало Entware не ответило ({len(days)} из {SILENT_DAYS_LIMIT} дн.), оставлено: {url}")
-            urls.append(url)
-    if state is not None:
-        for url in list(state):
-            if url not in listed:
-                state.pop(url)
-    return urls
+    today: Optional[str],
+) -> tuple[list[str], list[str]]:
+    """(выбранные адреса, сохранённый список); пустые выбранные — страница недоступна."""
+    listed, alive = survey(page, check, log)
+    kept = read_list(saved)
+    if not listed:
+        return [], kept
+    watch = load_watch(watch_path)
+    before = dict(watch)
+    urls = choose(listed, alive, kept, watch, today or date.today().isoformat(), log)
+    if watch != before:
+        save_watch(watch_path, watch)
+        log(f"[!] файл наблюдения за зеркалами изменился — закоммитить: scripts/{watch_path.name}")
+    return urls, kept
 
 
 def refresh(
@@ -237,27 +290,16 @@ def refresh(
     page: Callable[[], str] = fetch_page,
     check: Callable[[str], bool] = probe,
     log: Callable[[str], None] = print,
-    state_path: Optional[Path] = None,
+    watch_path: Path = WATCH_PATH,
     today: Optional[str] = None,
 ) -> list[str]:
-    """Записать в дерево архива свежий список; без сети — сохранённый.
-
-    Правила отбора — в choose(). state_path — счётчик дней молчания
-    (локальная сборка); без него сохранённые зеркала не убираются.
-    """
-    listed, alive = survey(page, check, log)
-    kept = read_list(saved)
-    urls: list[str] = []
-    if listed:
-        state = load_state(state_path) if state_path is not None else None
-        urls = choose(listed, alive, kept, state, today or date.today().isoformat(), log)
-        if state is not None:
-            save_state(state_path, state)
+    """Записать в дерево архива свежий список; без сети — сохранённый."""
+    urls, kept = _apply(saved, watch_path, page, check, log, today)
     if not urls:
         log(f"[!] зеркала Entware: беру список из репозитория ({len(kept)} адрес(ов))")
         urls = kept
     elif urls != kept:
-        log("[*] список зеркал Entware изменился; сохранить в репозиторий: npm run mirrors:entware")
+        log("[!] список зеркал Entware изменился; сохранить в репозиторий: npm run mirrors:entware")
     target = package_root / LIST_RELATIVE
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(render(urls), encoding="utf-8", newline="\n")
@@ -266,15 +308,10 @@ def refresh(
 
 
 def main() -> int:
-    # По тем же правилам, что и сборка: прогон через VPN не должен стереть
-    # из сохранённого списка живые зеркала.
+    # По тем же правилам, что и сборка: молчащее зеркало не стирается из
+    # сохранённого списка раньше срока.
     saved = REPO_ROOT / "xkeen-ui" / LIST_RELATIVE
-    listed, alive = survey()
-    urls: list[str] = []
-    if listed:
-        state = load_state(STATE_PATH)
-        urls = choose(listed, alive, read_list(saved), state, date.today().isoformat(), print)
-        save_state(STATE_PATH, state)
+    urls, _kept = _apply(saved, WATCH_PATH, fetch_page, probe, print, None)
     if not urls:
         print("[!] список не обновлён: ни страница, ни зеркала не ответили", file=sys.stderr)
         return 1
