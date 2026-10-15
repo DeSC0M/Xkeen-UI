@@ -37,7 +37,7 @@
       ],
       "removable": false,
       "unit_count": 560,
-      "size_bytes": 7483907,
+      "size_bytes": 7485459,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -5380,7 +5380,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_module_transactions_cli.py",
-      "size_bytes": 22859,
+      "size_bytes": 24411,
       "depends_on": [],
       "starts_background_task": true,
       "background_markers": [

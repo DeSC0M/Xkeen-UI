@@ -18,6 +18,7 @@ from services.module_transactions.plan import build_plan
 from services.module_transactions.state import (
     ModuleTransactionError,
     new_operation_id,
+    pid_alive,
     read_status,
     transactions_root,
     write_status,
@@ -141,6 +142,24 @@ def test_run_reports_a_failing_restart_command(stand) -> None:
     assert changed_paths(before, snapshot(stand.panel.root)) <= BOOKKEEPING
 
 
+def _recover_report(stand, recovered: subprocess.CompletedProcess) -> str:
+    lines = [f"recover rc={recovered.returncode}", f"stdout: {recovered.stdout.strip()}", f"stderr: {recovered.stderr.strip()}"]
+    operation_dir = Journal.find(stand.panel.root)
+    if operation_dir is not None:
+        try:
+            journal = Journal.open(operation_dir)
+            meta = journal.meta()
+            lines.append(
+                f"journal left: step={meta.get('step')} pid={meta.get('pid')} boot_id={meta.get('boot_id')} "
+                f"pid_alive={pid_alive(meta.get('pid')) if meta.get('pid') else None} "
+                f"runner_alive={journal.runner_alive()} starting={journal.starting()}"
+            )
+        except Exception as error:  # noqa: BLE001 - the report must not hide the failure
+            lines.append(f"journal left, unreadable: {error!r}")
+    lines.append(f"status: {read_status(stand.panel.state)}")
+    return "\n".join(lines)
+
+
 @pytest.mark.parametrize("step", ["prepared", "downloading", "verifying", "applying", "state", "restarting", "health"])
 def test_kill_at_step_then_recover_restores_tree(stand, step: str) -> None:
     before = snapshot(stand.panel.root)
@@ -151,12 +170,17 @@ def test_kill_at_step_then_recover_restores_tree(stand, step: str) -> None:
     assert Journal.find(stand.panel.root) is not None
 
     recovered = _runner(stand, "recover")
+    # Тест изредка падает в полном параллельном прогоне на Windows и ни разу —
+    # отдельно; причина не установлена. Сообщение несёт всё, чтобы понять её
+    # по первому же падению: подозрение — живость исполнителя по одному PID
+    # (на Windows нет boot_id, номер убитого процесса может достаться другому).
+    report = _recover_report(stand, recovered)
 
     # A cleanly cancelled operation is not a failure: only an undo that could
     # not be finished is reported with a non-zero code.
-    assert recovered.returncode == 0, recovered.stderr
-    assert changed_paths(before, snapshot(stand.panel.root)) <= BOOKKEEPING
-    assert Journal.find(stand.panel.root) is None
+    assert recovered.returncode == 0, report
+    assert changed_paths(before, snapshot(stand.panel.root)) <= BOOKKEEPING, report
+    assert Journal.find(stand.panel.root) is None, report
     assert not transactions_root(stand.panel.root).exists()
     status = read_status(stand.panel.state)
     assert status["result"] == ("interrupted" if step in EARLY else "rolled_back")
