@@ -29,6 +29,14 @@ test(`Modules screen owns the update channel only without DevTools: ${PROFILE}`,
     const prerelease = channel.locator('button[data-channel="prerelease"]');
     await prerelease.click();
     await expect(page.locator('#confirm-modal')).toBeVisible();
+    const modalStyle = await page.locator('#confirm-modal .modal-content').evaluate((element) => ({
+      radius: getComputedStyle(element).borderRadius,
+      background: getComputedStyle(element).backgroundColor,
+      actionRadius: getComputedStyle(element.querySelector('#confirm-modal-ok-btn')).borderRadius,
+    }));
+    expect(modalStyle.radius).toBe('9px');
+    expect(modalStyle.actionRadius).toBe('6px');
+    expect(modalStyle.background).not.toMatch(/rgb\(.*blue/i);
     await page.locator('#confirm-modal-ok-btn').click();
     await expect(prerelease).toHaveAttribute('aria-pressed', 'true');
     expect(selected).toBe('prerelease');
