@@ -1,4 +1,4 @@
-"""happ-decrypt-universal binary: which release asset fits, checks, install with backup, status."""
+"""happ-decrypt-universal binary: which release asset fits, checks, install, status."""
 
 from __future__ import annotations
 
@@ -227,7 +227,10 @@ def install_engine(
     run: Run | None = None,
     local_file: str | None = None,
 ) -> dict[str, Any]:
-    """Download (or take ``local_file``), check, run once, then replace ``bin_path`` keeping ``.bak``."""
+    """Download (or take ``local_file``), check, run once, then replace ``bin_path``.
+
+    The old binary is kept as ``.bak`` only while the swap happens and is put back if it fails.
+    """
     fetch = fetch or fetch_url
     run = run or run_command
     expected_arch = asset[len(ASSET_PREFIX):] if asset.startswith(ASSET_PREFIX) else ""
@@ -281,8 +284,15 @@ def install_engine(
             if backup:
                 os.replace(backup, bin_path)
             raise HappDecryptorError("install_failed", "Не удалось поставить движок на место.") from exc
+        # Копия нужна только на случай сбоя замены выше. После успеха её никто
+        # не читает, а на роутере она занимала 3 МБ; заодно уходит и та, что
+        # оставили прежние версии.
+        try:
+            os.unlink(bin_path + ".bak")
+        except OSError:
+            pass
         _remove_old_emulator_files(assets_dir_for(bin_path))
-        return {"path": bin_path, "asset": asset, "version": version, "backup": backup}
+        return {"path": bin_path, "asset": asset, "version": version}
     finally:
         if os.path.exists(candidate):
             try:

@@ -1,4 +1,4 @@
-"""happ-decrypt-universal binary: asset choice, ELF checks, checksum-gated install with backup."""
+"""happ-decrypt-universal binary: asset choice, ELF checks, checksum-gated install."""
 
 from __future__ import annotations
 
@@ -115,21 +115,54 @@ def test_parse_sha256sums_matches_whole_asset_name():
     assert engine.parse_sha256sums(text, ARM64) is None
 
 
-def test_install_engine_downloads_checks_and_replaces_with_backup(bin_path):
+def test_install_engine_downloads_checks_and_replaces_the_binary(bin_path):
     binary = _elf("arm64")
-    old = bin_path.read_bytes()
     fetch = FakeFetch({BASE + ARM64: binary, BASE + "SHA256SUMS": _sums(**{ARM64: binary})})
     run = FakeRun()
 
     result = engine.install_engine(str(bin_path), asset=ARM64, release_base=BASE, fetch=fetch, run=run)
 
     assert bin_path.read_bytes() == binary
-    assert Path(str(bin_path) + ".bak").read_bytes() == old
     assert result["version"] == "happ-decrypt-universal v9.9.9 (abc1234)"
-    assert sorted(p.name for p in bin_path.parent.iterdir()) == ["happ-decrypt-universal", "happ-decrypt-universal.bak"]
+    # Копия прежнего движка нужна только на случай сбоя самой замены. После
+    # успеха она никому не нужна, а на роутерах лежала по 3 МБ (16.10.2026).
+    assert sorted(p.name for p in bin_path.parent.iterdir()) == ["happ-decrypt-universal"]
     if os.name != "nt":
         assert os.access(bin_path, os.X_OK)
     assert run.calls and run.calls[0][0] != str(bin_path), "the candidate runs before it replaces the old binary"
+
+
+def test_install_engine_drops_a_copy_left_by_earlier_versions(bin_path):
+    # Прежние версии оставляли .bak после каждой установки: следующая
+    # установка его убирает.
+    Path(str(bin_path) + ".bak").write_bytes(b"old engine")
+    binary = _elf("arm64")
+    fetch = FakeFetch({BASE + ARM64: binary, BASE + "SHA256SUMS": _sums(**{ARM64: binary})})
+
+    engine.install_engine(str(bin_path), asset=ARM64, release_base=BASE, fetch=fetch, run=FakeRun())
+
+    assert sorted(p.name for p in bin_path.parent.iterdir()) == ["happ-decrypt-universal"]
+
+
+def test_install_engine_restores_the_old_binary_if_the_swap_fails(bin_path, monkeypatch):
+    binary = _elf("arm64")
+    fetch = FakeFetch({BASE + ARM64: binary, BASE + "SHA256SUMS": _sums(**{ARM64: binary})})
+    old = bin_path.read_bytes()
+    real_replace = os.replace
+
+    def replace(src, dst):
+        if str(src).endswith(".part"):
+            raise OSError("disk full")
+        real_replace(src, dst)
+
+    monkeypatch.setattr(engine.os, "replace", replace)
+
+    with pytest.raises(HappDecryptorError) as exc:
+        engine.install_engine(str(bin_path), asset=ARM64, release_base=BASE, fetch=fetch, run=FakeRun())
+
+    assert exc.value.code == "install_failed"
+    assert bin_path.read_bytes() == old
+    assert sorted(p.name for p in bin_path.parent.iterdir()) == ["happ-decrypt-universal"]
 
 
 @pytest.mark.parametrize(
