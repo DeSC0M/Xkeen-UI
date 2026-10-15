@@ -36,8 +36,8 @@
         "flask"
       ],
       "removable": false,
-      "unit_count": 554,
-      "size_bytes": 7434394,
+      "unit_count": 555,
+      "size_bytes": 7436685,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -46,7 +46,7 @@
         "configuration": 10,
         "frontend_bundle": 9,
         "frontend_entrypoint": 3,
-        "frontend_feature": 31,
+        "frontend_feature": 32,
         "frontend_javascript": 37,
         "frontend_runtime": 2,
         "frontend_test": 57,
@@ -8904,6 +8904,30 @@
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/module_manager/render.js",
       "size_bytes": 40369,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [
+        "devtools-page",
+        "mihomo-generator-page",
+        "modules-page",
+        "panel-core",
+        "xkeen-page"
+      ],
+      "system_requirements": [
+        "python3",
+        "flask"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_feature",
+      "path": "xkeen-ui/static/js/features/resource_summary.js",
+      "size_bytes": 2291,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
