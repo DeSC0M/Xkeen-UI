@@ -82,6 +82,11 @@ def test_stage4_1_contract_covers_shell_screens_modals_and_profiles(tmp_path):
         "panel/slots/diagnostics_actions.html",
         "panel/modals/diagnostics.html",
     ]
+    assert [
+        entry.template
+        for entry in PANEL_COMPOSITION
+        if entry.owners == ("core",) and entry.collection == "header_summary_partials"
+    ] == ["panel/slots/resource_monitor_unavailable.html"]
 
     screens = {item["id"]: item for item in payload["screens"]}
     assert {

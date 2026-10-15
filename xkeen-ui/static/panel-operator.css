@@ -1399,15 +1399,15 @@ body.panel-page.xk-operator-header-active .container.container-wide { width: 100
 body.panel-page.xk-operator-header-active :is(#view-routing, #view-mihomo, #view-xkeen, #view-xray-logs, #view-commands, #view-files) { margin-top: 0; scrollbar-gutter: auto; }
 body.panel-page.xk-operator-header-active .panel-header #xk-brand-title { font-size: 21px; }
 body.panel-page.xk-operator-header-active .header-right { gap: 28px; }
-body.panel-page.xk-operator-header-active #xk-resource-monitor {
+body.panel-page.xk-operator-header-active .xk-resource-monitor {
   padding: 0;
   border: 0 !important;
   background: transparent !important;
   gap: 26px;
 }
-body.panel-page.xk-operator-header-active #xk-resource-monitor .xk-resource-monitor-item { display: flex; align-items: center; gap: 4px; }
-body.panel-page.xk-operator-header-active #xk-resource-monitor :is(.xk-resource-monitor-label, strong) { display: inline; font-family: inherit; font-size: 12px; font-weight: 400; line-height: 1.4; }
-body.panel-page.xk-operator-header-active #xk-resource-monitor .xk-resource-meter { width: 32px; height: 3px; margin-left: 4px; }
+body.panel-page.xk-operator-header-active .xk-resource-monitor .xk-resource-monitor-item { display: flex; align-items: center; gap: 4px; }
+body.panel-page.xk-operator-header-active .xk-resource-monitor :is(.xk-resource-monitor-label, strong) { display: inline; font-family: inherit; font-size: 12px; font-weight: 400; line-height: 1.4; }
+body.panel-page.xk-operator-header-active .xk-resource-monitor .xk-resource-meter { width: 32px; height: 3px; margin-left: 4px; }
 body.panel-page.xk-operator-header-active .panel-header .xk-header-sections-trigger,
 body.panel-page.xk-operator-header-active .panel-header .xk-header-panel-trigger {
   display: inline-flex;

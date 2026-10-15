@@ -131,9 +131,13 @@ def test_dat_card_frontend_no_longer_depends_on_file_manager_api():
         assert endpoint in api
 
 
-def test_resource_summary_is_rendered_only_with_advanced_diagnostics(tmp_path, monkeypatch):
+def test_resource_summary_keeps_a_minimal_profile_install_offer(tmp_path, monkeypatch):
     monkeypatch.delenv("XKEEN_UI_PANEL_SECTIONS_WHITELIST", raising=False)
 
     assert 'id="xk-resource-monitor"' in render_panel(FULL_MODULE_IDS, tmp_path / "full")
     for name, module_ids in (("xray", XRAY_MINIMAL_MODULE_IDS), ("mihomo", MIHOMO_MINIMAL_MODULE_IDS)):
-        assert 'id="xk-resource-monitor"' not in render_panel(module_ids, tmp_path / name)
+        html = render_panel(module_ids, tmp_path / name)
+        assert 'id="xk-resource-monitor-install-offer"' in html
+        assert 'data-state="module-missing"' in html
+        assert 'data-resource-module="tool.advanced-diagnostics"' in html
+        assert 'id="xk-resource-dashboard-modal"' not in html

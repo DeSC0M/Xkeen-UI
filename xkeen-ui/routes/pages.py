@@ -73,6 +73,7 @@ class PanelFrontendModule:
 
 PANEL_COMPOSITION: tuple[PanelCompositionEntry, ...] = (
     PanelCompositionEntry("header_badge_partials", ("engine.xray",), "panel/slots/xray_badge.html"),
+    PanelCompositionEntry("header_summary_partials", ("core",), "panel/slots/resource_monitor_unavailable.html"),
     PanelCompositionEntry("header_summary_partials", ("tool.advanced-diagnostics",), "panel/slots/diagnostics_summary.html"),
     PanelCompositionEntry("header_action_partials", ("tool.advanced-diagnostics",), "panel/slots/diagnostics_actions.html"),
     PanelCompositionEntry("control_partials", ("engine.xray",), "panel/slots/routing_focus.html"),

@@ -30,9 +30,9 @@ const FORBIDDEN_WS_PREFIXES = {
 };
 
 const INACTIVE_DOM_ROOTS = {
-  'xray-minimal': ['view-mihomo', 'view-commands', 'terminal-overlay', 'view-files', 'xk-resource-monitor', 'xk-resource-dashboard-modal'],
-  'mihomo-minimal': ['view-routing', 'view-xray-logs', 'view-commands', 'terminal-overlay', 'view-files', 'xk-resource-monitor', 'xk-resource-dashboard-modal'],
-  'core-only': ['view-routing', 'view-xray-logs', 'view-mihomo', 'view-commands', 'terminal-overlay', 'view-files', 'xk-resource-monitor', 'xk-resource-dashboard-modal', 'json-editor-modal', 'fm-editor-modal', 'routing-editor', 'mihomo-editor'],
+  'xray-minimal': ['view-mihomo', 'view-commands', 'terminal-overlay', 'view-files', 'xk-resource-dashboard-modal'],
+  'mihomo-minimal': ['view-routing', 'view-xray-logs', 'view-commands', 'terminal-overlay', 'view-files', 'xk-resource-dashboard-modal'],
+  'core-only': ['view-routing', 'view-xray-logs', 'view-mihomo', 'view-commands', 'terminal-overlay', 'view-files', 'xk-resource-dashboard-modal', 'json-editor-modal', 'fm-editor-modal', 'routing-editor', 'mihomo-editor'],
 };
 
 const NOOP_VIEW_CASES = {
@@ -81,6 +81,16 @@ test.describe(`dynamic panel loading: ${PROFILE}`, () => {
     expect(observed.websockets.filter((path) => FORBIDDEN_WS_PREFIXES[PROFILE]?.some((prefix) => path.startsWith(prefix)))).toEqual([]);
     for (const root of INACTIVE_DOM_ROOTS[PROFILE] || []) {
       await expect(page.locator(`#${root}`)).toHaveCount(0);
+    }
+    if (PROFILE === 'full') {
+      await expect(page.locator('#xk-resource-monitor')).toHaveCount(1);
+      await expect(page.locator('#xk-resource-monitor-install-offer')).toHaveCount(0);
+    } else {
+      await expect(page.locator('#xk-resource-monitor')).toHaveCount(0);
+      const resourceOffer = page.locator('#xk-resource-monitor-install-offer');
+      await expect(resourceOffer).toHaveCount(1);
+      await expect(resourceOffer).toHaveAttribute('href', /\/modules$/);
+      await expect(resourceOffer).toHaveAttribute('data-resource-module', 'tool.advanced-diagnostics');
     }
     expect(observed.consoleErrors.filter((text) => !/favicon|ResizeObserver/i.test(text))).toEqual([]);
   });
