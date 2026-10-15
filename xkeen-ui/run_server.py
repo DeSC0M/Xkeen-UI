@@ -73,6 +73,10 @@ from app import (
     _unsubscribe_ws,
 )
 _ACTIVE_MODULES = set(app.extensions.get("xkeen.module_activation", {}).get("active_module_ids", []))
+_WS_RUNTIME_MODULES = frozenset(
+    {"tool.terminal", "engine.xray", "engine.mihomo", "tool.advanced-diagnostics"}
+)
+_WS_RUNTIME_NEEDED = bool(_ACTIVE_MODULES.intersection(_WS_RUNTIME_MODULES))
 # The handlers of an optional module are imported only when the module is
 # active: every use below stands under the same condition, and the server must
 # start when the files of that module are not installed.
@@ -99,9 +103,7 @@ try:
     import app as _appmod  # noqa
 
     try:
-        if GEVENT_AVAILABLE and _ACTIVE_MODULES.intersection(
-            {"tool.terminal", "engine.xray", "engine.mihomo", "tool.advanced-diagnostics"}
-        ):
+        if GEVENT_AVAILABLE and _WS_RUNTIME_NEEDED:
             if hasattr(_appmod, "set_ws_runtime"):
                 _appmod.set_ws_runtime(True)
             else:
@@ -228,12 +230,12 @@ if __name__ == "__main__":
         start_memory_guard()
     except Exception:
         pass
-    if GEVENT_AVAILABLE and "tool.terminal" in _ACTIVE_MODULES:
-        try:
-            start_pty_cleanup_loop()
-        except Exception:
-            pass
-
+    if GEVENT_AVAILABLE and _WS_RUNTIME_NEEDED:
+        if "tool.terminal" in _ACTIVE_MODULES:
+            try:
+                start_pty_cleanup_loop()
+            except Exception:
+                pass
         server = pywsgi.WSGIServer(
             ("0.0.0.0", server_port),
             application,

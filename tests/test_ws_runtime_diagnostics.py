@@ -211,6 +211,16 @@ def test_run_server_logs_the_gevent_failure_and_publishes_it_for_capabilities():
     assert "file=sys.stderr" in text
 
 
+def test_mihomo_minimal_starts_the_websocket_server_without_terminal_module():
+    text = (ROOT / "xkeen-ui" / "run_server.py").read_text(encoding="utf-8")
+
+    assert '_WS_RUNTIME_MODULES = frozenset(' in text
+    assert '"engine.mihomo"' in text
+    assert "_WS_RUNTIME_NEEDED = bool(_ACTIVE_MODULES.intersection(_WS_RUNTIME_MODULES))" in text
+    assert "if GEVENT_AVAILABLE and _WS_RUNTIME_NEEDED:" in text
+    assert 'if GEVENT_AVAILABLE and "tool.terminal" in _ACTIVE_MODULES:' not in text
+
+
 def test_terminal_window_has_a_place_to_show_the_websocket_warning():
     text = compose_panel_template(ROOT)
 
