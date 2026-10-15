@@ -440,6 +440,9 @@ PROVISION_OPKG_CONF=""
 PROVISION_OPKG_TMP=""
 PROVISION_ERROR=""
 PROVISION_WGET_SSL="${XKEEN_WGET_SSL:-/opt/libexec/wget-ssl}"
+# Установщик подставляет список из распакованного архива, запуск командой — тот,
+# что лежит рядом со скриптом.
+PROVISION_MIRRORS_FILE="${XKEEN_ENTWARE_MIRRORS:-$UI_DIR/scripts/entware_mirrors.txt}"
 PROVISION_WGET_DIR=""
 PROVISION_PATH_BEFORE=""
 
@@ -578,19 +581,78 @@ provision_opkg_sources() {
   sed -n 's/^src\/gz[[:space:]][[:space:]]*[^[:space:]]*[[:space:]][[:space:]]*//p' "$1" 2>/dev/null | tr '\n' ' '
 }
 
-provision_opkg_official_conf() {
-  # $1 — настройки роутера, $2 — куда записать те же настройки с официальным
-  # источником. Каталог архитектуры (aarch64-k3.10, mipsel-k3.4 …) и всё за ним
-  # остаются как есть: меняется только то, что стоит перед ними.
+provision_opkg_source_conf() {
+  # $1 — настройки роутера, $2 — куда записать те же настройки с источником $3.
+  # Каталог архитектуры (aarch64-k3.10, mipsel-k3.4 …) и всё за ним остаются
+  # как есть: меняется только то, что стоит перед ними.
   _pc_source="$1"
   _pc_target="$2"
+  _pc_base="$3"
   _pc_lists="$(dirname "$_pc_target")/lists"
   mkdir -p "$_pc_lists" || return 1
   sed -E \
-    -e "s#^(src/gz[[:space:]]+[^[:space:]]+[[:space:]]+)[a-z]+://.*/((aarch64|armv5|armv7|mips|mipsel|x64)[^/[:space:]]*-k[0-9.]+(/[^[:space:]]*)?)[[:space:]]*\$#\\1$PROVISION_OPKG_OFFICIAL/\\2#" \
+    -e "s#^(src/gz[[:space:]]+[^[:space:]]+[[:space:]]+)[a-z]+://.*/((aarch64|armv5|armv7|mips|mipsel|x64)[^/[:space:]]*-k[0-9.]+(/[^[:space:]]*)?)[[:space:]]*\$#\\1$_pc_base/\\2#" \
     -e "s#^lists_dir[[:space:]]+([^[:space:]]+)[[:space:]]+.*\$#lists_dir \\1 $_pc_lists#" \
     "$_pc_source" > "$_pc_target" || return 1
-  grep -q "^src/gz[[:space:]].*$PROVISION_OPKG_OFFICIAL/" "$_pc_target"
+  grep -q "^src/gz[[:space:]].*$_pc_base/" "$_pc_target"
+}
+
+provision_opkg_candidates() {
+  # Запасные источники по порядку: официальный по http, зеркала по http, затем
+  # по https официальный и зеркала — только если opkg качает через wget-ssl:
+  # wget из BusyBox на https падает. Зеркала приезжают в архиве
+  # (scripts/entware_mirrors.txt), их собирает сборщик архива.
+  echo "$PROVISION_OPKG_OFFICIAL"
+  provision_opkg_mirrors '^http://'
+  [ -n "$PROVISION_WGET_DIR" ] || return 0
+  echo "https://${PROVISION_OPKG_OFFICIAL#*://}"
+  provision_opkg_mirrors '^https://'
+}
+
+provision_opkg_mirrors() {
+  # Строки списка зеркал, подходящие под $1; CR от правки на Windows — прочь.
+  tr -d '\r' < "$PROVISION_MIRRORS_FILE" 2>/dev/null | grep "$1" || true
+}
+
+provision_opkg_spare_limit() {
+  # Предел для запасного источника: их может быть с десяток, и по основному
+  # пределу каждому установка висела бы минутами. Не больше основного.
+  _ps_main="${XKEEN_OPKG_UPDATE_TIMEOUT:-120}"
+  case "$_ps_main" in
+    ''|*[!0-9]*) _ps_main=120 ;;
+  esac
+  _ps_spare="${XKEEN_OPKG_MIRROR_TIMEOUT:-45}"
+  case "$_ps_spare" in
+    ''|*[!0-9]*) _ps_spare=45 ;;
+  esac
+  [ "$_ps_spare" -gt "$_ps_main" ] && _ps_spare="$_ps_main"
+  echo "$_ps_spare"
+}
+
+provision_opkg_try_source() {
+  # $1 — настройки роутера, $2 — источник, $3 — предел. 0 — список получен,
+  # дальше provision_opkg берёт пакеты оттуда же.
+  PROVISION_OPKG_TMP="${TMPDIR:-/tmp}/xkeen-opkg-$$"
+  rm -rf "$PROVISION_OPKG_TMP" 2>/dev/null || true
+  if ! mkdir -p "$PROVISION_OPKG_TMP" || ! provision_opkg_source_conf "$1" "$PROVISION_OPKG_TMP/opkg.conf" "$2"; then
+    provision_opkg_drop_tmp
+    return 1
+  fi
+  echo "[*] Беру список пакетов с $2 (настройки роутера не меняются)..."
+  _pt_status=0
+  _pt_started="$(date +%s 2>/dev/null || echo 0)"
+  provision_opkg_limited "$3" "$PROVISION_OPKG_TMP/opkg.conf" -f "$PROVISION_OPKG_TMP/opkg.conf" update || _pt_status=$?
+  if [ "$_pt_status" -ne 0 ] && ! provision_opkg_main_list_fresh "$PROVISION_OPKG_TMP/opkg.conf" "$_pt_started"; then
+    if [ "$_pt_status" -eq 124 ]; then
+      echo "[!] $2 не ответил за $3 с."
+    else
+      echo "[!] $2 не ответил (код $_pt_status)."
+    fi
+    provision_opkg_drop_tmp
+    return 1
+  fi
+  PROVISION_OPKG_CONF="$PROVISION_OPKG_TMP/opkg.conf"
+  return 0
 }
 
 provision_file_mtime() {
@@ -678,35 +740,31 @@ provision_opkg_update() {
     echo "[*] Обращение к официальному источнику Entware отключено (XKEEN_OPKG_FALLBACK=0)."
     return 1
   fi
-  if [ ! -f "$_pu_conf" ] || grep -q "^src/gz[[:space:]].*$PROVISION_OPKG_OFFICIAL/" "$_pu_conf" 2>/dev/null; then
-    # Это и был официальный источник: второй раз спрашивать некого.
-    return 1
-  fi
+  [ -f "$_pu_conf" ] || return 1
 
-  PROVISION_OPKG_TMP="${TMPDIR:-/tmp}/xkeen-opkg-$$"
-  rm -rf "$PROVISION_OPKG_TMP" 2>/dev/null || true
-  if ! mkdir -p "$PROVISION_OPKG_TMP" || ! provision_opkg_official_conf "$_pu_conf" "$PROVISION_OPKG_TMP/opkg.conf"; then
-    provision_opkg_cleanup
-    return 1
-  fi
-
-  echo "[*] Беру список пакетов с официального источника $PROVISION_OPKG_OFFICIAL (настройки роутера не меняются)..."
-  _pu_status=0
-  _pu_started="$(date +%s 2>/dev/null || echo 0)"
-  provision_opkg_limited "$_pu_limit" "$PROVISION_OPKG_TMP/opkg.conf" -f "$PROVISION_OPKG_TMP/opkg.conf" update || _pu_status=$?
-  if [ "$_pu_status" -ne 0 ] && ! provision_opkg_main_list_fresh "$PROVISION_OPKG_TMP/opkg.conf" "$_pu_started"; then
-    echo "[!] Официальный источник Entware тоже не ответил."
-    provision_opkg_cleanup
-    return 1
-  fi
-  PROVISION_OPKG_CONF="$PROVISION_OPKG_TMP/opkg.conf"
-  return 0
+  _pu_spare="$(provision_opkg_spare_limit)"
+  _pu_tried=" "
+  for _pu_base in $(provision_opkg_candidates); do
+    case "$_pu_tried" in
+      *" $_pu_base "*) continue ;;
+    esac
+    _pu_tried="$_pu_tried$_pu_base "
+    # Источник из настроек роутера уже не ответил: второй раз его не спрашиваем.
+    grep -q "^src/gz[[:space:]].*$_pu_base/" "$_pu_conf" 2>/dev/null && continue
+    provision_opkg_try_source "$_pu_conf" "$_pu_base" "$_pu_spare" && return 0
+  done
+  echo "[!] Ни один источник Entware не ответил."
+  return 1
 }
 
-provision_opkg_cleanup() {
+provision_opkg_drop_tmp() {
   [ -n "$PROVISION_OPKG_TMP" ] && rm -rf "$PROVISION_OPKG_TMP" 2>/dev/null || true
   PROVISION_OPKG_TMP=""
   PROVISION_OPKG_CONF=""
+}
+
+provision_opkg_cleanup() {
+  provision_opkg_drop_tmp
   provision_wget_ssl_restore
 }
 
@@ -1502,6 +1560,7 @@ provision_cmd_apply() {
 
 case "${0##*/}" in
   provision_env.sh)
+    [ -n "${XKEEN_ENTWARE_MIRRORS:-}" ] || PROVISION_MIRRORS_FILE="$(dirname "$0")/entware_mirrors.txt"
     case "${1:-}" in
       prepare) provision_cmd_prepare || exit 1 ;;
       apply) provision_cmd_apply || exit 1 ;;

@@ -746,6 +746,8 @@ trap 'installer_on_interrupt' HUP INT TERM
 PROVISION_LIB="$SRC_DIR/scripts/provision_env.sh"
 [ -f "$PROVISION_LIB" ] || fail_install "Установочный архив повреждён: нет scripts/provision_env.sh."
 . "$PROVISION_LIB"
+# Зеркала Entware — из устанавливаемого архива, а не из прежней версии панели.
+[ -n "${XKEEN_ENTWARE_MIRRORS:-}" ] || PROVISION_MIRRORS_FILE="$SRC_DIR/scripts/entware_mirrors.txt"
 
 if [ -f "$UI_DIR/app.py" ] || [ -f "$UI_DIR/run_server.py" ]; then
   INSTALL_MODE="Обновление"

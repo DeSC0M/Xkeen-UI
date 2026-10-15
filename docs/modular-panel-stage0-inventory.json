@@ -36,13 +36,13 @@
         "flask"
       ],
       "removable": false,
-      "unit_count": 555,
-      "size_bytes": 7435589,
+      "unit_count": 556,
+      "size_bytes": 7441568,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
         "backend_service": 76,
-        "backend_test": 251,
+        "backend_test": 252,
         "configuration": 10,
         "frontend_bundle": 9,
         "frontend_entrypoint": 3,
@@ -3687,6 +3687,24 @@
         "XKEEN_PROC_MOUNTS_FILE",
         "XKEEN_UI_STATE_DIR"
       ],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "backend_test",
+      "path": "tests/test_entware_mirrors.py",
+      "size_bytes": 5742,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask"
+      ],
+      "environment_variables": [],
       "removable": false
     },
     {
@@ -7950,7 +7968,7 @@
       "module_id": "core",
       "kind": "configuration",
       "path": "xkeen-ui/install.sh",
-      "size_bytes": 73756,
+      "size_bytes": 73993,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -7962,6 +7980,7 @@
         "flask"
       ],
       "environment_variables": [
+        "XKEEN_ENTWARE_MIRRORS",
         "XKEEN_GEODAT_CHECK_ONLY",
         "XKEEN_GEODAT_FETCH_TIMEOUT",
         "XKEEN_GEODAT_INSTALL",
