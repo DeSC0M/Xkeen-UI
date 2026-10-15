@@ -37,7 +37,7 @@
       ],
       "removable": false,
       "unit_count": 550,
-      "size_bytes": 7396238,
+      "size_bytes": 7396865,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -130,7 +130,7 @@
       ],
       "removable": true,
       "unit_count": 128,
-      "size_bytes": 3063844,
+      "size_bytes": 3067318,
       "kind_counts": {
         "app_runtime": 4,
         "backend_route": 2,
@@ -465,7 +465,7 @@
       "module_id": "core",
       "kind": "app_runtime",
       "path": "xkeen-ui/run_server.py",
-      "size_bytes": 8481,
+      "size_bytes": 8610,
       "depends_on": [
         "tool.terminal",
         "engine.mihomo"
@@ -7657,7 +7657,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_ws_runtime_diagnostics.py",
-      "size_bytes": 9304,
+      "size_bytes": 9802,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -12607,7 +12607,7 @@
       "module_id": "engine.mihomo",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/mihomo_clash.py",
-      "size_bytes": 109252,
+      "size_bytes": 111120,
       "depends_on": [
         "core",
         "tool.editor",
@@ -13588,7 +13588,7 @@
       "module_id": "engine.mihomo",
       "kind": "backend_test",
       "path": "tests/test_mihomo_clash_frontend_contract.py",
-      "size_bytes": 31921,
+      "size_bytes": 32166,
       "depends_on": [
         "core",
         "tool.editor"
@@ -13651,7 +13651,7 @@
       "module_id": "engine.mihomo",
       "kind": "backend_test",
       "path": "tests/test_mihomo_clash_routes.py",
-      "size_bytes": 61845,
+      "size_bytes": 62890,
       "depends_on": [
         "core",
         "tool.editor"
@@ -14805,7 +14805,7 @@
       "module_id": "engine.mihomo",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/mihomo_clash/index.js",
-      "size_bytes": 26920,
+      "size_bytes": 26955,
       "depends_on": [
         "core",
         "tool.editor"
@@ -14886,7 +14886,7 @@
       "module_id": "engine.mihomo",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/mihomo_clash/state.js",
-      "size_bytes": 2603,
+      "size_bytes": 2884,
       "depends_on": [
         "core",
         "tool.editor"
