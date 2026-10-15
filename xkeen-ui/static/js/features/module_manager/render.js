@@ -255,13 +255,11 @@ function appendUpdateChannelControl(summary, snapshot, { onUpdateChannel, channe
   const switchRoot = node('span', 'modules-channel-switch');
   switchRoot.setAttribute('role', 'group');
   switchRoot.setAttribute('aria-label', 'Канал обновлений');
-  const lifecycleAvailable = snapshot.lifecycle?.available === true;
-
   for (const [channel, label] of [['stable', 'Стабильный'], ['prerelease', 'Предрелизный']]) {
     const button = node('button', '', label);
     button.type = 'button';
     button.dataset.channel = channel;
-    button.disabled = !!channelBusy || !lifecycleAvailable;
+    button.disabled = !!channelBusy;
     switchRoot.append(button);
   }
 
@@ -269,7 +267,7 @@ function appendUpdateChannelControl(summary, snapshot, { onUpdateChannel, channe
   check.append(title, switchRoot, hint);
   summary.append(check);
   renderUpdateChannel(switchRoot, hint, snapshot.update_channel);
-  if (!lifecycleAvailable) {
+  if (snapshot.lifecycle?.available !== true) {
     hint.textContent = 'Для локальной сборки переключение канала не меняет доступность подписанных обновлений.';
   }
   wireUpdateChannel({

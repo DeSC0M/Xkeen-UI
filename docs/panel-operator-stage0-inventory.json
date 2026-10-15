@@ -11752,7 +11752,7 @@
       "#outbounds-file-code",
       ".xk-mihomo-topbar .xk-routing-active-inline"
     ],
-    "js_referenced_template_id_count": 1266,
+    "js_referenced_template_id_count": 1267,
     "js_referenced_template_ids": {
       "backups-clear-snapshots-btn": [
         "xkeen-ui/static/js/features/backups.js"
@@ -15617,6 +15617,9 @@
       ],
       "xk-resource-monitor": [
         "xkeen-ui/static/js/features/resource_monitor.js"
+      ],
+      "xk-resource-monitor-install-offer": [
+        "xkeen-ui/static/js/features/resource_summary.js"
       ],
       "xk-resource-monitor-stale": [
         "xkeen-ui/static/js/features/resource_monitor.js"

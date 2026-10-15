@@ -18,9 +18,9 @@ const FORBIDDEN_BUNDLE_MARKERS = {
 };
 
 const FORBIDDEN_API_PREFIXES = {
-  'xray-minimal': ['/api/mihomo', '/api/mihomo-clash', '/api/terminal', '/fs/', '/remotefs/', '/fileops/', '/api/storage', '/api/system'],
-  'mihomo-minimal': ['/api/xray', '/api/routing', '/routing/', '/api/terminal', '/fs/', '/remotefs/', '/fileops/', '/api/storage', '/api/system'],
-  'core-only': ['/api/xray', '/api/routing', '/routing/', '/api/mihomo', '/api/mihomo-clash', '/api/terminal', '/api/ws-token', '/fs/', '/remotefs/', '/fileops/', '/api/storage', '/api/system'],
+  'xray-minimal': ['/api/mihomo', '/api/mihomo-clash', '/api/terminal', '/fs/', '/remotefs/', '/fileops/', '/api/storage', '/api/system/processes', '/api/system/router'],
+  'mihomo-minimal': ['/api/xray', '/api/routing', '/routing/', '/api/terminal', '/fs/', '/remotefs/', '/fileops/', '/api/storage', '/api/system/processes', '/api/system/router'],
+  'core-only': ['/api/xray', '/api/routing', '/routing/', '/api/mihomo', '/api/mihomo-clash', '/api/terminal', '/api/ws-token', '/fs/', '/remotefs/', '/fileops/', '/api/storage', '/api/system/processes', '/api/system/router'],
 };
 
 const FORBIDDEN_WS_PREFIXES = {
@@ -63,6 +63,13 @@ async function moduleDescriptor(page) {
 test.describe(`dynamic panel loading: ${PROFILE}`, () => {
   test('publishes profile descriptor and respects inactive bundle boundaries', async ({ page }) => {
     const observed = observeBrowser(page);
+    await page.route('**/api/system/resources', (route) => route.fulfill({
+      json: {
+        ok: true,
+        cpu: { percent: 5.9 },
+        memory: { percent: 31.9 },
+      },
+    }));
     await page.goto('/');
     await expect(page.locator('.panel-header-shell')).toBeAttached();
     await expect.poll(
@@ -91,6 +98,8 @@ test.describe(`dynamic panel loading: ${PROFILE}`, () => {
       await expect(resourceOffer).toHaveCount(1);
       await expect(resourceOffer).toHaveAttribute('href', /\/modules$/);
       await expect(resourceOffer).toHaveAttribute('data-resource-module', 'tool.advanced-diagnostics');
+      await expect(resourceOffer.locator('strong').nth(0)).toHaveText('5.9%');
+      await expect(resourceOffer.locator('strong').nth(1)).toHaveText('31.9%');
     }
     expect(observed.consoleErrors.filter((text) => !/favicon|ResizeObserver/i.test(text))).toEqual([]);
   });

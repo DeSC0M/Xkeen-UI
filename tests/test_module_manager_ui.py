@@ -102,6 +102,7 @@ def test_modules_uses_the_panel_shell_and_stable_devtools_pointer_is_compact():
     assert 'data-xk-devtools-available=' in template
     assert 'id="confirm-modal"' in template
     assert 'class="modules-update-channel"' not in template
+    assert "min-height: 24px !important" in manager_css
 
 
 def test_manager_source_is_isolated_and_entry_stays_thin():
