@@ -73,8 +73,17 @@ def test_source_modal_uses_the_full_resizable_scroll_region():
 
 def test_core_source_supports_quick_fork_install_flow():
     source = (ROOT / "xkeen-ui/static/js/features/core_source.js").read_text(encoding="utf-8")
-    assert 'data-core-source-action="quick"' in SOURCE
+    assert 'data-core-source-action="prepare"' in SOURCE
+    assert "data-core-source-prepare-label" in SOURCE
     assert "Проверить и установить" in SOURCE
     assert "Выбрать и подготовить" in SOURCE
     assert "Источник выбран · релиз готовится" in source
-    assert "prepareInstallation({ closeSource: true })" in source
+    assert "Подготовить установку ${selectedProfile.display_name}" in source
+
+
+def test_core_modal_explains_missing_engine_modules():
+    assert "unmanaged_core_source_partials" in SHARED_MODAL
+    assert "Модуль управления не установлен" in SOURCE
+    service_status = (ROOT / "xkeen-ui/static/js/features/service_status.js").read_text(encoding="utf-8")
+    assert "coreModuleNotice" in service_status
+    assert "установите его для управления и настроек" in service_status

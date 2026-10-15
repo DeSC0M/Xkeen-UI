@@ -189,7 +189,7 @@ test.describe('Curated core source selection', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   });
 
-  test('offers the selected fork directly in the engine card and opens confirmation', async ({ page }) => {
+  test('renames the single card action for a selected fork and opens confirmation', async ({ page }) => {
     const payload = mihomoProfiles();
     payload.data.state.selected_profile_id = 'prizrak-core';
     payload.data.state.installed_profile_id = 'official';
@@ -217,9 +217,10 @@ test.describe('Curated core source selection', () => {
     await openView(page, 'mihomo');
     await openCoreManagement(page);
     const card = page.locator('[data-core-source][data-core-engine="mihomo"]');
-    const quick = card.getByRole('button', { name: 'Установить Prizrak-Core' });
-    await expect(quick).toBeVisible();
-    await quick.click();
+    const prepare = card.getByRole('button', { name: 'Подготовить установку Prizrak-Core' });
+    await expect(prepare).toBeVisible();
+    await expect(card.getByRole('button', { name: 'Проверить и установить' })).toHaveCount(0);
+    await prepare.click();
 
     await expect.poll(() => prepared).toBe(true);
     await expect(page.locator('#mihomo-core-source-modal')).toBeHidden();

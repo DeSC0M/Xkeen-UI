@@ -330,6 +330,41 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
 
         register_module_blueprints("engine.mihomo", "mihomo_blueprint_init_failed", _build_mihomo)
 
+    # Source/profile endpoints are core-level operations. If a binary exists
+    # but its optional engine UI module is disabled, expose only this narrow
+    # management facade so the core modal can explain the missing module
+    # instead of showing an empty source area.
+    try:
+        from services.cores import detect_available_cores, detect_running_core
+        from services.core_installer import CoreInstaller
+        from services.core_profile_state import CoreProfileStateStore
+        from .core_profiles import create_core_profiles_blueprint
+
+        core_installer = app.extensions.get("xkeen.core_installer")
+        available_core_ids = set(detect_available_cores())
+        inactive_core_ids = available_core_ids - {
+            core for core in ("xray", "mihomo") if module_active(f"engine.{core}")
+        }
+        if inactive_core_ids:
+            if core_installer is None:
+                core_installer = CoreInstaller(
+                    state_store=CoreProfileStateStore(ctx.ui_state_dir),
+                    binary_paths={"xray": "/opt/sbin/xray", "mihomo": "/opt/sbin/mihomo"},
+                    xray_configs_dir=ctx.xray_configs_dir,
+                    mihomo_config_file=ctx.mihomo_config_file,
+                    restart=ctx.restart_xkeen,
+                    running_core=detect_running_core,
+                )
+                app.extensions["xkeen.core_installer"] = core_installer
+            for core_id in ("xray", "mihomo"):
+                if core_id in inactive_core_ids:
+                    app.register_blueprint(create_core_profiles_blueprint(core_id, core_installer))
+    except Exception as exc:
+        try:
+            ctx.ws_debug("core profile routes initialization failed", error=str(exc))
+        except Exception:
+            pass
+
     if module_active("integration.happ"):
         def _build_happ():
             from .happ_decryptor import create_happ_decryptor_blueprint

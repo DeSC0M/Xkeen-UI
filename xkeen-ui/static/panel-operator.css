@@ -23410,6 +23410,13 @@ body.panel-page .xk-core-source-profile {
 }
 body.panel-page .xk-core-source-profile:has(input:checked) { border-color: var(--op-accent-border); background: var(--op-accent-soft); }
 body.panel-page .xk-core-source-profile.is-unavailable { opacity: .58; cursor: not-allowed; }
+body.panel-page .xk-core-source-control-unavailable {
+  border-color: var(--op-warning-border, var(--op-border));
+  background: color-mix(in srgb, var(--op-warning-soft, var(--op-surface-2)) 48%, var(--op-surface-2));
+}
+body.panel-page .xk-core-source-control-unavailable .xk-core-source-status {
+  color: var(--op-warning, #d9a441);
+}
 body.panel-page .xk-core-source-profile-body { display: grid; gap: 3px; min-width: 0; }
 body.panel-page .xk-core-source-profile-body a { color: var(--op-accent-hover); font-size: .82rem; overflow-wrap: anywhere; }
 body.panel-page .xk-core-source-profile-body small { color: var(--op-muted); line-height: 1.35; }

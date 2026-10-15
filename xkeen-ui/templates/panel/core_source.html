@@ -1,4 +1,23 @@
 {% from "panel/macros.html" import op_icon %}
+{% macro render_core_source_unavailable(engine_id, engine_label, module_id) -%}
+<section class="xk-core-source-control xk-core-source-control-unavailable" data-core-source-unavailable data-core-engine="{{ engine_id }}" aria-labelledby="{{ engine_id }}-core-source-title">
+  <div class="xk-core-source-control-copy">
+    <div class="xk-core-source-control-heading">
+      <h3 id="{{ engine_id }}-core-source-title">{{ engine_label }}</h3>
+      <span class="xk-core-source-status" data-core-source-status role="status">Модуль управления не установлен</span>
+    </div>
+    <div class="xk-core-source-summary">
+      <span>Ядро найдено на роутере, но панель не управляет им в текущем профиле.</span>
+    </div>
+  </div>
+  <div class="xk-core-source-actions" aria-label="Доступность управления ядром {{ engine_label }}">
+    <a class="btn-secondary xk-core-source-action" href="{{ url_for('modules_page') }}" data-tooltip="Установить модуль {{ module_id }} для управления ядром">
+      <span>Установить модуль</span>
+    </a>
+  </div>
+</section>
+{%- endmacro %}
+
 {% macro render_core_source_controls(engine_id, engine_label) -%}
 <section class="xk-core-source-control" data-core-source data-core-engine="{{ engine_id }}" aria-labelledby="{{ engine_id }}-core-source-title">
   <div class="xk-core-source-control-copy">
@@ -15,11 +34,8 @@
     <button type="button" class="btn-secondary xk-core-source-action" data-core-source-action="open" data-tooltip="Выбрать проверенный источник сборки">
       {{ op_icon('github') }}<span>Источник</span>
     </button>
-    <button type="button" class="btn-primary xk-core-source-action hidden" data-core-source-action="quick" data-tooltip="Выбрать источник, проверить релиз и подготовить установку" hidden>
-      {{ op_icon('download') }}<span data-core-source-quick-label>Установить форк</span>
-    </button>
     <button type="button" class="btn-primary xk-core-source-action" data-core-source-action="prepare" data-tooltip="Проверить релиз и подготовить безопасную установку" disabled>
-      {{ op_icon('download') }}<span>Проверить и установить</span>
+      {{ op_icon('download') }}<span data-core-source-prepare-label>Проверить и установить</span>
     </button>
   </div>
 </section>

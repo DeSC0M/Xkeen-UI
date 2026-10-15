@@ -100,6 +100,8 @@ _PACKAGE_OWNER_OVERRIDES = {
     "static/js/features/xray_log_line_class.js": "core",
     "static/js/pages/panel.mihomo_header.js": "core",
     "static/js/pages/top_level_panel_mihomo.shared.js": "core",
+    "templates/panel/slots/core_source_unavailable_xray.html": "core",
+    "templates/panel/slots/core_source_unavailable_mihomo.html": "core",
 }
 # Mirrors services.module_package_contract, which the offline builder cannot
 # import before it has located the package root.

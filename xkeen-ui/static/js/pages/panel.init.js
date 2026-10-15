@@ -3,6 +3,7 @@ import { bindPanelShellViewRuntime } from './panel.view_runtime.js';
 import { ensurePanelLazyFeature } from './panel.lazy_bindings.runtime.js';
 import { hasXkeenXrayCore } from '../features/xkeen_runtime.js';
 import { ensurePanelModule } from './panel.module_loader.js';
+import { initCoreSources } from '../features/core_source.js';
 
 function isPanelPage() {
   return !!(document.getElementById('view-routing') || document.querySelector('.top-tab-btn[data-view]'));
@@ -17,6 +18,7 @@ function hasXrayCore() {
 }
 
 function initModules() {
+  safe(() => initCoreSources(document));
   safe(() => {
     if (hasXrayCore()) void ensurePanelModule('panel-routing', 'init');
   });

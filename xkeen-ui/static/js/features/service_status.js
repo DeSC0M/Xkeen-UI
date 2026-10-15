@@ -77,6 +77,23 @@ let serviceStatusModuleApi = null;
     return value === 'mihomo' ? 'mihomo' : 'xray';
   }
 
+  function coreModuleId(core) {
+    return normalizeCore(core) === 'xray' ? 'engine.xray' : 'engine.mihomo';
+  }
+
+  function coreHasManagementModule(core) {
+    try {
+      const ids = window.XKeen?.pageConfig?.frontendModules?.activeModuleIds;
+      return Array.isArray(ids) && ids.includes(coreModuleId(core));
+    } catch (e) {
+      return true;
+    }
+  }
+
+  function coreModuleNotice(core) {
+    return `Ядро ${normalizeCore(core)} доступно, но модуль ${coreModuleId(core)} не установлен. После переключения установите его для управления и настроек.`;
+  }
+
   function getCoreModal() {
     return $('core-modal');
   }
@@ -1337,8 +1354,10 @@ let serviceStatusModuleApi = null;
       closeXkeenCoreModal();
       toast({
         id: 'xkeen-core-change',
-        message: `Ядро изменено на ${selectedCore}`,
-        kind: 'success',
+        message: coreHasManagementModule(selectedCore)
+          ? `Ядро изменено на ${selectedCore}`
+          : `Ядро изменено на ${selectedCore}. ${coreModuleNotice(selectedCore)}`,
+        kind: coreHasManagementModule(selectedCore) ? 'success' : 'warning',
         dedupeWindowMs: 0,
       });
       try {

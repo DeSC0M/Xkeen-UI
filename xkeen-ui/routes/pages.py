@@ -295,6 +295,8 @@ def _build_panel_page_context(active_module_ids: set[str] | None) -> dict[str, o
         "routing_side_card_partials": [],
         "routing_file_action_partials": [],
         "core_source_control_partials": [],
+        "unmanaged_core_source_engines": [],
+        "unmanaged_core_source_partials": [],
         "pre_screen_modal_partials": [],
         "screen_partials": [],
         "modal_partials": [],
@@ -529,6 +531,19 @@ def register_pages_routes(
 
         _core_ui = _detect_panel_core_ui(active_module_ids)
         page_context = _build_panel_page_context(active_module_ids)
+        if active_module_ids is not None:
+            active_engines = {
+                core for core, module_id in (("xray", "engine.xray"), ("mihomo", "engine.mihomo"))
+                if module_id in active_module_ids
+            }
+            page_context["unmanaged_core_source_engines"] = [
+                core for core in _core_ui.get("detected_cores", [])
+                if core in {"xray", "mihomo"} and core not in active_engines
+            ]
+            page_context["unmanaged_core_source_partials"] = [
+                f"panel/slots/core_source_unavailable_{core}.html"
+                for core in page_context["unmanaged_core_source_engines"]
+            ]
         panel_frontend_modules = _frontend_modules_descriptor()
         _websocket_runtime = str(os.environ.get("XKEEN_WS_RUNTIME", "")).strip().lower() in {"1", "true", "yes", "on"}
         page_ctx = {

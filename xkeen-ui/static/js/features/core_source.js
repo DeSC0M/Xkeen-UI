@@ -255,24 +255,14 @@ export function initCoreSource(root) {
     const selectedProfile = data.profiles?.find((profile) => profile.profile_id === selected);
     const updateButton = root.querySelector('[data-core-source-action="prepare"]');
     if (updateButton) updateButton.disabled = !selectedProfile?.release?.installable || data.state?.last_status === 'running';
-    const quickButton = root.querySelector('[data-core-source-action="quick"]');
-    const quickLabel = root.querySelector('[data-core-source-quick-label]');
+    const prepareLabel = root.querySelector('[data-core-source-prepare-label]');
     const installedProfile = data.state?.installed_profile_id;
-    const showQuick = Boolean(
-      selectedProfile?.release?.installable
-      && selected
-      && selected !== 'official'
-      && selected !== installedProfile
-      && data.state?.last_status !== 'running',
-    );
-    if (quickButton) {
-      quickButton.hidden = !showQuick;
-      quickButton.classList.toggle('hidden', !showQuick);
-      quickButton.disabled = !showQuick;
+    const selectedFork = Boolean(selected && selected !== 'official' && selected !== installedProfile);
+    if (prepareLabel) {
+      prepareLabel.textContent = selectedFork
+        ? `Подготовить установку ${selectedProfile.display_name}`
+        : 'Проверить и установить';
     }
-    if (quickLabel) quickLabel.textContent = showQuick
-      ? `Установить ${selectedProfile.display_name}`
-      : 'Установить форк';
     const installed = data.state?.installed_profile_id;
     const installedVersion = data.state?.detected_version || data.state?.installed_release_tag || 'версия не определена';
     text(root.querySelector('[data-core-source-installed]'), `Установлено: ${installed ? profileLabel(data.profiles, installed) : 'профиль не отмечен'} · ${installedVersion}`);
@@ -339,10 +329,6 @@ export function initCoreSource(root) {
       if (action === 'open') { modalOpen(sourceModal, true); await refresh(); return; }
       if (action === 'prepare') {
         await prepareInstallation();
-      }
-      if (action === 'quick') {
-        text(root.querySelector('[data-core-source-status]'), 'Источник выбран · релиз готовится');
-        await prepareInstallation({ closeSource: true });
       }
     } catch (error) { toastXkeen(error.message || 'Операция недоступна.', 'error'); }
   });
