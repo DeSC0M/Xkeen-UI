@@ -915,6 +915,8 @@ if [ "$NEED_FLASK" -eq 1 ] || [ "$NEED_CRYPTOGRAPHY" -eq 1 ] || [ "$NEED_GEVENT"
   ui_info "Настраиваю Python-зависимости панели..."
 fi
 provision_python_libs_install || fail_install "${PROVISION_ERROR:-Не удалось подготовить библиотеки панели.}"
+# wget-ssl — чтобы opkg мог ходить к источникам по https; панель работает и без него.
+provision_wget_ssl || true
 choose_panel_profile
 
 

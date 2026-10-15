@@ -439,6 +439,9 @@ PROVISION_OPKG_OFFICIAL="${XKEEN_OPKG_OFFICIAL_URL:-http://bin.entware.net}"
 PROVISION_OPKG_CONF=""
 PROVISION_OPKG_TMP=""
 PROVISION_ERROR=""
+PROVISION_WGET_SSL="${XKEEN_WGET_SSL:-/opt/libexec/wget-ssl}"
+PROVISION_WGET_DIR=""
+PROVISION_PATH_BEFORE=""
 
 provision_fail() {
   # Причина остановки для того, кто вызвал: он решает, как её показать.
@@ -515,8 +518,54 @@ provision_run_limited() {
   wait "$_pl_pid"
 }
 
+provision_wget_ssl_path() {
+  # opkg качает командой `wget` из PATH. Первым на роутерах стоит wget из
+  # BusyBox (/opt/usr/bin/wget), а он на https падает с Segmentation fault —
+  # источник по https в opkg.conf не отвечал, хотя wget-ssl установлен. На
+  # время своей работы ставим wget-ssl первым в PATH: системный PATH и ссылки
+  # в /opt/bin не меняются, чужие скрипты по-прежнему получают свой wget.
+  [ -n "$PROVISION_WGET_DIR" ] && return 0
+  [ -x "$PROVISION_WGET_SSL" ] || return 1
+  PROVISION_WGET_DIR="${TMPDIR:-/tmp}/xkeen-wget-$$"
+  if ! mkdir -p "$PROVISION_WGET_DIR" || ! ln -sf "$PROVISION_WGET_SSL" "$PROVISION_WGET_DIR/wget"; then
+    rm -rf "$PROVISION_WGET_DIR" 2>/dev/null || true
+    PROVISION_WGET_DIR=""
+    return 1
+  fi
+  PROVISION_PATH_BEFORE="$PATH"
+  PATH="$PROVISION_WGET_DIR:$PATH"
+  export PATH
+}
+
+provision_wget_ssl_restore() {
+  [ -n "$PROVISION_WGET_DIR" ] || return 0
+  rm -rf "$PROVISION_WGET_DIR" 2>/dev/null || true
+  PROVISION_WGET_DIR=""
+  PATH="$PROVISION_PATH_BEFORE"
+  export PATH
+}
+
+provision_wget_ssl() {
+  # wget-ssl — обязательный пакет: без него opkg не получит ни списка, ни
+  # пакетов по https. Панель работает и без него, поэтому неудача — строка в
+  # журнале, а не остановка установки или обновления.
+  if [ -x "$PROVISION_WGET_SSL" ]; then
+    provision_wget_ssl_path || true
+    return 0
+  fi
+  echo "[*] wget-ssl не найден. Устанавливаю через Entware (opkg)..."
+  if ensure_opkg_bin && provision_opkg_update && provision_opkg install wget-ssl && [ -x "$PROVISION_WGET_SSL" ]; then
+    provision_wget_ssl_path || true
+    return 0
+  fi
+  echo "[!] wget-ssl установить не удалось: источники Entware по https будут недоступны."
+  echo "    Поставь вручную: opkg install wget-ssl"
+  return 1
+}
+
 provision_opkg() {
   # opkg с тем источником, который ответил на provision_opkg_update.
+  provision_wget_ssl_path || true
   if [ -n "$PROVISION_OPKG_CONF" ]; then
     "$OPKG_BIN" -f "$PROVISION_OPKG_CONF" "$@"
   else
@@ -608,6 +657,7 @@ provision_opkg_update() {
   esac
 
   PROVISION_OPKG_CONF=""
+  provision_wget_ssl_path || true
   _pu_status=0
   _pu_started="$(date +%s 2>/dev/null || echo 0)"
   provision_opkg_limited "$_pu_limit" "$_pu_conf" update || _pu_status=$?
@@ -657,6 +707,7 @@ provision_opkg_cleanup() {
   [ -n "$PROVISION_OPKG_TMP" ] && rm -rf "$PROVISION_OPKG_TMP" 2>/dev/null || true
   PROVISION_OPKG_TMP=""
   PROVISION_OPKG_CONF=""
+  provision_wget_ssl_restore
 }
 
 # --- Библиотеки Python ------------------------------------------------------
@@ -1390,6 +1441,7 @@ provision_cmd_prepare() {
   provision_gevent_policy
   provision_python_libs_check
   provision_python_libs_install || return 1
+  provision_wget_ssl || true
 
   # Пакеты Entware для модулей. Ставятся здесь, а не в `apply`: запрос к
   # источнику пакетов бывает долгим, а у `apply` короткий предел времени и его

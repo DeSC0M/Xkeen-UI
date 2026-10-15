@@ -37,7 +37,7 @@
       ],
       "removable": false,
       "unit_count": 554,
-      "size_bytes": 7429446,
+      "size_bytes": 7429610,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -7928,7 +7928,7 @@
       "module_id": "core",
       "kind": "configuration",
       "path": "xkeen-ui/install.sh",
-      "size_bytes": 73592,
+      "size_bytes": 73756,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
