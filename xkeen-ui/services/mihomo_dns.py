@@ -87,7 +87,9 @@ DEFAULT_DOMAIN_RULE_PROVIDERS = {
     # Keep GitHub, Releases and GitHub-hosted panel updates on real addresses.
     "github@domain": "https://github.com/MetaCubeX/meta-rules-dat/raw/refs/heads/meta/geo/geosite/github.mrs",
     # Mobile operator whitelist used by the optional protected-DNS preset.
-    "whitelist-yota": "https://raw.githubusercontent.com/tobedeclared/mihomo/rules/domains/whitelist-yota.mrs",
+    # Keep this on the author's current YAML source: the published MRS
+    # snapshot can lag behind the main domains/whitelist.yaml list.
+    "whitelist-yota": "https://raw.githubusercontent.com/tobedeclared/mihomo/main/domains/whitelist.yaml",
 }
 MOBILE_BS_PROVIDER = "whitelist-yota"
 MOBILE_BS_BOOTSTRAP = ("77.88.8.88", "77.88.8.2")
@@ -1245,13 +1247,16 @@ def diagnose_dns_runtime(
 
 
 def _render_domain_rule_provider(name: str, url: str, *, use_anchor: bool) -> str:
+    provider_format = "yaml" if name == MOBILE_BS_PROVIDER else "mrs"
     if use_anchor:
+        if name == MOBILE_BS_PROVIDER:
+            return f"  {name}: {{ <<: *domain, format: yaml, url: {url} }}"
         return f"  {name}: {{ <<: *domain, url: {url} }}"
     return (
         f"  {name}:\n"
         "    type: http\n"
         "    behavior: domain\n"
-        "    format: mrs\n"
+        f"    format: {provider_format}\n"
         "    interval: 86400\n"
         f"    url: {url}"
     )
