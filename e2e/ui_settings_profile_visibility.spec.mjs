@@ -24,6 +24,13 @@ const ACTIVE_MODULES = {
   'core-only': ['core'],
 };
 
+const EDITOR_CAPABILITIES = {
+  full: ['codemirror', 'monaco', 'diff'],
+  'xray-minimal': ['codemirror'],
+  'mihomo-minimal': ['codemirror'],
+  'core-only': ['codemirror'],
+};
+
 
 test.describe(`UI settings module visibility: ${PROFILE}`, () => {
   test('shows only settings owned by active engine modules', async ({ page }) => {
@@ -34,6 +41,10 @@ test.describe(`UI settings module visibility: ${PROFILE}`, () => {
           terminal: { pty: false },
           moduleRegistry: {
             effective_module_ids: ACTIVE_MODULES[PROFILE] || ['core'],
+          },
+          editor: {
+            variant: (EDITOR_CAPABILITIES[PROFILE] || ['codemirror']).includes('monaco') ? 'full' : 'light',
+            capabilities: EDITOR_CAPABILITIES[PROFILE] || ['codemirror'],
           },
           modules: {},
         },
@@ -55,5 +66,11 @@ test.describe(`UI settings module visibility: ${PROFILE}`, () => {
       await expect(page.locator(`#ui-settings-nav-btn-${section}`)).toHaveCount(0);
       await expect(page.locator(`#ui-settings-section-${section}`)).toHaveCount(0);
     }
+
+    const monacoScale = page.locator(
+      '#ui-settings-section-editor [data-item-id="editor-monaco-font-scale"]'
+    );
+    const expectedMonaco = (EDITOR_CAPABILITIES[PROFILE] || []).includes('monaco') ? 1 : 0;
+    await expect(monacoScale).toHaveCount(expectedMonaco);
   });
 });

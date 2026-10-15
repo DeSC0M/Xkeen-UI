@@ -591,15 +591,18 @@ import {
           100,
           'Масштаб шрифта CodeMirror сохранён.'
         ),
-        createServerNumber(
-          'editor-monaco-font-scale',
-          'editor.monacoFontScale',
-          'Масштаб шрифта Monaco',
-          '100 = текущий размер Monaco. Больше значение делает текст крупнее, меньше — компактнее только в редакторах Monaco.',
-          75,
-          200,
-          100,
-          'Масштаб шрифта Monaco сохранён.'
+        Object.assign(
+          createServerNumber(
+            'editor-monaco-font-scale',
+            'editor.monacoFontScale',
+            'Масштаб шрифта Monaco',
+            '100 = текущий размер Monaco. Больше значение делает текст крупнее, меньше — компактнее только в редакторах Monaco.',
+            75,
+            200,
+            100,
+            'Масштаб шрифта Monaco сохранён.'
+          ),
+          { requiresEditorCapabilities: ['monaco'] }
         ),
         createServerNumber(
           'format-tab-width',
@@ -884,13 +887,46 @@ import {
     return new Set(Array.isArray(ids) ? ids.map((item) => String(item || '')) : []);
   }
 
+  function editorCapabilities(capabilities) {
+    const descriptors = [
+      capabilities?.editor,
+      window.XKeen?.pageConfig?.frontendModules?.editor,
+    ];
+
+    for (const descriptor of descriptors) {
+      if (!descriptor || typeof descriptor !== 'object') continue;
+      if (Array.isArray(descriptor.capabilities)) {
+        return new Set(descriptor.capabilities.map((item) => String(item || '').trim()).filter(Boolean));
+      }
+
+      const variant = String(descriptor.variant || '').trim().toLowerCase();
+      if (variant === 'full' || variant === 'advanced') return new Set(['codemirror', 'monaco']);
+      if (variant === 'light') return new Set(['codemirror']);
+    }
+
+    return new Set();
+  }
+
   function sectionIsAvailable(section, ctx) {
     const required = Array.isArray(section?.requiresModules) ? section.requiresModules : [];
     return !required.length || required.some((moduleId) => ctx.activeModuleIds.has(moduleId));
   }
 
+  function itemIsAvailable(item, ctx) {
+    const required = Array.isArray(item?.requiresEditorCapabilities)
+      ? item.requiresEditorCapabilities
+        .map((capability) => String(capability || '').trim())
+        .filter(Boolean)
+      : [];
+    return !required.length || required.every((capability) => ctx.editorCapabilities.has(capability));
+  }
+
   function visibleSections(ctx = getRenderContext()) {
-    return SECTION_SCHEMA.filter((section) => sectionIsAvailable(section, ctx));
+    return SECTION_SCHEMA
+      .filter((section) => sectionIsAvailable(section, ctx))
+      .map((section) => Object.assign({}, section, {
+        items: (section.items || []).filter((item) => itemIsAvailable(item, ctx)),
+      }));
   }
 
   function getRenderContext() {
@@ -903,6 +939,7 @@ import {
       auth: _state.auth,
       serverReady: isServerSettingsReady(),
       activeModuleIds: activeModuleIds(_state.capabilities),
+      editorCapabilities: editorCapabilities(_state.capabilities),
       capabilitiesReady: !!_state.capabilities,
     };
   }
@@ -1224,7 +1261,9 @@ import {
     if (!_dom.nav || !_dom.sections) return;
 
     const sections = visibleSections();
-    const nextSchemaKey = sections.map((section) => section.key).join(',');
+    const nextSchemaKey = sections
+      .map((section) => section.key + ':' + (section.items || []).map((item) => item.id).join('|'))
+      .join(',');
     if (_rendered && _dom.sections.dataset.schemaKey === nextSchemaKey) return;
 
     _sectionButtons.clear();
