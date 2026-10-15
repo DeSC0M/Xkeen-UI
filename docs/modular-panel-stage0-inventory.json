@@ -36,20 +36,20 @@
         "flask"
       ],
       "removable": false,
-      "unit_count": 550,
-      "size_bytes": 7398782,
+      "unit_count": 552,
+      "size_bytes": 7401451,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
         "backend_service": 76,
-        "backend_test": 249,
+        "backend_test": 250,
         "configuration": 10,
         "frontend_bundle": 9,
         "frontend_entrypoint": 3,
         "frontend_feature": 30,
         "frontend_javascript": 37,
         "frontend_runtime": 2,
-        "frontend_test": 55,
+        "frontend_test": 56,
         "frontend_ui": 17,
         "stylesheet": 8,
         "template": 32
@@ -7333,6 +7333,24 @@
     {
       "module_id": "core",
       "kind": "backend_test",
+      "path": "tests/test_ui_settings_profile_visibility.py",
+      "size_bytes": 665,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "backend_test",
       "path": "tests/test_ui_settings_routing_dat.py",
       "size_bytes": 3751,
       "depends_on": [],
@@ -11034,6 +11052,26 @@
         "flask"
       ],
       "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_test",
+      "path": "e2e/ui_settings_profile_visibility.spec.mjs",
+      "size_bytes": 2004,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask"
+      ],
+      "environment_variables": [
+        "XKEEN_E2E_MODULE_PROFILE"
+      ],
       "removable": false
     },
     {
