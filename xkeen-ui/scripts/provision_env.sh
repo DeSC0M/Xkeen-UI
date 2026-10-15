@@ -440,6 +440,9 @@ PROVISION_OPKG_CONF=""
 PROVISION_OPKG_TMP=""
 PROVISION_ERROR=""
 PROVISION_WGET_SSL="${XKEEN_WGET_SSL:-/opt/libexec/wget-ssl}"
+PROVISION_SSL_CERTS="${XKEEN_SSL_CERTS:-/opt/etc/ssl/certs}"
+PROVISION_CURL="${XKEEN_CURL:-curl}"
+PROVISION_OPKG_TRIED=" "
 # Установщик подставляет список из распакованного архива, запуск командой — тот,
 # что лежит рядом со скриптом.
 PROVISION_MIRRORS_FILE="${XKEEN_ENTWARE_MIRRORS:-$UI_DIR/scripts/entware_mirrors.txt}"
@@ -548,22 +551,145 @@ provision_wget_ssl_restore() {
   export PATH
 }
 
+provision_ssl_certs_present() {
+  # Корневые сертификаты: без них wget-ssl не проверит ни один https-источник.
+  [ -n "$(ls "$PROVISION_SSL_CERTS" 2>/dev/null)" ]
+}
+
+provision_https_ready() {
+  # Может ли opkg ходить к источникам по https прямо сейчас.
+  [ -n "$PROVISION_WGET_DIR" ] && provision_ssl_certs_present
+}
+
 provision_wget_ssl() {
-  # wget-ssl — обязательный пакет: без него opkg не получит ни списка, ни
-  # пакетов по https. Панель работает и без него, поэтому неудача — строка в
-  # журнале, а не остановка установки или обновления.
-  if [ -x "$PROVISION_WGET_SSL" ]; then
+  # wget-ssl и ca-bundle — обязательные пакеты: без них opkg не получит ни
+  # списка, ни пакетов по https. Панель работает и без них, поэтому неудача —
+  # строка в журнале, а не остановка установки или обновления.
+  if [ -x "$PROVISION_WGET_SSL" ] && provision_ssl_certs_present; then
     provision_wget_ssl_path || true
     return 0
   fi
-  echo "[*] wget-ssl не найден. Устанавливаю через Entware (opkg)..."
-  if ensure_opkg_bin && provision_opkg_update && provision_opkg install wget-ssl && [ -x "$PROVISION_WGET_SSL" ]; then
+  echo "[*] wget-ssl или корневые сертификаты не найдены. Устанавливаю через Entware (opkg)..."
+  if ensure_opkg_bin && provision_opkg_update && provision_opkg install wget-ssl ca-bundle \
+      && [ -x "$PROVISION_WGET_SSL" ] && provision_ssl_certs_present; then
     provision_wget_ssl_path || true
     return 0
   fi
   echo "[!] wget-ssl установить не удалось: источники Entware по https будут недоступны."
-  echo "    Поставь вручную: opkg install wget-ssl"
+  echo "    Поставь вручную: opkg install wget-ssl ca-bundle"
   return 1
+}
+
+provision_curl_get() {
+  # $1 — адрес, $2 — куда сохранить, $3 — предел в секундах.
+  "$PROVISION_CURL" -fsSL --connect-timeout 15 --max-time "$3" -o "$2" "$1" 2>/dev/null && return 0
+  _pg_status=$?
+  case "$_pg_status" in
+    35|60|77)
+      # Сертификат не проверить: корневых сертификатов на роутере ещё нет —
+      # их и несёт эта ступень. Без проверки, как и источники по http.
+      echo "[*] Сертификат $1 проверить нечем (корневых сертификатов ещё нет) — качаю без проверки, как по http."
+      "$PROVISION_CURL" -fsSLk --connect-timeout 15 --max-time "$3" -o "$2" "$1" 2>/dev/null && return 0
+      ;;
+  esac
+  return 1
+}
+
+provision_opkg_arch() {
+  # Каталог архитектуры из основного источника: aarch64-k3.10, mipsel-k3.4 …
+  sed -n -E 's#^src/gz[[:space:]]+[^[:space:]]+[[:space:]]+[a-z]+://.*/((aarch64|armv5|armv7|mips|mipsel|x64)[^/[:space:]]*-k[0-9.]+)(/[^[:space:]]*)?[[:space:]]*$#\1#p' "$1" 2>/dev/null | head -n 1
+}
+
+provision_bootstrap_closure() {
+  # $1 — список пакетов (Packages), $2 — установленные через пробел.
+  # Печатает «файл sha256» для wget-ssl, ca-bundle и тех зависимостей, которых
+  # на роутере нет; «MISSING имя» — чего нет в списке.
+  awk -v want="wget-ssl ca-bundle" -v have="$2" '
+    /^Package: /  { p = $2; next }
+    /^Depends: /  { sub(/^Depends: /, ""); dep[p] = $0; next }
+    /^Provides: / { sub(/^Provides: /, ""); n = split($0, a, /, */)
+                    for (i = 1; i <= n; i++) { x = a[i]; sub(/ .*/, "", x); if (!(x in prov)) prov[x] = p }
+                    next }
+    /^Filename: / { file[p] = $2; next }
+    /^SHA256sum: / { sum[p] = $2; next }
+    END {
+      tail = split(want, queue, " ")
+      for (head = 1; head <= tail; head++) {
+        d = queue[head]
+        if (index(have, " " d " ")) continue
+        pk = (d in file) ? d : prov[d]
+        if (pk == "") { print "MISSING " d; continue }
+        if (index(have, " " pk " ") || (pk in seen)) continue
+        seen[pk] = 1
+        print file[pk], sum[pk]
+        m = split(dep[pk], ds, /, */)
+        for (j = 1; j <= m; j++) { x = ds[j]; sub(/ .*/, "", x); if (x != "") queue[++tail] = x }
+      }
+    }' "$1"
+}
+
+provision_wget_ssl_bootstrap() {
+  # Последняя ступень, когда по http не ответил никто, а wget-ssl нет (первая
+  # установка): wget-ssl и сертификаты приносит curl — он умеет https. Берём
+  # список пакетов, качаем wget-ssl, ca-bundle и недостающие зависимости,
+  # сверяем SHA256 по списку и ставим из файлов. Дальше opkg идёт по https сам.
+  # $1 — настройки роутера, $2 — предел на один запрос.
+  if ! "$PROVISION_CURL" --version 2>/dev/null | grep -qi '^Protocols:.*https'; then
+    echo "[!] curl с поддержкой https не найден: wget-ssl принести нечем."
+    return 1
+  fi
+  if ! command -v sha256sum >/dev/null 2>&1; then
+    echo "[!] Нет sha256sum: скачанные пакеты не проверить, ставить их не буду."
+    return 1
+  fi
+  _pb_arch="$(provision_opkg_arch "$1")"
+  [ -n "$_pb_arch" ] || return 1
+  _pb_dir="${TMPDIR:-/tmp}/xkeen-bootstrap-$$"
+  rm -rf "$_pb_dir" 2>/dev/null || true
+  mkdir -p "$_pb_dir" || return 1
+  _pb_have=" $("$OPKG_BIN" list-installed 2>/dev/null | cut -d' ' -f1 | tr '\n' ' ') "
+  _pb_done=1
+  for _pb_base in "https://${PROVISION_OPKG_OFFICIAL#*://}" $(provision_opkg_mirrors '^https://'); do
+    echo "[*] Беру wget-ssl через curl с $_pb_base..."
+    if ! provision_curl_get "$_pb_base/$_pb_arch/Packages.gz" "$_pb_dir/Packages.gz" "$2" \
+        || ! { gzip -dc "$_pb_dir/Packages.gz" 2>/dev/null || zcat "$_pb_dir/Packages.gz" 2>/dev/null; } > "$_pb_dir/Packages"; then
+      echo "[!] $_pb_base не отдал список пакетов."
+      continue
+    fi
+    provision_bootstrap_closure "$_pb_dir/Packages" "$_pb_have" > "$_pb_dir/want" || continue
+    if grep -q '^MISSING ' "$_pb_dir/want"; then
+      echo "[!] В списке $_pb_base нет пакетов:$(sed -n 's/^MISSING / /p' "$_pb_dir/want" | tr -d '\n')"
+      continue
+    fi
+    _pb_files=""
+    _pb_ok=1
+    while read -r _pb_file _pb_sum; do
+      _pb_local="$_pb_dir/${_pb_file##*/}"
+      if ! provision_curl_get "$_pb_base/$_pb_arch/$_pb_file" "$_pb_local" "$2"; then
+        echo "[!] $_pb_base не отдал $_pb_file."
+        _pb_ok=0
+        break
+      fi
+      if [ "$(sha256sum "$_pb_local" | cut -d' ' -f1)" != "$_pb_sum" ]; then
+        echo "[!] $_pb_file: SHA256 не совпадает со списком — не ставлю."
+        _pb_ok=0
+        break
+      fi
+      _pb_files="$_pb_files $_pb_local"
+    done < "$_pb_dir/want"
+    [ "$_pb_ok" -eq 1 ] && [ -n "$_pb_files" ] || continue
+    # shellcheck disable=SC2086
+    if "$OPKG_BIN" install $_pb_files && [ -x "$PROVISION_WGET_SSL" ]; then
+      echo "[*] wget-ssl поставлен из пакетов, скачанных через curl."
+      _pb_done=0
+    else
+      echo "[!] opkg не смог поставить wget-ssl из скачанных пакетов."
+    fi
+    break
+  done
+  rm -rf "$_pb_dir" 2>/dev/null || true
+  [ "$_pb_done" -eq 0 ] || return 1
+  provision_wget_ssl_path
 }
 
 provision_opkg() {
@@ -604,7 +730,7 @@ provision_opkg_candidates() {
   # (scripts/entware_mirrors.txt), их собирает сборщик архива.
   echo "$PROVISION_OPKG_OFFICIAL"
   provision_opkg_mirrors '^http://'
-  [ -n "$PROVISION_WGET_DIR" ] || return 0
+  provision_https_ready || return 0
   echo "https://${PROVISION_OPKG_OFFICIAL#*://}"
   provision_opkg_mirrors '^https://'
 }
@@ -743,17 +869,31 @@ provision_opkg_update() {
   [ -f "$_pu_conf" ] || return 1
 
   _pu_spare="$(provision_opkg_spare_limit)"
-  _pu_tried=" "
-  for _pu_base in $(provision_opkg_candidates); do
-    case "$_pu_tried" in
-      *" $_pu_base "*) continue ;;
-    esac
-    _pu_tried="$_pu_tried$_pu_base "
-    # Источник из настроек роутера уже не ответил: второй раз его не спрашиваем.
-    grep -q "^src/gz[[:space:]].*$_pu_base/" "$_pu_conf" 2>/dev/null && continue
-    provision_opkg_try_source "$_pu_conf" "$_pu_base" "$_pu_spare" && return 0
-  done
+  PROVISION_OPKG_TRIED=" "
+  provision_opkg_walk "$_pu_conf" "$_pu_spare" && return 0
+  if ! provision_https_ready; then
+    if provision_wget_ssl_bootstrap "$_pu_conf" "$_pu_spare"; then
+      provision_opkg_walk "$_pu_conf" "$_pu_spare" && return 0
+    else
+      echo "    Источники по https без wget-ssl недоступны. Когда сеть будет: opkg install wget-ssl ca-bundle"
+    fi
+  fi
   echo "[!] Ни один источник Entware не ответил."
+  return 1
+}
+
+provision_opkg_walk() {
+  # Пройти запасные источники, которых ещё не спрашивали. $1 — настройки
+  # роутера, $2 — предел на источник.
+  for _pw_base in $(provision_opkg_candidates); do
+    case "$PROVISION_OPKG_TRIED" in
+      *" $_pw_base "*) continue ;;
+    esac
+    PROVISION_OPKG_TRIED="$PROVISION_OPKG_TRIED$_pw_base "
+    # Источник из настроек роутера уже не ответил: второй раз его не спрашиваем.
+    grep -q "^src/gz[[:space:]].*$_pw_base/" "$1" 2>/dev/null && continue
+    provision_opkg_try_source "$1" "$_pw_base" "$2" && return 0
+  done
   return 1
 }
 

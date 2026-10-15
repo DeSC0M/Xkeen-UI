@@ -28,13 +28,15 @@ arch aarch64-3.10 150
 """
 
 # Подставной opkg: пишет вызов и то, какой `wget` он бы запустил. На
-# `install wget-ssl` кладёт исполняемый wget-ssl туда, где его ждёт установщик.
+# `install wget-ssl ca-bundle` кладёт исполняемый wget-ssl и сертификаты туда,
+# где их ждёт установщик.
 FAKE_OPKG = """#!/bin/sh
 echo "$* | wget=$(wget 2>/dev/null || echo busybox)" >> "$FAKE_LOG"
 case "$*" in
-  *"install wget-ssl"*)
+  *"install wget-ssl ca-bundle"*)
     [ "$FAKE_INSTALL" = "fail" ] && exit 1
-    mkdir -p "$(dirname "$XKEEN_WGET_SSL")"
+    mkdir -p "$(dirname "$XKEEN_WGET_SSL")" "$XKEEN_SSL_CERTS"
+    echo cert > "$XKEEN_SSL_CERTS/ca-certificates.crt"
     printf '#!/bin/sh\\necho ssl\\n' > "$XKEEN_WGET_SSL"
     chmod +x "$XKEEN_WGET_SSL"
     ;;
@@ -59,6 +61,9 @@ def _put_wget_ssl(tmp_path: Path) -> Path:
     target.parent.mkdir(exist_ok=True)
     target.write_bytes(b"#!/bin/sh\necho ssl\n")
     os.chmod(target, 0o755)
+    certs = tmp_path / "certs"
+    certs.mkdir(exist_ok=True)
+    (certs / "ca-certificates.crt").write_text("cert", encoding="utf-8")
     return target
 
 
@@ -80,6 +85,7 @@ def _run(stand, body: str, **env: str) -> tuple[subprocess.CompletedProcess, lis
             "XKEEN_OPKG_CONF": (tmp_path / "opkg.conf").as_posix(),
             "XKEEN_OPKG_UPDATE_TIMEOUT": "5",
             "XKEEN_WGET_SSL": (tmp_path / "libexec" / "wget-ssl").as_posix(),
+            "XKEEN_SSL_CERTS": (tmp_path / "certs").as_posix(),
             "TMPDIR": tmp_path.as_posix(),
             **env,
         },
@@ -124,7 +130,20 @@ def test_a_missing_wget_ssl_is_installed_and_used_at_once(stand):
     proc, calls = _run(stand, "provision_wget_ssl && provision_opkg install lftp")
 
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert calls == ["update | wget=busybox", "install wget-ssl | wget=busybox", "install lftp | wget=ssl"]
+    assert calls == ["update | wget=busybox", "install wget-ssl ca-bundle | wget=busybox", "install lftp | wget=ssl"]
+
+
+def test_wget_ssl_without_root_certificates_is_completed(stand):
+    # wget-ssl без корневых сертификатов не проверит ни один https-источник.
+    tmp_path, _opkg = stand
+    _put_wget_ssl(tmp_path)
+    for cert in (tmp_path / "certs").iterdir():
+        cert.unlink()
+
+    proc, calls = _run(stand, "provision_wget_ssl && echo ready")
+
+    assert "ready" in proc.stdout, proc.stdout + proc.stderr
+    assert calls[-1].startswith("install wget-ssl ca-bundle")
 
 
 def test_a_present_wget_ssl_costs_no_request(stand):
@@ -143,8 +162,8 @@ def test_a_failed_install_is_reported_but_does_not_stop_the_work(stand):
     proc, calls = _run(stand, "provision_wget_ssl || echo missing", FAKE_INSTALL="fail")
 
     assert "missing" in proc.stdout, proc.stdout + proc.stderr
-    assert "opkg install wget-ssl" in proc.stdout
-    assert calls[-1].startswith("install wget-ssl")
+    assert "opkg install wget-ssl ca-bundle" in proc.stdout
+    assert calls[-1].startswith("install wget-ssl ca-bundle")
 
 
 def test_the_installer_and_the_panel_update_both_ensure_wget_ssl():

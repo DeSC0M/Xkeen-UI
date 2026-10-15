@@ -62,10 +62,13 @@ def _run(stand, body: str, *, answer: str = "", wget_ssl: bool = False, **env: s
     tmp_path, opkg = stand
     log = tmp_path / "opkg.log"
     wget = tmp_path / "libexec" / "wget-ssl"
+    certs = tmp_path / "certs"
     if wget_ssl:
         wget.parent.mkdir(exist_ok=True)
         wget.write_bytes(b"#!/bin/sh\nexit 0\n")
         os.chmod(wget, 0o755)
+        certs.mkdir(exist_ok=True)
+        (certs / "ca-certificates.crt").write_text("cert", encoding="utf-8")
     script = tmp_path / "call.sh"
     script.write_bytes(
         "\n".join(["set -e", f'. "{LIB.as_posix()}"', f'OPKG_BIN="{opkg.as_posix()}"', body, ""]).encode("utf-8")
@@ -82,6 +85,7 @@ def _run(stand, body: str, *, answer: str = "", wget_ssl: bool = False, **env: s
             "XKEEN_OPKG_CONF": (tmp_path / "opkg.conf").as_posix(),
             "XKEEN_ENTWARE_MIRRORS": (tmp_path / "mirrors.txt").as_posix(),
             "XKEEN_WGET_SSL": wget.as_posix(),
+            "XKEEN_SSL_CERTS": certs.as_posix(),
             "XKEEN_OPKG_UPDATE_TIMEOUT": "5",
             "TMPDIR": tmp_path.as_posix(),
             **env,

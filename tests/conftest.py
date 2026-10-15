@@ -147,6 +147,14 @@ def _private_update_dir(tmp_path_factory, monkeypatch):
     monkeypatch.setenv("XKEEN_UI_UPDATE_DIR", str(tmp_path_factory.mktemp("update")))
 
 
+@pytest.fixture(autouse=True)
+def _no_real_curl_for_entware(monkeypatch):
+    # Когда ни один источник Entware не ответил, установщик несёт wget-ssl через
+    # curl. Настоящий curl из PATH пошёл бы в сеть: тесты, которым он нужен,
+    # подставляют свой через XKEEN_CURL.
+    monkeypatch.setenv("XKEEN_CURL", "/nonexistent/curl")
+
+
 @pytest.fixture
 def isolated_runtime_env(tmp_path, monkeypatch):
     home_dir = tmp_path / "home"
