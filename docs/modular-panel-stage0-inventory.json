@@ -36,13 +36,13 @@
         "flask"
       ],
       "removable": false,
-      "unit_count": 554,
-      "size_bytes": 7429610,
+      "unit_count": 555,
+      "size_bytes": 7435589,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
         "backend_service": 76,
-        "backend_test": 250,
+        "backend_test": 251,
         "configuration": 10,
         "frontend_bundle": 9,
         "frontend_entrypoint": 3,
@@ -6389,6 +6389,28 @@
     {
       "module_id": "core",
       "kind": "backend_test",
+      "path": "tests/test_provision_wget_ssl.py",
+      "size_bytes": 5721,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask"
+      ],
+      "environment_variables": [
+        "XKEEN_OPKG_CONF",
+        "XKEEN_OPKG_UPDATE_TIMEOUT",
+        "XKEEN_WGET_SSL"
+      ],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "backend_test",
       "path": "tests/test_python_pycache_recovery_contracts.py",
       "size_bytes": 1558,
       "depends_on": [],
@@ -7774,7 +7796,7 @@
       "module_id": "core",
       "kind": "configuration",
       "path": ".github/workflows/build-user-archive.yml",
-      "size_bytes": 16115,
+      "size_bytes": 16292,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -7836,7 +7858,7 @@
       "module_id": "core",
       "kind": "configuration",
       "path": "package.json",
-      "size_bytes": 3152,
+      "size_bytes": 3233,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],

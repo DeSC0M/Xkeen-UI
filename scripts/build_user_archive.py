@@ -442,6 +442,23 @@ def write_module_ownership_map(package_root: Path, *, strict: bool = False) -> O
         return None
 
 
+def refresh_entware_mirrors(package_root: Path) -> list[str]:
+    """Положить в дерево панели свежий список зеркал Entware (scripts/entware_mirrors.py).
+
+    Без сети в архив идёт список из репозитория: сборка из-за зеркал не падает.
+    """
+
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("entware_mirrors", Path(__file__).resolve().parent / "entware_mirrors.py")
+    if spec is None or spec.loader is None:
+        raise RuntimeError("entware_mirrors.py is missing")
+    mirrors = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mirrors
+    spec.loader.exec_module(mirrors)
+    return mirrors.refresh(package_root, PROJECT_ROOT / mirrors.LIST_RELATIVE)
+
+
 def write_build_json(dst_root: Path, *, stamp: BuildStamp, update_url: str) -> None:
     payload = {
         "version": str(stamp.version or "").strip(),
@@ -534,6 +551,7 @@ def main() -> int:
         )
         if text_normalized:
             print(f"[*] line endings normalized to LF in {text_normalized} text file(s)")
+        refresh_entware_mirrors(package_root)
         packed = precompress_static_assets(package_root)
         if packed.files:
             saved = packed.original_bytes - packed.compressed_bytes

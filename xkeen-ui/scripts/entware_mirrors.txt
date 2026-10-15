@@ -1,0 +1,9 @@
+# Зеркала Entware — запасные источники пакетов для установщика.
+# Список берётся при сборке архива со страницы https://entware.net/mirrors.html;
+# строка — адрес, по которому зеркало отдало список пакетов. Порядок перебора
+# задаёт установщик. Файл обновляет `npm run mirrors:entware`, руками не править.
+http://mirrors.bfsu.edu.cn/entware
+https://mirrors.bfsu.edu.cn/entware
+http://mirrors.nju.edu.cn/entware
+https://mirrors.nju.edu.cn/entware
+https://entware.diversion.ch
