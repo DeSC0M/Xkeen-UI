@@ -14,6 +14,7 @@ export const MIHOMO_CLASH_STATUS_COPY = Object.freeze({
   controller_missing: ['API · не настроен', 'Controller не настроен', 'Добавьте loopback controller или Unix socket в активную конфигурацию.'],
   not_configured: ['API · нет конфига', 'Конфигурация Mihomo недоступна', 'Проверьте активный config.yaml и повторите запрос.'],
   blocked: ['API · заблокирован', 'Controller заблокирован политикой', 'Проверьте allowlist порта или безопасный путь Unix socket.'],
+  controller_conflict: ['API · конфликт порта', 'Controller занят другим ядром', 'На external-controller из config.yaml отвечает не Mihomo. Назначьте Mihomo свободный порт и перезапустите ядро.'],
   core_stopped: ['API · ядро остановлено', 'Mihomo не отвечает', 'Запустите ядро или проверьте конфигурацию, затем повторите запрос.'],
   unauthorized: ['API · отказ авторизации', 'Mihomo отклонил credential', 'Проверьте secret в config.yaml. Пароль панели не используется.'],
   paused: ['API · пауза', 'Проверка приостановлена', 'Скрытая вкладка не выполняет сетевые запросы.'],

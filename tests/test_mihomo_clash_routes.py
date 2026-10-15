@@ -441,6 +441,38 @@ def test_status_route_maps_unreachable_core_without_disclosing_target():
     assert "/private/mihomo.sock" not in serialized
 
 
+def test_status_route_rejects_a_sing_box_controller_on_the_mihomo_port():
+    client = StubClient(
+        responses={
+            "version": MihomoClashJSONResponse(
+                payload={"meta": True, "premium": True, "version": "sing-box 1.13.3"},
+                status=200,
+                elapsed_ms=1,
+                size_bytes=64,
+            ),
+            "configs": MihomoClashJSONResponse(
+                payload={"mode": "rule"},
+                status=200,
+                elapsed_ms=1,
+                size_bytes=32,
+            ),
+        }
+    )
+
+    response = make_app(ready_discovery(), client).test_client().get("/api/mihomo/clash/status")
+    body = response.get_json()
+
+    assert response.status_code == 200
+    assert body["ok"] is False
+    assert body["state"] == "controller_conflict"
+    assert body["error"] == {
+        "code": "mihomo_controller_identity_mismatch",
+        "retryable": False,
+    }
+    assert body["capabilities"]["status"] is False
+    assert client.operations == ["version", "configs"]
+
+
 def test_diagnostics_trace_is_read_only_and_bounded():
     client = StubClient(
         responses={

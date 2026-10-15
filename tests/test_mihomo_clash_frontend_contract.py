@@ -93,6 +93,7 @@ def test_mihomo_clash_feature_is_lazy_and_not_in_eager_feature_registry():
 def test_workspace_lifecycle_aborts_network_outside_runtime_subviews():
     feature = _text(FEATURE)
     client = _text(CLIENT)
+    state = _text(ROOT / "xkeen-ui/static/js/features/mihomo_clash/state.js")
 
     for fragment in (
         "export function activateMihomoClashWorkspace",
@@ -107,6 +108,9 @@ def test_workspace_lifecycle_aborts_network_outside_runtime_subviews():
     assert "'/api/mihomo/clash/status'" in client
     assert "timeoutMs: 5000" in client
     assert "retry: 0" in client
+    assert "controller_conflict:" in state
+    assert "Controller занят другим ядром" in state
+    assert "state === 'controller_conflict'" in feature
 
 
 def test_dns_maintenance_exposes_hash_build_fallback_and_route_check():

@@ -328,6 +328,29 @@ def _safe_version_payload(payload: Any) -> dict[str, Any]:
     return result
 
 
+def _controller_identity_conflict(version_payload: Any) -> bool:
+    """Return whether a known non-Mihomo Clash-compatible API answered.
+
+    Mihomo and sing-box can both expose a Clash-compatible controller, so a
+    TCP connection plus a successful ``/version`` is not sufficient proof that
+    the active config belongs to the Mihomo process. A pre-existing sing-box
+    controller on the same port prevents Mihomo from binding it; without this
+    check the operator view would combine unrelated sing-box data with the
+    user's Mihomo config.
+
+    Only reject an explicit, stable non-Mihomo identity. Unknown vendor
+    version strings remain supported because some Mihomo builds return just a
+    semver value.
+    """
+
+    if not isinstance(version_payload, Mapping):
+        return False
+    version = version_payload.get("version")
+    if not isinstance(version, (str, int, float)) or isinstance(version, bool):
+        return False
+    return "sing-box" in str(version).casefold()
+
+
 def _safe_config_payload(payload: Any) -> dict[str, Any]:
     """Redact controller config before it can enter the process cache."""
 
@@ -1470,6 +1493,28 @@ def create_mihomo_clash_blueprint(
                 ok=False,
                 code="mihomo_clash_status_failed",
             )
+
+        # A Clash-compatible API can belong to another core. Do not expose its
+        # groups/rules as if they were driven by the active Mihomo config: the
+        # next worker request may mutate the wrong process.
+        if _controller_identity_conflict(version_payload):
+            payload = _status_payload(
+                discovery,
+                state="controller_conflict",
+                status_capability=False,
+            )
+            payload["error"] = {
+                "code": "mihomo_controller_identity_mismatch",
+                "retryable": False,
+            }
+            return jsonify(
+                build_mihomo_clash_snapshot_envelope(
+                    payload,
+                    stream_type="mihomo-clash-status",
+                    sequence=0,
+                    state="controller_conflict",
+                )
+            ), 200
 
         # Runtime probing is opt-in because even a read-only /traffic or DNS
         # request consumes resources on a weak router.  Static version gates

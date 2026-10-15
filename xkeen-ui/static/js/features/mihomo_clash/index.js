@@ -181,7 +181,7 @@ async function changeRuntimeMode(nextMode) {
 function stateTone(state) {
   if (state === 'ready') return 'positive';
   if (state === 'loading' || state === 'idle' || state === 'paused') return 'neutral';
-  if (state === 'controller_missing' || state === 'not_configured' || state === 'core_stopped') return 'warning';
+  if (state === 'controller_missing' || state === 'not_configured' || state === 'controller_conflict' || state === 'core_stopped') return 'warning';
   return 'danger';
 }
 
