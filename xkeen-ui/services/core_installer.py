@@ -133,7 +133,12 @@ class CoreInstaller:
     def prepare(self, engine_id: str) -> dict[str, Any]:
         profile = get_profile(engine_id, self.state_store.get(engine_id).get("selected_profile_id") or "official")
         self._require_active(engine_id)
-        release = self._resolve(profile, fresh=True)
+        # The profile chooser has already resolved and verified release
+        # metadata (including SHA-256). Reuse that cache for the short-lived
+        # confirmation plan instead of repeating a GitHub lookup after every
+        # source selection. Expired entries still follow `_resolve`'s normal
+        # tag/revalidation policy before they can be used.
+        release = self._resolve(profile)
         if not release.get("installable"):
             reason = str(release.get("reason") or "release_unavailable")
             raise CoreInstallError(reason, self._reason_message(reason))

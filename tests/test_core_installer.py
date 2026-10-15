@@ -157,6 +157,20 @@ def test_resolved_release_metadata_is_cached_per_profile_and_architecture(tmp_pa
     assert calls == ["official", "uwuray", "gfw-knocker", "jolymmiles", "patterniha"]
 
 
+def test_prepare_reuses_verified_release_metadata_already_shown_to_the_user(tmp_path):
+    calls = []
+    release = _release_for(b"new-xray")
+    install, _store, _target = _installer(tmp_path, release=release)
+    install.release_resolver = lambda *args, **kwargs: calls.append(args[0].profile_id) or release
+
+    install.profiles("xray")
+    calls.clear()
+    prepared = install.prepare("xray")
+
+    assert calls == []
+    assert prepared["release"]["checksum"]["sha256"] == release["checksum"]["sha256"]
+
+
 def test_github_outage_uses_expired_verified_release_cache(tmp_path):
     release = _release_for(b"new-xray")
     install, store, _target = _installer(tmp_path, release=release)

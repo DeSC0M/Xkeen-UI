@@ -69,3 +69,12 @@ def test_source_modal_uses_the_full_resizable_scroll_region():
     assert ".xk-core-source-modal[data-core-source-modal] .modal-body" in CSS
     assert "max-height: none;" in CSS
     assert "overflow: auto;" in CSS
+
+
+def test_core_source_supports_quick_fork_install_flow():
+    source = (ROOT / "xkeen-ui/static/js/features/core_source.js").read_text(encoding="utf-8")
+    assert 'data-core-source-action="quick"' in SOURCE
+    assert "Проверить и установить" in SOURCE
+    assert "Выбрать и подготовить" in SOURCE
+    assert "Источник выбран · релиз готовится" in source
+    assert "prepareInstallation({ closeSource: true })" in source

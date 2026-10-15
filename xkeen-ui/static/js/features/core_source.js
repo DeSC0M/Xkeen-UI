@@ -175,6 +175,36 @@ export function initCoreSource(root) {
     }
   };
 
+  const fillConfirmation = (nextConfirmation) => {
+    confirmation = nextConfirmation;
+    if (!confirmation) return;
+    if (installDetails) {
+      installDetails.replaceChildren();
+      for (const [label, value] of [
+        ['Профиль', confirmation.profile?.display_name],
+        ['Версия', confirmation.release?.stable?.tag],
+        ['Файл', confirmation.release?.asset?.name],
+        ['SHA-256', confirmation.release?.checksum?.sha256],
+      ]) {
+        const dt = document.createElement('dt'); dt.textContent = label;
+        const dd = document.createElement('dd'); dd.textContent = value || '—';
+        installDetails.append(dt, dd);
+      }
+    }
+  };
+
+  const prepareInstallation = async ({ closeSource = false } = {}) => {
+    const response = await request(`${endpoint}/core-install/prepare`, {
+      method: 'POST',
+      body: '{}',
+    });
+    fillConfirmation(response.confirmation);
+    setMessage(installModal, '');
+    showConfirmation();
+    if (closeSource) modalOpen(sourceModal, false);
+    modalOpen(installModal, true);
+  };
+
   const startPolling = (operationId) => {
     if (!operationId) return;
     activeOperationId = String(operationId);
@@ -189,6 +219,24 @@ export function initCoreSource(root) {
     const selectedProfile = data.profiles?.find((profile) => profile.profile_id === selected);
     const updateButton = root.querySelector('[data-core-source-action="prepare"]');
     if (updateButton) updateButton.disabled = !selectedProfile?.release?.installable || data.state?.last_status === 'running';
+    const quickButton = root.querySelector('[data-core-source-action="quick"]');
+    const quickLabel = root.querySelector('[data-core-source-quick-label]');
+    const installedProfile = data.state?.installed_profile_id;
+    const showQuick = Boolean(
+      selectedProfile?.release?.installable
+      && selected
+      && selected !== 'official'
+      && selected !== installedProfile
+      && data.state?.last_status !== 'running',
+    );
+    if (quickButton) {
+      quickButton.hidden = !showQuick;
+      quickButton.classList.toggle('hidden', !showQuick);
+      quickButton.disabled = !showQuick;
+    }
+    if (quickLabel) quickLabel.textContent = showQuick
+      ? `Установить ${selectedProfile.display_name}`
+      : 'Установить форк';
     const installed = data.state?.installed_profile_id;
     const installedVersion = data.state?.detected_version || data.state?.installed_release_tag || 'версия не определена';
     text(root.querySelector('[data-core-source-installed]'), `Установлено: ${installed ? profileLabel(data.profiles, installed) : 'профиль не отмечен'} · ${installedVersion}`);
@@ -254,20 +302,11 @@ export function initCoreSource(root) {
     try {
       if (action === 'open') { modalOpen(sourceModal, true); await refresh(); return; }
       if (action === 'prepare') {
-        const response = await request(`${endpoint}/core-install/prepare`, { method: 'POST', body: '{}' });
-        confirmation = response.confirmation;
-        const details = installModal?.querySelector('[data-core-install-details]');
-        if (details) {
-          details.replaceChildren();
-          for (const [label, value] of [['Профиль', confirmation.profile?.display_name], ['Версия', confirmation.release?.stable?.tag], ['Файл', confirmation.release?.asset?.name], ['SHA-256', confirmation.release?.checksum?.sha256]]) {
-            const dt = document.createElement('dt'); dt.textContent = label;
-            const dd = document.createElement('dd'); dd.textContent = value || '—';
-            details.append(dt, dd);
-          }
-        }
-        setMessage(installModal, '');
-        showConfirmation();
-        modalOpen(installModal, true);
+        await prepareInstallation();
+      }
+      if (action === 'quick') {
+        text(root.querySelector('[data-core-source-status]'), 'Источник выбран · релиз готовится');
+        await prepareInstallation({ closeSource: true });
       }
     } catch (error) { toastXkeen(error.message || 'Операция недоступна.', 'error'); }
   });
@@ -278,13 +317,18 @@ export function initCoreSource(root) {
     const action = button.dataset.coreSourceAction;
     if (action === 'close') { modalOpen(sourceModal, false); return; }
     if (action === 'restore') selected = 'official';
-    if (action === 'save' || action === 'restore') {
+    if (action === 'save' || action === 'restore' || action === 'choose-install') {
       const checked = sourceModal.querySelector('input[type="radio"]:checked');
       const profileId = action === 'restore' ? 'official' : (checked?.value || selected);
       try {
         await request(`${endpoint}/core-source`, { method: 'POST', body: JSON.stringify({ profile_id: profileId }) });
         await refresh();
-        setMessage(sourceModal, 'Источник сохранён. Установка выполняется отдельным действием.');
+        if (action === 'choose-install') {
+          text(root.querySelector('[data-core-source-status]'), 'Источник выбран · релиз готовится');
+          await prepareInstallation({ closeSource: true });
+        } else {
+          setMessage(sourceModal, 'Источник сохранён. Для установки нажмите «Проверить и установить».');
+        }
       } catch (error) { setMessage(sourceModal, error.message || 'Не удалось сохранить источник.'); }
     }
   });

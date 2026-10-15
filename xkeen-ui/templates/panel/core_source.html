@@ -15,8 +15,11 @@
     <button type="button" class="btn-secondary xk-core-source-action" data-core-source-action="open" data-tooltip="Выбрать проверенный источник сборки">
       {{ op_icon('github') }}<span>Источник</span>
     </button>
+    <button type="button" class="btn-primary xk-core-source-action hidden" data-core-source-action="quick" data-tooltip="Выбрать источник, проверить релиз и подготовить установку" hidden>
+      {{ op_icon('download') }}<span data-core-source-quick-label>Установить форк</span>
+    </button>
     <button type="button" class="btn-primary xk-core-source-action" data-core-source-action="prepare" data-tooltip="Проверить релиз и подготовить безопасную установку" disabled>
-      {{ op_icon('download') }}<span>Обновить</span>
+      {{ op_icon('download') }}<span>Проверить и установить</span>
     </button>
   </div>
 </section>
@@ -40,7 +43,8 @@
     <div class="modal-actions xk-core-source-modal-actions">
       <button type="button" class="btn-secondary" data-core-source-action="close">Отмена</button>
       <button type="button" class="btn-secondary" data-core-source-action="restore">Вернуть официальный</button>
-      <button type="button" class="btn-primary" data-core-source-action="save">Сохранить выбор</button>
+      <button type="button" class="btn-secondary" data-core-source-action="save">Сохранить выбор</button>
+      <button type="button" class="btn-primary" data-core-source-action="choose-install">Выбрать и подготовить</button>
     </div>
   </div>
 </div>

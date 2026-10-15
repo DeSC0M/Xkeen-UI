@@ -160,7 +160,7 @@ test.describe('Curated core source selection', () => {
     await sourceModal.getByRole('button', { name: 'Отмена' }).click();
     await expect(sourceModal).toBeHidden();
 
-    await card.getByRole('button', { name: 'Обновить' }).click();
+    await card.getByRole('button', { name: 'Проверить и установить' }).click();
     const confirmation = page.locator('#xray-core-install-modal');
     await expect(confirmation).toContainText('Xray-linux-mips32le.zip');
     await expect(confirmation).toContainText('b'.repeat(64));
@@ -189,6 +189,89 @@ test.describe('Curated core source selection', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   });
 
+  test('offers the selected fork directly in the engine card and opens confirmation', async ({ page }) => {
+    const payload = mihomoProfiles();
+    payload.data.state.selected_profile_id = 'prizrak-core';
+    payload.data.state.installed_profile_id = 'official';
+    let prepared = false;
+
+    await page.route('**/api/mihomo/core-profiles', async (route) => route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(payload),
+    }));
+    await page.route('**/api/mihomo/core-install/prepare', async (route) => {
+      prepared = true;
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          confirmation: {
+            confirmation_id: 'fork-confirm',
+            profile: payload.data.profiles[1],
+            release: payload.data.profiles[1].release,
+          },
+        }),
+      });
+    });
+
+    await openView(page, 'mihomo');
+    await openCoreManagement(page);
+    const card = page.locator('[data-core-source][data-core-engine="mihomo"]');
+    const quick = card.getByRole('button', { name: 'Установить Prizrak-Core' });
+    await expect(quick).toBeVisible();
+    await quick.click();
+
+    await expect.poll(() => prepared).toBe(true);
+    await expect(page.locator('#mihomo-core-source-modal')).toBeHidden();
+    await expect(page.locator('#mihomo-core-install-modal')).toBeVisible();
+    await expect(page.locator('#mihomo-core-install-modal')).toContainText('prizrak-core-linux-mipsle-v1.19.32.gz');
+  });
+
+  test('source modal can save and prepare installation in one action', async ({ page }) => {
+    const payload = mihomoProfiles();
+    let saved = null;
+    let prepared = false;
+
+    await page.route('**/api/mihomo/core-profiles', async (route) => route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(payload),
+    }));
+    await page.route('**/api/mihomo/core-source', async (route) => {
+      saved = route.request().postDataJSON();
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({ ok: true, state: { selected_profile_id: 'prizrak-core' } }),
+      });
+    });
+    await page.route('**/api/mihomo/core-install/prepare', async (route) => {
+      prepared = true;
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          confirmation: {
+            confirmation_id: 'fork-confirm',
+            profile: payload.data.profiles[1],
+            release: payload.data.profiles[1].release,
+          },
+        }),
+      });
+    });
+
+    await openView(page, 'mihomo');
+    await openCoreManagement(page);
+    const card = page.locator('[data-core-source][data-core-engine="mihomo"]');
+    await card.getByRole('button', { name: 'Источник' }).click();
+    const modal = page.locator('#mihomo-core-source-modal');
+    await modal.locator('input[value="prizrak-core"]').check();
+    await modal.getByRole('button', { name: 'Выбрать и подготовить' }).click();
+
+    await expect.poll(() => saved).toEqual({ profile_id: 'prizrak-core' });
+    await expect.poll(() => prepared).toBe(true);
+    await expect(modal).toBeHidden();
+    await expect(page.locator('#mihomo-core-install-modal')).toBeVisible();
+  });
+
   test('a rollback result remains visible on the Xray card', async ({ page }) => {
     let rolledBack = false;
     await page.route('**/api/xray/core-profiles', async (route) => {
@@ -214,7 +297,7 @@ test.describe('Curated core source selection', () => {
     await openView(page, 'routing');
     await openCoreManagement(page);
     const card = page.locator('[data-core-source][data-core-engine="xray"]');
-    await card.getByRole('button', { name: 'Обновить' }).click();
+    await card.getByRole('button', { name: 'Проверить и установить' }).click();
     await page.locator('#xray-core-install-modal').getByRole('button', { name: 'Установить' }).click();
     await expect(card).toContainText('Откат: Конфигурация не прошла проверку');
   });
