@@ -296,6 +296,37 @@ def _safe_managed_path(value: str) -> bool:
     return bool(value) and "\\" not in value and not path.is_absolute() and ".." not in path.parts and ":" not in value
 
 
+RETIRED_FILES = "retired-files.json"
+
+
+def _retired_paths(source: Path, target: Path, shipped) -> set[str]:
+    """Files earlier builds laid that this build no longer ships.
+
+    The archive builder lists them from git history (retired-files.json). The
+    managed manifest exists only since 2026-10-02: a first modular install
+    over a release without it guesses the managed set, core files stay out of
+    the guess, and code the new build dropped stayed on the router for good.
+    Files of the owner and panel state are never taken, whatever the list says.
+    """
+
+    try:
+        raw = json.loads((source / RETIRED_FILES).read_text(encoding="utf-8"))["paths"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return set()
+    if not isinstance(raw, list):
+        return set()
+    found = set()
+    for rel in raw:
+        if not isinstance(rel, str) or not _safe_managed_path(rel) or _user_owned(rel):
+            continue
+        if rel in STATE_FILES or rel in shipped:
+            continue
+        path = target / rel
+        if path.is_file() and not path.is_symlink():
+            found.add(rel)
+    return found
+
+
 def _include_python_dependencies(source: Path, selected_files: dict[str, Path]) -> None:
     queue = [rel for rel in selected_files if rel.endswith(".py")]
     scanned = set()
@@ -579,7 +610,8 @@ def apply_profile(
         }
     managed.update(STATE_FILES)
     managed.update(rel for rel, _ in _files(target, source=False) if rel.startswith("static/") and rel.endswith(".gz"))
-    touched = set(source_files) | managed
+    retired = _retired_paths(source, target, set(source_files)) - managed
+    touched = set(source_files) | managed | retired
     _drop_older_transactions(target, transaction_root)
     old_bytes = sum((target / rel).stat().st_size for rel in touched if (target / rel).is_file())
     new_bytes = sum(path.stat().st_size for path in source_files.values())
@@ -609,6 +641,12 @@ def apply_profile(
                 quarantine = root / "quarantine" / rel
                 quarantine.parent.mkdir(parents=True, exist_ok=True)
                 shutil.move(destination, quarantine)
+        # Unlike the guessed quarantine these are surely ours: the backup above
+        # brings them back on rollback, commit drops them.
+        for rel in sorted(retired):
+            moved = root / "retired" / rel
+            moved.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(target / rel, moved)
         for rel, path in source_files.items():
             destination = target / rel
             destination.parent.mkdir(parents=True, exist_ok=True)
@@ -674,6 +712,7 @@ def commit_profile(root: Path):
         shutil.rmtree(root, ignore_errors=True)
         return root
     shutil.rmtree(root / "backup", ignore_errors=True)
+    shutil.rmtree(root / "retired", ignore_errors=True)
     (root / "transaction.json").unlink(missing_ok=True)
     return root
 

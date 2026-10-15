@@ -127,6 +127,9 @@ jobs:
                 f"{packed.original_bytes} -> {packed.compressed_bytes} bytes")
           # Карта «модуль → файлы» для менеджера модулей: после сжатия, чтобы
           # в неё попали .gz, и до штампа, чтобы tree_sha256 её учёл.
+          # Файлы, вышедшие из поставки: установщик уберёт их с роутера. До
+          # карты и штампа — они описывают дерево вместе со списком.
+          print(builder.write_retired_files(root, strict=True))
           print(builder.write_module_ownership_map(root, strict=True))
           builder.write_build_json(
               root,

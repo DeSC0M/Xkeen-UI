@@ -65,6 +65,7 @@ _KNOWN_PACKAGE_FILES = {
     "mihomo_server_core.py",
     "module-ownership.json",
     "module-sizes.json",
+    "retired-files.json",
     "run_server.py",
     "uninstall.sh",
     "xkeen_mihomo_service.py",

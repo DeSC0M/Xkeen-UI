@@ -37,7 +37,7 @@
       ],
       "removable": false,
       "unit_count": 559,
-      "size_bytes": 7475601,
+      "size_bytes": 7475908,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -320,7 +320,7 @@
       ],
       "removable": true,
       "unit_count": 22,
-      "size_bytes": 316349,
+      "size_bytes": 318355,
       "kind_counts": {
         "backend_route": 1,
         "backend_service": 6,
@@ -7872,7 +7872,7 @@
       "module_id": "core",
       "kind": "configuration",
       "path": ".github/workflows/build-user-archive.yml",
-      "size_bytes": 16292,
+      "size_bytes": 16599,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -19515,7 +19515,7 @@
       "module_id": "integration.happ",
       "kind": "backend_service",
       "path": "xkeen-ui/services/happ_decryptor/engine.py",
-      "size_bytes": 16408,
+      "size_bytes": 16875,
       "depends_on": [
         "core",
         "engine.xray"
@@ -19626,7 +19626,7 @@
       "module_id": "integration.happ",
       "kind": "backend_test",
       "path": "tests/test_happ_decryptor_engine.py",
-      "size_bytes": 13743,
+      "size_bytes": 15282,
       "depends_on": [
         "core"
       ],

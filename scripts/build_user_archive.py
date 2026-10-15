@@ -406,6 +406,48 @@ def precompress_static_assets(root: Path) -> PrecompressResult:
     )
 
 
+RETIRED_FILES_FILENAME = "retired-files.json"
+
+
+def retired_from_git(repo_root: Path) -> list[str]:
+    """Пути, которые когда-либо удалялись из xkeen-ui/ (переименование — тоже удаление старого имени)."""
+
+    output = _git_output(repo_root, ["log", "--no-renames", "--diff-filter=D", "--name-only", "--format=", "--", PROJECT_DIRNAME])
+    if output is None:
+        raise RuntimeError("git history is unavailable")
+    return sorted({line.strip() for line in output.splitlines() if line.strip()})
+
+
+def write_retired_files(package_root: Path, *, deleted: Optional[list[str]] = None, strict: bool = False) -> Optional[Path]:
+    """Положить в дерево панели список файлов, которые прежние сборки ставили, а эта — нет.
+
+    Установщик убирает их с роутера (scripts/module_profile_install.py): без
+    манифеста прежней установки он их не видит, и они оставались навсегда.
+    Путь, который снова поставляется, в список не идёт. Без истории git
+    локальная сборка обходится без списка, выпуск в CI (strict) — нет.
+    """
+
+    target = package_root / RETIRED_FILES_FILENAME
+    try:
+        paths = deleted if deleted is not None else retired_from_git(REPO_ROOT)
+    except Exception as error:
+        if strict:
+            raise
+        print(f"[!] {RETIRED_FILES_FILENAME} не записан ({error}): установщик не уберёт файлы, вышедшие из поставки")
+        return None
+    prefix = PROJECT_DIRNAME + "/"
+    retired = sorted(
+        {
+            path[len(prefix):]
+            for path in paths
+            if path.startswith(prefix) and not (package_root / path[len(prefix):]).exists()
+        }
+    )
+    payload = json.dumps({"schema_version": 1, "paths": retired}, ensure_ascii=False, indent=2) + "\n"
+    target.write_text(payload, encoding="utf-8", newline="\n")
+    return target
+
+
 MODULE_OWNERSHIP_FILENAME = "module-ownership.json"
 
 
@@ -588,6 +630,8 @@ def main() -> int:
             )
         # После сжатия — карта перечисляет и .gz; до штампа — tree_sha256
         # должен её учесть.
+        # До карты и штампа: список — часть дерева, которое они описывают.
+        write_retired_files(package_root)
         write_module_ownership_map(package_root)
         write_build_json(package_root, stamp=stamp, update_url=update_url)
 
