@@ -443,6 +443,8 @@ PROVISION_WGET_SSL="${XKEEN_WGET_SSL:-/opt/libexec/wget-ssl}"
 PROVISION_SSL_CERTS="${XKEEN_SSL_CERTS:-/opt/etc/ssl/certs}"
 PROVISION_CURL="${XKEEN_CURL:-curl}"
 PROVISION_OPKG_TRIED=" "
+# Без чего установка не пройдёт: зеркало, у которого этого нет, пропускается.
+PROVISION_OPKG_REQUIRED="python3 python3-pip python3-cryptography wget-ssl ca-bundle"
 # Установщик подставляет список из распакованного архива, запуск командой — тот,
 # что лежит рядом со скриптом.
 PROVISION_MIRRORS_FILE="${XKEEN_ENTWARE_MIRRORS:-$UI_DIR/scripts/entware_mirrors.txt}"
@@ -777,8 +779,32 @@ provision_opkg_try_source() {
     provision_opkg_drop_tmp
     return 1
   fi
+  if ! provision_opkg_list_complete "$PROVISION_OPKG_TMP/opkg.conf" "$2"; then
+    provision_opkg_drop_tmp
+    return 1
+  fi
+  echo "[*] Список пакетов получен с $2; пакеты ставлю оттуда же."
   PROVISION_OPKG_CONF="$PROVISION_OPKG_TMP/opkg.conf"
   return 0
+}
+
+provision_opkg_list_complete() {
+  # Есть ли в списке зеркала $2 пакеты, без которых установка не пройдёт.
+  # Зеркало может отставать от официального (так было с entware.diversion.ch);
+  # без нужного пакета оно бесполезно — идём к следующему. Официальный
+  # источник полон по определению и не проверяется.
+  case "$2" in
+    "$PROVISION_OPKG_OFFICIAL"|"https://${PROVISION_OPKG_OFFICIAL#*://}") return 0 ;;
+  esac
+  _pl_name="$(sed -n 's/^src\/gz[[:space:]][[:space:]]*\([^[:space:]]*\)[[:space:]].*/\1/p' "$1" 2>/dev/null | head -n 1)"
+  _pl_dir="$(sed -n 's/^lists_dir[[:space:]][[:space:]]*[^[:space:]]*[[:space:]][[:space:]]*\([^[:space:]]*\).*/\1/p' "$1" 2>/dev/null | head -n 1)"
+  _pl_missing=""
+  for _pl_pkg in $PROVISION_OPKG_REQUIRED; do
+    grep -q "^Package: $_pl_pkg\$" "$_pl_dir/$_pl_name" 2>/dev/null || _pl_missing="$_pl_missing $_pl_pkg"
+  done
+  [ -z "$_pl_missing" ] && return 0
+  echo "[!] В списке $2 нет нужных пакетов:$_pl_missing — беру следующий источник."
+  return 1
 }
 
 provision_file_mtime() {

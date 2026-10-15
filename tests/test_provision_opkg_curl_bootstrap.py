@@ -50,7 +50,16 @@ case "$*" in
   *update)
     source="$(sed -n 's#^src/gz[[:space:]]*[^[:space:]]*[[:space:]]*\\(.*\\)/aarch64-k3.10.*#\\1#p' "$conf" | head -n 1)"
     echo "update $source" >> "$FAKE_LOG"
-    case " $FAKE_ANSWER " in *" $source "*) exit 0 ;; esac
+    case " $FAKE_ANSWER " in
+      *" $source "*)
+        # Полный список — только во временные настройки, не в каталог роутера.
+        if [ "$1" = "-f" ]; then
+          lists="$(sed -n 's#^lists_dir[[:space:]]*[^[:space:]]*[[:space:]]*##p' "$conf")"
+          mkdir -p "$lists"
+          for p in python3 python3-pip python3-cryptography wget-ssl ca-bundle; do echo "Package: $p"; done > "$lists/entware"
+        fi
+        exit 0 ;;
+    esac
     exit 1 ;;
   install*)
     shift

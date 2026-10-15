@@ -36,13 +36,13 @@
         "flask"
       ],
       "removable": false,
-      "unit_count": 557,
-      "size_bytes": 7450110,
+      "unit_count": 558,
+      "size_bytes": 7461811,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
         "backend_service": 76,
-        "backend_test": 253,
+        "backend_test": 254,
         "configuration": 10,
         "frontend_bundle": 9,
         "frontend_entrypoint": 3,
@@ -6363,8 +6363,33 @@
     {
       "module_id": "core",
       "kind": "backend_test",
+      "path": "tests/test_provision_opkg_curl_bootstrap.py",
+      "size_bytes": 9403,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask"
+      ],
+      "environment_variables": [
+        "XKEEN_CURL",
+        "XKEEN_ENTWARE_MIRRORS",
+        "XKEEN_OPKG_CONF",
+        "XKEEN_OPKG_UPDATE_TIMEOUT",
+        "XKEEN_SSL_CERTS",
+        "XKEEN_WGET_SSL"
+      ],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "backend_test",
       "path": "tests/test_provision_opkg_mirrors.py",
-      "size_bytes": 7685,
+      "size_bytes": 9983,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],

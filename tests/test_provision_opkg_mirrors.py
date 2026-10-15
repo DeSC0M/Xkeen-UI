@@ -37,12 +37,27 @@ https://tls-only.example
 # в настройках), и отвечает только тем, что перечислены в FAKE_ANSWER.
 FAKE_OPKG = """#!/bin/sh
 conf="$XKEEN_OPKG_CONF"
+temporary=0
 prev=""
-for arg in "$@"; do [ "$prev" = "-f" ] && conf="$arg"; prev="$arg"; done
+for arg in "$@"; do [ "$prev" = "-f" ] && conf="$arg" && temporary=1; prev="$arg"; done
 source="$(sed -n 's#^src/gz[[:space:]]*[^[:space:]]*[[:space:]]*\\(.*\\)/aarch64-k3.10.*#\\1#p' "$conf" | head -n 1)"
 echo "$source" >> "$FAKE_LOG"
 case " $FAKE_ANSWER " in
-  *" $source "*) exit 0 ;;
+  *" $source "*)
+    # Список пакетов — только во временные настройки: каталог списков роутера
+    # (/opt/var/…) на машине с тестами трогать нельзя. У отставшего источника
+    # (FAKE_STALE, по умолчанию любой) нет пакетов из FAKE_OMIT.
+    if [ "$temporary" = 1 ] && [ "$3" = "update" ]; then
+      lists="$(sed -n 's#^lists_dir[[:space:]]*[^[:space:]]*[[:space:]]*##p' "$conf")"
+      mkdir -p "$lists"
+      for p in python3 python3-pip python3-cryptography wget-ssl ca-bundle lftp; do
+        if [ "$source" = "${FAKE_STALE:-$source}" ]; then
+          case " $FAKE_OMIT " in *" $p "*) continue ;; esac
+        fi
+        echo "Package: $p"
+      done > "$lists/entware"
+    fi
+    exit 0 ;;
 esac
 exit 1
 """
@@ -142,6 +157,32 @@ def test_with_wget_ssl_https_comes_after_http_official_first(stand):
     ]
 
 
+def test_a_mirror_without_needed_packages_is_passed_over(stand):
+    # Зеркало ответило, но отстало и python3-cryptography в нём нет: ставить с
+    # него нечего, берём следующее.
+    proc, calls = _run(
+        stand,
+        'provision_opkg_update && echo "conf=[$PROVISION_OPKG_CONF]" && cat "$PROVISION_OPKG_CONF"',
+        answer="http://one.example/entware http://two.example/entware",
+        FAKE_OMIT="python3-cryptography",
+        FAKE_STALE="http://one.example/entware",
+    )
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "python3-cryptography" in proc.stdout
+    assert "src/gz entware http://two.example/entware/aarch64-k3.10\n" in proc.stdout
+    assert calls[-1] == "http://two.example/entware"
+
+
+def test_a_mirror_without_optional_packages_is_still_used(stand):
+    proc, _calls = _run(
+        stand, "provision_opkg_update && cat \"$PROVISION_OPKG_CONF\"", answer="http://one.example/entware", FAKE_OMIT="lftp"
+    )
+
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "src/gz entware http://one.example/entware/aarch64-k3.10\n" in proc.stdout
+
+
 def test_the_source_of_the_router_is_not_asked_twice(stand):
     tmp_path, _opkg = stand
     (tmp_path / "opkg.conf").write_text(
@@ -166,6 +207,12 @@ def test_what_was_tried_is_left_in_the_log(stand):
 
     assert "http://two.example/entware" in proc.stdout
     assert "Ни один источник Entware не ответил" in proc.stdout
+
+
+def test_the_source_that_answered_is_named_in_the_log(stand):
+    proc, _calls = _run(stand, "provision_opkg_update", answer="http://two.example/entware")
+
+    assert "Список пакетов получен с http://two.example/entware" in proc.stdout, proc.stdout + proc.stderr
 
 
 def test_temporary_settings_of_failed_sources_do_not_pile_up(stand):
