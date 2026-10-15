@@ -32,7 +32,10 @@ _DYNAMIC_NAVIGATION_LOOP_RE = re.compile(
 # arbitrary Jinja expressions or accepting template names from runtime input.
 DYNAMIC_COMPOSITION_INCLUDE_PATHS: dict[str, tuple[str, ...]] = {
     "header_badge_partial": ("panel/slots/xray_badge.html",),
-    "header_summary_partial": ("panel/slots/diagnostics_summary.html",),
+    "header_summary_partial": (
+        "panel/slots/resource_monitor_unavailable.html",
+        "panel/slots/diagnostics_summary.html",
+    ),
     "header_action_partial": ("panel/slots/diagnostics_actions.html",),
     "control_partial": ("panel/slots/routing_focus.html",),
     "routing_inbounds_action_partial": ("panel/slots/backups_inbounds_actions.html",),

@@ -13,3 +13,4 @@ import '../util/tab_id.js';
 import '../util/ansi.js?v=20260302a';
 import '../util/command_job.js';
 import '../ui/spinner_fetch.js?v=20260317c';
+import '../features/resource_summary.js';

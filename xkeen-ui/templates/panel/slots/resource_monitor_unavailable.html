@@ -1,0 +1,23 @@
+{% if not page_context.legacy_fallback and 'tool.advanced-diagnostics' not in page_context.active_module_ids %}
+<a
+  href="{{ url_for('modules_page') }}"
+  id="xk-resource-monitor-install-offer"
+  class="xk-resource-monitor"
+  aria-label="Установить модуль мониторинга ресурсов"
+  title="Для просмотра CPU и RAM установите модуль «Расширенная диагностика»."
+  data-state="module-missing"
+  data-resource-module="tool.advanced-diagnostics"
+  data-tooltip="Установить модуль «Расширенная диагностика»"
+>
+  <span class="xk-resource-monitor-item">
+    <span class="xk-resource-monitor-label">CPU</span>
+    <strong aria-hidden="true">—</strong>
+    <span class="xk-resource-meter" aria-hidden="true"><i></i></span>
+  </span>
+  <span class="xk-resource-monitor-item">
+    <span class="xk-resource-monitor-label">RAM</span>
+    <strong aria-hidden="true">—</strong>
+    <span class="xk-resource-meter" aria-hidden="true"><i></i></span>
+  </span>
+</a>
+{% endif %}

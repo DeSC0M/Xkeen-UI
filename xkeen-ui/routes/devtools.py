@@ -66,6 +66,9 @@ def _redact_env_updates(updates: dict) -> dict:
 
 from services import devtools as dt
 from services import branding as br
+from services.memory_guard import get_memory_guard_status
+from services.router_diagnostics import cached_router_diagnostics
+from services.system_resources import sample_system_resources
 
 try:
     from services.logging_setup import refresh_runtime_from_env as _refresh_logging
@@ -79,6 +82,40 @@ def create_devtools_blueprint(
     include_advanced: bool = True,
 ) -> Blueprint:
     bp = Blueprint("devtools", __name__)
+
+    @bp.get("/api/system/resources")
+    def api_system_resources_summary() -> Any:
+        try:
+            payload = sample_system_resources()
+        except (OSError, ValueError):
+            return jsonify(
+                {
+                    "ok": False,
+                    "code": "system_resources_unavailable",
+                    "error": "Мониторинг ресурсов недоступен на этом устройстве.",
+                }
+            ), 503
+        if include_advanced:
+            try:
+                payload["router"] = cached_router_diagnostics()
+            except Exception:  # noqa: BLE001 - optional router telemetry must not hide procfs metrics
+                payload["router"] = {
+                    "schema_version": 1,
+                    "sampled_at": payload.get("sampled_at"),
+                    "freshness": {"state": "unavailable", "age_seconds": 0, "stale_after_seconds": 15},
+                    "rci": {"available": False, "state": "unavailable"},
+                    "internet": {"available": False},
+                    "conntrack": {"available": False},
+                    "interfaces": {"available": False, "count": 0, "items": [], "truncated": False},
+                }
+            try:
+                payload["ui_process"] = get_memory_guard_status()
+            except Exception:  # noqa: BLE001 - optional process telemetry
+                pass
+        payload["ok"] = True
+        response = jsonify(payload)
+        response.headers["Cache-Control"] = "no-store"
+        return response, 200
 
     @bp.before_request
     def _gate_optional_advanced_routes():

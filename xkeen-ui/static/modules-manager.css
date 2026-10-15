@@ -713,14 +713,15 @@ body.modules-page .modules-channel-switch {
 }
 
 body.modules-page .modules-channel-switch button {
-  min-height: 0;
-  padding: 5px 12px;
+  min-height: 24px !important;
+  padding: 3px 9px !important;
   border: 0;
   border-radius: 4px;
   background: transparent;
   color: var(--modules-muted);
   font: inherit;
-  line-height: 1.2;
+  font-size: calc(11px * var(--xk-font-scale, 1));
+  line-height: 1.15;
   cursor: pointer;
 }
 

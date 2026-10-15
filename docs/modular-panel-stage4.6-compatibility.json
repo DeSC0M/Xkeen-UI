@@ -33,6 +33,13 @@
     {
       "collection": "header_summary_partials",
       "owners": [
+        "core"
+      ],
+      "template": "panel/slots/resource_monitor_unavailable.html"
+    },
+    {
+      "collection": "header_summary_partials",
+      "owners": [
         "tool.advanced-diagnostics"
       ],
       "template": "panel/slots/diagnostics_summary.html"

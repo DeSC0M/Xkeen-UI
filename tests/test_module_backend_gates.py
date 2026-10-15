@@ -200,7 +200,8 @@ def test_advanced_diagnostics_routes_are_not_exposed_when_optional_module_is_off
 
     assert client.get("/api/devtools/logs").status_code == 200
     assert client.get("/api/devtools/env").status_code == 404
-    assert client.get("/api/system/resources").status_code == 404
+    assert client.get("/api/system/resources").status_code in {200, 503}
+    assert client.get("/api/system/processes").status_code == 404
 
 
 def test_optional_module_factory_failures_do_not_stop_core(tmp_path, monkeypatch):

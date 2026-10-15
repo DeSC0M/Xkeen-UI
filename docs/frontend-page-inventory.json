@@ -458,6 +458,11 @@
           "lazy_features": []
         },
         {
+          "path": "static/js/features/resource_summary.js",
+          "globals": [],
+          "lazy_features": []
+        },
+        {
           "path": "static/js/pages/panel.view_runtime.js",
           "globals": [],
           "lazy_features": [

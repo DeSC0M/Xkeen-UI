@@ -459,7 +459,7 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
         def _build_system_resources():
             from .system_resources import create_system_resources_blueprint
 
-            return (create_system_resources_blueprint(),)
+            return (create_system_resources_blueprint(include_summary=False),)
 
         register_module_blueprints(
             "tool.advanced-diagnostics",

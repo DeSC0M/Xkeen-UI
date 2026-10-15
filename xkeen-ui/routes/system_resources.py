@@ -58,41 +58,42 @@ def _modem_control_error(exc: ModemControlError):
     return response, response_status
 
 
-def create_system_resources_blueprint() -> Blueprint:
+def create_system_resources_blueprint(*, include_summary: bool = True) -> Blueprint:
     bp = Blueprint("system_resources", __name__)
 
-    @bp.get("/api/system/resources")
-    def api_system_resources():
-        try:
-            payload = sample_system_resources()
-        except (OSError, ValueError):
-            return error_response(
-                "Мониторинг ресурсов недоступен на этом устройстве.",
-                503,
-                ok=False,
-                code="system_resources_unavailable",
-                retryable=True,
-            )
-        try:
-            payload["router"] = cached_router_diagnostics()
-        except Exception:  # noqa: BLE001 - optional router telemetry must not hide procfs metrics
-            payload["router"] = {
-                "schema_version": 1,
-                "sampled_at": payload.get("sampled_at"),
-                "freshness": {"state": "unavailable", "age_seconds": 0, "stale_after_seconds": 15},
-                "rci": {"available": False, "state": "unavailable"},
-                "internet": {"available": False},
-                "conntrack": {"available": False},
-                "interfaces": {"available": False, "count": 0, "items": [], "truncated": False},
-            }
-        try:
-            payload["ui_process"] = get_memory_guard_status()
-        except Exception:  # noqa: BLE001 - optional process telemetry
-            pass
-        payload["ok"] = True
-        response = jsonify(payload)
-        response.headers["Cache-Control"] = "no-store"
-        return response, 200
+    if include_summary:
+        @bp.get("/api/system/resources")
+        def api_system_resources():
+            try:
+                payload = sample_system_resources()
+            except (OSError, ValueError):
+                return error_response(
+                    "Мониторинг ресурсов недоступен на этом устройстве.",
+                    503,
+                    ok=False,
+                    code="system_resources_unavailable",
+                    retryable=True,
+                )
+            try:
+                payload["router"] = cached_router_diagnostics()
+            except Exception:  # noqa: BLE001 - optional router telemetry must not hide procfs metrics
+                payload["router"] = {
+                    "schema_version": 1,
+                    "sampled_at": payload.get("sampled_at"),
+                    "freshness": {"state": "unavailable", "age_seconds": 0, "stale_after_seconds": 15},
+                    "rci": {"available": False, "state": "unavailable"},
+                    "internet": {"available": False},
+                    "conntrack": {"available": False},
+                    "interfaces": {"available": False, "count": 0, "items": [], "truncated": False},
+                }
+            try:
+                payload["ui_process"] = get_memory_guard_status()
+            except Exception:  # noqa: BLE001 - optional process telemetry
+                pass
+            payload["ok"] = True
+            response = jsonify(payload)
+            response.headers["Cache-Control"] = "no-store"
+            return response, 200
 
     @bp.get("/api/system/processes")
     def api_system_processes():
