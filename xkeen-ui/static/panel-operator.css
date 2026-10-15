@@ -23446,6 +23446,32 @@ body.panel-page .xk-core-install-steps li[data-state="active"] { color: var(--op
 body.panel-page .xk-core-install-steps li[data-state="active"]::before { background: var(--op-accent); box-shadow: 0 0 0 3px var(--op-accent-soft); }
 body.panel-page .xk-core-install-steps li[data-state="done"] { color: var(--op-muted); }
 body.panel-page .xk-core-install-steps li[data-state="done"]::before { background: var(--op-success, #42b883); }
+body.panel-page .xk-core-source-modal-actions button.is-working,
+body.panel-page .xk-core-source-actions button.is-working {
+  animation: xk-core-source-button-pulse 1.05s ease-in-out infinite;
+  cursor: wait;
+}
+body.panel-page .xk-core-source-modal-actions button.is-success {
+  color: var(--op-success, #42b883);
+  border-color: color-mix(in srgb, var(--op-success, #42b883) 55%, var(--op-border));
+  animation: xk-core-source-button-success .45s ease-out both;
+}
+@keyframes xk-core-source-button-pulse {
+  0%, 100% { opacity: .72; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.025); }
+}
+@keyframes xk-core-source-button-success {
+  0% { transform: scale(.96); }
+  70% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.panel-page .xk-core-source-modal-actions button.is-working,
+  body.panel-page .xk-core-source-actions button.is-working,
+  body.panel-page .xk-core-source-modal-actions button.is-success {
+    animation: none;
+  }
+}
 
 @media (max-width: 680px) {
   body.panel-page #core-modal .xk-core-engine-list { grid-template-columns: 1fr; }

@@ -15,6 +15,42 @@ function text(node, value) {
   if (node) node.textContent = String(value == null ? '' : value);
 }
 
+function buttonLabelNode(button) {
+  return button?.querySelector('[data-core-source-button-label]') || button;
+}
+
+async function withButtonFeedback(button, task, {
+  busyLabel = 'Сохранение…',
+  successLabel = 'Сохранено ✓',
+} = {}) {
+  if (!button) return task();
+  const labelNode = buttonLabelNode(button);
+  const originalLabel = labelNode?.textContent || '';
+  button.disabled = true;
+  button.setAttribute('aria-busy', 'true');
+  button.classList.add('is-working');
+  if (labelNode) labelNode.textContent = busyLabel;
+  try {
+    const result = await task();
+    button.classList.remove('is-working');
+    button.classList.add('is-success');
+    if (labelNode) labelNode.textContent = successLabel;
+    window.setTimeout(() => {
+      button.classList.remove('is-success');
+      button.removeAttribute('aria-busy');
+      button.disabled = false;
+      if (labelNode) labelNode.textContent = originalLabel;
+    }, 1300);
+    return result;
+  } catch (error) {
+    button.classList.remove('is-working');
+    button.removeAttribute('aria-busy');
+    button.disabled = false;
+    if (labelNode) labelNode.textContent = originalLabel;
+    throw error;
+  }
+}
+
 function modalOpen(node, open) {
   if (!node) return;
   try {
@@ -321,14 +357,25 @@ export function initCoreSource(root) {
       const checked = sourceModal.querySelector('input[type="radio"]:checked');
       const profileId = action === 'restore' ? 'official' : (checked?.value || selected);
       try {
-        await request(`${endpoint}/core-source`, { method: 'POST', body: JSON.stringify({ profile_id: profileId }) });
-        await refresh();
-        if (action === 'choose-install') {
-          text(root.querySelector('[data-core-source-status]'), 'Источник выбран · релиз готовится');
-          await prepareInstallation({ closeSource: true });
-        } else {
-          setMessage(sourceModal, 'Источник сохранён. Для установки нажмите «Проверить и установить».');
-        }
+        const feedbackButton = button;
+        await withButtonFeedback(
+          feedbackButton,
+          async () => {
+            await request(`${endpoint}/core-source`, { method: 'POST', body: JSON.stringify({ profile_id: profileId }) });
+            await refresh();
+            if (action === 'choose-install') {
+              text(root.querySelector('[data-core-source-status]'), 'Источник выбран · релиз готовится');
+              await prepareInstallation({ closeSource: true });
+            } else {
+              setMessage(sourceModal, 'Источник сохранён. Для установки нажмите «Проверить и установить».');
+            }
+          },
+          action === 'choose-install'
+            ? { busyLabel: 'Подготовка…', successLabel: 'Готово ✓' }
+            : action === 'restore'
+              ? { busyLabel: 'Возврат…', successLabel: 'Официальный ✓' }
+              : { busyLabel: 'Сохранение…', successLabel: 'Сохранено ✓' },
+        );
       } catch (error) { setMessage(sourceModal, error.message || 'Не удалось сохранить источник.'); }
     }
   });
@@ -340,6 +387,9 @@ export function initCoreSource(root) {
     if (button.dataset.coreSourceAction !== 'apply' || !confirmation) return;
     if (['succeeded', 'failed', 'rolled_back'].includes(operationStatus)) { modalOpen(installModal, false); return; }
     button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    button.classList.add('is-working');
+    text(buttonLabelNode(button), 'Установка…');
     try {
       const response = await request(`${endpoint}/core-install/apply`, { method: 'POST', body: JSON.stringify({ confirmation_id: confirmation.confirmation_id }) });
       pollStartedAt = Date.now();
@@ -349,6 +399,9 @@ export function initCoreSource(root) {
     } catch (error) {
       setMessage(installModal, error.message || 'Не удалось начать установку.');
       button.disabled = false;
+      button.removeAttribute('aria-busy');
+      button.classList.remove('is-working');
+      text(buttonLabelNode(button), 'Установить');
     }
   });
 
