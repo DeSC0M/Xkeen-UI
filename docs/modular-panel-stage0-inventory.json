@@ -86,7 +86,7 @@
       ],
       "removable": true,
       "unit_count": 138,
-      "size_bytes": 3829900,
+      "size_bytes": 3833238,
       "kind_counts": {
         "backend_route": 13,
         "backend_service": 20,
@@ -16458,7 +16458,7 @@
       "module_id": "engine.xray",
       "kind": "backend_service",
       "path": "xkeen-ui/services/dns_over_vless.py",
-      "size_bytes": 192801,
+      "size_bytes": 193357,
       "depends_on": [
         "core",
         "tool.editor"
@@ -17239,7 +17239,7 @@
       "module_id": "engine.xray",
       "kind": "backend_test",
       "path": "tests/test_dns_over_vless_transactions_prune.py",
-      "size_bytes": 2171,
+      "size_bytes": 4953,
       "depends_on": [
         "core",
         "tool.editor"

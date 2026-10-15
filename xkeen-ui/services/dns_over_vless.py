@@ -2595,19 +2595,26 @@ def _write_routing_preserving_comments(
 
 # Снимок нужен только для отката внутри операции, которая его сделала; после
 # неё его никто не читает.  Без чистки каталоги копились с каждым включением.
-TRANSACTIONS_KEEP = xray_transactions.TRANSACTIONS_KEEP
+# Снимок нужен только для отката внутри операции: интерфейс их не показывает,
+# откатиться по ним нельзя.  Снимок удачной операции удаляется сразу, неудачной
+# остаётся для разбора — не больше стольких последних.
+FAILED_TRANSACTIONS_KEEP = 3
 
 
 def _transactions_dir(ui_state_dir: str) -> str:
     return os.path.join(ui_state_dir, "dns-over-vless", "transactions")
 
 
-def _prune_transactions(ui_state_dir: str, keep: int = TRANSACTIONS_KEEP) -> None:
+def _prune_transactions(ui_state_dir: str, keep: int = FAILED_TRANSACTIONS_KEEP) -> None:
     xray_transactions.prune_transactions(_transactions_dir(ui_state_dir), keep)
 
 
 def _snapshot(paths: Iterable[str], ui_state_dir: str) -> tuple[str, Dict[str, Any]]:
-    return xray_transactions.snapshot(paths, _transactions_dir(ui_state_dir), keep=TRANSACTIONS_KEEP)
+    return xray_transactions.snapshot(paths, _transactions_dir(ui_state_dir), keep=FAILED_TRANSACTIONS_KEEP)
+
+
+def _drop_snapshot(snapshot_dir: str) -> None:
+    shutil.rmtree(snapshot_dir, ignore_errors=True)
 
 
 def _restore_snapshot(manifest: Dict[str, Any]) -> None:
@@ -3927,13 +3934,13 @@ def apply_action(
             else:
                 presence = _managed_presence(configs_dir, routing)
                 if not _managed_config_present(presence) and not previous_state.get("enabled"):
+                    _drop_snapshot(snapshot_dir)
                     return {
                         "ok": True,
                         "action": normalized,
                         "enabled": False,
                         "restarted": False,
                         "probe": {"ok": True, "skipped": True},
-                        "backup": os.path.basename(snapshot_dir),
                         "target": None,
                     }
                 if _managed_config_tampered(presence) or (
@@ -4052,7 +4059,6 @@ def apply_action(
                         "hosts": wanted_hosts,
                         "hosts_enabled": wanted_hosts_on,
                         "target": ({k: v for k, v in target.items() if k != "managed_balancer"} if target else previous_state.get("target")),
-                        "last_transaction": snapshot_dir,
                     },
                 )
                 if wanted_pass:
@@ -4083,7 +4089,9 @@ def apply_action(
                 kept = {
                     key: value
                     for key, value in previous_state.items()
-                    if key not in {"enabled_at", "original_dns_override", "watchdog"}
+                    # last_transaction — прежняя ссылка на снимок, который
+                    # теперь удаляется сразу; читать её было некому.
+                    if key not in {"enabled_at", "original_dns_override", "watchdog", "last_transaction"}
                 }
                 kept.update(
                     {
@@ -4096,11 +4104,11 @@ def apply_action(
                         "version": int(previous_state.get("version") or STATE_VERSION),
                         "enabled": False,
                         "disabled_at": int(time.time()),
-                        "last_transaction": snapshot_dir,
                     }
                 )
                 _save_state(ui_state_dir, kept)
 
+            _drop_snapshot(snapshot_dir)
             return {
                 "ok": True,
                 "action": normalized,
@@ -4108,7 +4116,6 @@ def apply_action(
                 "capture": capture_result,
                 "restarted": True,
                 "probe": probe,
-                "backup": os.path.basename(snapshot_dir),
                 "target": ({k: v for k, v in target.items() if k != "managed_balancer"} if target else None),
             }
         except Exception as exc:
