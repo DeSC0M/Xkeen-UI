@@ -1,4 +1,5 @@
 import { iconHtml } from '../../ui/operator_icons.js';
+import { renderUpdateChannel, wireUpdateChannel } from '../update_channel.js';
 
 function node(tag, className, text) {
   const element = document.createElement(tag);
@@ -246,6 +247,41 @@ function appendPanelIdentity(summary, snapshot) {
     const displayed = Number.isFinite(built.getTime()) ? built.toLocaleString('ru-RU') : String(build.built_utc);
     summary.append(node('p', 'modules-build-meta', `Собрано: ${displayed}`));
   }
+}
+
+function appendUpdateChannelControl(summary, snapshot, { onUpdateChannel, channelBusy }) {
+  const check = node('section', 'modules-update-channel');
+  const title = node('h3', '', 'Канал обновлений');
+  const switchRoot = node('span', 'modules-channel-switch');
+  switchRoot.setAttribute('role', 'group');
+  switchRoot.setAttribute('aria-label', 'Канал обновлений');
+  const lifecycleAvailable = snapshot.lifecycle?.available === true;
+
+  for (const [channel, label] of [['stable', 'Стабильный'], ['prerelease', 'Предрелизный']]) {
+    const button = node('button', '', label);
+    button.type = 'button';
+    button.dataset.channel = channel;
+    button.disabled = !!channelBusy || !lifecycleAvailable;
+    switchRoot.append(button);
+  }
+
+  const hint = node('p', 'modules-channel-hint');
+  check.append(title, switchRoot, hint);
+  summary.append(check);
+  renderUpdateChannel(switchRoot, hint, snapshot.update_channel);
+  if (!lifecycleAvailable) {
+    hint.textContent = 'Для локальной сборки переключение канала не меняет доступность подписанных обновлений.';
+  }
+  wireUpdateChannel({
+    root: switchRoot,
+    hint,
+    onSelect: onUpdateChannel,
+    onError: (error) => {
+      const message = error && error.message ? String(error.message) : 'нет ответа сервера';
+      check.dataset.error = '1';
+      hint.textContent = 'Не удалось выбрать канал: ' + message;
+    },
+  });
 }
 
 // Only the light variant lacks files of the others, and a local build
@@ -517,6 +553,9 @@ export function renderInstalled(host, snapshot, onToggle, onPlan = () => {}, bus
   onCheckUpdate = null,
   update = null,
   onEditorVariant = null,
+  showUpdateChannelControl = false,
+  onUpdateChannel = null,
+  channelBusy = false,
   expandedModules = new Set(),
 } = {}) {
   host.replaceChildren();
@@ -527,6 +566,9 @@ export function renderInstalled(host, snapshot, onToggle, onPlan = () => {}, bus
   summary.append(summaryIntro);
   const summaryIdentity = node('div', 'modules-summary-identity');
   appendPanelIdentity(summaryIdentity, snapshot);
+  if (showUpdateChannelControl && typeof onUpdateChannel === 'function') {
+    appendUpdateChannelControl(summaryIdentity, snapshot, { onUpdateChannel, channelBusy });
+  }
   appendModuleSets(summaryIdentity, snapshot);
   summary.append(summaryIdentity);
   const summaryControls = node('div', 'modules-summary-controls');

@@ -830,6 +830,29 @@
           "lazy_features": []
         },
         {
+          "path": "static/js/ui/modal.js",
+          "globals": [
+            "XKeen.ui",
+            "XKeen.ui.modal",
+            "XKeen.core",
+            "XKeen.core.uiModal",
+            "XKeen.uiModal"
+          ],
+          "lazy_features": []
+        },
+        {
+          "path": "static/js/ui/confirm_modal.js",
+          "globals": [
+            "XKeen.ui",
+            "XKeen.ui.confirm",
+            "XKeen.ui.modal",
+            "XKeen.ui.confirm._closeWith",
+            "XKeen.ui.toast",
+            "XKeen.ui.confirm._isPending"
+          ],
+          "lazy_features": []
+        },
+        {
           "path": "static/js/ui/theme.js",
           "globals": [
             "XKeen.ui",
@@ -876,6 +899,13 @@
           "path": "static/js/features/module_manager/render.js",
           "globals": [],
           "lazy_features": []
+        },
+        {
+          "path": "static/js/features/update_channel.js",
+          "globals": [
+            "XKeen.ui"
+          ],
+          "lazy_features": []
         }
       ],
       "direct_init_globals": [],
@@ -920,6 +950,10 @@
         "XKeen.ui.settings.clampEditorFontScale",
         "XKeen.ui.settings.getEditorFontScale",
         "XKeen.ui.settings.isEditorExpertModeEnabled",
+        "XKeen.ui.modal",
+        "XKeen.ui.confirm",
+        "XKeen.ui.confirm._closeWith",
+        "XKeen.ui.confirm._isPending",
         "XKeen.ui.applyTheme",
         "XKeen.ui.initThemeToggle",
         "XKeen.ui.syncThemeToggleButtons",
@@ -1423,9 +1457,7 @@
         },
         {
           "path": "static/js/features/devtools/update.js",
-          "globals": [
-            "XKeen.ui"
-          ],
+          "globals": [],
           "lazy_features": []
         },
         {
@@ -1436,6 +1468,13 @@
         {
           "path": "static/js/features/module_manager/render.js",
           "globals": [],
+          "lazy_features": []
+        },
+        {
+          "path": "static/js/features/update_channel.js",
+          "globals": [
+            "XKeen.ui"
+          ],
           "lazy_features": []
         },
         {

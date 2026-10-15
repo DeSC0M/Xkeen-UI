@@ -99,6 +99,9 @@ def test_modules_uses_the_panel_shell_and_stable_devtools_pointer_is_compact():
     assert "body.modules-page.panel-page" not in manager_css
     assert "createModuleLifecycleClient" in devtools_update
     assert "dt-panel-summary-grid" in devtools_css
+    assert 'data-xk-devtools-available=' in template
+    assert 'id="confirm-modal"' in template
+    assert 'class="modules-update-channel"' not in template
 
 
 def test_manager_source_is_isolated_and_entry_stays_thin():

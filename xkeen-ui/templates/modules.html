@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='modules-manager.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='page-shell.css') }}">
 </head>
-<body class="modules-page" data-xk-top-level-screen="modules">
+<body class="modules-page" data-xk-top-level-screen="modules" data-xk-devtools-available="{{ '1' if ui_endpoint_available('devtools_page') else '0' }}">
   {% set top_level_spinner_text = 'Выполняется операция с модулями…' %}
   {% include '_top_level_global_spinner.html' %}
 
@@ -63,6 +63,22 @@
         <button type="button" id="modules-plan-apply" class="btn-primary">Применить план</button>
       </div>
     </dialog>
+
+    <div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Подтверждение">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span class="modal-title" id="confirm-modal-title">Подтверждение</span>
+          <button type="button" class="modal-close" id="confirm-modal-close-btn" title="Закрыть">×</button>
+        </div>
+        <div class="modal-body">
+          <p id="confirm-modal-message" class="modal-description"></p>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="confirm-modal-cancel-btn" title="Отменить действие и закрыть окно подтверждения.">Отменить</button>
+          <button type="button" id="confirm-modal-ok-btn" class="btn-danger">Подтвердить</button>
+        </div>
+      </div>
+    </div>
   </div>
   <script type="module" src="{{ frontend_page_entry_url('modules') }}"></script>
 </body>

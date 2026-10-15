@@ -55,6 +55,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
   let installedFresh = false;
   let statusChecked = false;
   let statusRefreshPending = false;
+  let channelBusy = false;
   let updateCheckFocusPending = false;
   let refreshGeneration = 0;
   let drawnCards = null;
@@ -184,6 +185,9 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
         onCheckUpdate: requestUpdateCheck,
         update: state.update,
         onEditorVariant: changeEditorVariant,
+        showUpdateChannelControl: document.body?.dataset.xkDevtoolsAvailable !== '1',
+        onUpdateChannel: requestUpdateChannel,
+        channelBusy,
         expandedModules,
       });
     } else {
@@ -537,6 +541,25 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
       state.update = { ...state.update, checked: false, loading: false, error };
     } finally {
       if (trigger && active) updateCheckFocusPending = true;
+      if (active) render();
+    }
+  }
+
+  async function requestUpdateChannel(channel) {
+    if (busy || channelBusy) return null;
+    channelBusy = true;
+    if (active) render();
+    try {
+      const result = await api.setUpdateChannel(channel);
+      state.installed = await api.loadInstalled();
+      reconcileModulesUpdateBadge(state.installed);
+      clearError();
+      return result;
+    } catch (error) {
+      showError(error);
+      throw error;
+    } finally {
+      channelBusy = false;
       if (active) render();
     }
   }

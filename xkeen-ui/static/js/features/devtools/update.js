@@ -1,7 +1,11 @@
-import { getDevtoolsSharedApi, setDevtoolsNamespaceApi } from '../devtools_namespace.js';
+import { setDevtoolsNamespaceApi } from '../devtools_namespace.js';
 import { createModuleLifecycleClient } from '../module_manager/api.js';
 import { reconcileModulesUpdateCheck } from '../module_manager/badge.js';
 import { describeModuleSets } from '../module_manager/render.js';
+import {
+  renderUpdateChannel,
+  wireUpdateChannel,
+} from '../update_channel.js';
 
 // Справочная карточка «Сборка панели» на вкладке Tools: версия, источник и
 // состав установленных модулей. Сама она ничего не обновляет — команды живут
@@ -12,7 +16,6 @@ import { describeModuleSets } from '../module_manager/render.js';
   const api = createModuleLifecycleClient();
   let _inited = false;
   let _loadSeq = 0;
-  let _channelBusy = false;
 
   const MODULE_STATES = {
     enabled: { tone: 'ok', label: 'включён' },
@@ -103,67 +106,26 @@ import { describeModuleSets } from '../module_manager/render.js';
     setText('dt-panel-enabled-set', sets ? sets.enabled : '—');
   }
 
-  const CHANNEL_HINTS = {
-    stable: 'Проверенные версии. Выбирайте, если панель просто должна работать.',
-    prerelease: 'Тестовые версии с новыми функциями. Выбирайте, если готовы находить ошибки и сообщать о них.',
-  };
-
   function renderChannel(value) {
-    const channel = value === 'prerelease' ? 'prerelease' : 'stable';
-    const box = byId('dt-panel-channel');
-    if (box) {
-      box.querySelectorAll('[data-channel]').forEach((button) => {
-        button.setAttribute('aria-pressed', String(button.dataset.channel === channel));
-      });
-    }
-    const hint = byId('dt-panel-channel-hint');
-    if (hint) {
-      hint.textContent = CHANNEL_HINTS[channel];
-      hint.dataset.channel = channel;
-    }
-  }
-
-  // Переход на тестовые версии — решение с риском, его подтверждают; обратно — без вопроса.
-  async function confirmPrerelease() {
-    const options = {
-      title: 'Перейти на предрелизный канал?',
-      message: 'Панель будет обновляться до тестовых версий: новые функции появятся раньше, но возможны ошибки и недоработки.',
-      details: [
-        'Сейчас ничего не устанавливается — канал влияет на следующее обновление.',
-        'Вернуться можно в любой момент: панель останется на установленной версии и перейдёт на стабильную, когда та выйдет новее.',
-      ],
-      okText: 'Перейти на предрелиз',
-      cancelText: 'Остаться на стабильном',
-      danger: false,
-    };
-    const shared = getDevtoolsSharedApi() || {};
-    if (typeof shared.confirmAction === 'function') return !!(await shared.confirmAction(options));
-    const ui = window.XKeen && window.XKeen.ui;
-    if (ui && typeof ui.confirm === 'function') return !!(await ui.confirm(options));
-    return window.confirm(options.message);
+    renderUpdateChannel(byId('dt-panel-channel'), byId('dt-panel-channel-hint'), value);
   }
 
   function wireChannel() {
     const box = byId('dt-panel-channel');
     if (!box) return;
-    box.querySelectorAll('[data-channel]').forEach((button) => {
-      button.addEventListener('click', async () => {
-        if (_channelBusy || button.getAttribute('aria-pressed') === 'true') return;
-        _channelBusy = true;
-        box.querySelectorAll('button').forEach((item) => { item.disabled = true; });
-        try {
-          if (button.dataset.channel === 'prerelease' && !(await confirmPrerelease())) return;
-          const result = await api.setUpdateChannel(button.dataset.channel);
-          renderChannel(result.channel);
-          // A change of channel has its own verified cache and update check.
-          await load();
-        } catch (error) {
-          setError('Не удалось выбрать канал: ' + ((error && error.message) || 'нет ответа сервера'));
-        } finally {
-          _channelBusy = false;
-          box.querySelectorAll('button').forEach((item) => { item.disabled = false; });
-        }
-      });
+    wireUpdateChannel({
+      root: box,
+      hint: byId('dt-panel-channel-hint'),
+      onSelect: async (channel) => {
+        const result = await api.setUpdateChannel(channel);
+        renderChannel(result.channel);
+        // A change of channel has its own verified cache and update check.
+        await load();
+        return result;
+      },
+      onError: (error) => {
+        setError('Не удалось выбрать канал: ' + ((error && error.message) || 'нет ответа сервера'));
+      },
     });
   }
 
