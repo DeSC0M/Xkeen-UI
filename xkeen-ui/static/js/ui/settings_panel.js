@@ -1,3 +1,8 @@
+import {
+  getXkeenKnownCapabilities,
+  loadXkeenCapabilities,
+} from '../features/xkeen_runtime.js';
+
 (() => {
   'use strict';
 
@@ -24,6 +29,8 @@
     activeSection: 'editor',
     settingsError: '',
     settings: null,
+    capabilities: getXkeenKnownCapabilities(),
+    capabilitiesError: '',
     auth: {
       loading: false,
       configured: false,
@@ -658,6 +665,7 @@
     },
     {
       key: 'logs',
+      requiresModules: ['engine.xray'],
       navLabel: 'Логи',
       eyebrow: 'Логи',
       title: 'Рендеринг и транспорт логов',
@@ -696,6 +704,7 @@
     },
     {
       key: 'routing',
+      requiresModules: ['engine.xray'],
       navLabel: 'Маршрутизация',
       eyebrow: 'Маршрутизация',
       title: 'Настройки маршрутизации',
@@ -733,6 +742,7 @@
     },
     {
       key: 'mihomo',
+      requiresModules: ['engine.mihomo'],
       navLabel: 'Mihomo',
       eyebrow: 'Mihomo',
       title: 'Узлы Clash API',
@@ -869,6 +879,20 @@
     },
   ];
 
+  function activeModuleIds(capabilities) {
+    const ids = capabilities?.moduleRegistry?.effective_module_ids;
+    return new Set(Array.isArray(ids) ? ids.map((item) => String(item || '')) : []);
+  }
+
+  function sectionIsAvailable(section, ctx) {
+    const required = Array.isArray(section?.requiresModules) ? section.requiresModules : [];
+    return !required.length || required.some((moduleId) => ctx.activeModuleIds.has(moduleId));
+  }
+
+  function visibleSections(ctx = getRenderContext()) {
+    return SECTION_SCHEMA.filter((section) => sectionIsAvailable(section, ctx));
+  }
+
   function getRenderContext() {
     refreshLocalSnapshots();
     return {
@@ -878,6 +902,8 @@
       settings: _state.settings || {},
       auth: _state.auth,
       serverReady: isServerSettingsReady(),
+      activeModuleIds: activeModuleIds(_state.capabilities),
+      capabilitiesReady: !!_state.capabilities,
     };
   }
 
@@ -919,10 +945,11 @@
     const container = _dom.sections;
     if (!container) return;
 
-    let active = SECTION_SCHEMA[0] ? SECTION_SCHEMA[0].key : '';
+    const sections = visibleSections();
+    let active = sections[0] ? sections[0].key : '';
     const threshold = container.scrollTop + 120;
 
-    SECTION_SCHEMA.forEach((section) => {
+    sections.forEach((section) => {
       const el = _sectionEls.get(section.key);
       if (!el) return;
       let sectionTop = el.offsetTop;
@@ -1190,18 +1217,23 @@
   }
 
   function ensureSchemaRendered() {
-    if (_rendered) return;
-
     _dom.nav = $('ui-settings-nav');
     _dom.sections = $('ui-settings-sections');
     _dom.status = $('ui-settings-status');
 
     if (!_dom.nav || !_dom.sections) return;
 
+    const sections = visibleSections();
+    const nextSchemaKey = sections.map((section) => section.key).join(',');
+    if (_rendered && _dom.sections.dataset.schemaKey === nextSchemaKey) return;
+
+    _sectionButtons.clear();
+    _sectionEls.clear();
+    _itemRefs.clear();
     _dom.nav.innerHTML = '';
     _dom.sections.innerHTML = '';
 
-    SECTION_SCHEMA.forEach((section) => {
+    sections.forEach((section) => {
       const navButton = document.createElement('button');
       navButton.type = 'button';
       navButton.className = 'xk-ui-settings-nav-btn';
@@ -1251,6 +1283,10 @@
     });
 
     _dom.sections.addEventListener('scroll', syncActiveSectionFromScroll);
+    _dom.sections.dataset.schemaKey = nextSchemaKey;
+    if (!sections.some((section) => section.key === _state.activeSection)) {
+      _state.activeSection = sections[0]?.key || '';
+    }
 
     _rendered = true;
     syncSectionNavState();
@@ -1262,7 +1298,7 @@
 
     const ctx = getRenderContext();
 
-    SECTION_SCHEMA.forEach((section) => {
+    visibleSections(ctx).forEach((section) => {
       (section.items || []).forEach((item) => {
         const refs = _itemRefs.get(item.id);
         if (!refs) return;
@@ -1344,6 +1380,20 @@
 
     const tasks = [];
     const settingsApi = getSettingsApi();
+
+    tasks.push(
+      loadXkeenCapabilities()
+        .then((capabilities) => {
+          _state.capabilities = capabilities;
+          _state.capabilitiesError = '';
+        })
+        .catch((e) => {
+          _state.capabilities = null;
+          _state.capabilitiesError = (e && e.message)
+            ? String(e.message)
+            : 'Не удалось определить активный профиль.';
+        })
+    );
 
     if (settingsApi && typeof settingsApi.fetchOnce === 'function') {
       tasks.push(

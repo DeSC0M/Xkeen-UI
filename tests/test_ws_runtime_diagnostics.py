@@ -216,6 +216,7 @@ def test_mihomo_minimal_starts_the_websocket_server_without_terminal_module():
 
     assert '_WS_RUNTIME_MODULES = frozenset(' in text
     assert '"engine.mihomo"' in text
+    assert '"engine.xray"' in text
     assert "_WS_RUNTIME_NEEDED = bool(_ACTIVE_MODULES.intersection(_WS_RUNTIME_MODULES))" in text
     assert "if GEVENT_AVAILABLE and _WS_RUNTIME_NEEDED:" in text
     assert 'if GEVENT_AVAILABLE and "tool.terminal" in _ACTIVE_MODULES:' not in text
