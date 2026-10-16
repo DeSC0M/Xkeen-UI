@@ -180,6 +180,25 @@ def read_panel_version(panel_root: Path) -> str:
         ) from error
 
 
+def is_local_build(version: str) -> bool:
+    """A locally packed archive names its build after "+": 2.10.0+local.f46f1f10.
+
+    It counts as the release it grew from and may update to the next one, but
+    the module packages of that release were cut from other code.
+    """
+
+    return "+" in version
+
+
+def ensure_release_build(version: str) -> None:
+    if is_local_build(version):
+        raise ModuleTransactionError(
+            "panel_version_local",
+            "modules are installed only by a release build; update the panel to one",
+            panel_version=version,
+        )
+
+
 def read_installed_modules(state_dir: Path) -> frozenset[str]:
     try:
         data = json.loads((Path(state_dir) / "module-installed.json").read_text(encoding="utf-8"))
@@ -320,6 +339,7 @@ def build_plan(
 ) -> Plan:
     panel_root = Path(panel_root)
     version = read_panel_version(panel_root)
+    ensure_release_build(version)
     ownership = load_ownership_map(panel_root)
     if (
         operation not in OPERATIONS

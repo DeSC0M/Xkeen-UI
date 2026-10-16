@@ -55,11 +55,17 @@ export function summaryIssues(snapshot, { restartRequired = false } = {}) {
 }
 
 export function isLocalBuild(snapshot) {
-  return !String(snapshot?.panel_version || '').trim();
+  return !String(snapshot?.panel_version || '').trim() || snapshot?.lifecycle?.local === true;
 }
 
 export function lifecycleAvailable(snapshot) {
   return snapshot?.lifecycle?.available === true;
+}
+
+// Локальная сборка с версией выпуска обновляет панель, но модулей не меняет:
+// пакеты выпуска собраны из другого кода.
+export function modulesChangeable(snapshot) {
+  return lifecycleAvailable(snapshot) && snapshot?.lifecycle?.local !== true;
 }
 
 function buildOf(snapshot) {
@@ -91,6 +97,8 @@ export function formatCheckedAt(seconds) {
 
 function panelTitle(snapshot) {
   const release = String(snapshot?.panel_version || '').trim();
+  // Пометка локальной сборки (+local.<коммит>) видна в подробностях о сборке.
+  if (release && snapshot?.lifecycle?.local === true) return `Локальная сборка ${release.split('+')[0]}`;
   if (release) return `Xkeen UI ${release}`;
   const build = buildOf(snapshot);
   const version = String(build.version || '').trim() || shortCommit(build.commit);
@@ -211,6 +219,16 @@ export function updateStat(snapshot, update) {
   return { tone: 'ok', value: current, label: update.freshness === 'stale' ? 'актуальна по сохранённым данным' : 'версия актуальна' };
 }
 
+// Номер беты крупными цифрами в плашку не влезает: выпуск остаётся крупным,
+// метка беты встаёт рядом мелко. Метаданные сборки (+…) видны в заголовке.
+function statValue(value) {
+  const match = /^(\d+\.\d+\.\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/.exec(value);
+  if (!match || match[0] === match[1]) return node('b', '', value);
+  const number = node('b', '', match[1]);
+  if (match[2]) number.append(' ', node('small', '', match[2]));
+  return number;
+}
+
 // Три плашки: сколько включено, сколько требует внимания, что с обновлением.
 export function summaryStats(snapshot, update, issues) {
   const stats = node('div', 'xk-summary-stats');
@@ -221,7 +239,7 @@ export function summaryStats(snapshot, update, issues) {
   ]) {
     const cell = node('div', `xk-summary-stat${stat.tone ? ` is-${stat.tone}` : ''}`);
     cell.dataset.stat = key;
-    cell.append(node('b', '', stat.value), node('span', '', stat.label));
+    cell.append(statValue(stat.value), node('span', '', stat.label));
     stats.append(cell);
   }
   return stats;
@@ -240,8 +258,15 @@ export function summaryIssueList(issues) {
 
 // Плашка вместо команд обновления, когда подписанные операции недоступны.
 export function summaryLifecycleNote(snapshot, describeFailure) {
-  if (lifecycleAvailable(snapshot)) return null;
   const note = node('p', 'xk-summary-note');
+  if (lifecycleAvailable(snapshot)) {
+    if (modulesChangeable(snapshot)) return null;
+    note.append(
+      node('b', '', 'Локальная сборка. '),
+      document.createTextNode('Обновить панель до выпуска можно отсюда, а ставить и удалять модули — только на выпуске. Включать и выключать модули можно.'),
+    );
+    return note;
+  }
   if (isLocalBuild(snapshot) || snapshot?.lifecycle?.code === 'panel_version_unsupported') {
     note.append(
       node('b', '', 'Локальная сборка. '),

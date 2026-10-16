@@ -536,6 +536,12 @@ html body .container.xk-page-container {
   white-space: nowrap;
 }
 
+:root body .xk-summary-stat b small {
+  font-size: 0.62em;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
 :root body .xk-summary-stat span {
   color: var(--op-muted);
   font-size: calc(11.5px * var(--xk-font-scale, 1));

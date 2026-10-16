@@ -115,7 +115,7 @@
           "accessible_label": "Предупреждение"
         },
         {
-          "location": "xkeen-ui/static/js/features/module_manager/render.js:L230",
+          "location": "xkeen-ui/static/js/features/module_manager/render.js:L231",
           "control_type": "runtime-action",
           "accessible_label": "Предупреждение"
         },
@@ -1901,7 +1901,7 @@
           "accessible_label": "Информация"
         },
         {
-          "location": "xkeen-ui/static/js/features/module_manager/render.js:L392",
+          "location": "xkeen-ui/static/js/features/module_manager/render.js:L393",
           "control_type": "runtime-action",
           "accessible_label": "Информация"
         },
@@ -2129,7 +2129,7 @@
           "accessible_label": "Ограничить"
         },
         {
-          "location": "xkeen-ui/static/js/features/module_manager/render.js:L360",
+          "location": "xkeen-ui/static/js/features/module_manager/render.js:L361",
           "control_type": "runtime-action",
           "accessible_label": "Ограничить"
         },
@@ -2172,7 +2172,7 @@
           "accessible_label": "Дополнительные действия"
         },
         {
-          "location": "xkeen-ui/static/js/features/module_manager/render.js:L418",
+          "location": "xkeen-ui/static/js/features/module_manager/render.js:L419",
           "control_type": "runtime-action",
           "accessible_label": "Дополнительные действия"
         },
@@ -2945,7 +2945,7 @@
           "accessible_label": "Восстановить"
         },
         {
-          "location": "xkeen-ui/static/js/features/module_manager/render.js:L301",
+          "location": "xkeen-ui/static/js/features/module_manager/render.js:L302",
           "control_type": "runtime-action",
           "accessible_label": "Восстановить"
         },
@@ -3525,7 +3525,7 @@
           "accessible_label": "Удалить"
         },
         {
-          "location": "xkeen-ui/static/js/features/module_manager/render.js:L301",
+          "location": "xkeen-ui/static/js/features/module_manager/render.js:L302",
           "control_type": "runtime-action",
           "accessible_label": "Удалить"
         },

@@ -45,6 +45,8 @@ from services.module_transactions.plan import (
     installed_panel_listing,
     plan_to_json,
     read_installed_modules,
+    ensure_release_build,
+    is_local_build,
     read_panel_version,
 )
 from services.module_transactions.previous_version import describe_previous_version
@@ -625,6 +627,7 @@ class ModuleLifecycleService:
     def _release_context(self):
         try:
             version = read_panel_version(self.panel_root)
+            ensure_release_build(version)
             architecture = self._architecture_provider()
             client = self._catalog_factory(version, architecture)
             snapshot = client.get_release_catalog(version)
@@ -678,6 +681,11 @@ class ModuleLifecycleService:
             "available": lifecycle_error is None,
             "code": None if lifecycle_error is None else lifecycle_error.code,
         }
+        # A local build updates the panel but changes no modules.
+        module_actions = lifecycle["available"]
+        if panel_version is not None and is_local_build(panel_version):
+            lifecycle["local"] = True
+            module_actions = False
         ordered_ids = [module_id for module_id in MODULE_IDS if module_id in installed_ids]
         return {
             "ok": True,
@@ -708,7 +716,7 @@ class ModuleLifecycleService:
                     **item,
                     "lifecycle_actions": (
                         _lifecycle_actions(str(item.get("id")), True)
-                        if lifecycle["available"] else []
+                        if module_actions else []
                     ),
                 }
                 for item in registry.get("modules", [])
@@ -893,6 +901,8 @@ class ModuleLifecycleService:
             return self._rollback_plan_and_payload()
         try:
             source_version = read_panel_version(self.panel_root)
+            if operation != "panel-update":
+                ensure_release_build(source_version)
             architecture = self._architecture_provider()
             client = self._catalog_factory(source_version, architecture)
             try:

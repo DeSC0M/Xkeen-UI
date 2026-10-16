@@ -1,4 +1,5 @@
 import { renderInstalled, renderAvailable, renderCatalogError, renderPlan, renderPlanError, renderOperationStatus, hasOperationStatus, describeLifecycleFailure, renderPageAlert, TILE_REFUSAL_CODES } from './render.js';
+import { modulesChangeable } from '../panel_summary.js';
 import { clearModulesUpdateBadge, reconcileModulesUpdateBadge, reconcileModulesUpdateCheck, reconcileModulesUpdatePlan, reconcileModulesUpdateStatus } from './badge.js';
 
 // The panel restarts at the end of every operation and after a restart
@@ -189,7 +190,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
   }
 
   function renderCards() {
-    const catalogAvailable = state.installed?.lifecycle?.available === true;
+    const catalogAvailable = modulesChangeable(state.installed);
     for (const [name, tab] of Object.entries(tabs)) {
       tab.setAttribute('aria-selected', String(state.selectedTab === name));
       tab.classList.toggle('active', state.selectedTab === name);
@@ -345,7 +346,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     }
     if (active) render();
     void loadKeptUpdateCheck();
-    if (active && returnTo === 'available' && state.installed?.lifecycle?.available === true) await selectTab('available');
+    if (active && returnTo === 'available' && modulesChangeable(state.installed)) await selectTab('available');
   }
 
   function observeStatus(status, operationId) {
@@ -619,7 +620,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
 
   async function selectTab(name) {
     if (!tabs[name]) return;
-    if (name === 'available' && state.installed?.lifecycle?.available !== true) return;
+    if (name === 'available' && !modulesChangeable(state.installed)) return;
     state.selectedTab = name;
     render();
     if (name === 'available' && !state.catalog) {

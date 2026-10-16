@@ -8,6 +8,7 @@ import json
 import os
 import shutil
 import stat
+import re
 import subprocess
 import sys
 import tarfile
@@ -106,9 +107,15 @@ class BuildStamp:
 
     ``base_commit`` is only where the packaging started from.  The release
     workflow packs before committing, so the working tree is normally ahead of
-    it — then ``dirty`` is true, ``commit`` is withheld and ``version`` carries
-    the ``-dirty`` suffix.  Claiming the bare hash used to make BUILD.json name
-    a commit that did not contain the shipped code.
+    it — then ``dirty`` is true, ``commit`` is withheld and ``version`` says
+    so.  Claiming the bare hash used to make BUILD.json name a commit that did
+    not contain the shipped code.
+
+    ``version`` names the release the tree grew from, with the build as SemVer
+    metadata: ``2.10.0-beta.2+local.f46f1f10`` (``.dirty`` when the tree is
+    ahead of the commit).  Metadata takes no part in comparing versions, so
+    the panel counts itself as that release and finds a newer one by itself.
+    A repository without such a tag keeps the bare hash.
     """
 
     version: str
@@ -128,6 +135,37 @@ def _git_output(repo_root: Path, args: list[str]) -> Optional[str]:
     except Exception:
         return None
     return str(output or "").strip()
+
+
+_RELEASE_TAG_RE = re.compile(
+    r"^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$"
+)
+
+
+def _release_key(match: "re.Match[str]") -> tuple:
+    numbers = tuple(int(match.group(index)) for index in (1, 2, 3))
+    prerelease = match.group(4)
+    if prerelease is None:
+        # A release is above every prerelease of the same number.
+        return numbers, 1, ()
+    identifiers = tuple(
+        (0, int(part), "") if part.isdigit() else (1, 0, part) for part in prerelease.split(".")
+    )
+    return numbers, 0, identifiers
+
+
+def latest_release_tag(repo_root: Path) -> Optional[str]:
+    """The highest SemVer release tag reachable from HEAD, without its ``v``.
+
+    Tags outside SemVer (``v2.9.2a``) and releases of other branches are
+    skipped: the build can count itself only as a release it contains.
+    """
+
+    output = _git_output(repo_root, ["tag", "--merged", "HEAD", "--list", "v*"])
+    matches = [match for match in map(_RELEASE_TAG_RE.match, (output or "").split()) if match]
+    if not matches:
+        return None
+    return max(matches, key=_release_key).group(0)[1:]
 
 
 def git_build_stamp(repo_root: Path, pathspec: Optional[str] = None) -> BuildStamp:
@@ -156,9 +194,12 @@ def git_build_stamp(repo_root: Path, pathspec: Optional[str] = None) -> BuildSta
     else:
         dirty = bool(status.strip())
 
-    if dirty:
-        return BuildStamp(version=f"{short}-dirty", base_commit=short, commit=None, dirty=True)
-    return BuildStamp(version=short, base_commit=short, commit=full, dirty=False)
+    release = latest_release_tag(repo_root)
+    if release:
+        version = f"{release}+local.{short}" + (".dirty" if dirty else "")
+    else:
+        version = f"{short}-dirty" if dirty else short
+    return BuildStamp(version=version, base_commit=short, commit=None if dirty else full, dirty=dirty)
 
 
 def compute_tree_sha256(root: Path, exclude: Optional[Set[str]] = None) -> str:

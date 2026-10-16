@@ -1,6 +1,6 @@
 import { iconHtml } from '../../ui/operator_icons.js';
 import {
-  formatCheckedAt, lifecycleAvailable, moduleProblem, summaryChannel, summaryHeading,
+  formatCheckedAt, lifecycleAvailable, moduleProblem, modulesChangeable, summaryChannel, summaryHeading,
   summaryIssues, summaryLifecycleNote, summaryStats,
 } from '../panel_summary.js';
 
@@ -119,6 +119,7 @@ const FAILURE_MESSAGES = {
   module_conflict: 'Обнаружен конфликт модулей.',
   module_required_by: 'Модуль требуется другим модулям.',
   panel_archive_invalid: 'Архив панели не прошёл проверку.',
+  panel_version_local: 'Это локальная сборка: модули ставятся и удаляются только на выпуске. Обновите панель до выпуска.',
   panel_version_unsupported: 'Для локальной сборки подписанные операции доступны только после установки release-пакета. Выбор канала обновлений этого не меняет.',
   profile_payload_unavailable: 'Архив для перехода профиля недоступен.',
   editor_variant_invalid: 'Такого варианта редакторов нет.',
@@ -329,7 +330,7 @@ function textList(parent, label, values) {
 // Only the light variant lacks files of the others, and a local build
 // has no signed archive to fetch them from.
 function editorVariantsLocked(snapshot) {
-  return snapshot.lifecycle?.available !== true && snapshot.editor?.installed_variant === 'light';
+  return !modulesChangeable(snapshot) && snapshot.editor?.installed_variant === 'light';
 }
 
 function editorVariantControl(snapshot, current, onEditorVariant, busy) {

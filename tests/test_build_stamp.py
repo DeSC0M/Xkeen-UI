@@ -111,6 +111,46 @@ def test_build_stamp_marks_uncommitted_work(builder, tmp_path):
     assert stamp.commit is None
 
 
+def _commit(repo: Path, name: str) -> None:
+    (repo / name).write_text(name + "\n", encoding="utf-8")
+    _git(repo, "add", name)
+    _git(repo, "commit", "-qm", name)
+
+
+def test_build_stamp_names_the_release_it_grew_from(builder, tmp_path):
+    # Сборка с версией выпуска умеет сама обновиться до следующего: метаданные
+    # после «+» в сравнении версий не участвуют, и она равна своему выпуску.
+    repo = tmp_path / "tagged"
+    _init_repo(repo)
+    _git(repo, "tag", "v1.2.0-beta.9")
+    _git(repo, "tag", "v1.2.0-beta.10")
+    _git(repo, "tag", "v1.3.0a")  # тег не по SemVer, как v2.9.2a
+    _git(repo, "checkout", "-qb", "side")
+    _commit(repo, "side.txt")
+    _git(repo, "tag", "v9.0.0")  # выпуск с другой ветки этой сборки не касается
+    _git(repo, "checkout", "-q", "-")
+    _commit(repo, "after.txt")
+
+    stamp = builder.git_build_stamp(repo)
+
+    assert stamp.version == f"1.2.0-beta.10+local.{stamp.base_commit}"
+    assert stamp.dirty is False
+
+    (repo / "after.txt").write_text("edited\n", encoding="utf-8")
+    assert builder.git_build_stamp(repo).version == f"1.2.0-beta.10+local.{stamp.base_commit}.dirty"
+
+
+def test_build_stamp_prefers_the_release_over_its_betas(builder, tmp_path):
+    repo = tmp_path / "released"
+    _init_repo(repo)
+    _git(repo, "tag", "v1.2.0-rc.1")
+    _git(repo, "tag", "v1.2.0")
+
+    stamp = builder.git_build_stamp(repo)
+
+    assert stamp.version == f"1.2.0+local.{stamp.base_commit}"
+
+
 def test_build_stamp_notices_untracked_files(builder, tmp_path):
     repo = tmp_path / "untracked"
     _init_repo(repo)

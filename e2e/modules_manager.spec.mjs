@@ -178,7 +178,7 @@ test.describe('Modules panel update surface', () => {
     await installIdleLifecycleRoutes(page);
     await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({ json: {
       ...server.update_check_current,
-      target_version: null, stable_unreleased: true,
+      source_version: '2.10.0-beta.2', target_version: null, stable_unreleased: true,
     } }));
     await page.goto('/modules');
 
@@ -189,7 +189,26 @@ test.describe('Modules panel update surface', () => {
       'Вы на стабильном канале, а все текущие обновления пока выходят как пререлизы. Как только появится стабильный выпуск, панель предложит его здесь.',
     );
     await expect(check.locator('.xk-summary-stat[data-stat="update"] span')).toHaveText('стабильных выпусков пока нет');
+    // Номер беты не обрезается: выпуск крупно, метка беты рядом мелко.
+    const number = check.locator('.xk-summary-stat[data-stat="update"] b');
+    await expect(number).toHaveText('2.10.0 beta.2');
+    await expect(number.locator('small')).toHaveText('beta.2');
+    expect(await number.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
     await expect(check.getByRole('button', { name: /Обновить/ })).toHaveCount(0);
+  });
+
+  test('a local build of a release updates the panel but does not open the module catalog', async ({ page }) => {
+    const local = { ...installedSnapshot, panel_version: '2.10.0+local.f46f1f10', lifecycle: { available: true, code: null, local: true },
+      modules: installedSnapshot.modules.map((item) => ({ ...item, lifecycle_actions: [] })) };
+    await installLifecycleRoutes(page, { installed: local });
+    await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({ json: {
+      ...server.update_check_current, source_version: '2.10.0+local.f46f1f10', target_version: '2.11.0', update_available: true,
+    } }));
+    await page.goto('/modules');
+
+    await expect(page.getByRole('button', { name: 'Обновить до 2.11.0' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Доступные' })).toBeDisabled();
+    await expect(page.locator('.modules-summary .xk-summary-note')).toContainText('Локальная сборка.');
   });
 
   test('keeps update feedback focused and clears a stale badge after a failed check', async ({ page }) => {

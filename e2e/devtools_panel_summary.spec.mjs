@@ -76,7 +76,7 @@ test.describe('DevTools panel summary', () => {
     await expect(channelButton(page, 'prerelease')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator(`${summary} .xk-summary-channel-hint`)).toHaveText('Тестовые версии с новыми функциями. Выбирайте, если готовы находить ошибки и сообщать о них.');
     await expect(page.locator(`${summary} .xk-summary-chip`)).toHaveText('Предрелизный канал');
-    await expect(stat(page, 'update').locator('b')).toHaveText('2.11.0-rc.1');
+    await expect(stat(page, 'update').locator('b')).toHaveText('2.11.0 rc.1');
     await expect(page.locator(`${summary} .xk-summary-link`)).toHaveText('Обновить в «Модулях и обновлениях»');
 
     // Шапка «Модулей и обновлений» — та же сводка.
@@ -223,6 +223,26 @@ test.describe('DevTools panel summary', () => {
     await expect(page.locator(`${summary} .xk-summary-note`)).toContainText('Локальная сборка.');
     await expect(page.locator(`${summary} .xk-summary-channel-hint`)).toHaveText('Канал запомнится и сработает, когда панель будет поставлена из выпуска.');
     expect(checks).toEqual([]);
+  });
+
+  test('a local build of a release offers the next release but keeps modules as they are', async ({ page }) => {
+    const local = '2.10.0-beta.2+local.f46f1f10.dirty';
+    const checks = await mockPanelSummary(page, {
+      snapshot: {
+        ...installed,
+        panel_version: local,
+        build: { ...installed.build, version: local },
+        lifecycle: { available: true, code: null, local: true },
+      },
+      check: { ...noUpdate, source_version: local, target_version: '2.10.0-beta.3', update_available: true },
+    });
+    await page.goto('/devtools');
+
+    await expect(page.locator(`${summary} .xk-summary-version`)).toHaveText('Локальная сборка 2.10.0-beta.2');
+    await expect(stat(page, 'update').locator('b')).toHaveText('2.10.0 beta.3');
+    await expect(stat(page, 'update').locator('span')).toHaveText('доступно обновление');
+    await expect(page.locator(`${summary} .xk-summary-note`)).toContainText('ставить и удалять модули — только на выпуске');
+    expect(checks.length).toBe(1);
   });
 
   test('shows the error only when the summary cannot be loaded and recovers', async ({ page }) => {
