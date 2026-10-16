@@ -21,6 +21,7 @@ import http.client
 import json
 import socket
 import sys
+import time
 import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -36,6 +37,8 @@ LIST_RELATIVE = Path("scripts") / "entware_mirrors.txt"
 PROBE_PATH = "aarch64-k3.10/Packages.gz"
 TIMEOUT_S = 15
 ATTEMPTS = 2
+# Пауза перед повторной проверкой мимо VPN знакомых зеркал, не ответивших при обходе.
+RECHECK_DELAY_S = 30
 # Сколько календарных дней зеркало из списка может молчать, прежде чем его уберут.
 SILENT_DAYS_LIMIT = 7
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -46,7 +49,8 @@ RULE_NOTE = (
     f"с датой, с которой молчит. Ответило при любой сборке (у кого угодно) — запись снимается. "
     f"Молчит {SILENT_DAYS_LIMIT} календарных дней — уходит из архива, пока снова не ответит. "
     f"Файл наблюдения общий: изменился — закоммитить его, чтобы счёт видели остальные. "
-    f"VPN на машине сборщика (Happ) обходится: зеркало, не ответившее через него, проверяется напрямую."
+    f"VPN на машине сборщика (Happ) обходится: зеркало, не ответившее через него, проверяется напрямую, "
+    f"а знакомое, не ответившее и так, — ещё раз мимо VPN через {RECHECK_DELAY_S} с."
 )
 
 HEADER = """# Зеркала Entware — запасные источники пакетов для установщика.
@@ -148,12 +152,17 @@ def _ask(opener: urllib.request.OpenerDirector, url: str, timeout: float) -> boo
         return False
 
 
+def probe_direct(url: str, timeout: float = TIMEOUT_S) -> bool:
+    """Напрямую с каждого адреса этой машины, мимо VPN."""
+    return any(_ask(_direct_opener(source), url, timeout) for source in local_addresses())
+
+
 def probe(url: str, timeout: float = TIMEOUT_S) -> bool:
     if _ask(urllib.request.build_opener(_NoRedirect), url, timeout):
         return True
     # Не ответило обычным путём — возможно, его режет VPN на машине сборщика.
     # Пробуем напрямую с каждого адреса: у кого VPN нет, сюда почти не доходят.
-    return any(_ask(_direct_opener(source), url, timeout) for source in local_addresses())
+    return probe_direct(url, timeout)
 
 
 def fetch_page(url: str = PAGE_URL, timeout: float = TIMEOUT_S) -> str:
@@ -262,6 +271,33 @@ def read_list(path: Path) -> list[str]:
     return [line.strip() for line in text.splitlines() if line.strip() and not line.startswith("#")]
 
 
+def _recheck_known(
+    listed: list[str],
+    alive: list[str],
+    kept: list[str],
+    watch: dict[str, str],
+    recheck: Optional[Callable[[str], bool]],
+    pause: Callable[[float], None],
+    log: Callable[[str], None],
+) -> list[str]:
+    """Знакомое зеркало, не ответившее ни через VPN, ни мимо него, проверяется
+    мимо VPN ещё раз — после паузы.
+
+    На машине с Happ прямой путь временами пропадает на полминуты, и живое
+    зеркало записывалось в молчащие. Перепроверяются только те, что уже есть
+    в списке или в наблюдении: ни разу не отвечавшее в список и так не идёт,
+    и обычная сборка из-за него не удлиняется.
+    """
+    doubtful = [url for url in listed if url not in alive and (url in kept or url in watch)]
+    if not doubtful or recheck is None:
+        return alive
+    log(f"[*] зеркала Entware: {len(doubtful)} знакомых не ответили, через {RECHECK_DELAY_S} с — ещё раз мимо VPN")
+    pause(RECHECK_DELAY_S)
+    with ThreadPoolExecutor(max_workers=len(doubtful)) as pool:
+        again = list(pool.map(recheck, doubtful))
+    return alive + [url for url, ok in zip(doubtful, again) if ok]
+
+
 def _apply(
     saved: Path,
     watch_path: Path,
@@ -269,6 +305,8 @@ def _apply(
     check: Callable[[str], bool],
     log: Callable[[str], None],
     today: Optional[str],
+    recheck: Optional[Callable[[str], bool]] = None,
+    pause: Callable[[float], None] = time.sleep,
 ) -> tuple[list[str], list[str]]:
     """(выбранные адреса, сохранённый список); пустые выбранные — страница недоступна."""
     listed, alive = survey(page, check, log)
@@ -277,6 +315,9 @@ def _apply(
         return [], kept
     watch = load_watch(watch_path)
     before = dict(watch)
+    if recheck is None and check is probe:
+        recheck = probe_direct
+    alive = _recheck_known(listed, alive, kept, watch, recheck, pause, log)
     urls = choose(listed, alive, kept, watch, today or date.today().isoformat(), log)
     if watch != before:
         save_watch(watch_path, watch)
@@ -292,9 +333,11 @@ def refresh(
     log: Callable[[str], None] = print,
     watch_path: Path = WATCH_PATH,
     today: Optional[str] = None,
+    recheck: Optional[Callable[[str], bool]] = None,
+    pause: Callable[[float], None] = time.sleep,
 ) -> list[str]:
     """Записать в дерево архива свежий список; без сети — сохранённый."""
-    urls, kept = _apply(saved, watch_path, page, check, log, today)
+    urls, kept = _apply(saved, watch_path, page, check, log, today, recheck, pause)
     if not urls:
         log(f"[!] зеркала Entware: беру список из репозитория ({len(kept)} адрес(ов))")
         urls = kept

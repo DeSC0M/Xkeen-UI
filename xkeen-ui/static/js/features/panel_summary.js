@@ -72,7 +72,9 @@ function shortCommit(commit) {
   return /^[0-9a-f]{13,}$/i.test(raw) ? raw.slice(0, 12) : raw;
 }
 
+// No date is no date: new Date(null) would be 1 January 1970.
 function validDate(value) {
+  if (value === null || value === undefined || value === '') return null;
   const date = new Date(value);
   return Number.isFinite(date.getTime()) ? date : null;
 }

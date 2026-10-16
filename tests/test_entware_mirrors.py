@@ -157,6 +157,51 @@ def test_a_mirror_gone_from_the_page_is_forgotten(bench):
     assert json.loads(watch.read_text(encoding="utf-8")) == {}
 
 
+def test_a_known_mirror_is_asked_again_past_the_vpn_before_it_counts_as_silent(mirrors, tmp_path):
+    # 16.10.2026: на машине с Happ прямой путь пропал на полминуты, и живые
+    # bfsu/nju записались в молчащие. Знакомое зеркало, не ответившее ни через
+    # VPN, ни мимо него, спрашивается мимо VPN ещё раз — после паузы.
+    saved = tmp_path / "saved.txt"
+    saved.write_text(mirrors.render([ONE, TLS]), encoding="utf-8")
+    watch = tmp_path / "watch.json"
+    asked: list[str] = []
+    paused: list[float] = []
+
+    def recheck(url: str) -> bool:
+        asked.append(url)
+        return url == ONE
+
+    urls = mirrors.refresh(
+        tmp_path / "pkg", saved, lambda: PAGE, _check({TLS}), lambda _l: None, watch, "2026-10-16",
+        recheck=recheck, pause=paused.append,
+    )
+
+    assert urls == [ONE, TLS]
+    assert not watch.exists()
+    assert paused == [mirrors.RECHECK_DELAY_S]
+    # Ни разу не отвечавшее в список не идёт и сборку не удлиняет.
+    assert "https://mirrors.dead.example/entware" not in asked
+    assert asked == [ONE]
+
+
+def test_nothing_is_asked_again_when_every_known_mirror_answered(mirrors, tmp_path):
+    saved = tmp_path / "saved.txt"
+    saved.write_text(mirrors.render([ONE, TLS]), encoding="utf-8")
+    paused: list[float] = []
+
+    mirrors.refresh(
+        tmp_path / "pkg", saved, lambda: PAGE, _check({ONE, TLS}), lambda _l: None, tmp_path / "w.json", "2026-10-16",
+        recheck=lambda _u: pytest.fail("asked again"), pause=paused.append,
+    )
+
+    assert paused == []
+
+
+def test_the_build_asks_again_past_the_vpn_by_default(mirrors):
+    source = (ROOT / "scripts" / "entware_mirrors.py").read_text(encoding="utf-8")
+    assert "if recheck is None and check is probe:\n        recheck = probe_direct" in source
+
+
 def test_without_network_the_saved_list_goes_into_the_archive(mirrors, tmp_path):
     saved = tmp_path / "saved.txt"
     saved.write_text(mirrors.render(["http://kept.example/entware"]), encoding="utf-8")
