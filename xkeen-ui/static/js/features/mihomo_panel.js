@@ -1763,6 +1763,7 @@ let mihomoPanelModuleApi = null;
   }
 
   async function waitForRestartJob(jobId, onChunk) {
+    const restartStatusUrl = `/api/restart-job/${encodeURIComponent(String(jobId))}`;
     const CJ = getCommandJobApi();
     if (CJ && typeof CJ.waitForCommandJob === 'function') {
       return CJ.waitForCommandJob(String(jobId), {
@@ -1776,7 +1777,7 @@ let mihomoPanelModuleApi = null;
 
     let lastLen = 0;
     while (true) {
-      const pr = await fetch(`/api/run-command/${encodeURIComponent(String(jobId))}`);
+      const pr = await fetch(restartStatusUrl);
       const pj = await pr.json().catch(() => ({}));
       const out = (pj && typeof pj.output === 'string') ? pj.output : '';
       if (out.length > lastLen) {
@@ -2134,8 +2135,9 @@ let mihomoPanelModuleApi = null;
       } else {
         // Minimal HTTP polling fallback.
         let lastLen = 0;
+        const restartStatusUrl = `/api/restart-job/${encodeURIComponent(String(jobId))}`;
         while (true) {
-          const pr = await fetch(`/api/run-command/${encodeURIComponent(String(jobId))}`);
+          const pr = await fetch(restartStatusUrl);
           const pj = await pr.json().catch(() => ({}));
           const out = (pj && typeof pj.output === 'string') ? pj.output : '';
           if (out.length > lastLen) {

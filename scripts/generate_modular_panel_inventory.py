@@ -20,9 +20,9 @@ STAGE_CLOSED_ON = "2026-09-29"
 MODULE_SPECS: dict[str, dict[str, Any]] = {
     "core": {
         "name": "Xkeen UI Core",
-        "description": "Запуск панели, авторизация, shell, настройки, сервис, capabilities и общий runtime.",
+        "description": "Запуск панели, авторизация, WebSocket runtime, настройки, сервис, capabilities и общий runtime.",
         "depends_on": [],
-        "system_requirements": ["python3", "flask"],
+        "system_requirements": ["python3", "flask", "gevent (optional)", "gevent-websocket (optional)"],
         "removable": False,
     },
     "engine.xray": {
@@ -48,9 +48,9 @@ MODULE_SPECS: dict[str, dict[str, Any]] = {
     },
     "tool.terminal": {
         "name": "Терминал и команды",
-        "description": "PTY, WebSocket, xterm, command jobs и shell policy.",
+        "description": "PTY, xterm, интерактивные команды и shell policy.",
         "depends_on": ["core"],
-        "system_requirements": ["shell", "gevent (optional)", "gevent-websocket (optional)"],
+        "system_requirements": ["shell"],
         "removable": True,
     },
     "tool.files": {
@@ -407,12 +407,14 @@ class ModularPanelInventoryGenerator:
             or "storage_usb" in p
         ):
             module_id = "tool.files"
+        elif name in {"command_jobs.py", "xkeen_commands_catalog.py"}:
+            module_id = "core"
         elif (
             "terminal.lazy.entry.js" in p
             or "/static/js/terminal/" in p
             or "terminal_debug" in p
             or "ws_pty" in p
-            or name in {"commands.py", "command_jobs.py", "xkeen_commands_catalog.py"}
+            or name == "commands.py"
             or "commands_list" in p
         ):
             module_id = "tool.terminal"

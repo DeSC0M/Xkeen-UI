@@ -213,13 +213,20 @@ def test_run_server_logs_the_gevent_failure_and_publishes_it_for_capabilities():
 
 def test_mihomo_minimal_starts_the_websocket_server_without_terminal_module():
     text = (ROOT / "xkeen-ui" / "run_server.py").read_text(encoding="utf-8")
+    app_text = (ROOT / "xkeen-ui" / "app.py").read_text(encoding="utf-8")
+    registry_text = (ROOT / "xkeen-ui" / "services" / "module_registry.py").read_text(encoding="utf-8")
 
     assert '_WS_RUNTIME_MODULES = frozenset(' in text
+    assert '"core"' in text
     assert '"engine.mihomo"' in text
     assert '"engine.xray"' in text
     assert "_WS_RUNTIME_NEEDED = bool(_ACTIVE_MODULES.intersection(_WS_RUNTIME_MODULES))" in text
     assert "if GEVENT_AVAILABLE and _WS_RUNTIME_NEEDED:" in text
-    assert 'if GEVENT_AVAILABLE and "tool.terminal" in _ACTIVE_MODULES:' not in text
+    assert 'if GEVENT_AVAILABLE and "tool.terminal" in _ACTIVE_MODULES and path == "/ws/command-status"' not in text
+    assert 'if GEVENT_AVAILABLE and path == "/ws/command-status":' in text
+    assert '{"core", "engine.xray", "engine.mihomo", "tool.advanced-diagnostics"}' in text
+    assert "from services.command_jobs import get_command_job as _get_command_job" in app_text
+    assert '"/ws/command-status": "core"' in registry_text
 
 
 def test_terminal_window_has_a_place_to_show_the_websocket_warning():
@@ -276,4 +283,6 @@ def test_install_script_prints_a_final_summary_of_the_websocket_verdict():
     assert "log_install() {" in text
     assert "log_install \"[=] WebSocket: ВКЛ" in text
     assert "log_install \"[=] WebSocket: ВЫКЛ" in text
+    assert "потоковые функции панели доступны" in text
+    assert "если установлен модуль терминала" in text
     assert "Итог установки" in text

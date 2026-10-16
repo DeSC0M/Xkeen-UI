@@ -134,6 +134,46 @@ def create_service_blueprint(
         except Exception:
             pass
 
+    @bp.get("/api/restart-job/<job_id>")
+    def api_restart_job_status(job_id: str) -> Any:
+        """Return the status of an internal xkeen restart job.
+
+        Engine routes can enqueue a restart even when the optional terminal
+        module is disabled. Keep their status endpoint in this core-owned
+        blueprint instead of making engine panels depend on the terminal
+        module's ``/api/run-command`` route.
+        """
+        try:
+            from services.command_jobs import cleanup_old_jobs, get_command_job
+
+            cleanup_old_jobs()
+            job = get_command_job(job_id)
+        except Exception:
+            job = None
+        if job is None or getattr(job, "flag", None) not in {"-restart", "-start"}:
+            return _service_error(
+                "Задание перезапуска не найдено.",
+                404,
+                code="restart_job_not_found",
+            )
+
+        return (
+            jsonify(
+                {
+                    "ok": True,
+                    "job_id": job.id,
+                    "flag": job.flag,
+                    "status": job.status,
+                    "exit_code": job.exit_code,
+                    "output": job.output,
+                    "created_at": job.created_at,
+                    "finished_at": job.finished_at,
+                    "error": job.error,
+                }
+            ),
+            200,
+        )
+
     def _restart_log_elapsed_ms(started_at: float) -> int:
         try:
             return max(0, int(round((time.monotonic() - started_at) * 1000)))

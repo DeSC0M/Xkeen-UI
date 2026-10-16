@@ -29,19 +29,21 @@
     {
       "id": "core",
       "name": "Xkeen UI Core",
-      "description": "Запуск панели, авторизация, shell, настройки, сервис, capabilities и общий runtime.",
+      "description": "Запуск панели, авторизация, WebSocket runtime, настройки, сервис, capabilities и общий runtime.",
       "depends_on": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "removable": false,
-      "unit_count": 560,
-      "size_bytes": 7473848,
+      "unit_count": 562,
+      "size_bytes": 7503686,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
-        "backend_service": 76,
+        "backend_service": 78,
         "backend_test": 255,
         "configuration": 10,
         "frontend_bundle": 9,
@@ -54,7 +56,7 @@
         "stylesheet": 8,
         "template": 32
       },
-      "route_count": 95,
+      "route_count": 96,
       "background_task_count": 4,
       "ui_surface_count": 36,
       "representative_paths": [
@@ -130,7 +132,7 @@
       ],
       "removable": true,
       "unit_count": 129,
-      "size_bytes": 3067466,
+      "size_bytes": 3069213,
       "kind_counts": {
         "app_runtime": 4,
         "backend_route": 2,
@@ -201,21 +203,19 @@
     {
       "id": "tool.terminal",
       "name": "Терминал и команды",
-      "description": "PTY, WebSocket, xterm, command jobs и shell policy.",
+      "description": "PTY, xterm, интерактивные команды и shell policy.",
       "depends_on": [
         "core"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "removable": true,
-      "unit_count": 49,
-      "size_bytes": 510348,
+      "unit_count": 47,
+      "size_bytes": 483327,
       "kind_counts": {
         "backend_route": 1,
-        "backend_service": 3,
+        "backend_service": 1,
         "backend_test": 1,
         "frontend_entrypoint": 1,
         "frontend_feature": 2,
@@ -226,9 +226,7 @@
       "ui_surface_count": 2,
       "representative_paths": [
         "xkeen-ui/routes/commands.py",
-        "xkeen-ui/services/command_jobs.py",
         "xkeen-ui/services/ws_pty.py",
-        "xkeen-ui/services/xkeen_commands_catalog.py",
         "tests/test_ws_pty_replay.py",
         "xkeen-ui/static/js/pages/terminal.lazy.entry.js",
         "xkeen-ui/static/js/features/commands_list.js",
@@ -236,7 +234,9 @@
         "xkeen-ui/static/js/terminal/_core.js",
         "xkeen-ui/static/js/terminal/capabilities.js",
         "xkeen-ui/static/js/terminal/chrome.js",
-        "xkeen-ui/static/js/terminal/commands/builtins/sysmon.js"
+        "xkeen-ui/static/js/terminal/commands/builtins/sysmon.js",
+        "xkeen-ui/static/js/terminal/commands/builtins/xkeen_restart.js",
+        "xkeen-ui/static/js/terminal/commands/registry.js"
       ]
     },
     {
@@ -393,10 +393,9 @@
       "module_id": "core",
       "kind": "app_runtime",
       "path": "xkeen-ui/app.py",
-      "size_bytes": 3184,
+      "size_bytes": 3205,
       "depends_on": [
-        "engine.xray",
-        "tool.terminal"
+        "engine.xray"
       ],
       "starts_background_task": false,
       "background_markers": [],
@@ -405,7 +404,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_WS_RUNTIME"
@@ -421,7 +422,6 @@
         "engine.mihomo",
         "engine.xray",
         "tool.backups",
-        "tool.terminal",
         "tool.files"
       ],
       "starts_background_task": true,
@@ -440,7 +440,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_BIN",
@@ -465,7 +467,7 @@
       "module_id": "core",
       "kind": "app_runtime",
       "path": "xkeen-ui/run_server.py",
-      "size_bytes": 8610,
+      "size_bytes": 8553,
       "depends_on": [
         "tool.terminal",
         "engine.mihomo"
@@ -521,7 +523,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_LOCAL_DEMO",
@@ -534,7 +538,7 @@
       "module_id": "core",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/__init__.py",
-      "size_bytes": 23122,
+      "size_bytes": 23036,
       "depends_on": [
         "tool.files",
         "engine.xray",
@@ -551,7 +555,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_REMOTEFM_MAX_SESSIONS",
@@ -626,7 +632,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -650,7 +658,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -668,7 +678,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -686,7 +698,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -730,7 +744,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -748,7 +764,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -780,7 +798,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_CORES_UPDATE_API_TIMEOUT",
@@ -867,7 +887,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -887,7 +909,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -996,7 +1020,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1040,7 +1066,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_DEV",
@@ -1054,7 +1082,7 @@
       "module_id": "core",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/service.py",
-      "size_bytes": 21898,
+      "size_bytes": 23329,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -1068,6 +1096,11 @@
         {
           "method": "GET",
           "path": "/api/operation-diagnostics/<ref>",
+          "decorator": "bp.get"
+        },
+        {
+          "method": "GET",
+          "path": "/api/restart-job/<job_id>",
           "decorator": "bp.get"
         },
         {
@@ -1124,7 +1157,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1148,7 +1183,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_DEV",
@@ -1182,7 +1219,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1211,7 +1250,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1247,7 +1288,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1276,7 +1319,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1286,9 +1331,7 @@
       "kind": "backend_route",
       "path": "xkeen-ui/routes/xkeen_lists.py",
       "size_bytes": 4231,
-      "depends_on": [
-        "tool.terminal"
-      ],
+      "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
       "registers_routes": true,
@@ -1337,7 +1380,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1355,7 +1400,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1375,7 +1422,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_AMNEZIA_PREMIUM_MIHOMO_PROXY_PORT",
@@ -1397,7 +1446,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_AUTH_LOGIN_LOCKOUT_SECONDS",
@@ -1419,7 +1470,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_DEVTOOLS_SECTIONS_WHITELIST",
@@ -1441,7 +1494,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1459,7 +1514,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_UPDATE_CHANNEL",
@@ -1472,9 +1529,7 @@
       "kind": "backend_service",
       "path": "xkeen-ui/services/capabilities.py",
       "size_bytes": 16101,
-      "depends_on": [
-        "tool.terminal"
-      ],
+      "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
       "registers_routes": false,
@@ -1482,7 +1537,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_ENV",
@@ -1510,6 +1567,32 @@
     {
       "module_id": "core",
       "kind": "backend_service",
+      "path": "xkeen-ui/services/command_jobs.py",
+      "size_bytes": 14839,
+      "depends_on": [],
+      "starts_background_task": true,
+      "background_markers": [
+        "daemon_thread",
+        "threading.Thread"
+      ],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [
+        "XKEEN_COMMAND_MAX_OUTPUT_CHARS",
+        "XKEEN_RESTART_LOG_FILE"
+      ],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "backend_service",
       "path": "xkeen-ui/services/config_exchange_github.py",
       "size_bytes": 6598,
       "depends_on": [],
@@ -1520,7 +1603,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_CONFIG_SERVER_BASE",
@@ -1546,7 +1631,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_CONFIG_FILE"
@@ -1569,7 +1656,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1587,7 +1676,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1605,7 +1696,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_HTTP_USER_AGENT"
@@ -1618,8 +1711,7 @@
       "path": "xkeen-ui/services/cores.py",
       "size_bytes": 21740,
       "depends_on": [
-        "engine.xray",
-        "tool.terminal"
+        "engine.xray"
       ],
       "starts_background_task": false,
       "background_markers": [],
@@ -1628,7 +1720,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_CORE_START_GRACE_AFTER_RUNNING_MS",
@@ -1651,7 +1745,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_DNS"
@@ -1671,7 +1767,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1692,7 +1790,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_DNS_OVER_VLESS_WATCHDOG"
@@ -1712,7 +1812,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1732,7 +1834,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1750,7 +1854,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1768,7 +1874,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1786,7 +1894,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1804,7 +1914,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_GITHUB_API_BASE",
@@ -1827,7 +1939,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_HAPP_DECRYPTOR_CMD",
@@ -1852,7 +1966,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1870,7 +1986,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1888,7 +2006,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1906,7 +2026,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -1924,7 +2046,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_CONFIG_FILE"
@@ -1944,7 +2068,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_LATENCY_JOB_WORKERS"
@@ -1964,7 +2090,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_LOCAL_DEMO"
@@ -1984,7 +2112,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2002,7 +2132,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_LOG_ACCESS_ENABLE",
@@ -2035,7 +2167,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2053,7 +2187,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_MIHOMO_",
@@ -2074,7 +2210,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2092,7 +2230,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2110,7 +2250,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2128,7 +2270,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2146,7 +2290,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2164,7 +2310,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2173,7 +2321,7 @@
       "module_id": "core",
       "kind": "backend_service",
       "path": "xkeen-ui/services/module_registry.py",
-      "size_bytes": 64965,
+      "size_bytes": 65064,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -2182,7 +2330,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_BIN",
@@ -2203,7 +2353,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2224,7 +2376,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2242,7 +2396,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2260,7 +2416,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2278,7 +2436,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2296,7 +2456,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2317,7 +2479,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2335,7 +2499,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_LOCAL_DEMO"
@@ -2355,7 +2521,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2373,7 +2541,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_OPERATION_MODULE",
@@ -2394,7 +2564,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2412,7 +2584,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2430,7 +2604,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_NET_MAX_WORKERS"
@@ -2450,7 +2626,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_OPERATION_DIAGNOSTICS_LIMIT"
@@ -2470,7 +2648,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2488,7 +2668,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_INIT_OWNER",
@@ -2509,7 +2691,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_CONFIG_EXCHANGE_MAX_BYTES",
@@ -2537,7 +2721,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2557,7 +2743,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2575,7 +2763,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2593,7 +2783,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_BACKUP_DIR",
@@ -2614,7 +2806,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2634,7 +2828,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2652,7 +2848,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2670,7 +2868,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2688,7 +2888,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2706,7 +2908,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2724,7 +2928,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2742,7 +2948,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2764,7 +2972,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_WS2_MAX_CHARS_PER_MSG",
@@ -2785,7 +2995,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2803,7 +3015,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2821,7 +3035,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2832,7 +3048,6 @@
       "path": "xkeen-ui/services/xkeen.py",
       "size_bytes": 9414,
       "depends_on": [
-        "tool.terminal",
         "engine.mihomo"
       ],
       "starts_background_task": false,
@@ -2842,9 +3057,37 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "backend_service",
+      "path": "xkeen-ui/services/xkeen_commands_catalog.py",
+      "size_bytes": 12182,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [
+        "XKEEN_ALLOW_SHELL",
+        "XKEEN_BIN",
+        "XKEEN_INITD_FILE",
+        "XKEEN_INITD_SCRIPT",
+        "XKEEN_INIT_SCRIPT"
+      ],
       "removable": false
     },
     {
@@ -2860,7 +3103,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_CONFIG_FILE",
@@ -2885,7 +3130,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_GEODAT_ASSET",
@@ -2916,7 +3163,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_AMNEZIA_PREMIUM_MIHOMO_PROXY_PORT",
@@ -2938,7 +3187,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2959,7 +3210,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -2979,7 +3232,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3003,7 +3258,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_AUTH_LOGIN_LOCKOUT_SECONDS",
@@ -3027,7 +3284,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_AUTH_LOGIN_LOCKOUT_SECONDS",
@@ -3058,7 +3317,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_SECRET_KEY",
@@ -3079,7 +3340,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_BACKUP_MONITOR_PATHS",
@@ -3102,7 +3365,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3120,7 +3385,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3138,7 +3405,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3156,7 +3425,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3174,7 +3445,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3194,7 +3467,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3212,7 +3487,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3230,7 +3507,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_CONFIG_SERVER_BASE"
@@ -3250,7 +3529,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3268,7 +3549,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3286,7 +3569,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3304,7 +3589,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3322,7 +3609,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3340,7 +3629,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3358,7 +3649,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_PROC_MOUNTS_FILE"
@@ -3382,7 +3675,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_DNS_OVER_VLESS_WATCHDOG",
@@ -3430,7 +3725,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3448,7 +3745,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3466,7 +3765,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3484,7 +3785,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3502,7 +3805,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3520,7 +3825,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3538,7 +3845,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_DNS_OVER_VLESS_WATCHDOG_INTERVAL"
@@ -3558,7 +3867,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3576,7 +3887,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3594,7 +3907,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3612,7 +3927,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3633,7 +3950,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3651,7 +3970,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3669,7 +3990,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3687,7 +4010,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_LOCAL_BACKUP_DIR",
@@ -3709,7 +4034,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3727,7 +4054,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3745,7 +4074,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3763,7 +4094,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3783,7 +4116,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_TRASH_MAX_BYTES",
@@ -3804,7 +4139,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3822,7 +4159,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_FRONTEND_SOURCE_FALLBACK"
@@ -3842,7 +4181,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3860,7 +4201,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3878,7 +4221,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3896,7 +4241,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_AVAILABLE_CORES",
@@ -3937,7 +4284,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3955,7 +4304,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3973,7 +4324,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -3993,7 +4346,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_GEODAT_BIN"
@@ -4015,7 +4370,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4033,7 +4390,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_SKIP_KEYS_CHECK"
@@ -4053,7 +4412,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_GITHUB_API_BASE",
@@ -4075,7 +4436,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_HAPP_DECRYPTOR_CMD",
@@ -4103,7 +4466,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4123,7 +4488,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4141,7 +4508,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4159,7 +4528,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4177,7 +4548,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4195,7 +4568,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_GEODAT_CHECK_ONLY"
@@ -4215,7 +4590,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4233,7 +4610,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4251,7 +4630,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_GEVENT_PIP_SPEC",
@@ -4275,7 +4656,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_GEODAT_CHECK_ONLY",
@@ -4301,7 +4684,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4319,7 +4704,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4337,7 +4724,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4355,7 +4744,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4373,7 +4764,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4391,7 +4784,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_INSTALL_MODULES",
@@ -4412,7 +4807,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4430,7 +4827,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_MODULE_TX_RECOVER_TIMEOUT"
@@ -4450,7 +4849,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4468,7 +4869,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4486,7 +4889,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_STATE_DIR"
@@ -4506,7 +4911,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4526,7 +4933,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4544,7 +4953,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4562,7 +4973,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4580,7 +4993,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_CONFIG_FILE"
@@ -4600,7 +5015,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4618,7 +5035,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4638,7 +5057,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_SECRET_KEY",
@@ -4659,7 +5080,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_ROUTING_SAVE_MAX_BYTES",
@@ -4681,7 +5104,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_SECRET_KEY",
@@ -4702,7 +5127,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_SECRET_KEY",
@@ -4723,7 +5150,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4741,7 +5170,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4759,7 +5190,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_RELEASE_ED25519_PRIVATE_KEY"
@@ -4779,7 +5212,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4797,7 +5232,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4815,7 +5252,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4833,7 +5272,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_RELEASE_ED25519_PRIVATE_KEY"
@@ -4853,7 +5294,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4871,7 +5314,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4889,7 +5334,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4907,7 +5354,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4925,7 +5374,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -4943,7 +5394,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_PANEL_SECTIONS_WHITELIST"
@@ -4963,7 +5416,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_PANEL_SECTIONS_WHITELIST"
@@ -4983,7 +5438,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_PANEL_SECTIONS_WHITELIST"
@@ -5003,7 +5460,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5021,7 +5480,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5039,7 +5500,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_E2E_MODULE_PROFILE",
@@ -5060,7 +5523,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5078,7 +5543,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5096,7 +5563,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_E2E_MODULE_PROFILE",
@@ -5119,7 +5588,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5128,7 +5599,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_module_backend_gates.py",
-      "size_bytes": 12827,
+      "size_bytes": 13023,
       "depends_on": [
         "tool.terminal",
         "integration.happ",
@@ -5144,7 +5615,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_PORT"
@@ -5164,7 +5637,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5182,7 +5657,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5200,7 +5677,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5218,7 +5697,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_LOCAL_DEMO"
@@ -5238,7 +5719,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5256,7 +5739,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5274,7 +5759,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_FRONTEND_SOURCE_FALLBACK"
@@ -5294,7 +5781,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5312,7 +5801,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5330,7 +5821,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5348,7 +5841,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_MODULE_SAFE_MODE",
@@ -5369,7 +5864,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_UPDATE_DIR"
@@ -5392,7 +5889,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_MODULE_TX_HEALTH_TIMEOUT",
@@ -5416,7 +5915,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5434,7 +5935,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5452,7 +5955,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5470,7 +5975,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5488,7 +5995,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5506,7 +6015,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_UPDATE_DIR"
@@ -5526,7 +6037,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_UPDATE_DIR"
@@ -5546,7 +6059,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5564,7 +6079,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5582,7 +6099,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5600,7 +6119,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5618,7 +6139,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5636,7 +6159,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_UPDATE_DIR"
@@ -5656,7 +6181,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5674,7 +6201,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5692,7 +6221,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5712,7 +6243,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5730,7 +6263,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5748,7 +6283,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_PANEL_SECTIONS_WHITELIST"
@@ -5768,7 +6305,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5786,7 +6325,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5804,7 +6345,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5822,7 +6365,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5840,7 +6385,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5858,7 +6405,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5876,7 +6425,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5894,7 +6445,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5912,7 +6465,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5930,7 +6485,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5948,7 +6505,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5966,7 +6525,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -5984,7 +6545,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6002,7 +6565,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6020,7 +6585,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6038,7 +6605,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6056,7 +6625,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6074,7 +6645,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6092,7 +6665,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6112,7 +6687,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_INIT_SCRIPT"
@@ -6134,7 +6711,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6152,7 +6731,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6170,7 +6751,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_UPDATE_DIR"
@@ -6190,7 +6773,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_OPERATION_MODULE",
@@ -6211,7 +6796,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_STATE_DIR"
@@ -6231,7 +6818,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6249,7 +6838,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6267,7 +6858,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6285,7 +6878,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_",
@@ -6308,7 +6903,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_BIN_DIR",
@@ -6334,7 +6931,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_BIN_DIR"
@@ -6354,7 +6953,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_INIT_OWNER",
@@ -6375,7 +6976,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_OPKG_CONF",
@@ -6398,7 +7001,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_CURL",
@@ -6423,7 +7028,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_ENTWARE_MIRRORS",
@@ -6448,7 +7055,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_OPKG_CONF",
@@ -6471,7 +7080,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_OPKG_CONF",
@@ -6492,7 +7103,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_OPKG_CONF",
@@ -6515,7 +7128,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_PYTHONPYCACHEPREFIX"
@@ -6537,7 +7152,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6557,7 +7174,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6575,7 +7194,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_CONFIG_EXCHANGE_MAX_BYTES",
@@ -6601,7 +7222,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_CONFIG_EXCHANGE_MAX_BYTES",
@@ -6635,7 +7258,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_GZIP_MIN_BYTES"
@@ -6646,7 +7271,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_restart_log_subscription_ux.py",
-      "size_bytes": 12305,
+      "size_bytes": 12369,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -6655,7 +7280,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6673,7 +7300,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6693,7 +7322,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_LOCALFM_ROOTS",
@@ -6717,7 +7348,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6737,7 +7370,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_XRAY_ROUTING_FILE_RAW"
@@ -6757,7 +7392,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6775,7 +7412,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6793,7 +7432,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6811,7 +7452,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6829,7 +7472,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6847,7 +7492,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6865,7 +7512,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6883,7 +7532,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6901,7 +7552,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6919,7 +7572,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6939,7 +7594,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6957,7 +7614,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6975,7 +7634,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -6993,7 +7654,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7003,9 +7666,7 @@
       "kind": "backend_test",
       "path": "tests/test_shell_access_policy.py",
       "size_bytes": 4166,
-      "depends_on": [
-        "tool.terminal"
-      ],
+      "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
       "registers_routes": false,
@@ -7013,7 +7674,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_ALLOW_SHELL"
@@ -7033,7 +7696,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_ALLOW_SHELL"
@@ -7053,7 +7718,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7071,7 +7738,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7089,7 +7758,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_DEV",
@@ -7110,7 +7781,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7128,7 +7801,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7146,7 +7821,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7164,7 +7841,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7182,7 +7861,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_HAPP_HELPER_HWID",
@@ -7203,7 +7884,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7221,7 +7904,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7239,7 +7924,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7257,7 +7944,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_ACCESSED_IP"
@@ -7277,7 +7966,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7295,7 +7986,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7313,7 +8006,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_PORT"
@@ -7333,7 +8028,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7351,7 +8048,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7369,7 +8068,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7387,7 +8088,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7405,7 +8108,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7423,7 +8128,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7441,7 +8148,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7459,7 +8168,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7477,7 +8188,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7495,7 +8208,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7513,7 +8228,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7531,7 +8248,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7549,7 +8268,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_LOG_DIR",
@@ -7577,7 +8298,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7595,7 +8318,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7613,7 +8338,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7631,7 +8358,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7649,7 +8378,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_DAT_ALLOW_CUSTOM_URLS",
@@ -7676,7 +8407,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_DAT",
@@ -7706,7 +8439,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7724,7 +8459,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7742,7 +8479,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7760,7 +8499,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7778,7 +8519,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_CACHE_DIR",
@@ -7791,7 +8534,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_ws_runtime_diagnostics.py",
-      "size_bytes": 9837,
+      "size_bytes": 10563,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -7800,7 +8543,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_INSTALL_LOG",
@@ -7821,7 +8566,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7841,7 +8588,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7851,9 +8600,7 @@
       "kind": "backend_test",
       "path": "tests/test_xkeen_commands_catalog.py",
       "size_bytes": 1573,
-      "depends_on": [
-        "tool.terminal"
-      ],
+      "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
       "registers_routes": false,
@@ -7861,7 +8608,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7879,7 +8628,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_CORE_START_GRACE_AFTER_RUNNING_MS"
@@ -7899,7 +8650,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_RELEASE_ED25519_PRIVATE_KEY"
@@ -7919,7 +8672,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7937,7 +8692,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_ANDROID_KEYSTORE_BASE64",
@@ -7961,7 +8718,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -7979,7 +8738,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_E2E_PORT"
@@ -7999,7 +8760,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8017,7 +8780,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8035,7 +8800,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8044,7 +8811,7 @@
       "module_id": "core",
       "kind": "configuration",
       "path": "xkeen-ui/install.sh",
-      "size_bytes": 73993,
+      "size_bytes": 74082,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -8053,7 +8820,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_ENTWARE_MIRRORS",
@@ -8085,7 +8854,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_LOG_DIR",
@@ -8123,7 +8894,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8150,7 +8923,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8177,7 +8952,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8204,7 +8981,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8231,7 +9010,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8258,7 +9039,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8285,7 +9068,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8313,7 +9098,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8339,7 +9126,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8361,7 +9150,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8383,7 +9174,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8405,7 +9198,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8433,7 +9228,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8457,7 +9254,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8483,7 +9282,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8507,7 +9308,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8535,7 +9338,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8561,7 +9366,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8589,7 +9396,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8617,7 +9426,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8645,7 +9456,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8673,7 +9486,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8700,7 +9515,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8724,7 +9541,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8751,7 +9570,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8778,7 +9599,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8802,7 +9625,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8828,7 +9653,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8854,7 +9681,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8880,7 +9709,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8904,7 +9735,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8932,7 +9765,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8956,7 +9791,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -8980,7 +9817,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9004,7 +9843,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9028,7 +9869,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9052,7 +9895,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9061,7 +9906,7 @@
       "module_id": "core",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/restart_log.js",
-      "size_bytes": 77882,
+      "size_bytes": 77732,
       "depends_on": [
         "engine.xray"
       ],
@@ -9081,7 +9926,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9105,7 +9952,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9129,7 +9978,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9153,7 +10004,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9177,7 +10030,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9205,7 +10060,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9229,7 +10086,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9253,7 +10112,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9277,7 +10138,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9301,7 +10164,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9325,7 +10190,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9349,7 +10216,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9373,7 +10242,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9402,7 +10273,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9430,7 +10303,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9454,7 +10329,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9480,7 +10357,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9504,7 +10383,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9528,7 +10409,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9557,7 +10440,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9586,7 +10471,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9612,7 +10499,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9636,7 +10525,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9662,7 +10553,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9686,7 +10579,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9712,7 +10607,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9736,7 +10633,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9760,7 +10659,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9784,7 +10685,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9808,7 +10711,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9832,7 +10737,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9856,7 +10763,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9880,7 +10789,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9904,7 +10815,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9928,7 +10841,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9954,7 +10869,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9972,7 +10889,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -9996,7 +10915,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10005,7 +10926,7 @@
       "module_id": "core",
       "kind": "frontend_javascript",
       "path": "xkeen-ui/static/js/util/command_job.js",
-      "size_bytes": 7818,
+      "size_bytes": 8302,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -10020,7 +10941,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10044,7 +10967,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10070,7 +10995,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10094,7 +11021,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10123,7 +11052,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10148,7 +11079,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10177,7 +11110,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10201,7 +11136,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10219,7 +11156,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10237,7 +11176,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10255,7 +11196,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_E2E_MODULE_PROFILE"
@@ -10275,7 +11218,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10293,7 +11238,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_ENV_SHOTS_DIR",
@@ -10323,7 +11270,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10341,7 +11290,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10359,7 +11310,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10377,7 +11330,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10395,7 +11350,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_GUARD_SHOTS_DIR",
@@ -10416,7 +11373,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10434,7 +11393,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10452,7 +11413,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10470,7 +11433,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10488,7 +11453,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10506,7 +11473,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_E2E_MODULE_PROFILE"
@@ -10526,7 +11495,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10544,7 +11515,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_E2E_MODULE_PROFILE"
@@ -10564,7 +11537,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10582,7 +11557,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10600,7 +11577,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10618,7 +11597,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10636,7 +11617,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10654,7 +11637,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10672,7 +11657,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_CAPTURE_STAGE0_BASELINE"
@@ -10692,7 +11679,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10710,7 +11699,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10728,7 +11719,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10746,7 +11739,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10764,7 +11759,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10782,7 +11779,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10800,7 +11799,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10818,7 +11819,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10836,7 +11839,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10854,7 +11859,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10872,7 +11879,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10890,7 +11899,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10908,7 +11919,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_CAPTURE_UI"
@@ -10928,7 +11941,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10946,7 +11961,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10964,7 +11981,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -10982,7 +12001,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11000,7 +12021,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11018,7 +12041,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11036,7 +12061,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11054,7 +12081,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11072,7 +12101,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11090,7 +12121,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_E2E_MODULE_PROFILE"
@@ -11110,7 +12143,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11128,7 +12163,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11146,7 +12183,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11164,7 +12203,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11182,7 +12223,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11200,7 +12243,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11218,7 +12263,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11236,7 +12283,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11254,7 +12303,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_E2E_MODULE_PROFILE"
@@ -11274,7 +12325,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11298,7 +12351,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11316,7 +12371,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_REMOTEFM_ENABLE"
@@ -11342,7 +12399,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11370,7 +12429,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11398,7 +12459,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11426,7 +12489,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11450,7 +12515,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [
         "XKEEN_UI_DEVTOOLS_SECTIONS_WHITELIST",
@@ -11477,7 +12544,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11501,7 +12570,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11525,7 +12596,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11551,7 +12624,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11575,7 +12650,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11599,7 +12676,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11623,7 +12702,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11641,7 +12722,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11665,7 +12748,9 @@
       ],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11683,7 +12768,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11701,7 +12788,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11719,7 +12808,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11737,7 +12828,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11755,7 +12848,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11773,7 +12868,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11791,7 +12888,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11809,7 +12908,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11827,7 +12928,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11845,7 +12948,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11863,7 +12968,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11881,7 +12988,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11899,7 +13008,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11917,7 +13028,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11935,7 +13048,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11953,7 +13068,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11971,7 +13088,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -11989,7 +13108,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12007,7 +13128,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12025,7 +13148,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12043,7 +13168,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12061,7 +13188,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12079,7 +13208,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12097,7 +13228,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12115,7 +13248,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12133,7 +13268,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12151,7 +13288,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12169,7 +13308,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12187,7 +13328,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12205,7 +13348,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12223,7 +13368,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12241,7 +13388,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12259,7 +13408,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12277,7 +13428,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12295,7 +13448,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12313,7 +13468,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12331,7 +13488,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12349,7 +13508,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12367,7 +13528,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12385,7 +13548,9 @@
       "frontend_bundle": [],
       "system_requirements": [
         "python3",
-        "flask"
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
       ],
       "environment_variables": [],
       "removable": false
@@ -12488,8 +13653,7 @@
         "tool.editor",
         "engine.xray",
         "tool.backups",
-        "integration.happ",
-        "tool.terminal"
+        "integration.happ"
       ],
       "starts_background_task": false,
       "background_markers": [],
@@ -13277,8 +14441,7 @@
       "size_bytes": 188832,
       "depends_on": [
         "core",
-        "tool.editor",
-        "tool.terminal"
+        "tool.editor"
       ],
       "starts_background_task": false,
       "background_markers": [],
@@ -13540,8 +14703,7 @@
       "size_bytes": 16398,
       "depends_on": [
         "core",
-        "tool.editor",
-        "tool.terminal"
+        "tool.editor"
       ],
       "starts_background_task": false,
       "background_markers": [],
@@ -13680,7 +14842,7 @@
       "module_id": "engine.mihomo",
       "kind": "backend_test",
       "path": "tests/test_mihomo_async_restart.py",
-      "size_bytes": 4229,
+      "size_bytes": 5878,
       "depends_on": [
         "core",
         "tool.editor"
@@ -15276,7 +16438,7 @@
       "module_id": "engine.mihomo",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/mihomo_panel.js",
-      "size_bytes": 138118,
+      "size_bytes": 138216,
       "depends_on": [
         "core",
         "tool.editor"
@@ -15886,7 +17048,6 @@
       "depends_on": [
         "core",
         "tool.editor",
-        "tool.terminal",
         "tool.backups"
       ],
       "starts_background_task": false,
@@ -16190,7 +17351,6 @@
       "depends_on": [
         "core",
         "tool.editor",
-        "tool.terminal",
         "tool.backups"
       ],
       "starts_background_task": false,
@@ -20081,8 +21241,7 @@
       "size_bytes": 30296,
       "depends_on": [
         "core",
-        "integration.happ",
-        "tool.terminal"
+        "integration.happ"
       ],
       "starts_background_task": false,
       "background_markers": [],
@@ -23949,38 +25108,9 @@
       ],
       "frontend_bundle": [],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
-      "removable": true
-    },
-    {
-      "module_id": "tool.terminal",
-      "kind": "backend_service",
-      "path": "xkeen-ui/services/command_jobs.py",
-      "size_bytes": 14839,
-      "depends_on": [
-        "core"
-      ],
-      "starts_background_task": true,
-      "background_markers": [
-        "daemon_thread",
-        "threading.Thread"
-      ],
-      "registers_routes": false,
-      "routes": [],
-      "frontend_bundle": [],
-      "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
-      ],
-      "environment_variables": [
-        "XKEEN_COMMAND_MAX_OUTPUT_CHARS",
-        "XKEEN_RESTART_LOG_FILE"
-      ],
       "removable": true
     },
     {
@@ -24001,41 +25131,12 @@
       "routes": [],
       "frontend_bundle": [],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [
         "XKEEN_PTY_IDLE_TTL_SECONDS",
         "XKEEN_PTY_MAX_BUF_CHARS",
         "XKEEN_UI_PTY_SESSION"
-      ],
-      "removable": true
-    },
-    {
-      "module_id": "tool.terminal",
-      "kind": "backend_service",
-      "path": "xkeen-ui/services/xkeen_commands_catalog.py",
-      "size_bytes": 12182,
-      "depends_on": [
-        "core"
-      ],
-      "starts_background_task": false,
-      "background_markers": [],
-      "registers_routes": false,
-      "routes": [],
-      "frontend_bundle": [],
-      "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
-      ],
-      "environment_variables": [
-        "XKEEN_ALLOW_SHELL",
-        "XKEEN_BIN",
-        "XKEEN_INITD_FILE",
-        "XKEEN_INITD_SCRIPT",
-        "XKEEN_INIT_SCRIPT"
       ],
       "removable": true
     },
@@ -24053,9 +25154,7 @@
       "routes": [],
       "frontend_bundle": [],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [
         "XKEEN_UI_PTY_SESSION"
@@ -24083,9 +25182,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24110,9 +25207,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24138,9 +25233,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24166,9 +25259,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24194,9 +25285,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [
         "XKEEN_ALLOW_SHELL"
@@ -24224,9 +25313,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24252,9 +25339,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24280,9 +25365,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24308,9 +25391,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24336,9 +25417,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24364,9 +25443,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24392,9 +25469,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24420,9 +25495,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24448,9 +25521,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24476,9 +25547,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24504,9 +25573,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24532,9 +25599,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24560,9 +25625,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24588,9 +25651,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24616,9 +25677,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24644,9 +25703,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24672,9 +25729,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24700,9 +25755,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24728,9 +25781,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24756,9 +25807,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24784,9 +25833,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24812,9 +25859,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24840,9 +25885,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24868,9 +25911,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24896,9 +25937,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24924,9 +25963,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24952,9 +25989,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -24980,9 +26015,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [
         "XKEEN_ALLOW_SHELL"
@@ -25010,9 +26043,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -25038,9 +26069,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -25066,9 +26095,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [
         "XKEEN_TERMINAL_QC_MODE_KEY"
@@ -25096,9 +26123,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -25124,9 +26149,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -25152,9 +26175,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -25180,9 +26201,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -25208,9 +26227,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -25236,9 +26253,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -25264,9 +26279,7 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
@@ -25292,16 +26305,14 @@
         "xkeen-page"
       ],
       "system_requirements": [
-        "shell",
-        "gevent (optional)",
-        "gevent-websocket (optional)"
+        "shell"
       ],
       "environment_variables": [],
       "removable": true
     }
   ],
   "routes": {
-    "endpoint_count": 317,
+    "endpoint_count": 318,
     "files_with_routes": 51,
     "endpoint_files": [
       {
@@ -25680,6 +26691,11 @@
           {
             "method": "GET",
             "path": "/api/operation-diagnostics/<ref>",
+            "decorator": "bp.get"
+          },
+          {
+            "method": "GET",
+            "path": "/api/restart-job/<job_id>",
             "decorator": "bp.get"
           },
           {
@@ -29775,16 +30791,16 @@
       {
         "from": "core",
         "to": "tool.terminal",
-        "unit_count": 16,
+        "unit_count": 8,
         "examples": [
-          "xkeen-ui/app.py",
-          "xkeen-ui/app_factory.py",
           "xkeen-ui/run_server.py",
           "xkeen-ui/routes/__init__.py",
-          "xkeen-ui/routes/xkeen_lists.py",
-          "xkeen-ui/services/capabilities.py",
-          "xkeen-ui/services/cores.py",
-          "xkeen-ui/services/xkeen.py"
+          "tests/test_module_backend_gates.py",
+          "xkeen-ui/static/js/features/index.js",
+          "xkeen-ui/static/js/pages/panel.lazy_bindings.runtime.js",
+          "xkeen-ui/static/js/pages/panel.module_loader.js",
+          "xkeen-ui/static/js/pages/panel_shell.shared.js",
+          "xkeen-ui/static/js/runtime/lazy_runtime.js"
         ]
       },
       {
@@ -29857,16 +30873,6 @@
         ]
       },
       {
-        "from": "engine.mihomo",
-        "to": "tool.terminal",
-        "unit_count": 3,
-        "examples": [
-          "xkeen-ui/routes/mihomo.py",
-          "xkeen-ui/services/mihomo_dns.py",
-          "xkeen-ui/services/mihomo_runtime.py"
-        ]
-      },
-      {
         "from": "engine.xray",
         "to": "core",
         "unit_count": 138,
@@ -29930,15 +30936,6 @@
           "xkeen-ui/routes/routing/dat.py",
           "xkeen-ui/routes/routing/dat_files.py",
           "xkeen-ui/services/geodat/runner.py"
-        ]
-      },
-      {
-        "from": "engine.xray",
-        "to": "tool.terminal",
-        "unit_count": 2,
-        "examples": [
-          "xkeen-ui/routes/routing/config.py",
-          "xkeen-ui/routes/xray_configs.py"
         ]
       },
       {
@@ -30033,14 +31030,6 @@
         ]
       },
       {
-        "from": "tool.advanced-diagnostics",
-        "to": "tool.terminal",
-        "unit_count": 1,
-        "examples": [
-          "xkeen-ui/services/devtools/env.py"
-        ]
-      },
-      {
         "from": "tool.backups",
         "to": "core",
         "unit_count": 8,
@@ -30130,16 +31119,16 @@
       {
         "from": "tool.terminal",
         "to": "core",
-        "unit_count": 49,
+        "unit_count": 47,
         "examples": [
           "xkeen-ui/routes/commands.py",
-          "xkeen-ui/services/command_jobs.py",
           "xkeen-ui/services/ws_pty.py",
-          "xkeen-ui/services/xkeen_commands_catalog.py",
           "tests/test_ws_pty_replay.py",
           "xkeen-ui/static/js/pages/terminal.lazy.entry.js",
           "xkeen-ui/static/js/features/commands_list.js",
-          "xkeen-ui/static/js/features/terminal_debug.js"
+          "xkeen-ui/static/js/features/terminal_debug.js",
+          "xkeen-ui/static/js/terminal/_core.js",
+          "xkeen-ui/static/js/terminal/capabilities.js"
         ]
       }
     ],
@@ -30242,16 +31231,15 @@
       {
         "from": "core",
         "to": "tool.terminal",
-        "unit_count": 13,
+        "unit_count": 7,
         "examples": [
-          "xkeen-ui/app.py",
-          "xkeen-ui/app_factory.py",
           "xkeen-ui/run_server.py",
           "xkeen-ui/routes/__init__.py",
-          "xkeen-ui/routes/xkeen_lists.py",
-          "xkeen-ui/services/capabilities.py",
-          "xkeen-ui/services/cores.py",
-          "xkeen-ui/services/xkeen.py"
+          "xkeen-ui/static/js/features/index.js",
+          "xkeen-ui/static/js/pages/panel.lazy_bindings.runtime.js",
+          "xkeen-ui/static/js/pages/panel.module_loader.js",
+          "xkeen-ui/static/js/pages/panel_shell.shared.js",
+          "xkeen-ui/static/js/runtime/lazy_runtime.js"
         ]
       },
       {
@@ -30323,16 +31311,6 @@
         ]
       },
       {
-        "from": "engine.mihomo",
-        "to": "tool.terminal",
-        "unit_count": 3,
-        "examples": [
-          "xkeen-ui/routes/mihomo.py",
-          "xkeen-ui/services/mihomo_dns.py",
-          "xkeen-ui/services/mihomo_runtime.py"
-        ]
-      },
-      {
         "from": "engine.xray",
         "to": "core",
         "unit_count": 82,
@@ -30396,15 +31374,6 @@
           "xkeen-ui/routes/routing/dat.py",
           "xkeen-ui/routes/routing/dat_files.py",
           "xkeen-ui/services/geodat/runner.py"
-        ]
-      },
-      {
-        "from": "engine.xray",
-        "to": "tool.terminal",
-        "unit_count": 2,
-        "examples": [
-          "xkeen-ui/routes/routing/config.py",
-          "xkeen-ui/routes/xray_configs.py"
         ]
       },
       {
@@ -30498,14 +31467,6 @@
         ]
       },
       {
-        "from": "tool.advanced-diagnostics",
-        "to": "tool.terminal",
-        "unit_count": 1,
-        "examples": [
-          "xkeen-ui/services/devtools/env.py"
-        ]
-      },
-      {
         "from": "tool.backups",
         "to": "core",
         "unit_count": 8,
@@ -30595,16 +31556,16 @@
       {
         "from": "tool.terminal",
         "to": "core",
-        "unit_count": 48,
+        "unit_count": 46,
         "examples": [
           "xkeen-ui/routes/commands.py",
-          "xkeen-ui/services/command_jobs.py",
           "xkeen-ui/services/ws_pty.py",
-          "xkeen-ui/services/xkeen_commands_catalog.py",
           "xkeen-ui/static/js/pages/terminal.lazy.entry.js",
           "xkeen-ui/static/js/features/commands_list.js",
           "xkeen-ui/static/js/features/terminal_debug.js",
-          "xkeen-ui/static/js/terminal/_core.js"
+          "xkeen-ui/static/js/terminal/_core.js",
+          "xkeen-ui/static/js/terminal/capabilities.js",
+          "xkeen-ui/static/js/terminal/chrome.js"
         ]
       }
     ],
@@ -30707,16 +31668,15 @@
       {
         "from": "core",
         "to": "tool.terminal",
-        "unit_count": 13,
+        "unit_count": 7,
         "examples": [
-          "xkeen-ui/app.py",
-          "xkeen-ui/app_factory.py",
           "xkeen-ui/run_server.py",
           "xkeen-ui/routes/__init__.py",
-          "xkeen-ui/routes/xkeen_lists.py",
-          "xkeen-ui/services/capabilities.py",
-          "xkeen-ui/services/cores.py",
-          "xkeen-ui/services/xkeen.py"
+          "xkeen-ui/static/js/features/index.js",
+          "xkeen-ui/static/js/pages/panel.lazy_bindings.runtime.js",
+          "xkeen-ui/static/js/pages/panel.module_loader.js",
+          "xkeen-ui/static/js/pages/panel_shell.shared.js",
+          "xkeen-ui/static/js/runtime/lazy_runtime.js"
         ]
       }
     ],
@@ -30828,16 +31788,16 @@
       {
         "from": "core",
         "to": "tool.terminal",
-        "unit_count": 16,
+        "unit_count": 8,
         "examples": [
-          "xkeen-ui/app.py",
-          "xkeen-ui/app_factory.py",
           "xkeen-ui/run_server.py",
           "xkeen-ui/routes/__init__.py",
-          "xkeen-ui/routes/xkeen_lists.py",
-          "xkeen-ui/services/capabilities.py",
-          "xkeen-ui/services/cores.py",
-          "xkeen-ui/services/xkeen.py"
+          "tests/test_module_backend_gates.py",
+          "xkeen-ui/static/js/features/index.js",
+          "xkeen-ui/static/js/pages/panel.lazy_bindings.runtime.js",
+          "xkeen-ui/static/js/pages/panel.module_loader.js",
+          "xkeen-ui/static/js/pages/panel_shell.shared.js",
+          "xkeen-ui/static/js/runtime/lazy_runtime.js"
         ]
       }
     ]
@@ -31002,16 +31962,15 @@
         {
           "from": "core",
           "to": "tool.terminal",
-          "unit_count": 13,
+          "unit_count": 7,
           "examples": [
-            "xkeen-ui/app.py",
-            "xkeen-ui/app_factory.py",
             "xkeen-ui/run_server.py",
             "xkeen-ui/routes/__init__.py",
-            "xkeen-ui/routes/xkeen_lists.py",
-            "xkeen-ui/services/capabilities.py",
-            "xkeen-ui/services/cores.py",
-            "xkeen-ui/services/xkeen.py"
+            "xkeen-ui/static/js/features/index.js",
+            "xkeen-ui/static/js/pages/panel.lazy_bindings.runtime.js",
+            "xkeen-ui/static/js/pages/panel.module_loader.js",
+            "xkeen-ui/static/js/pages/panel_shell.shared.js",
+            "xkeen-ui/static/js/runtime/lazy_runtime.js"
           ]
         }
       ],
@@ -31044,8 +32003,8 @@
           "size_bytes": 828158
         },
         "tool.terminal": {
-          "unit_count": 49,
-          "size_bytes": 510348
+          "unit_count": 47,
+          "size_bytes": 483327
         },
         "tool.files": {
           "unit_count": 85,

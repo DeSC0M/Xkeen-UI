@@ -16,17 +16,63 @@ def _read(rel_path: str) -> str:
 
 def test_mihomo_async_restart_flow_persists_full_restart_log():
     panel_src = _read("xkeen-ui/static/js/features/mihomo_panel.js")
+    command_job_src = _read("xkeen-ui/static/js/util/command_job.js")
     route_src = _read("xkeen-ui/routes/mihomo.py")
     jobs_src = _read("xkeen-ui/services/command_jobs.py")
     restart_log_src = _read("xkeen-ui/services/restart_log.py")
 
     assert "const url = restart ? '/api/mihomo-config?async=1' : '/api/mihomo-config';" in panel_src
     assert "const jobId = data.restart_job_id || data.job_id || data.restartJobId || null;" in panel_src
+    assert "/api/restart-job/" in panel_src
+    assert "const canWs = (typeof options.hasWs === 'boolean') ? options.hasWs : true;" in command_job_src
+    assert "res.status === 404 && statusPath !== restartStatusPath" in command_job_src
     assert 'async_q = request.args.get("async")' in route_src
     assert 'resp.update({"restart_queued": True, "restart_job_id": job.id})' in route_src
     assert "def write_restart_log(log_file: str, raw_text: str) -> None:" in restart_log_src
     assert "def _sync_restart_log(job: \"CommandJob\" | None) -> None:" in jobs_src
     assert "write_restart_log(_restart_log_file(), payload)" in jobs_src
+
+
+def test_core_restart_job_status_is_available_without_terminal_module(monkeypatch, tmp_path):
+    sys.path.insert(0, str(ROOT / "xkeen-ui"))
+    try:
+        service = importlib.import_module("routes.service")
+        command_jobs = importlib.import_module("services.command_jobs")
+    finally:
+        sys.path.pop(0)
+
+    class Job:
+        id = "restart-job-1"
+        flag = "-restart"
+        status = "finished"
+        exit_code = 0
+        output = "Mihomo started\n"
+        created_at = 1.0
+        finished_at = 2.0
+        error = None
+
+    monkeypatch.setattr(
+        command_jobs,
+        "get_command_job",
+        lambda job_id: Job() if job_id == "restart-job-1" else None,
+    )
+
+    app = Flask("restart-job-status")
+    app.register_blueprint(
+        service.create_service_blueprint(
+            restart_xkeen=lambda **_kwargs: True,
+            append_restart_log=lambda *_args, **_kwargs: None,
+            XRAY_ERROR_LOG=str(tmp_path / "xray-error.log"),
+        )
+    )
+
+    response = app.test_client().get("/api/restart-job/restart-job-1")
+    assert response.status_code == 200
+    assert response.get_json()["output"] == "Mihomo started\n"
+
+    missing = app.test_client().get("/api/restart-job/missing")
+    assert missing.status_code == 404
+    assert missing.get_json()["code"] == "restart_job_not_found"
 
 
 def test_routing_editor_save_and_restart_uses_raw_config_endpoint():

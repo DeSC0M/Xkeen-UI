@@ -210,6 +210,7 @@ def test_restart_log_subscribes_to_events_ws_for_instant_refresh():
     assert "ensureRestartLogWs" in restart_log_src
     assert "debouncedRestartLogReload" in restart_log_src
     assert "scheduleRestartLogWsReconnect" in restart_log_src
+    assert "return active.includes('core');" in restart_log_src
 
 
 def test_outbounds_subscription_refresh_relies_on_restart_log_for_changed_restarts():

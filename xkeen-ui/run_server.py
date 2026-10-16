@@ -74,7 +74,7 @@ from app import (
 )
 _ACTIVE_MODULES = set(app.extensions.get("xkeen.module_activation", {}).get("active_module_ids", []))
 _WS_RUNTIME_MODULES = frozenset(
-    {"tool.terminal", "engine.xray", "engine.mihomo", "tool.advanced-diagnostics"}
+    {"core", "engine.xray", "engine.mihomo", "tool.advanced-diagnostics"}
 )
 _WS_RUNTIME_NEEDED = bool(_ACTIVE_MODULES.intersection(_WS_RUNTIME_MODULES))
 # The handlers of an optional module are imported only when the module is
@@ -145,7 +145,7 @@ def application(environ, start_response):
             adjust_log_timezone=adjust_log_timezone,
         )
 
-    if GEVENT_AVAILABLE and "tool.terminal" in _ACTIVE_MODULES and path == "/ws/command-status":
+    if GEVENT_AVAILABLE and path == "/ws/command-status":
         qs_safe = redact_ws_query_string(environ.get("QUERY_STRING", ""))
         return handle_command_status_request(
             environ,
@@ -171,7 +171,7 @@ def application(environ, start_response):
     if (
         GEVENT_AVAILABLE
         and _ACTIVE_MODULES.intersection(
-            {"tool.terminal", "engine.xray", "engine.mihomo", "tool.advanced-diagnostics"}
+            {"core", "engine.xray", "engine.mihomo", "tool.advanced-diagnostics"}
         )
         and path == "/ws/events"
     ):

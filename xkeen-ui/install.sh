@@ -1759,10 +1759,10 @@ rm -rf "$UI_DIR.previous-version" "$UI_DIR.previous-version.old"
 log_install "[=] Итог установки:"
 ui_step_done
 if [ "$WS_VERDICT" = "on" ]; then
-  log_install "[=] WebSocket: ВКЛ — доступен полноценный терминал (PTY) и потоковые логи Xray."
+  log_install "[=] WebSocket: ВКЛ — потоковые функции панели доступны; PTY работает, если установлен модуль терминала."
 else
   log_install "[=] WebSocket: ВЫКЛ — $WS_VERDICT_REASON."
-  log_install "[=] Терминал останется в lite-режиме, логи Xray — через HTTP-пулинг."
+  log_install "[=] Потоковые функции панели используют HTTP-пулинг; терминал останется в lite-режиме."
   log_install "[=] Проверить пакеты: $PYTHON_BIN $UI_DIR/scripts/check_pydeps_integrity.py gevent gevent-websocket"
 fi
 log_install "[=] Подробности установки: $INSTALL_LOG"

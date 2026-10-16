@@ -206,13 +206,9 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
         )
     )
 
-    # WebSocket token issuance is needed by every active WS-owning module.
-    if (
-        module_active("tool.terminal")
-        or module_active("engine.xray")
-        or module_active("tool.advanced-diagnostics")
-        or module_active("engine.mihomo")
-    ):
+    # WebSocket token issuance belongs to core: operation events and internal
+    # restart jobs must work in minimal profiles without tool.terminal.
+    if module_active("core"):
         from .ws_support import create_ws_support_blueprint
 
         app.register_blueprint(create_ws_support_blueprint())

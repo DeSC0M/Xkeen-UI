@@ -78,7 +78,7 @@ VIEW_SPECS: tuple[dict[str, Any], ...] = (
         "target_partial": "xkeen-ui/templates/panel/screens/commands.html",
         "root_id": "view-commands",
         "frontend_roots": ["panel-core", "terminal-lazy"],
-        "api_groups": ["/api/run-command", "/api/command-jobs/*", "/ws/*"],
+        "api_groups": ["/api/run-command", "/api/command-jobs/*", "/ws/pty"],
         "dependencies": ["core"],
     },
     {

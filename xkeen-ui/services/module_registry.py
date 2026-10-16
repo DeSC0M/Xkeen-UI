@@ -86,6 +86,7 @@ BLUEPRINT_OWNERS: dict[str, str] = {
 
 WS_HANDLER_OWNERS: dict[str, str] = {
     "/ws/xray-logs": "engine.xray",
+    "/ws/command-status": "core",
     "/ws/mihomo-clash/connections": "engine.mihomo",
     "/ws/mihomo-clash/telemetry": "engine.mihomo",
     "/ws/mihomo-clash/logs": "engine.mihomo",
@@ -179,11 +180,16 @@ MODULE_DEFINITIONS: tuple[ModuleDefinition, ...] = (
     ModuleDefinition(
         id="core",
         name="Xkeen UI Core",
-        description="Запуск панели, авторизация, shell, настройки, сервис и общий runtime.",
+        description="Запуск панели, авторизация, WebSocket runtime, настройки, сервис и общий runtime.",
         version=REGISTRY_VERSION,
         dependencies=(),
         conflicts=(),
-        system_requirements=(_requirement("python3"), _requirement("flask")),
+        system_requirements=(
+            _requirement("python3"),
+            _requirement("flask"),
+            _requirement("gevent", optional=True),
+            _requirement("gevent-websocket", optional=True),
+        ),
         size_bytes=_module_size("core"),
         removable=False,
         can_disable=False,
@@ -237,14 +243,12 @@ MODULE_DEFINITIONS: tuple[ModuleDefinition, ...] = (
     ModuleDefinition(
         id="tool.terminal",
         name="Терминал и команды",
-        description="PTY, WebSocket, xterm, command jobs и shell policy.",
+        description="PTY, xterm, интерактивные команды и shell policy.",
         version=REGISTRY_VERSION,
         dependencies=("core",),
         conflicts=(),
         system_requirements=(
             _requirement("shell"),
-            _requirement("gevent", optional=True),
-            _requirement("gevent-websocket", optional=True),
         ),
         size_bytes=_module_size("tool.terminal"),
         removable=True,

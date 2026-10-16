@@ -49,7 +49,7 @@ head → startup → header → navigation → global_controls → screens → m
 | mihomo | engine.mihomo | xkeen-ui/templates/panel/screens/mihomo.html | `#view-mihomo` / 1200 | panel-mihomo | /api/mihomo/*, /api/mihomo/clash/* |
 | xkeen | core | xkeen-ui/templates/panel/screens/xkeen.html | `#view-xkeen` / 1933 | panel-core | /api/service/*, /api/cores/*, /api/settings/* |
 | xray-logs | engine.xray | xkeen-ui/templates/panel/screens/xray_logs.html | `#view-xray-logs` / 2387 | panel-core, panel-routing | /api/xray/logs, /api/xray/* |
-| commands | tool.terminal | xkeen-ui/templates/panel/screens/commands.html | `#view-commands` / 2048 | panel-core, terminal-lazy | /api/run-command, /api/command-jobs/*, /ws/* |
+| commands | tool.terminal | xkeen-ui/templates/panel/screens/commands.html | `#view-commands` / 2048 | panel-core, terminal-lazy | /api/run-command, /api/command-jobs/*, /ws/pty |
 | files | tool.files | xkeen-ui/templates/panel/screens/files.html | `#view-files` / 2295 | panel-core, file-manager-lazy | /api/fs/*, /api/fileops/*, /api/remotefs/* |
 
 Все дочерние `id`, `data-*`, `aria-*` и trigger selectors screen должны сохраниться при переносе. `mihomo_generator.html` не входит в эту таблицу: это отдельная canonical page с собственным entrypoint.

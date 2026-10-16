@@ -101,6 +101,7 @@ def test_lifecycle_api_is_core_owned_and_wired_lazily(tmp_path, monkeypatch):
     assert panel_restarts == ["module-lifecycle"]
     assert service._active_engines() == frozenset({"engine.xray"})
     assert app.test_client().get("/api/modules/operations/status").status_code == 200
+    assert app.test_client().post("/api/ws-token", json={"scope": "events"}).status_code == 200
 
 
 def test_lifecycle_port_falls_back_for_invalid_values(monkeypatch):
@@ -146,6 +147,8 @@ def test_mihomo_only_registers_mihomo_routes_and_excludes_xray_tools(tmp_path):
     assert "devtools" in app.blueprints
     assert "/api/xray/subscriptions" not in rules
     assert "/api/mihomo/clash/status" in rules
+    assert "/api/restart-job/<job_id>" in rules
+    assert "/api/run-command/<job_id>" not in rules
     assert app.test_client().get("/api/xray/subscriptions").status_code == 404
 
 

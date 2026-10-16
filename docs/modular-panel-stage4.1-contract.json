@@ -367,7 +367,7 @@
       "api_groups": [
         "/api/run-command",
         "/api/command-jobs/*",
-        "/ws/*"
+        "/ws/pty"
       ],
       "dependencies": [
         "core"

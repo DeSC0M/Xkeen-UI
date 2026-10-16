@@ -1258,7 +1258,8 @@ provision_python_libs_check() {
 
   echo "[*] Проверяю наличие Flask/cryptography/gevent для Python3..."
 
-  # Flask и cryptography обязательны; gevent/geventwebsocket — опциональны (WebSocket-логи).
+  # Flask и cryptography обязательны; gevent/geventwebsocket — опциональны
+  # для общего WebSocket runtime панели.
 
   NEED_FLASK=0
   NEED_CRYPTOGRAPHY=0
@@ -1275,7 +1276,7 @@ provision_python_libs_check() {
   fi
 
 
-  # Проверяем gevent и geventwebsocket (только если архитектура позволяет)
+  # Проверяем gevent и geventwebsocket (только если архитектура позволяет).
   if [ "$WANT_GEVENT" -eq 1 ]; then
     for MOD in gevent geventwebsocket; do
       if ! "$PYTHON_BIN" -c "import $MOD" >/dev/null 2>&1; then

@@ -30,13 +30,15 @@
 - `engine.mihomo`: Mihomo Blueprint, Clash API/cache/telemetry, Mihomo
   subscriptions scheduler и Mihomo WebSocket handlers;
 - `integration.happ`: Happ decryptor API;
-- `tool.terminal`: command API, PTY/command WebSocket handlers и PTY cleanup;
+- `tool.terminal`: command API, PTY WebSocket handler и PTY cleanup;
 - `tool.files`: FS, RemoteFS, FileOps и USB storage;
 - `tool.advanced-diagnostics`: DevTools, system resources и DevTools WS;
 - `tool.backups`: backup Blueprint.
 
 Общие core routes — auth, settings, registry, capabilities, service-control,
-config exchange и cores status — остаются зарегистрированными.
+config exchange, cores status, `/ws/events` и `/ws/command-status` — остаются
+зарегистрированными. Поэтому операции engine-панелей могут передавать события
+и поток статуса restart-job без установки `tool.terminal`.
 
 ## Поведение отключённых модулей
 

@@ -86,11 +86,9 @@ else:
         return value
 
 
-if "tool.terminal" in _ACTIVE_MODULES:
-    from services.command_jobs import get_command_job as _get_command_job  # noqa: E402
-else:
-    def _get_command_job(*_args, **_kwargs):
-        return None
+# Command jobs are core-owned: engine panels use them for asynchronous
+# restarts even when the optional terminal UI is not installed.
+from services.command_jobs import get_command_job as _get_command_job  # noqa: E402
 from services.events import EVENT_SUBSCRIBERS, subscribe as _subscribe_ws, unsubscribe as _unsubscribe_ws  # noqa: E402
 
 

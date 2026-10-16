@@ -1509,12 +1509,7 @@ let restartLogModuleApi = null;
       // No descriptor means an older panel page. Preserve its existing WS
       // behaviour instead of deriving a capability from absent metadata.
       if (!Array.isArray(active)) return true;
-      return active.some((moduleId) => [
-        'tool.terminal',
-        'engine.xray',
-        'engine.mihomo',
-        'tool.advanced-diagnostics',
-      ].includes(String(moduleId)));
+      return active.includes('core');
     } catch (error) {
       return true;
     }

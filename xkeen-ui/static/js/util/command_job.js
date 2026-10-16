@@ -167,11 +167,20 @@
     // HTTP polling fallback
     let lastLen = 0;
     let httpAlignedToWs = accOutput.length === 0;
+    let statusPath = `/api/run-command/${encodeURIComponent(jobId)}`;
+    const restartStatusPath = `/api/restart-job/${encodeURIComponent(jobId)}`;
     while (true) {
-      const res = await fetch(`/api/run-command/${encodeURIComponent(jobId)}`);
+      const res = await fetch(statusPath);
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok || data.ok === false) {
+        // Engine panels can enqueue an internal restart without the optional
+        // terminal module. In that profile /api/run-command is not registered,
+        // while the core-owned restart status route remains available.
+        if (res.status === 404 && statusPath !== restartStatusPath) {
+          statusPath = restartStatusPath;
+          continue;
+        }
         if (!data.error) data.error = 'HTTP ' + res.status;
         if (accOutput && typeof data.output !== 'string') data.output = accOutput;
         return data;
