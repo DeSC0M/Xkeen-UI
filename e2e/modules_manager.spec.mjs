@@ -247,9 +247,9 @@ test.describe('Module manager recovery and guards', () => {
         iconBeforeLabel: iconRect.right <= label.getBoundingClientRect().left,
         sliderWidth: sliderRect.width,
         sliderHeight: sliderRect.height,
-        stateFontSize: Number.parseFloat(getComputedStyle(state).fontSize),
-        stateSliderGap: sliderRect.top - stateRect.bottom,
-        stateBelowSlider: stateRect.bottom > sliderRect.top,
+        sliderBackground: getComputedStyle(slider).backgroundColor,
+        stateText: state.textContent,
+        stateWidth: stateRect.width,
       };
     });
 
@@ -257,9 +257,11 @@ test.describe('Module manager recovery and guards', () => {
     expect(layout.iconBeforeLabel, JSON.stringify(layout)).toBe(true);
     expect(layout.sliderWidth, JSON.stringify(layout)).toBeLessThanOrEqual(30);
     expect(layout.sliderHeight, JSON.stringify(layout)).toBeLessThanOrEqual(16);
-    expect(layout.stateFontSize, JSON.stringify(layout)).toBeLessThanOrEqual(10.5);
-    expect(layout.stateSliderGap, JSON.stringify(layout)).toBeGreaterThanOrEqual(7);
-    expect(layout.stateBelowSlider, JSON.stringify(layout)).toBe(false);
+    // The switch of the main panel: no green, no words beside the slider; the
+    // state is still said to screen readers.
+    expect(layout.sliderBackground, JSON.stringify(layout)).not.toBe('rgb(62, 174, 120)');
+    expect(layout.stateText, JSON.stringify(layout)).toMatch(/^(Включён|Выключен)$/);
+    expect(layout.stateWidth, JSON.stringify(layout)).toBeLessThanOrEqual(1);
   });
 
   test('keeps module navigation inside the compact operator header', async ({ page }) => {
@@ -287,24 +289,57 @@ test.describe('Module manager recovery and guards', () => {
     expect(layout.activeTabRadius, JSON.stringify(layout)).toBeLessThanOrEqual(6);
   });
 
-  test('groups installed module controls at the trailing edge of a row', async ({ page }) => {
+  test('a tile keeps its switch and menu on the line of its name', async ({ page }) => {
+    // 16.10.2026: in a row stretched across the screen the switch stood far
+    // from the name. A tile keeps them together; restore and remove live in «⋯».
     await page.setViewportSize({ width: 1800, height: 1300 });
     await installIdleLifecycleRoutes(page);
     await page.goto('/modules');
 
-    const row = page.locator('.modules-row').filter({ hasText: 'Mihomo' });
-    const controls = row.locator('.modules-row-actions');
-    await expect(controls).toBeVisible();
-    await expect(controls.getByRole('switch')).toBeVisible();
-    await expect(row.getByRole('button', { name: 'Восстановить Mihomo' })).toHaveCount(0);
-    await row.getByRole('button', { name: 'Развернуть Mihomo' }).click();
-    await expect(row.getByRole('button', { name: 'Восстановить Mihomo' })).toBeVisible();
-    const geometry = await row.evaluate((element) => {
-      const body = element.querySelector('.modules-module-toggle').getBoundingClientRect();
-      const actions = element.querySelector('.modules-row-actions').getBoundingClientRect();
-      return { bodyRight: body.right, actionsLeft: actions.left };
+    const tile = page.locator('.modules-tile[data-module-id="engine.mihomo"]');
+    await expect(tile.getByRole('switch')).toBeAttached();
+    await expect(tile.getByRole('button', { name: 'Восстановить Mihomo' })).toBeHidden();
+    await tile.getByLabel('Действия: Mihomo').click();
+    await expect(tile.getByRole('button', { name: 'Восстановить Mihomo' })).toBeVisible();
+    await expect(tile).toContainText('Нужен для работы: Xkeen UI Core');
+    const geometry = await tile.evaluate((element) => {
+      const box = (selector) => element.querySelector(selector).getBoundingClientRect();
+      const name = box('.modules-tile-name');
+      const slider = box('.modules-switch .dt-switch-slider');
+      return {
+        gap: Math.round(slider.left - name.right),
+        tileWidth: Math.round(element.getBoundingClientRect().width),
+        sliderMiddle: slider.top + slider.height / 2,
+        topMiddle: box('.modules-tile-top').top + box('.modules-tile-top').height / 2,
+      };
     });
-    expect(geometry.actionsLeft, JSON.stringify(geometry)).toBeGreaterThanOrEqual(geometry.bodyRight);
+    expect(geometry.gap, JSON.stringify(geometry)).toBeGreaterThan(0);
+    expect(geometry.gap, JSON.stringify(geometry)).toBeLessThan(geometry.tileWidth);
+    expect(Math.abs(geometry.sliderMiddle - geometry.topMiddle), JSON.stringify(geometry)).toBeLessThanOrEqual(2);
+
+    // A click elsewhere closes the menu, as every panel menu does.
+    await page.locator('.modules-list-header').click();
+    await expect(tile.getByRole('button', { name: 'Восстановить Mihomo' })).toBeHidden();
+  });
+
+  test('module icons stand in one column and Core is framed like a tile on a phone', async ({ page }) => {
+    await installIdleLifecycleRoutes(page);
+    for (const width of [1600, 1100, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.goto('/modules');
+      const geometry = await page.evaluate(() => {
+        const left = (selector) => document.querySelector(selector).getBoundingClientRect().left;
+        const core = document.querySelector('.modules-core');
+        return {
+          offset: Math.round(left('.modules-core .modules-module-icon') - left('.modules-tile .modules-module-icon')),
+          coreBorder: getComputedStyle(core).borderTopWidth,
+          columns: getComputedStyle(document.querySelector('.modules-grid')).gridTemplateColumns.split(' ').length,
+        };
+      });
+      expect(geometry.offset, `${width}: ${JSON.stringify(geometry)}`).toBe(0);
+      expect(geometry.coreBorder, `${width}: ${JSON.stringify(geometry)}`).toBe(width <= 700 ? '1px' : '0px');
+      expect(geometry.columns, `${width}: ${JSON.stringify(geometry)}`).toBe(width > 1300 ? 4 : width > 700 ? 2 : 1);
+    }
   });
 
   test('uses neutral dashboard surfaces in the dark theme', async ({ page }) => {
@@ -351,7 +386,7 @@ test.describe('Module manager recovery and guards', () => {
       const theme = read(document.querySelector('#theme-toggle-btn'));
       const restart = read(restartButton);
       const title = read(document.querySelector('header.modules-header h1'));
-      const description = read(document.querySelector('.modules-row p'));
+      const description = read(document.querySelector('.modules-tile-description'));
       return { headerButton, theme, restart, title, description };
     });
 
@@ -371,26 +406,20 @@ test.describe('Module manager recovery and guards', () => {
       const update = document.querySelector('.modules-update-check');
       const updateButton = document.querySelector('.modules-update-check-button');
       const headerButton = document.querySelector('header.modules-header .xk-header-btn');
-      const state = document.querySelector('.modules-switch-state');
-      const slider = document.querySelector('.modules-switch .dt-switch-slider');
       const updateRect = update.getBoundingClientRect();
       const buttonRect = updateButton.getBoundingClientRect();
       const headerStyle = getComputedStyle(headerButton);
       const updateStyle = getComputedStyle(updateButton);
-      const stateRect = state.getBoundingClientRect();
-      const sliderRect = slider.getBoundingClientRect();
       return {
         buttonWidth: buttonRect.width,
         updateWidth: updateRect.width,
         updateBackground: updateStyle.backgroundColor,
         headerBackground: headerStyle.backgroundColor,
-        switchGap: sliderRect.top - stateRect.bottom,
       };
     });
 
     expect(layout.buttonWidth, JSON.stringify(layout)).toBeLessThan(layout.updateWidth / 2);
     expect(layout.updateBackground, JSON.stringify(layout)).toBe(layout.headerBackground);
-    expect(layout.switchGap, JSON.stringify(layout)).toBeGreaterThanOrEqual(3);
 
     await page.getByRole('button', { name: 'Выйти' }).hover();
     const tooltip = page.locator('#xk-tooltip-portal .xk-tooltip-bubble');
@@ -412,14 +441,13 @@ test.describe('Module manager recovery and guards', () => {
     await expect(switchShell.locator('.dt-switch-slider')).toBeVisible();
     await expect(switchShell.locator('.dt-switch-label')).toHaveText('Выключен');
     await expect(switchShell.locator('.dt-switch-label')).toHaveClass(/is-disabled/);
-    const placement = await switchShell.evaluate((shell) => {
-      const state = shell.querySelector('.dt-switch-label').getBoundingClientRect();
-      const slider = shell.querySelector('.dt-switch-slider').getBoundingClientRect();
-      const style = getComputedStyle(shell);
-      return { display: style.display, stateBottom: state.bottom, sliderTop: slider.top };
-    });
-    expect(placement.display, JSON.stringify(placement)).toBe('grid');
-    expect(placement.stateBottom, JSON.stringify(placement)).toBeLessThanOrEqual(placement.sliderTop);
+    // The words are for screen readers only: the slider alone shows the state.
+    const placement = await switchShell.evaluate((shell) => ({
+      stateWidth: shell.querySelector('.dt-switch-label').getBoundingClientRect().width,
+      slider: shell.querySelector('.dt-switch-slider').getBoundingClientRect().width,
+    }));
+    expect(placement.stateWidth, JSON.stringify(placement)).toBeLessThanOrEqual(1);
+    expect(placement.slider, JSON.stringify(placement)).toBe(30);
   });
 
   test('keeps a local build readable while withholding signed lifecycle actions', async ({ page }) => {
@@ -797,7 +825,7 @@ test.describe('Module manager recovery and guards', () => {
     await recover.click();
 
     await expect(page.locator('#modules-operation-status')).toContainText('Отменено, файлы возвращены');
-    await expect(page.locator('.modules-row').filter({ hasText: TERMINAL })).toBeVisible();
+    await expect(page.locator('.modules-module').filter({ hasText: TERMINAL })).toBeVisible();
     expect(installedLoads).toBeGreaterThan(loadsBeforeRecovery);
   });
 
@@ -818,7 +846,7 @@ test.describe('Module manager recovery and guards', () => {
     });
 
     await page.goto('/modules');
-    const row = page.locator('.modules-row').filter({ hasText: 'Mihomo' });
+    const row = page.locator('.modules-tile[data-module-id="engine.mihomo"]');
     const control = row.getByRole('switch', { name: 'Включить Mihomo' });
     await expect(row.locator('.modules-switch-state')).toHaveText('Включён');
     await expect(row.locator('.modules-switch-state')).toHaveClass(/is-enabled/);
@@ -976,7 +1004,7 @@ test.describe('Module manager recovery and guards', () => {
     await expect(page.locator('#modules-card-host')).toContainText('catalog_unavailable');
     await expect(page.locator('#modules-card-host')).not.toContainText('/private/path');
     await page.getByRole('tab', { name: 'Установленные' }).click();
-    await expect(page.locator('.modules-row').first()).toContainText('Xkeen UI Core');
+    await expect(page.locator('.modules-core')).toContainText('Xkeen UI Core');
     expect(await page.evaluate(() => window.catalogInjected)).toBeUndefined();
   });
 
@@ -986,7 +1014,7 @@ test.describe('Module manager recovery and guards', () => {
       ok: false, code: 'operation_in_progress', message: '/private/operation.log',
     } }));
     await page.goto('/modules');
-    await expect(page.locator('.modules-row').first()).toContainText('Xkeen UI Core');
+    await expect(page.locator('.modules-core')).toContainText('Xkeen UI Core');
     await expect(page.locator('#modules-error')).toContainText('operation_in_progress');
     await expect(page.locator('#modules-error')).not.toContainText('/private/operation.log');
     await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeDisabled();
@@ -1016,7 +1044,7 @@ test.describe('Module manager recovery and guards', () => {
       const { getModulesController } = await import('/static/js/pages/modules.init.js');
       await getModulesController().refreshInstalledAfterTerminal();
     });
-    await expect(page.locator('.modules-row').first()).toContainText('Xkeen UI Core');
+    await expect(page.locator('.modules-core')).toContainText('Xkeen UI Core');
     await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeDisabled();
     await expect(page.getByRole('switch', { name: 'Включить Mihomo' })).toBeDisabled();
     await page.evaluate(() => document.querySelector('input[role="switch"]').click());
@@ -1101,8 +1129,9 @@ test.describe('Module manager loading', () => {
     await page.goto('/modules');
     await expect(page.getByRole('heading', { name: 'Модули и обновления' })).toBeVisible();
     await expect(page.locator('.modules-summary')).toContainText('Xkeen UI 2.10.0');
-    await expect(page.locator('.modules-row').first()).toContainText('Xkeen UI Core 1.0.0');
-    await page.getByRole('button', { name: 'Развернуть Mihomo' }).click();
+    await expect(page.locator('.modules-core')).toContainText('Xkeen UI Core');
+    await expect(page.locator('.modules-core')).toContainText('версия 1.0.0');
+    await page.getByLabel('Действия: Mihomo').click();
     await expect(page.getByRole('button', { name: 'Восстановить Mihomo' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Удалить Mihomo' })).toBeVisible();
     expect(initialCalls.sort()).toEqual(['installed', 'status']);
@@ -1272,7 +1301,7 @@ test.describe('Module lifecycle review', () => {
     // The runner restarted the panel on the way: the page must not go on with the old scripts.
     status = committedStatus;
     await expect.poll(() => page.evaluate(() => window.xkBeforeInstall === true), { timeout: 15000 }).toBe(false);
-    await expect(page.locator('.modules-row').filter({ hasText: TERMINAL })).toBeVisible();
+    await expect(page.locator('.modules-module').filter({ hasText: TERMINAL })).toBeVisible();
     await expect(page.locator('#modules-operation-status')).toContainText('Готово');
     expect(catalogCalls).toBe(1);
     await page.getByRole('tab', { name: 'Доступные' }).click();
@@ -1628,12 +1657,11 @@ test.describe('Editor variant choice', () => {
     });
 
     await page.goto('/modules');
-    const row = page.locator('.modules-module').filter({ hasText: 'Редакторы 1.0.0' });
-    await row.getByRole('button', { name: 'Развернуть Редакторы' }).click();
+    const row = page.locator('.modules-tile[data-module-id="tool.editor"]');
     const options = row.getByRole('group', { name: 'Вариант редакторов' }).getByRole('button');
     await expect(options).toHaveText(['Лёгкий', 'Стандартный', 'Расширенный']);
     await expect(options.nth(1)).toHaveAttribute('aria-pressed', 'true');
-    await expect(row).toContainText('Нужны, пока включено хотя бы одно ядро.');
+    await expect(row.locator('.modules-tile-foot')).toHaveText('Нужен, пока включено ядро');
     await expect(row).toContainText('Стандартный: CodeMirror, Monaco и сравнение версий.');
     await expect(row.getByRole('switch')).toHaveCount(0);
 
@@ -1661,8 +1689,7 @@ test.describe('Editor variant choice', () => {
     });
 
     await page.goto('/modules');
-    const row = page.locator('.modules-module').filter({ hasText: 'Редакторы 1.0.0' });
-    await row.getByRole('button', { name: 'Развернуть Редакторы' }).click();
+    const row = page.locator('.modules-tile[data-module-id="tool.editor"]');
     const options = row.getByRole('group', { name: 'Вариант редакторов' }).getByRole('button');
     await expect(options.nth(0)).toHaveAttribute('aria-pressed', 'true');
     await expect(options.nth(1)).toBeDisabled();
@@ -1772,7 +1799,7 @@ test.describe('A screen that is not drawn anew without a reason', () => {
     await page.route('**/api/modules/operations/plan', (route) => { planCalls += 1; return route.fulfill({ json: panelUpdatePlan }); });
     await page.goto('/modules');
     const toggle = page.getByRole('switch', { name: 'Включить Mihomo' });
-    await page.getByRole('button', { name: 'Развернуть Mihomo' }).click();
+    await page.getByLabel('Действия: Mihomo').click();
     await toggle.focus();
     await page.keyboard.press('Space');
     await expect.poll(() => Boolean(releaseSave)).toBe(true);

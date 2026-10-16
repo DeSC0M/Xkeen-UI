@@ -61,7 +61,7 @@
         "id": "core",
         "module_id": "core",
         "name": "Xkeen UI Core",
-        "description": "Запуск панели, авторизация, WebSocket runtime, настройки, сервис и общий runtime.",
+        "description": "Основа панели: вход, настройки и работа самой панели.",
         "version": "1.0.0",
         "api_version": 1,
         "depends_on": [],
@@ -115,7 +115,7 @@
         "id": "engine.mihomo",
         "module_id": "engine.mihomo",
         "name": "Mihomo",
-        "description": "Mihomo config, Clash API, DNS, генератор, импорт, telemetry.",
+        "description": "Всё для ядра Mihomo: настройки, генератор конфигурации, импорт ссылок, Защищённый DNS Mihomo, базы доменов и адресов, статистика соединений, логи Mihomo.",
         "version": "1.0.0",
         "api_version": 1,
         "depends_on": [
@@ -169,7 +169,7 @@
         "id": "tool.editor",
         "module_id": "tool.editor",
         "name": "Редакторы",
-        "description": "CodeMirror, Monaco, JSON/YAML schema, форматирование, diff и quick-fix.",
+        "description": "Редакторы конфигураций с подсветкой, подсказками, проверкой ошибок и сравнением версий.",
         "version": "1.0.0",
         "api_version": 1,
         "depends_on": [
@@ -240,7 +240,7 @@
         "sha256": "bc8140fbcf3c5b07c0412d61eaf7975150aa79543fdc82337d46a1afa7339604",
         "signing_key_id": "release-2026",
         "name": "Xkeen UI Core",
-        "description": "Запуск панели, авторизация, WebSocket runtime, настройки, сервис и общий runtime.",
+        "description": "Основа панели: вход, настройки и работа самой панели.",
         "installed": true,
         "lifecycle_actions": [],
         "update_available": false
@@ -268,7 +268,7 @@
         "sha256": "816508e9b203a819c9cc328430d15204ab64f5da0410e7752d761cb59d8b71d5",
         "signing_key_id": "release-2026",
         "name": "Mihomo",
-        "description": "Mihomo config, Clash API, DNS, генератор, импорт, telemetry.",
+        "description": "Всё для ядра Mihomo: настройки, генератор конфигурации, импорт ссылок, Защищённый DNS Mihomo, базы доменов и адресов, статистика соединений, логи Mihomo.",
         "installed": true,
         "lifecycle_actions": [
           "repair",
@@ -299,7 +299,7 @@
         "sha256": "e939228c9095f2c5c2b2afd7ade5ea0e3d000eca475dc09c78365e0bd24fecd8",
         "signing_key_id": "release-2026",
         "name": "Xray",
-        "description": "Routing, inbounds, outbounds, подписки, логи, DNS-over-VLESS и geodat.",
+        "description": "Всё для ядра Xray: маршруты, подключения, подписки, DNS-over-VLESS, базы доменов и адресов, логи Xray.",
         "installed": false,
         "lifecycle_actions": [
           "install"
@@ -328,7 +328,7 @@
         "sha256": "b4669b46fc5289314e45806280bee3327d339aa93972e43b9c991cb1b423dc87",
         "signing_key_id": "release-2026",
         "name": "Расшифровка подписок",
-        "description": "Импорт подписок с зашифрованными ссылками, HWID-подписки.",
+        "description": "Подписки с зашифрованными ссылками и подписки, привязанные к устройству (HWID).",
         "installed": false,
         "lifecycle_actions": [
           "install"
@@ -357,7 +357,7 @@
         "sha256": "17e3e0aac99fe556e47166920e662f2a98eca7a9c3a244f7ec7148ff0fdac30a",
         "signing_key_id": "release-2026",
         "name": "Расширенная диагностика",
-        "description": "DevTools, ресурсы, router diagnostics и служебные журналы.",
+        "description": "Страница инструментов: состояние роутера, загрузка, служебные журналы.",
         "installed": false,
         "lifecycle_actions": [
           "install"
@@ -386,7 +386,7 @@
         "sha256": "6a35d1a94d1d60ff2452808c0d00f273967cf27c03ba23c09b9c4a4d27b1ba83",
         "signing_key_id": "release-2026",
         "name": "Резервные копии",
-        "description": "Карточка и API резервных копий конфигураций Xray/Mihomo.",
+        "description": "Сохранение и восстановление настроек Xray и Mihomo.",
         "installed": false,
         "lifecycle_actions": [
           "install"
@@ -415,7 +415,7 @@
         "sha256": "62b963e6f345aa94bd9f7dcbb12cfaa5059ff69431bb00ed406be8365222e02e",
         "signing_key_id": "release-2026",
         "name": "Редакторы",
-        "description": "CodeMirror, Monaco, JSON/YAML schema, форматирование, diff и quick-fix.",
+        "description": "Редакторы конфигураций с подсветкой, подсказками, проверкой ошибок и сравнением версий.",
         "installed": true,
         "lifecycle_actions": [
           "repair"
@@ -444,7 +444,7 @@
         "sha256": "91e610094777b9ef24158a0991c44d83fc67f7b3fcd6bdee39f6553643d2f364",
         "signing_key_id": "release-2026",
         "name": "Файловый менеджер",
-        "description": "Локальные/удалённые операции, архивы, передачи и USB storage.",
+        "description": "Файлы на роутере и на удалённых серверах: правка, копирование, архивы, USB-накопители.",
         "installed": false,
         "lifecycle_actions": [
           "install"
@@ -473,7 +473,7 @@
         "sha256": "59386e5df3a7d0858aa3fef57ff1c5e5f252bd25d42d823c7af971c3548e6aad",
         "signing_key_id": "release-2026",
         "name": "Терминал и команды",
-        "description": "PTY, xterm, интерактивные команды и shell policy.",
+        "description": "Командная строка роутера прямо в браузере и быстрый запуск команд XKeen.",
         "installed": false,
         "lifecycle_actions": [
           "install"
@@ -945,7 +945,7 @@
         "id": "core",
         "module_id": "core",
         "name": "Xkeen UI Core",
-        "description": "Запуск панели, авторизация, WebSocket runtime, настройки, сервис и общий runtime.",
+        "description": "Основа панели: вход, настройки и работа самой панели.",
         "version": "1.0.0",
         "api_version": 1,
         "depends_on": [],
@@ -999,7 +999,7 @@
         "id": "engine.mihomo",
         "module_id": "engine.mihomo",
         "name": "Mihomo",
-        "description": "Mihomo config, Clash API, DNS, генератор, импорт, telemetry.",
+        "description": "Всё для ядра Mihomo: настройки, генератор конфигурации, импорт ссылок, Защищённый DNS Mihomo, базы доменов и адресов, статистика соединений, логи Mihomo.",
         "version": "1.0.0",
         "api_version": 1,
         "depends_on": [
@@ -1053,7 +1053,7 @@
         "id": "tool.editor",
         "module_id": "tool.editor",
         "name": "Редакторы",
-        "description": "CodeMirror, Monaco, JSON/YAML schema, форматирование, diff и quick-fix.",
+        "description": "Редакторы конфигураций с подсветкой, подсказками, проверкой ошибок и сравнением версий.",
         "version": "1.0.0",
         "api_version": 1,
         "depends_on": [
@@ -1094,7 +1094,7 @@
         "id": "tool.terminal",
         "module_id": "tool.terminal",
         "name": "Терминал и команды",
-        "description": "PTY, xterm, интерактивные команды и shell policy.",
+        "description": "Командная строка роутера прямо в браузере и быстрый запуск команд XKeen.",
         "version": "1.0.0",
         "api_version": 1,
         "depends_on": [
@@ -1170,7 +1170,7 @@
         "sha256": "bc8140fbcf3c5b07c0412d61eaf7975150aa79543fdc82337d46a1afa7339604",
         "signing_key_id": "release-2026",
         "name": "Xkeen UI Core",
-        "description": "Запуск панели, авторизация, WebSocket runtime, настройки, сервис и общий runtime.",
+        "description": "Основа панели: вход, настройки и работа самой панели.",
         "installed": true,
         "lifecycle_actions": [],
         "update_available": false
@@ -1198,7 +1198,7 @@
         "sha256": "816508e9b203a819c9cc328430d15204ab64f5da0410e7752d761cb59d8b71d5",
         "signing_key_id": "release-2026",
         "name": "Mihomo",
-        "description": "Mihomo config, Clash API, DNS, генератор, импорт, telemetry.",
+        "description": "Всё для ядра Mihomo: настройки, генератор конфигурации, импорт ссылок, Защищённый DNS Mihomo, базы доменов и адресов, статистика соединений, логи Mihomo.",
         "installed": true,
         "lifecycle_actions": [
           "repair",
@@ -1229,7 +1229,7 @@
         "sha256": "e939228c9095f2c5c2b2afd7ade5ea0e3d000eca475dc09c78365e0bd24fecd8",
         "signing_key_id": "release-2026",
         "name": "Xray",
-        "description": "Routing, inbounds, outbounds, подписки, логи, DNS-over-VLESS и geodat.",
+        "description": "Всё для ядра Xray: маршруты, подключения, подписки, DNS-over-VLESS, базы доменов и адресов, логи Xray.",
         "installed": false,
         "lifecycle_actions": [
           "install"
@@ -1258,7 +1258,7 @@
         "sha256": "b4669b46fc5289314e45806280bee3327d339aa93972e43b9c991cb1b423dc87",
         "signing_key_id": "release-2026",
         "name": "Расшифровка подписок",
-        "description": "Импорт подписок с зашифрованными ссылками, HWID-подписки.",
+        "description": "Подписки с зашифрованными ссылками и подписки, привязанные к устройству (HWID).",
         "installed": false,
         "lifecycle_actions": [
           "install"
@@ -1287,7 +1287,7 @@
         "sha256": "17e3e0aac99fe556e47166920e662f2a98eca7a9c3a244f7ec7148ff0fdac30a",
         "signing_key_id": "release-2026",
         "name": "Расширенная диагностика",
-        "description": "DevTools, ресурсы, router diagnostics и служебные журналы.",
+        "description": "Страница инструментов: состояние роутера, загрузка, служебные журналы.",
         "installed": false,
         "lifecycle_actions": [
           "install"
@@ -1316,7 +1316,7 @@
         "sha256": "6a35d1a94d1d60ff2452808c0d00f273967cf27c03ba23c09b9c4a4d27b1ba83",
         "signing_key_id": "release-2026",
         "name": "Резервные копии",
-        "description": "Карточка и API резервных копий конфигураций Xray/Mihomo.",
+        "description": "Сохранение и восстановление настроек Xray и Mihomo.",
         "installed": false,
         "lifecycle_actions": [
           "install"
@@ -1345,7 +1345,7 @@
         "sha256": "62b963e6f345aa94bd9f7dcbb12cfaa5059ff69431bb00ed406be8365222e02e",
         "signing_key_id": "release-2026",
         "name": "Редакторы",
-        "description": "CodeMirror, Monaco, JSON/YAML schema, форматирование, diff и quick-fix.",
+        "description": "Редакторы конфигураций с подсветкой, подсказками, проверкой ошибок и сравнением версий.",
         "installed": true,
         "lifecycle_actions": [
           "repair"
@@ -1374,7 +1374,7 @@
         "sha256": "91e610094777b9ef24158a0991c44d83fc67f7b3fcd6bdee39f6553643d2f364",
         "signing_key_id": "release-2026",
         "name": "Файловый менеджер",
-        "description": "Локальные/удалённые операции, архивы, передачи и USB storage.",
+        "description": "Файлы на роутере и на удалённых серверах: правка, копирование, архивы, USB-накопители.",
         "installed": false,
         "lifecycle_actions": [
           "install"
@@ -1403,7 +1403,7 @@
         "sha256": "59386e5df3a7d0858aa3fef57ff1c5e5f252bd25d42d823c7af971c3548e6aad",
         "signing_key_id": "release-2026",
         "name": "Терминал и команды",
-        "description": "PTY, xterm, интерактивные команды и shell policy.",
+        "description": "Командная строка роутера прямо в браузере и быстрый запуск команд XKeen.",
         "installed": true,
         "lifecycle_actions": [
           "repair",
@@ -1692,7 +1692,7 @@
         "id": "core",
         "module_id": "core",
         "name": "Xkeen UI Core",
-        "description": "Запуск панели, авторизация, WebSocket runtime, настройки, сервис и общий runtime.",
+        "description": "Основа панели: вход, настройки и работа самой панели.",
         "version": "1.0.0",
         "api_version": 1,
         "depends_on": [],
@@ -1746,7 +1746,7 @@
         "id": "engine.mihomo",
         "module_id": "engine.mihomo",
         "name": "Mihomo",
-        "description": "Mihomo config, Clash API, DNS, генератор, импорт, telemetry.",
+        "description": "Всё для ядра Mihomo: настройки, генератор конфигурации, импорт ссылок, Защищённый DNS Mihomo, базы доменов и адресов, статистика соединений, логи Mihomo.",
         "version": "1.0.0",
         "api_version": 1,
         "depends_on": [
@@ -1800,7 +1800,7 @@
         "id": "tool.editor",
         "module_id": "tool.editor",
         "name": "Редакторы",
-        "description": "CodeMirror, Monaco, JSON/YAML schema, форматирование, diff и quick-fix.",
+        "description": "Редакторы конфигураций с подсветкой, подсказками, проверкой ошибок и сравнением версий.",
         "version": "1.0.0",
         "api_version": 1,
         "depends_on": [

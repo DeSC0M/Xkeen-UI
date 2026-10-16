@@ -858,6 +858,22 @@
           "lazy_features": []
         },
         {
+          "path": "static/js/ui/shared_primitives.js",
+          "globals": [
+            "XKeen.ui",
+            "XKeen.core",
+            "XKeen.core.dom",
+            "XKeen.core.http",
+            "XKeen.core.storage",
+            "XKeen.ui.toast",
+            "XKeen.ui.confirm",
+            "XKeen.ui.modal",
+            "XKeen.ui.dropdownDismissWired",
+            "XKeen.ui.sharedPrimitives"
+          ],
+          "lazy_features": []
+        },
+        {
           "path": "static/js/ui/theme.js",
           "globals": [
             "XKeen.ui",
@@ -959,6 +975,10 @@
         "XKeen.ui.confirm",
         "XKeen.ui.confirm._closeWith",
         "XKeen.ui.confirm._isPending",
+        "XKeen.core.dom",
+        "XKeen.core.storage",
+        "XKeen.ui.dropdownDismissWired",
+        "XKeen.ui.sharedPrimitives",
         "XKeen.ui.applyTheme",
         "XKeen.ui.initThemeToggle",
         "XKeen.ui.syncThemeToggleButtons",

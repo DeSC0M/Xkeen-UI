@@ -226,6 +226,7 @@
     'details.outbounds-tag-menu',
     'details.outbounds-help-popover',
     'details.xk-card-help-popover',
+    'details.modules-tile-menu',
   ].join(', ');
 
   function openDropdowns() {

@@ -1,6 +1,8 @@
 import './shell.shared.js';
 import '../ui/modal.js';
 import '../ui/confirm_modal.js';
+// The tile menus close on a click elsewhere and on Escape, as all panel menus do.
+import '../ui/shared_primitives.js';
 import '../ui/theme.js?v=20260324b';
 import '../ui/tooltips_auto.js?v=20260805g';
 import '../ui/spinner_fetch.js';

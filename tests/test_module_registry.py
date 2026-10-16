@@ -863,12 +863,19 @@ def test_optional_module_metadata_is_neutral_and_registry_owns_runtime_boundarie
     assert "update" not in metadata["tool.advanced-diagnostics"].description.lower()
 
 
-def test_mihomo_module_description_stays_focused_on_core_capabilities():
+def test_engine_descriptions_name_features_as_their_windows_do():
+    # 16.10.2026: the owner reads these on the module tiles. Features are named
+    # by the titles of their windows and cards, without the words of the code.
     metadata = {definition.id: definition for definition in MODULE_DEFINITIONS}
 
-    assert metadata["engine.mihomo"].description == (
-        "Mihomo config, Clash API, DNS, генератор, импорт, telemetry."
-    )
+    xray = metadata["engine.xray"].description
+    mihomo = metadata["engine.mihomo"].description
+    assert "DNS-over-VLESS" in xray and "логи Xray" in xray
+    assert "Защищённый DNS Mihomo" in mihomo and "логи Mihomo" in mihomo
+    assert "базы доменов и адресов" in xray and "базы доменов и адресов" in mihomo
+    for definition in MODULE_DEFINITIONS:
+        for word in ("runtime", "Clash API", "telemetry", "PTY", "xterm", "shell policy", "geodat", "Routing"):
+            assert word not in definition.description, (definition.id, word)
 
 
 def test_subscription_link_utility_install_marker_ignores_core_helpers():

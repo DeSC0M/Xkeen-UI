@@ -289,8 +289,7 @@ function editorVariantsLocked(snapshot) {
 }
 
 function editorVariantControl(snapshot, current, onEditorVariant, busy) {
-  const side = node('div', 'modules-variant-side');
-  side.append(node('span', 'modules-variant-label', 'Вариант'));
+  const block = node('div', 'modules-variant-block');
   const group = node('div', 'modules-variant');
   group.setAttribute('role', 'group');
   group.setAttribute('aria-label', 'Вариант редакторов');
@@ -305,8 +304,150 @@ function editorVariantControl(snapshot, current, onEditorVariant, busy) {
     button.addEventListener('click', () => { if (!selected) onEditorVariant(variant.id, button); });
     group.append(button);
   }
-  side.append(group);
-  return side;
+  block.append(group, node('p', 'modules-variant-hint', `${current.label}: ${current.hint}`));
+  if (locked) {
+    block.append(node('p', 'modules-variant-hint', 'Стандартный и расширенный варианты докачивают файлы. На локальной сборке докачка недоступна.'));
+  }
+  return block;
+}
+
+function lockNote(text) {
+  const note = node('span', 'modules-lock');
+  note.insertAdjacentHTML('afterbegin', iconHtml('lock', 'modules-lock-icon'));
+  note.append(node('span', '', text));
+  return note;
+}
+
+function versionLine(item) {
+  return item.version ? `версия ${item.version}` : '';
+}
+
+// Core is the panel itself: it is never switched, so it is not a tile.
+function coreStrip(item) {
+  const strip = node('div', 'modules-core');
+  strip.dataset.moduleId = item.id;
+  const text = node('div', 'modules-core-text');
+  text.append(node('strong', 'modules-tile-name', item.name || item.id));
+  text.append(node('span', 'modules-core-meta', [versionLine(item), item.description].filter(Boolean).join(' · ')));
+  strip.append(moduleIcon(item.id), text, lockNote('Не выключается'));
+  return strip;
+}
+
+const CORE_REQUIREMENTS = { xray: 'Xray', mihomo: 'Mihomo' };
+
+// The tile says nothing below the description while the module works as the
+// switch shows. A line appears only for what the switch cannot tell.
+function tileNotice(item, names) {
+  if (item.id === 'tool.editor' && item.can_disable !== true) {
+    return { tone: 'lock', text: 'Нужен, пока включено ядро' };
+  }
+  if (item.can_disable !== true) return { tone: 'lock', text: 'Не выключается' };
+  if (item.status === 'failed') return { tone: 'bad', text: 'Не запустился при последнем старте панели' };
+  if (item.status === 'unavailable') {
+    const missing = Array.isArray(item.missing_requirement_ids) ? item.missing_requirement_ids : [];
+    const engine = missing.map((id) => CORE_REQUIREMENTS[id]).find(Boolean);
+    if (engine) return { tone: 'warn', text: `Ядро ${engine} на роутере не найдено` };
+    if (missing.length) return { tone: 'warn', text: `На роутере не хватает: ${missing.join(', ')}` };
+    const deps = Array.isArray(item.unavailable_dependency_ids) ? item.unavailable_dependency_ids : [];
+    if (deps.length) return { tone: 'warn', text: `Не работает без модуля: ${moduleList(deps, names)}` };
+    return { tone: 'warn', text: 'Сейчас не работает' };
+  }
+  if (item.reason === 'deferred_disable_blocked') {
+    return { tone: 'warn', text: 'Выключится, когда ядро остановят' };
+  }
+  return null;
+}
+
+const MENU_LABELS = { repair: 'Восстановить файлы модуля', remove: 'Удалить модуль' };
+
+function tileMenu(item, names, { onPlan, busy, openMenus }) {
+  const actions = (Array.isArray(item.lifecycle_actions) ? item.lifecycle_actions : []).filter((action) => MENU_LABELS[action]);
+  const deps = Array.isArray(item.dependencies) ? item.dependencies : [];
+  if (!actions.length && !deps.length) return null;
+  const label = item.name || item.id;
+  const menu = node('details', 'modules-tile-menu');
+  menu.open = openMenus.has(item.id);
+  menu.addEventListener('toggle', () => {
+    if (menu.open) openMenus.add(item.id);
+    else openMenus.delete(item.id);
+  });
+  const summary = node('summary', 'modules-tile-menu-button');
+  summary.setAttribute('aria-label', `Действия: ${label}`);
+  summary.title = `Действия: ${label}`;
+  summary.insertAdjacentHTML('afterbegin', iconHtml('more', 'modules-tile-menu-icon'));
+  const panel = node('div', 'modules-tile-menu-panel');
+  for (const action of actions) {
+    const button = node('button', `modules-tile-menu-item modules-action-${action}`);
+    button.type = 'button';
+    button.insertAdjacentHTML('afterbegin', iconHtml(action === 'repair' ? 'restore' : 'trash', 'modules-action-icon'));
+    button.append(document.createTextNode(MENU_LABELS[action]));
+    button.setAttribute('aria-label', `${ACTION_LABELS[action]} ${label}`);
+    button.dataset.operation = action;
+    button.dataset.moduleId = item.id;
+    button.disabled = busy;
+    button.addEventListener('click', () => {
+      menu.open = false;
+      onPlan(action, item.id, button);
+    });
+    panel.append(button);
+  }
+  if (deps.length) panel.append(node('p', 'modules-tile-menu-note', `Нужен для работы: ${moduleList(deps, names)}`));
+  menu.append(summary, panel);
+  return menu;
+}
+
+function moduleSwitch(item, { onToggle, busy }) {
+  const label = node('label', 'dt-switch xk-switch-bare modules-switch');
+  // The words stay for screen readers; the slider says the same to the eye.
+  const stateLabel = node(
+    'span',
+    `dt-switch-label modules-switch-state ${item.enabled === true ? 'is-enabled' : 'is-disabled'}`,
+    item.enabled === true ? 'Включён' : 'Выключен',
+  );
+  const switchControl = node('span', 'modules-switch-control');
+  const input = node('input');
+  input.type = 'checkbox';
+  input.setAttribute('role', 'switch');
+  input.setAttribute('aria-label', `Включить ${item.name || item.id}`);
+  input.dataset.moduleId = item.id;
+  input.checked = item.enabled === true;
+  input.disabled = busy;
+  input.addEventListener('change', () => onToggle(item.id, input.checked, input));
+  switchControl.append(input, node('span', 'dt-switch-slider'));
+  label.append(stateLabel, switchControl);
+  return label;
+}
+
+function moduleTile(item, snapshot, names, { onToggle, onPlan, onEditorVariant, busy, openMenus }) {
+  const tile = node('article', 'modules-tile modules-module');
+  tile.dataset.moduleId = item.id;
+  if (item.enabled !== true) tile.classList.add('is-off');
+  const top = node('div', 'modules-tile-top');
+  const title = node('div', 'modules-tile-title');
+  title.append(node('strong', 'modules-tile-name', item.name || item.id));
+  const version = versionLine(item);
+  if (version) title.append(node('span', 'modules-tile-version', version));
+  top.append(moduleIcon(item.id), title);
+  top.append(item.can_disable ? moduleSwitch(item, { onToggle, busy }) : node('span', 'modules-tile-switch-slot'));
+  const menu = tileMenu(item, names, { onPlan, busy, openMenus });
+  if (menu) top.append(menu);
+  tile.append(top);
+  if (item.description) tile.append(node('p', 'modules-tile-description', item.description));
+  const editorVariant = item.id === 'tool.editor' && item.enabled === true && typeof onEditorVariant === 'function'
+    ? EDITOR_VARIANTS.find((variant) => variant.id === snapshot.editor?.variant)
+    : null;
+  if (editorVariant) tile.append(editorVariantControl(snapshot, editorVariant, onEditorVariant, busy));
+  const notice = tileNotice(item, names);
+  if (notice) {
+    const foot = node('div', `modules-tile-foot is-${notice.tone}`);
+    if (notice.tone === 'lock') foot.append(lockNote(notice.text));
+    else {
+      foot.append(node('span', 'modules-tile-dot'));
+      foot.append(node('span', '', notice.text));
+    }
+    tile.append(foot);
+  }
+  return tile;
 }
 
 function moduleSetLabel(name) { return MODULE_SET_LABELS[name] || 'свой набор'; }
@@ -554,7 +695,7 @@ export function renderInstalled(host, snapshot, onToggle, onPlan = () => {}, bus
   showUpdateChannelControl = false,
   onUpdateChannel = null,
   channelBusy = false,
-  expandedModules = new Set(),
+  openMenus = new Set(),
 } = {}) {
   host.replaceChildren();
   const summary = node('section', 'modules-summary card');
@@ -604,100 +745,17 @@ export function renderInstalled(host, snapshot, onToggle, onPlan = () => {}, bus
   list.append(listHeader);
   const modules = Array.isArray(snapshot.modules) ? snapshot.modules : [];
   if (!modules.length) list.append(node('p', 'modules-empty', 'Установленных модулей нет.'));
-  modules.forEach((item) => {
-    const row = node('article', 'modules-row modules-module');
-    const header = node('div', 'modules-module-header');
-    const isCore = item.id === 'core';
-    const expanded = !isCore && expandedModules.has(item.id);
-    const title = node(isCore ? 'div' : 'button', isCore ? 'modules-module-static' : 'modules-module-toggle');
-    if (!isCore) title.type = 'button';
-    const details = node('div', 'modules-module-details');
-    details.id = `modules-details-${String(item.id).replace(/[^a-z0-9-]/gi, '-')}`;
-    details.hidden = !expanded;
-    if (!isCore) {
-      title.setAttribute('aria-expanded', String(expanded));
-      title.setAttribute('aria-label', `${expanded ? 'Свернуть' : 'Развернуть'} ${item.name || item.id}`);
-      title.setAttribute('aria-controls', details.id);
-      title.addEventListener('click', () => {
-        const nextExpanded = !expandedModules.has(item.id);
-        if (nextExpanded) expandedModules.add(item.id);
-        else expandedModules.delete(item.id);
-        title.setAttribute('aria-expanded', String(nextExpanded));
-        title.setAttribute('aria-label', `${nextExpanded ? 'Свернуть' : 'Развернуть'} ${item.name || item.id}`);
-        details.hidden = !nextExpanded;
-      });
-    } else {
-      details.remove();
+  const names = new Map(modules.map((module) => [module.id, module.name || module.id]));
+  const core = modules.find((item) => item.id === 'core');
+  if (core) list.append(coreStrip(core));
+  const others = modules.filter((item) => item.id !== 'core');
+  if (others.length) {
+    const grid = node('div', 'modules-grid');
+    for (const item of others) {
+      grid.append(moduleTile(item, snapshot, names, { onToggle, onPlan, onEditorVariant, busy, openMenus }));
     }
-    const titleText = node('span', 'modules-module-title');
-    titleText.append(node('strong', '', moduleTitle(item)));
-    title.append(moduleIcon(item.id), titleText);
-    if (!isCore) {
-      const chevron = node('span', 'modules-module-chevron');
-      chevron.setAttribute('aria-hidden', 'true');
-      chevron.innerHTML = iconHtml('chevron-down', 'modules-module-chevron-svg');
-      title.append(chevron);
-    }
-    header.append(title);
-    const body = node('div', 'modules-row-body');
-    const editorVariant = item.id === 'tool.editor' && item.enabled === true && typeof onEditorVariant === 'function'
-      ? EDITOR_VARIANTS.find((variant) => variant.id === snapshot.editor?.variant)
-      : null;
-    if (!isCore && item.description) body.append(node('p', '', item.description));
-    if (editorVariant) {
-      // The row has no switch while an engine is on: say why.
-      body.append(node('p', '', item.can_disable ? 'Редакторы конфигов.' : 'Редакторы конфигов. Нужны, пока включено хотя бы одно ядро.'));
-      body.append(node('p', 'modules-variant-hint', `${editorVariant.label}: ${editorVariant.hint}`));
-      if (editorVariantsLocked(snapshot)) {
-        body.append(node('p', 'modules-variant-hint', 'Стандартный и расширенный варианты докачивают файлы. На локальной сборке докачка недоступна.'));
-      }
-    }
-    const facts = node('dl', 'modules-module-facts');
-    facts.append(node('dt', '', 'Идентификатор'), node('dd', '', item.id));
-    if (Array.isArray(item.dependencies) && item.dependencies.length) {
-      facts.append(node('dt', '', 'Зависимости'), node('dd', '', moduleList(item.dependencies, new Map(
-        (snapshot.modules || []).map((module) => [module.id, module.name || module.id]),
-      ))));
-    }
-    if (!isCore) {
-      body.append(facts);
-      details.append(body);
-    }
-    const controls = node('div', 'modules-row-actions');
-    if (item.can_disable) {
-      const label = node('label', 'dt-switch xk-switch-bare modules-switch');
-      const stateLabel = node(
-        'span',
-        `dt-switch-label modules-switch-state ${item.enabled === true ? 'is-enabled' : 'is-disabled'}`,
-        item.enabled === true ? 'Включён' : 'Выключен',
-      );
-      const switchControl = node('span', 'modules-switch-control');
-      const input = node('input');
-      input.type = 'checkbox';
-      input.setAttribute('role', 'switch');
-      input.setAttribute('aria-label', `Включить ${item.name || item.id}`);
-      input.dataset.moduleId = item.id;
-      input.checked = item.enabled === true;
-      input.disabled = busy;
-      input.addEventListener('change', () => onToggle(item.id, input.checked, input));
-      switchControl.append(input, node('span', 'dt-switch-slider'));
-      label.append(stateLabel, switchControl);
-      controls.append(label);
-    }
-    if (!isCore && controls.childElementCount) header.append(controls);
-    row.append(header);
-    if (!isCore) {
-      const detailControls = node('div', 'modules-module-detail-actions');
-      if (editorVariant) detailControls.append(editorVariantControl(snapshot, editorVariant, onEditorVariant, busy));
-      const actions = Array.isArray(item.lifecycle_actions) ? item.lifecycle_actions : [];
-      for (const action of actions) {
-        if (ACTION_LABELS[action]) detailControls.append(actionButton(action, item.id, `${ACTION_LABELS[action]} ${item.name || item.id}`, onPlan, busy));
-      }
-      if (detailControls.childElementCount) details.append(detailControls);
-      row.append(details);
-    }
-    list.append(row);
-  });
+    list.append(grid);
+  }
   host.append(list);
 }
 

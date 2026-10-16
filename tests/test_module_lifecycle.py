@@ -241,7 +241,7 @@ def test_available_calls_every_known_module_by_its_name(tmp_path):
 
     assert "name" not in make_release().catalog["modules"][0]
     assert modules["tool.terminal"]["name"] == "Терминал и команды"
-    assert modules["tool.terminal"]["description"].startswith("PTY")
+    assert modules["tool.terminal"]["description"].startswith("Командная строка роутера")
     assert all(item.get("name") for item in modules.values())
 
 

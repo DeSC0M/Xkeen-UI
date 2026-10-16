@@ -115,7 +115,7 @@
           "accessible_label": "Предупреждение"
         },
         {
-          "location": "xkeen-ui/static/js/features/module_manager/render.js:L449",
+          "location": "xkeen-ui/static/js/features/module_manager/render.js:L590",
           "control_type": "runtime-action",
           "accessible_label": "Предупреждение"
         },
@@ -435,11 +435,6 @@
         },
         {
           "location": "xkeen-ui/static/js/features/mihomo_panel.js:L3506",
-          "control_type": "runtime-action",
-          "accessible_label": "Раскрыть"
-        },
-        {
-          "location": "xkeen-ui/static/js/features/module_manager/render.js:L638",
           "control_type": "runtime-action",
           "accessible_label": "Раскрыть"
         },
@@ -2129,6 +2124,11 @@
           "accessible_label": "Ограничить"
         },
         {
+          "location": "xkeen-ui/static/js/features/module_manager/render.js:L316",
+          "control_type": "runtime-action",
+          "accessible_label": "Ограничить"
+        },
+        {
           "location": "xkeen-ui/templates/panel.html:L1025",
           "control_type": "icon-only",
           "accessible_label": "Маршрутизация сервисов и IP"
@@ -2163,6 +2163,11 @@
       "usage": [
         {
           "location": "xkeen-ui/static/js/features/devtools/env.js:L631",
+          "control_type": "runtime-action",
+          "accessible_label": "Дополнительные действия"
+        },
+        {
+          "location": "xkeen-ui/static/js/features/module_manager/render.js:L377",
           "control_type": "runtime-action",
           "accessible_label": "Дополнительные действия"
         },

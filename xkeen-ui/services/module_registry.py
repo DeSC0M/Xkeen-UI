@@ -180,7 +180,7 @@ MODULE_DEFINITIONS: tuple[ModuleDefinition, ...] = (
     ModuleDefinition(
         id="core",
         name="Xkeen UI Core",
-        description="Запуск панели, авторизация, WebSocket runtime, настройки, сервис и общий runtime.",
+        description="Основа панели: вход, настройки и работа самой панели.",
         version=REGISTRY_VERSION,
         dependencies=(),
         conflicts=(),
@@ -200,7 +200,7 @@ MODULE_DEFINITIONS: tuple[ModuleDefinition, ...] = (
     ModuleDefinition(
         id="engine.xray",
         name="Xray",
-        description="Routing, inbounds, outbounds, подписки, логи, DNS-over-VLESS и geodat.",
+        description="Всё для ядра Xray: маршруты, подключения, подписки, DNS-over-VLESS, базы доменов и адресов, логи Xray.",
         version=REGISTRY_VERSION,
         dependencies=("core", "tool.editor"),
         conflicts=(),
@@ -215,7 +215,7 @@ MODULE_DEFINITIONS: tuple[ModuleDefinition, ...] = (
     ModuleDefinition(
         id="engine.mihomo",
         name="Mihomo",
-        description="Mihomo config, Clash API, DNS, генератор, импорт, telemetry.",
+        description="Всё для ядра Mihomo: настройки, генератор конфигурации, импорт ссылок, Защищённый DNS Mihomo, базы доменов и адресов, статистика соединений, логи Mihomo.",
         version=REGISTRY_VERSION,
         dependencies=("core", "tool.editor"),
         conflicts=(),
@@ -230,7 +230,7 @@ MODULE_DEFINITIONS: tuple[ModuleDefinition, ...] = (
     ModuleDefinition(
         id="tool.editor",
         name="Редакторы",
-        description="CodeMirror, Monaco, JSON/YAML schema, форматирование, diff и quick-fix.",
+        description="Редакторы конфигураций с подсветкой, подсказками, проверкой ошибок и сравнением версий.",
         version=REGISTRY_VERSION,
         dependencies=("core",),
         conflicts=(),
@@ -243,7 +243,7 @@ MODULE_DEFINITIONS: tuple[ModuleDefinition, ...] = (
     ModuleDefinition(
         id="tool.terminal",
         name="Терминал и команды",
-        description="PTY, xterm, интерактивные команды и shell policy.",
+        description="Командная строка роутера прямо в браузере и быстрый запуск команд XKeen.",
         version=REGISTRY_VERSION,
         dependencies=("core",),
         conflicts=(),
@@ -260,7 +260,7 @@ MODULE_DEFINITIONS: tuple[ModuleDefinition, ...] = (
     ModuleDefinition(
         id="tool.files",
         name="Файловый менеджер",
-        description="Локальные/удалённые операции, архивы, передачи и USB storage.",
+        description="Файлы на роутере и на удалённых серверах: правка, копирование, архивы, USB-накопители.",
         version=REGISTRY_VERSION,
         dependencies=("core",),
         conflicts=(),
@@ -278,7 +278,7 @@ MODULE_DEFINITIONS: tuple[ModuleDefinition, ...] = (
     ModuleDefinition(
         id="tool.backups",
         name="Резервные копии",
-        description="Карточка и API резервных копий конфигураций Xray/Mihomo.",
+        description="Сохранение и восстановление настроек Xray и Mihomo.",
         version=REGISTRY_VERSION,
         dependencies=("core",),
         conflicts=(),
@@ -293,7 +293,7 @@ MODULE_DEFINITIONS: tuple[ModuleDefinition, ...] = (
     ModuleDefinition(
         id="integration.happ",
         name="Расшифровка подписок",
-        description="Импорт подписок с зашифрованными ссылками, HWID-подписки.",
+        description="Подписки с зашифрованными ссылками и подписки, привязанные к устройству (HWID).",
         version=REGISTRY_VERSION,
         dependencies=("core",),
         conflicts=(),
@@ -306,7 +306,7 @@ MODULE_DEFINITIONS: tuple[ModuleDefinition, ...] = (
     ModuleDefinition(
         id="tool.advanced-diagnostics",
         name="Расширенная диагностика",
-        description="DevTools, ресурсы, router diagnostics и служебные журналы.",
+        description="Страница инструментов: состояние роутера, загрузка, служебные журналы.",
         version=REGISTRY_VERSION,
         dependencies=("core",),
         conflicts=(),
