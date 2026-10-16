@@ -3363,8 +3363,9 @@ body.panel-page .xk-mihomo-topbar {
 }
 
 body.panel-page .xk-routing-fileblock {
-  flex: 1 1 220px;
-  min-width: 160px;
+  flex: 0 1 auto;
+  width: max-content;
+  min-width: 0;
   max-width: 360px;
 }
 
@@ -3395,7 +3396,10 @@ body.panel-page :is(
 }
 
 body.panel-page .xk-routing-fileline .xray-log-select {
-  width: 100%;
+  width: auto;
+  max-width: 100%;
+  flex: 0 1 auto;
+  field-sizing: content;
 }
 
 body.panel-page .xk-routing-toolbararea,
@@ -17965,6 +17969,11 @@ body.panel-page :is(#json-editor-modal, #fm-editor-modal) :is(#json-editor-save-
   body.panel-page .xk-routing-fileblock {
     width: 100%;
     max-width: none;
+  }
+
+  body.panel-page .xk-routing-fileline .xray-log-select {
+    width: 100%;
+    flex: 1 1 auto;
   }
 
   body.panel-page .xk-routing-toolbararea,

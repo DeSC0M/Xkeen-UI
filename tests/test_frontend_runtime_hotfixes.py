@@ -1463,6 +1463,17 @@ def test_routing_topbar_fragment_select_keeps_intrinsic_width_after_screen_retur
     assert 'flex: 0 1 auto;' in text
 
 
+def test_operator_routing_fragment_select_is_compact_on_wide_screens_and_full_width_on_mobile():
+    text = Path('xkeen-ui/static/panel-operator.css').read_text(encoding='utf-8')
+
+    assert 'body.panel-page .xk-routing-fileblock {' in text
+    assert 'width: max-content;' in text
+    assert 'body.panel-page .xk-routing-fileline .xray-log-select {' in text
+    assert 'width: auto;' in text
+    assert 'field-sizing: content;' in text
+    assert 'width: 100%;' in text
+
+
 def test_xray_live_logs_header_selects_keep_compact_width_after_panel_reactivation():
     text = Path('xkeen-ui/static/styles.css').read_text(encoding='utf-8')
 
