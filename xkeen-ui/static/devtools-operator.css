@@ -1221,53 +1221,8 @@ body.devtools-page .dt-log-line-menu {
 /* ========================================================================== 
  * 6. MODALS
  * ========================================================================== */
-body.devtools-page .modal {
-  padding: 18px;
-  background: rgba(6, 7, 10, 0.68) !important;
-  backdrop-filter: none !important;
-}
-
-body.devtools-page .modal-content {
-  overflow: hidden;
-  border: 1px solid var(--op-border-strong) !important;
-  border-radius: var(--op-radius-lg) !important;
-  background: var(--op-surface) !important;
-  color: var(--op-text);
-  box-shadow: var(--op-shadow-float) !important;
-}
-
-body.devtools-page .modal-header {
-  min-height: 48px;
-  padding: 9px 12px;
-  border-bottom: 1px solid var(--op-border);
-  background: var(--op-surface) !important;
-}
-
-body.devtools-page .modal-title {
-  color: var(--op-text-strong);
-  font-size: calc(13px * var(--xk-font-scale, 1));
-  font-weight: 650;
-}
-
-body.devtools-page .modal-body {
-  padding: 12px;
-  background: var(--op-bg);
-  color: var(--op-text);
-}
-
-body.devtools-page .modal-actions {
-  min-height: 48px;
-  padding: 8px 12px;
-  border-top: 1px solid var(--op-border);
-  background: var(--op-surface) !important;
-}
-
-body.devtools-page .modal-close {
-  width: 30px;
-  min-width: 30px;
-  min-height: 30px;
-  padding: 0;
-}
+/* Frame, strips and buttons of the dialogs are shared with the Modules page:
+ * page-shell.css, the dialogs section at its end. */
 
 body.devtools-page .dt-env-help-table-wrap {
   border: 1px solid var(--op-border);
@@ -1412,26 +1367,6 @@ html[data-theme="light"] body.devtools-page {
 
   body.devtools-page .dt-log-view {
     min-height: 50vh;
-  }
-
-  body.devtools-page .modal {
-    align-items: stretch !important;
-    padding: 0 !important;
-  }
-
-  body.devtools-page .modal-content {
-    width: 100% !important;
-    max-width: none !important;
-    min-height: 100dvh;
-    max-height: 100dvh !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-  }
-
-  body.devtools-page .modal-body {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: auto;
   }
 }
 

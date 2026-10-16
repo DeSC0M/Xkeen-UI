@@ -134,6 +134,46 @@ test.describe('DevTools Operator Console theme', () => {
     await expect(tooltip).toHaveCSS('backdrop-filter', 'none');
   });
 
+  test('dialogs put their buttons on the edges of the text block, mid-strip, at 13 px', async ({ page }) => {
+    await openDevtools(page, 'dark', { width: 1440, height: 900 });
+    await page.evaluate(() => {
+      window.XKeen.ui.confirm({ title: 'Проверка', message: 'Текст окна.', okText: 'Подтвердить', cancelText: 'Отменить' });
+    });
+    const modal = page.locator('#confirm-modal:not(.hidden)');
+    await expect(modal).toBeVisible();
+    const geometry = await modal.locator('.modal-content').evaluate((element) => {
+      const box = (node) => node.getBoundingClientRect();
+      const body = box(element.querySelector('.modal-body'));
+      const header = box(element.querySelector('.modal-header'));
+      const strip = box(element.querySelector('.modal-actions'));
+      const close = box(element.querySelector('.modal-close'));
+      const title = box(element.querySelector('.modal-title'));
+      const cancel = element.querySelector('#confirm-modal-cancel-btn');
+      const ok = element.querySelector('#confirm-modal-ok-btn');
+      return {
+        titleLeft: Math.round(title.left - body.left),
+        closeRight: Math.round(body.right - close.right),
+        cancelLeft: Math.round(box(cancel).left - body.left),
+        okRight: Math.round(body.right - box(ok).right),
+        closeAbove: Math.round(close.top - header.top),
+        closeBelow: Math.round(header.bottom - close.bottom),
+        okAbove: Math.round(box(ok).top - strip.top),
+        okBelow: Math.round(strip.bottom - box(ok).bottom),
+        font: getComputedStyle(ok).fontSize,
+        height: Math.round(box(ok).height),
+      };
+    });
+    expect(geometry.titleLeft).toBe(0);
+    expect(geometry.closeRight).toBe(0);
+    expect(geometry.cancelLeft).toBe(0);
+    expect(geometry.okRight).toBe(0);
+    // The strip's own 1 px border sits on one side of the button.
+    expect(Math.abs(geometry.closeAbove - geometry.closeBelow)).toBeLessThanOrEqual(1);
+    expect(Math.abs(geometry.okAbove - geometry.okBelow)).toBeLessThanOrEqual(1);
+    expect(geometry.font).toBe('13px');
+    expect(geometry.height).toBe(34);
+  });
+
   test('mobile contains the ENV table in its own scroller', async ({ page }) => {
     await openDevtools(page, 'light', { width: 390, height: 844 });
     const geometry = await readOperatorGeometry(page);

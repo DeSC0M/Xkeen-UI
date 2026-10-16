@@ -94,7 +94,25 @@ def test_devtools_operator_layer_covers_shell_tools_env_logs_modals_and_mobile()
     assert ".dt-log-interval" in css
     assert "max-height: calc(100vh - 210px);" in css
     assert "min-width: 760px;" in css
-    assert "min-height: 100dvh;" in css
+
+
+def test_dialogs_of_devtools_and_modules_share_one_frame():
+    # 16.10.2026: the Modules page kept its own copy of the confirm dialog and
+    # it drifted away from DevTools. One frame now lives in page-shell.css.
+    shell = (ROOT / "xkeen-ui/static/page-shell.css").read_text(encoding="utf-8")
+    devtools = CSS.read_text(encoding="utf-8")
+    modules = (ROOT / "xkeen-ui/static/modules-manager.css").read_text(encoding="utf-8")
+
+    scope = ":is(body.devtools-page, body.modules-page)"
+    for anchor in (".modal-content", ".modal-header, .modal-actions", ".modal .modal-actions button", "min-height: 100dvh;"):
+        assert anchor in shell
+    assert f"{scope} .modal:not(.modal-drawer) .modal-content" in shell
+    assert "font-size: calc(13px * var(--xk-font-scale, 1));" in shell
+
+    assert "body.devtools-page .modal-content {" not in devtools
+    assert "body.devtools-page .modal-actions {" not in devtools
+    assert "#confirm-modal" not in modules
+    assert ".modal-content" not in modules
 
 
 def test_legacy_devtools_theme_remains_untouched_as_runtime_compatibility_layer():

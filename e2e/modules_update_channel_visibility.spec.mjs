@@ -29,14 +29,30 @@ test(`Modules screen owns the update channel only without DevTools: ${PROFILE}`,
     const prerelease = channel.locator('button[data-channel="prerelease"]');
     await prerelease.click();
     await expect(page.locator('#confirm-modal')).toBeVisible();
-    const modalStyle = await page.locator('#confirm-modal .modal-content').evaluate((element) => ({
-      radius: getComputedStyle(element).borderRadius,
-      background: getComputedStyle(element).backgroundColor,
-      actionRadius: getComputedStyle(element.querySelector('#confirm-modal-ok-btn')).borderRadius,
-    }));
-    expect(modalStyle.radius).toBe('9px');
+    // The frame is the DevTools one (page-shell.css): buttons on the edges of
+    // the text block, in the middle of their strip, 13 px.
+    const modalStyle = await page.locator('#confirm-modal .modal-content').evaluate((element) => {
+      const box = (node) => node.getBoundingClientRect();
+      const body = box(element.querySelector('.modal-body'));
+      const strip = box(element.querySelector('.modal-actions'));
+      const cancel = element.querySelector('#confirm-modal-cancel-btn');
+      const ok = element.querySelector('#confirm-modal-ok-btn');
+      return {
+        radius: getComputedStyle(element).borderRadius,
+        actionRadius: getComputedStyle(ok).borderRadius,
+        actionFont: getComputedStyle(ok).fontSize,
+        leftGap: Math.round(box(cancel).left - body.left),
+        rightGap: Math.round(body.right - box(ok).right),
+        above: Math.round(box(ok).top - strip.top),
+        below: Math.round(strip.bottom - box(ok).bottom),
+      };
+    });
+    expect(modalStyle.radius).toBe('12px');
     expect(modalStyle.actionRadius).toBe('6px');
-    expect(modalStyle.background).not.toMatch(/rgb\(.*blue/i);
+    expect(modalStyle.actionFont).toBe('13px');
+    expect(modalStyle.leftGap).toBe(0);
+    expect(modalStyle.rightGap).toBe(0);
+    expect(Math.abs(modalStyle.above - modalStyle.below)).toBeLessThanOrEqual(1);
     await page.locator('#confirm-modal-ok-btn').click();
     await expect(prerelease).toHaveAttribute('aria-pressed', 'true');
     expect(selected).toBe('prerelease');

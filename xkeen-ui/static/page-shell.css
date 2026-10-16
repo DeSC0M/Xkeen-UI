@@ -149,3 +149,146 @@ html body .container.xk-page-container {
     display: none;
   }
 }
+
+/*
+ * Окна DevTools и «Модулей и обновлений» — одно оформление. До 16.10.2026
+ * DevTools держал своё в devtools-operator.css, а модули — копию для окна
+ * подтверждения в modules-manager.css, и копии разошлись.
+ *
+ * Заголовок, крестик и кнопки стоят по краям блока с текстом; у окна нет
+ * своих полей сверху и снизу, полосы шапки и кнопок несут равные отступы,
+ * поэтому кнопки и крестик посередине своих полос. Кнопки окна — 13 px
+ * (кнопки страниц DevTools плотнее, 11 px): их читают рядом с текстом 13 px.
+ * Генератор Mihomo и главная панель не входят: у их окон свои семейства
+ * (data-operator-modal-family) в panel-operator.css.
+ */
+
+:is(body.devtools-page, body.modules-page) .modal {
+  padding: 18px;
+  background: rgba(6, 7, 10, 0.68) !important;
+  backdrop-filter: none !important;
+}
+
+:is(body.devtools-page, body.modules-page) .modal-content {
+  overflow: hidden;
+  border: 1px solid var(--op-border-strong) !important;
+  border-radius: var(--op-radius-lg) !important;
+  background: var(--op-surface) !important;
+  color: var(--op-text);
+  box-shadow: var(--op-shadow-float) !important;
+  /* Модули живут на 16 px, DevTools на 13 px: текст окна везде 13 px. */
+  font-size: calc(13px * var(--xk-font-scale, 1));
+  line-height: 1.42;
+}
+
+:is(body.devtools-page, body.modules-page) .modal:not(.modal-drawer) .modal-content {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Длинный текст прокручивается, полосы под кнопками не сжимаются. */
+:is(body.devtools-page, body.modules-page) .modal:not(.modal-drawer) :is(.modal-header, .modal-actions) {
+  flex: 0 0 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 12px 0;
+  background: var(--op-surface) !important;
+}
+
+:is(body.devtools-page, body.modules-page) .modal-header {
+  border-bottom: 1px solid var(--op-border);
+}
+
+:is(body.devtools-page, body.modules-page) .modal-actions {
+  border-top: 1px solid var(--op-border);
+}
+
+:is(body.devtools-page, body.modules-page) .modal-title {
+  color: var(--op-text-strong);
+  font-size: calc(13px * var(--xk-font-scale, 1));
+  font-weight: 650;
+}
+
+:is(body.devtools-page, body.modules-page) .modal-body {
+  padding: 12px;
+  background: var(--op-bg);
+  color: var(--op-text);
+}
+
+:is(body.devtools-page, body.modules-page) .modal:not(.modal-drawer) .modal-body {
+  margin: 12px 0;
+}
+
+:is(body.devtools-page, body.modules-page) .modal :is(.modal-actions button, .modal-close) {
+  box-sizing: border-box;
+  border: 1px solid var(--op-border) !important;
+  border-radius: var(--op-radius-sm) !important;
+  background: var(--op-surface-2) !important;
+  color: var(--op-muted) !important;
+  box-shadow: none !important;
+  font-weight: 600;
+  line-height: 1;
+  transform: none !important;
+}
+
+:is(body.devtools-page, body.modules-page) .modal .modal-actions button {
+  min-height: 34px;
+  padding: 0 14px;
+  font-size: calc(13px * var(--xk-font-scale, 1));
+}
+
+:is(body.devtools-page, body.modules-page) .modal .modal-close {
+  width: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  padding: 0;
+  font-size: calc(11px * var(--xk-font-scale, 1));
+}
+
+:is(body.devtools-page, body.modules-page) .modal :is(.modal-actions button, .modal-close):hover:not(:disabled) {
+  border-color: var(--op-border-strong) !important;
+  background: var(--op-surface-3) !important;
+  color: var(--op-text) !important;
+}
+
+:is(body.devtools-page, body.modules-page) .modal .modal-actions .btn-danger:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--op-danger) 52%, var(--op-border)) !important;
+  background: var(--op-danger-soft) !important;
+  color: var(--op-danger) !important;
+}
+
+:is(body.devtools-page, body.modules-page) .modal :is(.modal-actions button, .modal-close):focus-visible {
+  outline: 2px solid var(--op-accent) !important;
+  outline-offset: 2px;
+  box-shadow: none !important;
+}
+
+:is(body.devtools-page, body.modules-page) .modal .modal-actions button:disabled {
+  border-color: var(--op-border) !important;
+  background: var(--op-surface) !important;
+  color: var(--op-faint) !important;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+@media (max-width: 720px) {
+  :is(body.devtools-page, body.modules-page) .modal {
+    align-items: stretch !important;
+    padding: 0 !important;
+  }
+
+  :is(body.devtools-page, body.modules-page) .modal-content {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 100dvh;
+    max-height: 100dvh !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  :is(body.devtools-page, body.modules-page) .modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+  }
+}
