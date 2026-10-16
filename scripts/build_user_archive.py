@@ -463,6 +463,10 @@ def write_module_ownership_map(package_root: Path, *, strict: bool = False) -> O
     import importlib.util
 
     target = package_root / MODULE_OWNERSHIP_FILENAME
+    # Карта считается загрузкой модулей панели из самого дерева поставки:
+    # байткод лёг бы рядом с ними, а CI пакует это дерево как есть.
+    wrote_bytecode = sys.dont_write_bytecode
+    sys.dont_write_bytecode = True
     try:
         spec = importlib.util.spec_from_file_location(
             "build_modular_panel_release", Path(__file__).resolve().parent / "build_modular_panel_release.py"
@@ -482,6 +486,8 @@ def write_module_ownership_map(package_root: Path, *, strict: bool = False) -> O
             raise
         print(f"[!] {MODULE_OWNERSHIP_FILENAME} не записан ({error}); панель из этого архива не сможет ставить и удалять модули")
         return None
+    finally:
+        sys.dont_write_bytecode = wrote_bytecode
 
 
 def refresh_entware_mirrors(package_root: Path, **probe_overrides) -> list[str]:

@@ -506,6 +506,10 @@ function formatCatalogTime(seconds) {
 }
 
 // What the check said, under the buttons: the moment it was made, or why it failed.
+// The stable channel before its first modular release: the latest stable
+// release is one of the panel before modules and carries no catalog.
+const STABLE_UNRELEASED_HINT = 'Вы на стабильном канале, а все текущие обновления пока выходят как пререлизы. Как только появится стабильный выпуск, панель предложит его здесь.';
+
 function updateMessages(update, lifecycleReady) {
   const lines = [];
   const say = (className, text) => {
@@ -521,7 +525,8 @@ function updateMessages(update, lifecycleReady) {
     // The server answered from the catalog it kept: not today's word.
     const when = formatCheckedAt(update.fetched_at);
     if (update.freshness === 'stale') say('modules-alert', `Не удалось связаться с GitHub. Показаны данные каталога от ${formatCatalogTime(update.fetched_at)}.`);
-    if (update.requires_installer) say('modules-alert', `Версия ${update.target_version || 'из каталога'} требует обновления через установщик.`);
+    if (update.stable_unreleased) say('xk-summary-hint', STABLE_UNRELEASED_HINT);
+    else if (update.requires_installer) say('modules-alert', `Версия ${update.target_version || 'из каталога'} требует обновления через установщик.`);
     else if (update.update_available) say('xk-summary-hint', `Обновит панель и все модули одним выпуском.${when ? ` Проверено ${when}.` : ''}`);
     else say('xk-summary-hint', `${when ? `Проверено ${when}. ` : ''}Проверка не скачивает архив и не меняет панель.`);
   } else {

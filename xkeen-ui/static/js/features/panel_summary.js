@@ -206,6 +206,7 @@ export function updateStat(snapshot, update) {
   if (!update?.checked) return { tone: 'muted', value: '—', label: 'обновления не проверены' };
   if (update.requires_installer) return { tone: 'warn', value: update.target_version || '—', label: 'только через установщик' };
   if (update.update_available) return { tone: 'accent', value: update.target_version || '—', label: 'доступно обновление' };
+  if (update.stable_unreleased) return { tone: 'ok', value: update.source_version || snapshot?.panel_version || '—', label: 'стабильных выпусков пока нет' };
   const current = update.source_version || snapshot?.panel_version || '—';
   return { tone: 'ok', value: current, label: update.freshness === 'stale' ? 'актуальна по сохранённым данным' : 'версия актуальна' };
 }

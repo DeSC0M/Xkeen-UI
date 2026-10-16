@@ -174,6 +174,24 @@ test.describe('Modules panel update surface', () => {
     await expect(check.locator('.xk-summary-stat[data-stat="update"] span')).toHaveText('актуальна по сохранённым данным');
   });
 
+  test('explains the stable channel before its first modular release', async ({ page }) => {
+    await installIdleLifecycleRoutes(page);
+    await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({ json: {
+      ...server.update_check_current,
+      target_version: null, stable_unreleased: true,
+    } }));
+    await page.goto('/modules');
+
+    await page.getByRole('button', { name: 'Проверить ещё раз' }).click();
+
+    const check = page.locator('.modules-summary .xk-summary-col.is-controls');
+    await expect(check.getByRole('status')).toHaveText(
+      'Вы на стабильном канале, а все текущие обновления пока выходят как пререлизы. Как только появится стабильный выпуск, панель предложит его здесь.',
+    );
+    await expect(check.locator('.xk-summary-stat[data-stat="update"] span')).toHaveText('стабильных выпусков пока нет');
+    await expect(check.getByRole('button', { name: /Обновить/ })).toHaveCount(0);
+  });
+
   test('keeps update feedback focused and clears a stale badge after a failed check', async ({ page }) => {
     await installIdleLifecycleRoutes(page);
     await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({ status: 503, json: {

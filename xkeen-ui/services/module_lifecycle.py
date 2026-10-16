@@ -181,6 +181,11 @@ def _raise_domain(error: BaseException) -> None:
     ) from error
 
 
+# The catalog client's code for a stable channel whose latest release came
+# from the panel before modules (services.module_catalog_client).
+STABLE_UNRELEASED = "catalog_stable_unreleased"
+
+
 def _default_catalog_factory(
     state_dir: Path,
 ) -> Callable[[str, str], "ModuleCatalogClient"]:
@@ -564,7 +569,25 @@ class ModuleLifecycleService:
 
             source_version = read_panel_version(self.panel_root)
             client = self._catalog_factory(source_version, self._architecture_provider())
-            snapshot = client.get_catalog(force_refresh=bool(force_refresh))
+            try:
+                snapshot = client.get_catalog(force_refresh=bool(force_refresh))
+            except Exception as error:
+                if getattr(error, "code", None) != STABLE_UNRELEASED:
+                    raise
+                # The stable channel is chosen before its first modular
+                # release: nothing to offer there is an answer, not a failure.
+                return {
+                    "ok": True,
+                    "source_version": source_version,
+                    "target_version": None,
+                    "update_available": False,
+                    "stable_unreleased": True,
+                    "requires_installer": False,
+                    "min_updater": None,
+                    "freshness": "fresh",
+                    "stale_reason": None,
+                    "fetched_at": time.time(),
+                }
             target_version = str(snapshot.catalog.get("release_version") or "")
             newer = compare_semver(target_version, source_version) > 0
             descriptor = snapshot.catalog.get("panel")
@@ -872,11 +895,22 @@ class ModuleLifecycleService:
             source_version = read_panel_version(self.panel_root)
             architecture = self._architecture_provider()
             client = self._catalog_factory(source_version, architecture)
-            snapshot = (
-                client.get_catalog(force_refresh=True)
-                if operation == "panel-update"
-                else client.get_release_catalog(source_version)
-            )
+            try:
+                snapshot = (
+                    client.get_catalog(force_refresh=True)
+                    if operation == "panel-update"
+                    else client.get_release_catalog(source_version)
+                )
+            except Exception as error:
+                if getattr(error, "code", None) != STABLE_UNRELEASED:
+                    raise
+                raise ModuleTransactionError(
+                    "panel_update_not_newer",
+                    "the stable channel has no modular release yet",
+                    current_version=source_version,
+                    target_version=None,
+                    stable_unreleased=True,
+                ) from error
             if operation == "panel-update":
                 from services.module_package_contract import compare_semver
 

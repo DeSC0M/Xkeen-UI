@@ -201,6 +201,41 @@ def test_update_check_maps_an_unreachable_catalog_to_the_public_code(tmp_path):
     assert raised.value.status == 503
 
 
+class _StableUnreleased:
+    def get_catalog(self, **_kwargs):
+        from services.module_catalog_client import CatalogClientError
+
+        raise CatalogClientError("catalog_stable_unreleased", "no stable modular release")
+
+
+def test_update_check_on_stable_before_its_first_modular_release_is_not_a_failure(tmp_path):
+    # Последний стабильный релиз пока выпущен прежней панелью: обновлений на
+    # этом канале нет, и это ответ, а не сбой проверки.
+    service, _ = make_service(
+        make_panel(tmp_path), make_release(), catalog_factory=lambda _version, _architecture: _StableUnreleased()
+    )
+
+    result = service.panel_update_check()
+
+    assert result["ok"] is True
+    assert result["update_available"] is False
+    assert result["stable_unreleased"] is True
+    assert result["source_version"] == VERSION
+    assert result["target_version"] is None
+
+
+def test_update_plan_on_stable_before_its_first_modular_release_says_the_panel_is_current(tmp_path):
+    service, _ = make_service(
+        make_panel(tmp_path), make_release(), catalog_factory=lambda _version, _architecture: _StableUnreleased()
+    )
+
+    payload = service.plan("panel-update", None)
+
+    assert payload["applicable"] is False
+    assert payload["blockers"][0]["code"] == "panel_version_current"
+    assert payload["blockers"][0]["stable_unreleased"] is True
+
+
 def test_update_check_asks_for_a_fresh_catalog_only_on_request(tmp_path):
     seen: list[bool] = []
     release = make_release(version="2.11.0")

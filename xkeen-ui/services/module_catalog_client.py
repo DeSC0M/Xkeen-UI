@@ -60,6 +60,10 @@ def _fail(code: str, message: str, **details: Any) -> None:
     raise CatalogClientError(code, message, **details)
 
 
+def _stable_unreleased() -> None:
+    _fail("catalog_stable_unreleased", "the latest stable release carries no module catalog")
+
+
 class CatalogTransportError(CatalogClientError):
     """A transport failure eligible for validated stale-cache fallback."""
 
@@ -282,6 +286,22 @@ def parse_latest_release(payload: Mapping[str, Any]) -> str:
         _fail(error.code, "latest release tag is invalid")
 
 
+def stable_release_lacks_catalog(payload: object) -> bool:
+    """Whether the latest stable release was published by the panel before modules.
+
+    Such a release carries the old archive and no signed catalog. Until the
+    first modular stable release appears it is the "latest" one, and the
+    stable channel has nothing to offer rather than a broken catalog.
+    """
+
+    if not isinstance(payload, Mapping) or payload.get("draft") is not False or payload.get("prerelease") is not False:
+        return False
+    assets = payload.get("assets")
+    if not isinstance(assets, list):
+        return False
+    return not any(isinstance(asset, Mapping) and asset.get("name") == "catalog.json" for asset in assets)
+
+
 def parse_latest_prerelease(payload: object) -> str:
     """Select the highest published SemVer prerelease from the bounded official list."""
     if not isinstance(payload, list):
@@ -342,6 +362,9 @@ class ModuleCatalogClient:
         self._cache_path = Path(ui_state_dir).resolve() / "module-catalog" / (
             "catalog-cache.json" if selected == "stable" else "catalog-cache-prerelease.json"
         )
+        # The stable channel's answer "no modular release yet" is kept as long
+        # as a catalog would be: opening a screen must not cost a request.
+        self._unreleased_path = self._cache_path.with_name("stable-unreleased.json")
         self._transport = transport or UrlLibCatalogTransport()
         self._now = now
         self._cache_ttl_s = float(cache_ttl_s)
@@ -466,6 +489,12 @@ class ModuleCatalogClient:
             discovery = json.loads(discovery_bytes.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError) as error:
             raise CatalogClientError("catalog_release_discovery_invalid", "latest release metadata is invalid") from error
+        if self._channel == "stable" and stable_release_lacks_catalog(discovery):
+            try:
+                _atomic_write_json(str(self._unreleased_path), {"checked_at": float(self._now())}, mode=0o600)
+            except OSError:
+                pass
+            _stable_unreleased()
         release_version = (
             parse_latest_prerelease(discovery) if self._channel == "prerelease"
             else parse_latest_release(discovery)
@@ -509,6 +538,8 @@ class ModuleCatalogClient:
         max_age_s = self._min_refresh_s if force_refresh else self._cache_ttl_s
         if cached is not None and 0.0 <= now - cached.fetched_at <= max_age_s:
             return cached
+        if self._channel == "stable" and 0.0 <= now - self._unreleased_checked_at() <= max_age_s:
+            _stable_unreleased()
         try:
             snapshot = self._fetch_remote()
         except CatalogTransportError as error:
@@ -523,7 +554,19 @@ class ModuleCatalogClient:
                 "catalog release version is older than the highest verified cache version",
             )
         self._write_cache(snapshot)
+        if self._channel == "stable":
+            try:
+                self._unreleased_path.unlink(missing_ok=True)
+            except OSError:
+                pass
         return snapshot
+
+    def _unreleased_checked_at(self) -> float:
+        try:
+            checked_at = float(json.loads(self._unreleased_path.read_text(encoding="utf-8"))["checked_at"])
+        except (OSError, ValueError, TypeError, KeyError):
+            return -math.inf
+        return checked_at if math.isfinite(checked_at) else -math.inf
 
     def get_release_catalog(self, release_version: str) -> CatalogSnapshot:
         """Return the catalog of one exact release, the one a panel was built from.

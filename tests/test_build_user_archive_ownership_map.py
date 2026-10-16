@@ -104,3 +104,21 @@ def test_workflow_builds_module_packages_from_the_packaged_tree() -> None:
 
     assert "--root package-root" in command
     assert "--root . " not in command and "--root .\n" not in command
+
+
+def test_map_leaves_no_bytecode_in_the_package_tree(panel_source_root: Path) -> None:
+    # Карту считают, загружая модули панели из дерева поставки. В CI архив
+    # пакуется из этого дерева как есть, и байткод уезжал в релиз.
+    import subprocess
+
+    package_root = panel_source_root / "xkeen-ui"
+    code = (
+        "import importlib.util, sys; from pathlib import Path;"
+        f"spec = importlib.util.spec_from_file_location('builder', {str(SCRIPT)!r});"
+        "builder = importlib.util.module_from_spec(spec); sys.modules['builder'] = builder;"
+        "spec.loader.exec_module(builder);"
+        f"builder.write_module_ownership_map(Path({str(package_root)!r}), strict=True)"
+    )
+    subprocess.run([sys.executable, "-c", code], check=True, cwd=ROOT, timeout=120)
+
+    assert not [path for path in package_root.rglob("*") if path.name == "__pycache__" or path.suffix == ".pyc"]

@@ -982,3 +982,121 @@ def test_release_catalog_rejects_a_version_that_is_not_semver(tmp_path, version:
 
     assert raised.value.code == "catalog_release_version_invalid"
     assert transport.calls == []
+
+
+# --- стабильный канал до первого модульного выпуска --------------------------------
+
+
+def _old_style_latest(tag: str) -> bytes:
+    # Так GitHub описывает последний стабильный релиз прежней панели: архив
+    # есть, подписанного каталога нет.
+    return json.dumps(
+        {
+            "tag_name": tag,
+            "draft": False,
+            "prerelease": False,
+            "assets": [{"name": "xkeen-ui-routing.tar.gz"}, {"name": "SHA256SUMS"}],
+        }
+    ).encode("utf-8")
+
+
+@pytest.mark.parametrize("tag", ["v2.9.2a", "v2.9.3"])
+def test_stable_release_without_a_catalog_means_no_stable_modular_release_yet(tmp_path, tag: str) -> None:
+    transport = _CatalogTransport({LATEST_RELEASE_URL: _old_style_latest(tag)})
+    client = ModuleCatalogClient(tmp_path, transport=transport, now=lambda: 100.0, channel="stable")
+
+    with pytest.raises(CatalogClientError) as raised:
+        client.get_catalog()
+
+    assert raised.value.code == "catalog_stable_unreleased"
+    assert transport.calls == [LATEST_RELEASE_URL]
+
+
+def test_the_stable_unreleased_answer_is_kept_like_a_catalog(tmp_path) -> None:
+    # Открытие экрана спрашивает без принуждения: без памяти об ответе
+    # каждое открытие тратило бы запрос из шестидесяти в час.
+    clock = [100.0]
+    transport = _CatalogTransport({LATEST_RELEASE_URL: _old_style_latest("v2.9.2a")})
+    client = ModuleCatalogClient(tmp_path, transport=transport, now=lambda: clock[0], channel="stable")
+
+    for force_refresh, step in ((False, 0.0), (True, 60.0), (False, 60 * 60.0)):
+        clock[0] += step
+        with pytest.raises(CatalogClientError) as raised:
+            client.get_catalog(force_refresh=force_refresh)
+        assert raised.value.code == "catalog_stable_unreleased"
+    assert transport.calls == [LATEST_RELEASE_URL]
+
+    clock[0] += 5 * 60.0
+    with pytest.raises(CatalogClientError):
+        client.get_catalog(force_refresh=True)
+    assert transport.calls == [LATEST_RELEASE_URL, LATEST_RELEASE_URL]
+
+
+def test_a_stable_modular_release_replaces_the_kept_unreleased_answer(tmp_path) -> None:
+    private_key = Ed25519PrivateKey.generate()
+    clock = [100.0]
+    responses: dict[str, bytes | Exception] = {LATEST_RELEASE_URL: _old_style_latest("v2.9.2a")}
+    transport = _CatalogTransport(responses)
+    client = ModuleCatalogClient(
+        tmp_path,
+        transport=transport,
+        now=lambda: clock[0],
+        keyring={"release-2026": _public_pem(private_key)},
+        channel="stable",
+    )
+    with pytest.raises(CatalogClientError):
+        client.get_catalog()
+
+    responses.update(_release_responses(private_key, "2.10.0"))
+    clock[0] += 5 * 60.0 + 1
+
+    assert client.get_catalog(force_refresh=True).release_version == "2.10.0"
+    assert not (tmp_path / "module-catalog" / "stable-unreleased.json").exists()
+
+
+def test_the_stable_unreleased_answer_is_not_a_prerelease_answer(tmp_path) -> None:
+    transport = _CatalogTransport({PRERELEASES_URL: json.dumps([]).encode("utf-8")})
+    stable = ModuleCatalogClient(
+        tmp_path,
+        transport=_CatalogTransport({LATEST_RELEASE_URL: _old_style_latest("v2.9.2a")}),
+        now=lambda: 100.0,
+        channel="stable",
+    )
+    with pytest.raises(CatalogClientError):
+        stable.get_catalog()
+    prerelease = ModuleCatalogClient(tmp_path, transport=transport, now=lambda: 100.0, channel="prerelease")
+
+    with pytest.raises(CatalogClientError) as raised:
+        prerelease.get_catalog()
+
+    assert raised.value.code == "catalog_release_not_found"
+    assert transport.calls == [PRERELEASES_URL]
+
+
+def test_a_prerelease_catalog_keeps_the_stable_unreleased_answer(tmp_path) -> None:
+    # Владелец переключает каналы туда и обратно: удачный пререлиз не
+    # отменяет того, что стабильный канал уже ответил.
+    private_key = Ed25519PrivateKey.generate()
+    keyring = {"release-2026": _public_pem(private_key)}
+    stable_transport = _CatalogTransport({LATEST_RELEASE_URL: _old_style_latest("v2.9.2a")})
+    stable = ModuleCatalogClient(tmp_path, transport=stable_transport, now=lambda: 100.0, keyring=keyring, channel="stable")
+    with pytest.raises(CatalogClientError):
+        stable.get_catalog()
+    catalog_bytes = _catalog_bytes("2.10.0-beta.2")
+    prerelease = ModuleCatalogClient(
+        tmp_path,
+        transport=_CatalogTransport({
+            PRERELEASES_URL: json.dumps([{"tag_name": "v2.10.0-beta.2", "draft": False, "prerelease": True}]).encode("utf-8"),
+            official_release_asset_url("2.10.0-beta.2", "catalog.json"): catalog_bytes,
+            official_release_asset_url("2.10.0-beta.2", "catalog.json.sig"): _signature_bytes(private_key, catalog_bytes),
+        }),
+        now=lambda: 100.0,
+        keyring=keyring,
+        channel="prerelease",
+    )
+
+    assert prerelease.get_catalog().release_version == "2.10.0-beta.2"
+    with pytest.raises(CatalogClientError) as raised:
+        stable.get_catalog()
+    assert raised.value.code == "catalog_stable_unreleased"
+    assert stable_transport.calls == [LATEST_RELEASE_URL]

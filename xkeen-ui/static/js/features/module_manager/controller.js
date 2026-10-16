@@ -280,6 +280,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
         state.update = {
           checked: true, loading: false, error: null, update_available: false, requires_installer: false,
           source_version: plan.source_version, target_version: plan.target_version,
+          stable_unreleased: plan.blockers.some((blocker) => blocker?.stable_unreleased === true),
         };
         return;
       }

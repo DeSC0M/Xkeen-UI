@@ -770,16 +770,16 @@ def main(argv=None):
         return
     if args.action == "apply":
         selected = args.module_ids.split(",") if args.module_ids else None
-        print(
-            apply_profile(
-                args.source,
-                args.target,
-                args.profile,
-                module_ids=selected,
-                transaction_root=args.transaction,
-                editor_variant=args.editor_variant,
-                keep_switches=args.keep_switches,
-            )
+        # The installer names the transaction itself; the path printed back
+        # only stood as a bare line in its log.
+        apply_profile(
+            args.source,
+            args.target,
+            args.profile,
+            module_ids=selected,
+            transaction_root=args.transaction,
+            editor_variant=args.editor_variant,
+            keep_switches=args.keep_switches,
         )
     elif args.action == "rollback":
         rollback_profile(args.transaction)
