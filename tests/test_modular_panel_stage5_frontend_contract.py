@@ -202,9 +202,7 @@ def test_restart_log_uses_page_runtime_and_module_ownership_before_opening_event
     assert "if (!canUseRestartLogWs()) return;" in source
     assert "pageConfig?.runtime" in source
     assert "runtime.websocket === false" in source
-    assert "'tool.terminal'" in source
-    assert "'engine.xray'" in source
-    assert "'engine.mihomo'" in source
+    assert "active.includes('core')" in source
 
 
 def test_e2e_server_does_not_advertise_websocket_without_a_websocket_server():

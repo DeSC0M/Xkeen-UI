@@ -61,7 +61,7 @@
         "id": "core",
         "module_id": "core",
         "name": "Xkeen UI Core",
-        "description": "Запуск панели, авторизация, shell, настройки, сервис и общий runtime.",
+        "description": "Запуск панели, авторизация, WebSocket runtime, настройки, сервис и общий runtime.",
         "version": "1.0.0",
         "api_version": 1,
         "depends_on": [],
@@ -76,6 +76,16 @@
           {
             "id": "flask",
             "optional": false,
+            "available": true
+          },
+          {
+            "id": "gevent",
+            "optional": true,
+            "available": true
+          },
+          {
+            "id": "gevent-websocket",
+            "optional": true,
             "available": true
           }
         ],
@@ -230,7 +240,7 @@
         "sha256": "bc8140fbcf3c5b07c0412d61eaf7975150aa79543fdc82337d46a1afa7339604",
         "signing_key_id": "release-2026",
         "name": "Xkeen UI Core",
-        "description": "Запуск панели, авторизация, shell, настройки, сервис и общий runtime.",
+        "description": "Запуск панели, авторизация, WebSocket runtime, настройки, сервис и общий runtime.",
         "installed": true,
         "lifecycle_actions": [],
         "update_available": false
@@ -463,7 +473,7 @@
         "sha256": "59386e5df3a7d0858aa3fef57ff1c5e5f252bd25d42d823c7af971c3548e6aad",
         "signing_key_id": "release-2026",
         "name": "Терминал и команды",
-        "description": "PTY, WebSocket, xterm, command jobs и shell policy.",
+        "description": "PTY, xterm, интерактивные команды и shell policy.",
         "installed": false,
         "lifecycle_actions": [
           "install"
@@ -935,7 +945,7 @@
         "id": "core",
         "module_id": "core",
         "name": "Xkeen UI Core",
-        "description": "Запуск панели, авторизация, shell, настройки, сервис и общий runtime.",
+        "description": "Запуск панели, авторизация, WebSocket runtime, настройки, сервис и общий runtime.",
         "version": "1.0.0",
         "api_version": 1,
         "depends_on": [],
@@ -950,6 +960,16 @@
           {
             "id": "flask",
             "optional": false,
+            "available": true
+          },
+          {
+            "id": "gevent",
+            "optional": true,
+            "available": true
+          },
+          {
+            "id": "gevent-websocket",
+            "optional": true,
             "available": true
           }
         ],
@@ -1074,7 +1094,7 @@
         "id": "tool.terminal",
         "module_id": "tool.terminal",
         "name": "Терминал и команды",
-        "description": "PTY, WebSocket, xterm, command jobs и shell policy.",
+        "description": "PTY, xterm, интерактивные команды и shell policy.",
         "version": "1.0.0",
         "api_version": 1,
         "depends_on": [
@@ -1088,16 +1108,6 @@
           {
             "id": "shell",
             "optional": false,
-            "available": true
-          },
-          {
-            "id": "gevent",
-            "optional": true,
-            "available": true
-          },
-          {
-            "id": "gevent-websocket",
-            "optional": true,
             "available": true
           }
         ],
@@ -1160,7 +1170,7 @@
         "sha256": "bc8140fbcf3c5b07c0412d61eaf7975150aa79543fdc82337d46a1afa7339604",
         "signing_key_id": "release-2026",
         "name": "Xkeen UI Core",
-        "description": "Запуск панели, авторизация, shell, настройки, сервис и общий runtime.",
+        "description": "Запуск панели, авторизация, WebSocket runtime, настройки, сервис и общий runtime.",
         "installed": true,
         "lifecycle_actions": [],
         "update_available": false
@@ -1393,7 +1403,7 @@
         "sha256": "59386e5df3a7d0858aa3fef57ff1c5e5f252bd25d42d823c7af971c3548e6aad",
         "signing_key_id": "release-2026",
         "name": "Терминал и команды",
-        "description": "PTY, WebSocket, xterm, command jobs и shell policy.",
+        "description": "PTY, xterm, интерактивные команды и shell policy.",
         "installed": true,
         "lifecycle_actions": [
           "repair",
@@ -1682,7 +1692,7 @@
         "id": "core",
         "module_id": "core",
         "name": "Xkeen UI Core",
-        "description": "Запуск панели, авторизация, shell, настройки, сервис и общий runtime.",
+        "description": "Запуск панели, авторизация, WebSocket runtime, настройки, сервис и общий runtime.",
         "version": "1.0.0",
         "api_version": 1,
         "depends_on": [],
@@ -1697,6 +1707,16 @@
           {
             "id": "flask",
             "optional": false,
+            "available": true
+          },
+          {
+            "id": "gevent",
+            "optional": true,
+            "available": true
+          },
+          {
+            "id": "gevent-websocket",
+            "optional": true,
             "available": true
           }
         ],
