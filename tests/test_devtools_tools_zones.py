@@ -229,11 +229,10 @@ def test_stretched_update_card_keeps_its_slack_at_the_bottom():
     operator = OPERATOR_CSS.read_text(encoding="utf-8")
 
     card = template[template.index('id="dt-update-card"'): template.index('id="dt-env-card"')]
-    assert 'class="dt-panel-summary-grid"' in card
-    assert 'id="dt-panel-installed-set"' in card
-    assert 'id="dt-panel-enabled-set"' in card
+    assert 'id="dt-panel-summary"' in card
+    assert 'id="dt-panel-modules"' not in card
+    assert 'id="dt-panel-installed-set"' not in card
     assert 'id="dt-panel-profile"' not in card
-    assert 'id="dt-panel-modules"' in card
     for stale in (
         "dt-update-autocheck-row",
         "dt-update-log-box",
@@ -243,11 +242,7 @@ def test_stretched_update_card_keeps_its_slack_at_the_bottom():
         "dt-update-open-logs",
     ):
         assert stale not in card
-
-    summary = glass[glass.index(".dt-panel-summary-grid {"):]
-    summary = summary[: summary.index("}")]
-    assert "display: grid;" in summary
-    assert "gap: 8px;" in summary
+    assert ".dt-panel-summary-grid" not in glass
 
     # Карточки верхнего ряда не растут вместе с окном: высоту задаёт содержимое,
     # низы половин держит `flex: 1 1 auto`, а не привязка к 100vh или к строке грида.
@@ -281,19 +276,13 @@ def test_update_card_is_reduced_to_panel_summary():
     card = card[: card.index('id="dt-env-card"')]
 
     assert "<pre" not in card
-    assert 'id="dt-panel-channel"' in card
-    assert 'data-channel="stable"' in card
-    assert 'data-channel="prerelease"' in card
     assert ">Сборка панели</h2>" in card
-    assert 'class="dt-panel-summary-grid"' in card
-    assert '<ul id="dt-panel-modules"' in card
-    assert 'id="dt-panel-installed-set"' in card
-    assert 'id="dt-panel-enabled-set"' in card
-    assert 'id="dt-panel-profile"' not in card
-    assert 'id="dt-panel-update-note"' in card
-    # Версия печатается один раз, канал подписан своей строкой.
-    assert card.count('id="dt-panel-version"') == 1
-    assert "<dt>Канал обновлений</dt>" in card
+    # Сводку рисует общий модуль: та же, что в шапке «Модулей и обновлений».
+    assert 'id="dt-panel-summary" class="xk-summary"' in card
+    assert "data-modules-url=\"{{ url_for('modules_page') }}\"" in card
+    # Полного списка модулей больше нет — только те, что требуют внимания.
+    for gone in ('id="dt-panel-modules"', 'id="dt-panel-update-note"', 'id="dt-panel-channel"', 'dt-panel-summary-grid'):
+        assert gone not in card, gone
     # Плашка состояния появляется только при ошибке загрузки.
     status = card[card.index('id="dt-panel-status"'):]
     assert " hidden>" in status[: status.index(">") + 1]
@@ -302,24 +291,18 @@ def test_update_card_is_reduced_to_panel_summary():
     # Карточка только читает: сведения о сборке и модулях и ответ каталога.
     assert "api.loadInstalled()" in script
     assert "api.checkPanelUpdate(false)" in script
+    assert "summaryIssueList(issues)" in script
     assert "/api/devtools/update" not in script
     assert "update_notifier" not in script
     assert "setDevtoolsNamespaceApi('devtoolsUpdate', { init, activate, deactivate });" in script
 
 
-def test_module_rows_show_version_and_state():
-    script = (ROOT / "xkeen-ui/static/js/features/devtools/update.js").read_text(encoding="utf-8")
-    glass = GLASS_CSS.read_text(encoding="utf-8")
-
-    # Каждый модуль — своя строка: имя, версия, состояние словом.
-    for cls in ("dt-panel-module-name", "dt-panel-module-version", "dt-panel-module-state"):
-        assert "'%s'" % cls in script
-        assert "." + cls + " {" in glass
-    for label in ("включён", "выключен", "ошибка", "недоступен"):
-        assert "label: '%s'" % label in script
-
-    # Спрятанная строка об обновлении не должна проступать из-за display:flex.
-    assert ".dt-panel-update-note[hidden]," in glass
+def test_devtools_header_has_no_modules_button():
+    """Кнопка «Модули и обновления» в шапке дублировала кнопку карточки «Сборка панели»."""
+    template = TEMPLATE.read_text(encoding="utf-8")
+    header = template[template.index('<header'): template.index('</header>')]
+    assert "url_for('modules_page')" not in header
+    assert "data-xk-modules-update-badge" not in header
 
 
 def test_prefs_io_columns_are_built_the_same_way():
@@ -531,13 +514,20 @@ def test_prefs_io_buttons_are_labelled_in_russian():
 
 
 def test_current_commit_is_printed_as_a_short_hash():
-    """Полные 40 символов рвали строку «Версия» надвое — печатаем короткий хэш."""
-    script = (ROOT / "xkeen-ui/static/js/features/devtools/update.js").read_text(encoding="utf-8")
+    """Полные 40 символов рвали строку — печатаем короткий хэш."""
+    script = (ROOT / "xkeen-ui/static/js/features/panel_summary.js").read_text(encoding="utf-8")
 
     fn = script[script.index("function shortCommit("):]
-    fn = fn[: fn.index("\n  }")]
+    fn = fn[: fn.index("\n}")]
     assert "slice(0, 12)" in fn
+    assert "shortCommit(build.commit)" in script
 
-    printed = [ln for ln in script.splitlines() if "'dt-panel-commit'" in ln]
-    assert printed, "строка с выводом коммита не найдена"
-    assert "const commit = shortCommit(build.commit);" in script
+
+def test_summary_lists_only_modules_that_need_attention():
+    summary = (ROOT / "xkeen-ui/static/js/features/panel_summary.js").read_text(encoding="utf-8")
+    render = (ROOT / "xkeen-ui/static/js/features/module_manager/render.js").read_text(encoding="utf-8")
+
+    # Беда модуля описывается в одном месте: строкой плитки и строкой сводки.
+    assert "export function moduleProblem(" in summary
+    assert "return moduleProblem(item, names);" in render
+    assert "Нужен перезапуск, чтобы изменения вступили в силу" in summary

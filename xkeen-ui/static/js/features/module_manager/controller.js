@@ -185,7 +185,6 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
         onCheckUpdate: requestUpdateCheck,
         update: state.update,
         onEditorVariant: changeEditorVariant,
-        showUpdateChannelControl: document.body?.dataset.xkDevtoolsAvailable !== '1',
         onUpdateChannel: requestUpdateChannel,
         channelBusy,
         openMenus,
@@ -317,6 +316,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
       }
     }
     if (active) render();
+    void loadKeptUpdateCheck();
     if (active && returnTo === 'available' && state.installed?.lifecycle?.available === true) await selectTab('available');
   }
 
@@ -545,6 +545,23 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     }
   }
 
+  // The counter of the summary is filled from the catalog the server keeps for
+  // a day: opening the screen does not go to GitHub. Silence on failure — the
+  // owner checks by the button.
+  async function loadKeptUpdateCheck() {
+    if (!state.installed?.lifecycle?.available || state.update.loading || state.update.checked) return;
+    const installed = state.installed;
+    try {
+      const checked = await api.checkPanelUpdate(false);
+      if (state.installed !== installed || state.update.loading || state.update.checked) return;
+      state.update = { ...checked, checked: true, loading: false, error: null };
+      reconcileModulesUpdateCheck(checked);
+    } catch (error) {
+      return;
+    }
+    if (active) render();
+  }
+
   async function requestUpdateChannel(channel) {
     if (busy || channelBusy) return null;
     channelBusy = true;
@@ -552,6 +569,8 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     try {
       const result = await api.setUpdateChannel(channel);
       state.installed = await api.loadInstalled();
+      // Another channel has its own catalog and its own answer.
+      state.update = { checked: false, loading: false, error: null };
       reconcileModulesUpdateBadge(state.installed);
       clearError();
       return result;
@@ -561,6 +580,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     } finally {
       channelBusy = false;
       if (active) render();
+      void loadKeptUpdateCheck();
     }
   }
 
@@ -629,6 +649,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
         render();
         if (statusFresh && state.status?.result === 'running') schedulePoll();
       }
+      void loadKeptUpdateCheck();
       if (installedResult.status === 'rejected' || statusResult.status === 'rejected') initialLoad = null;
     });
     return initialLoad;

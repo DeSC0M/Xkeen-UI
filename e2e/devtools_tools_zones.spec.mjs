@@ -98,24 +98,23 @@ test.describe('DevTools Tools zones', () => {
     expect(Math.abs(geometry.trayBottom - geometry.envBottom)).toBeLessThanOrEqual(2);
     expect(Math.abs(geometry.prefsBottom - geometry.ioBottom)).toBeLessThanOrEqual(2);
 
-    // Карточка обновления стала информационной: сведения о панели и модулях,
+    // Карточка обновления — сводка о панели: счётчики вместо списка модулей,
     // а команды обновления живут в разделе «Модули и обновления».
-    await expect(page.locator('#dt-update-card')).toContainText('Xkeen UI Core');
-    await expect(page.locator('#dt-panel-installed-set')).toHaveText('только Xray');
-    await expect(page.locator('#dt-panel-enabled-set')).toHaveText('все модули (2 из 2)');
-    await expect(page.locator('#dt-panel-modules .dt-panel-module')).toHaveCount(2);
-    await expect(page.locator('#dt-panel-modules .dt-panel-module').nth(1)).toContainText('Xray');
+    await expect(page.locator('#dt-panel-summary .xk-summary-stat[data-stat="enabled"] b')).toHaveText('2 из 2');
+    await expect(page.locator('#dt-panel-modules')).toHaveCount(0);
     await expect(page.locator('#dt-update-card pre:visible')).toHaveCount(0);
     await expect(page.locator('#dt-update-log-box')).toHaveCount(0);
     await expect(page.locator('#dt-update-check')).toHaveCount(0);
   });
 
-  test('only the header links to the modules manager', async ({ page }) => {
+  test('only the panel summary links to the modules manager', async ({ page }) => {
     await openTools(page, { width: 1600, height: 1000 });
 
-    const links = page.getByRole('link', { name: 'Модули и обновления', exact: true });
+    // В шапке кнопки больше нет: она дублировала кнопку карточки «Сборка панели».
+    await expect(page.locator('header a[href$="/modules"]')).toHaveCount(0);
+    const links = page.locator('a[href$="/modules"]');
     await expect(links).toHaveCount(1);
-    await expect(links).toHaveAttribute('href', /\/modules$/);
+    await expect(page.locator('#dt-update-card a[href$="/modules"]')).toHaveText(/«Модул/);
     await expect(page.locator('[data-dt-modules-manager-notice]')).toHaveCount(0);
   });
 
@@ -268,8 +267,8 @@ test.describe('DevTools Tools zones', () => {
         updateBottom: b('#dt-update-card').bottom,
         envBottom: b('#dt-env-card').bottom,
         updateBodyTop: b('#dt-update-card .dt-update-body').top,
-        summaryTop: b('#dt-update-card .dt-panel-summary-grid').top,
-        modulesTop: b('#dt-panel-modules').top,
+        summaryTop: b('#dt-panel-summary').top,
+        modulesTop: b('#dt-panel-summary .xk-summary-link-row').top,
       };
     });
 
@@ -289,8 +288,8 @@ test.describe('DevTools Tools zones', () => {
         return {
           updateBottom: b('#dt-update-card').bottom,
           envBottom: b('#dt-env-card').bottom,
-          summaryTop: b('#dt-update-card .dt-panel-summary-grid').top,
-          modulesBottom: b('#dt-panel-modules').bottom,
+          summaryTop: b('#dt-panel-summary').top,
+          modulesBottom: b('#dt-panel-summary .xk-summary-link-row').bottom,
         };
       });
 

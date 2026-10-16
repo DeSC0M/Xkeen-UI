@@ -1,5 +1,8 @@
 import { iconHtml } from '../../ui/operator_icons.js';
-import { renderUpdateChannel, wireUpdateChannel } from '../update_channel.js';
+import {
+  formatCheckedAt, lifecycleAvailable, moduleProblem, summaryChannel, summaryHeading,
+  summaryIssues, summaryLifecycleNote, summaryStats,
+} from '../panel_summary.js';
 
 function node(tag, className, text) {
   const element = document.createElement(tag);
@@ -227,61 +230,6 @@ function textList(parent, label, values) {
   parent.append(node('p', 'modules-meta', `${label}: ${values.map(String).join(', ')}`));
 }
 
-function appendPanelIdentity(summary, snapshot) {
-  const build = snapshot.build && typeof snapshot.build === 'object' ? snapshot.build : {};
-  const updateChannel = snapshot.update_channel === 'prerelease' ? 'Предрелиз' : 'Стабильный';
-  const releaseVersion = String(snapshot.panel_version || '').trim();
-  const buildVersion = String(build.version || '').trim();
-  summary.append(node(
-    'p',
-    'modules-build-version',
-    releaseVersion ? `Xkeen UI ${releaseVersion}` : (buildVersion ? `Локальная сборка ${buildVersion}` : 'Сборка панели не определена'),
-  ));
-  if (build.repo || build.channel) {
-    summary.append(node('p', 'modules-build-meta', `Источник: ${build.repo || 'не указан'} · канал сборки: ${build.channel || 'не указан'}`));
-  }
-  summary.append(node('p', 'modules-build-meta', `Канал обновлений: ${updateChannel}`));
-  if (build.commit) summary.append(node('p', 'modules-build-meta', `Коммит: ${build.commit}`));
-  if (build.built_utc) {
-    const built = new Date(build.built_utc);
-    const displayed = Number.isFinite(built.getTime()) ? built.toLocaleString('ru-RU') : String(build.built_utc);
-    summary.append(node('p', 'modules-build-meta', `Собрано: ${displayed}`));
-  }
-}
-
-function appendUpdateChannelControl(summary, snapshot, { onUpdateChannel, channelBusy }) {
-  const check = node('section', 'modules-update-channel');
-  const title = node('h3', '', 'Канал обновлений');
-  const switchRoot = node('span', 'modules-channel-switch');
-  switchRoot.setAttribute('role', 'group');
-  switchRoot.setAttribute('aria-label', 'Канал обновлений');
-  for (const [channel, label] of [['stable', 'Стабильный'], ['prerelease', 'Предрелизный']]) {
-    const button = node('button', '', label);
-    button.type = 'button';
-    button.dataset.channel = channel;
-    button.disabled = !!channelBusy;
-    switchRoot.append(button);
-  }
-
-  const hint = node('p', 'modules-channel-hint');
-  check.append(title, switchRoot, hint);
-  summary.append(check);
-  renderUpdateChannel(switchRoot, hint, snapshot.update_channel);
-  if (snapshot.lifecycle?.available !== true) {
-    hint.textContent = 'Для локальной сборки переключение канала не меняет доступность подписанных обновлений.';
-  }
-  wireUpdateChannel({
-    root: switchRoot,
-    hint,
-    onSelect: onUpdateChannel,
-    onError: (error) => {
-      const message = error && error.message ? String(error.message) : 'нет ответа сервера';
-      check.dataset.error = '1';
-      hint.textContent = 'Не удалось выбрать канал: ' + message;
-    },
-  });
-}
-
 // Only the light variant lacks files of the others, and a local build
 // has no signed archive to fetch them from.
 function editorVariantsLocked(snapshot) {
@@ -333,8 +281,6 @@ function coreStrip(item) {
   return strip;
 }
 
-const CORE_REQUIREMENTS = { xray: 'Xray', mihomo: 'Mihomo' };
-
 // The tile says nothing below the description while the module works as the
 // switch shows. A line appears only for what the switch cannot tell.
 function tileNotice(item, names) {
@@ -342,20 +288,7 @@ function tileNotice(item, names) {
     return { tone: 'lock', text: 'Нужен, пока включено ядро' };
   }
   if (item.can_disable !== true) return { tone: 'lock', text: 'Не выключается' };
-  if (item.status === 'failed') return { tone: 'bad', text: 'Не запустился при последнем старте панели' };
-  if (item.status === 'unavailable') {
-    const missing = Array.isArray(item.missing_requirement_ids) ? item.missing_requirement_ids : [];
-    const engine = missing.map((id) => CORE_REQUIREMENTS[id]).find(Boolean);
-    if (engine) return { tone: 'warn', text: `Ядро ${engine} на роутере не найдено` };
-    if (missing.length) return { tone: 'warn', text: `На роутере не хватает: ${missing.join(', ')}` };
-    const deps = Array.isArray(item.unavailable_dependency_ids) ? item.unavailable_dependency_ids : [];
-    if (deps.length) return { tone: 'warn', text: `Не работает без модуля: ${moduleList(deps, names)}` };
-    return { tone: 'warn', text: 'Сейчас не работает' };
-  }
-  if (item.reason === 'deferred_disable_blocked') {
-    return { tone: 'warn', text: 'Выключится, когда ядро остановят' };
-  }
-  return null;
+  return moduleProblem(item, names);
 }
 
 const MENU_LABELS = { repair: 'Восстановить файлы модуля', remove: 'Удалить модуль' };
@@ -452,29 +385,6 @@ function moduleTile(item, snapshot, names, { onToggle, onPlan, onEditorVariant, 
 
 function moduleSetLabel(name) { return MODULE_SET_LABELS[name] || 'свой набор'; }
 
-function appendSetLine(summary, label, value) {
-  const line = node('p', 'modules-set');
-  line.append(node('span', 'modules-set-label', label), document.createTextNode(` ${value}`));
-  summary.append(line);
-}
-
-// What lies on the storage and what of it runs are two facts: a module
-// switched off keeps its files.
-export function describeModuleSets(snapshot) {
-  const modules = Array.isArray(snapshot?.modules) ? snapshot.modules : [];
-  const enabled = modules.filter((item) => item.enabled === true).length;
-  return {
-    installed: moduleSetLabel(snapshot?.installed_set),
-    enabled: `${enabled === modules.length ? 'все модули' : moduleSetLabel(snapshot?.enabled_set)} (${enabled} из ${modules.length})`,
-  };
-}
-
-function appendModuleSets(summary, snapshot) {
-  const sets = describeModuleSets(snapshot);
-  appendSetLine(summary, 'Установлено:', sets.installed);
-  appendSetLine(summary, 'Включено:', sets.enabled);
-}
-
 function formatCatalogTime(seconds) {
   const date = new Date(Number(seconds) * 1000);
   return Number.isFinite(date.getTime()) && Number(seconds) > 0
@@ -482,37 +392,98 @@ function formatCatalogTime(seconds) {
     : 'неизвестного времени';
 }
 
-function appendUpdateCheck(summary, update, { onCheckUpdate, busy, lifecycleAvailable }) {
-  const check = node('section', 'modules-update-check');
-  const appendMessage = (className, text) => {
+// What the check said, under the buttons: the moment it was made, or why it failed.
+function updateMessages(update, lifecycleReady) {
+  const lines = [];
+  const say = (className, text) => {
     const message = node('p', className, text);
     message.setAttribute('role', 'status');
     message.setAttribute('aria-live', 'polite');
-    check.append(message);
+    lines.push(message);
   };
-  check.append(node('h3', '', 'Обновление панели'));
-  const button = node('button', 'btn-secondary modules-update-check-button', 'Проверить обновления');
-  button.type = 'button';
-  button.disabled = busy || lifecycleAvailable !== true;
-  if (typeof onCheckUpdate === 'function') button.addEventListener('click', onCheckUpdate);
-  check.append(button);
-  if (lifecycleAvailable !== true) {
-    appendMessage('modules-build-note', 'Для локальной сборки проверка и установка подписанного обновления станут доступны после установки release-пакета.');
-  } else if (update?.loading) {
-    appendMessage('modules-build-meta', 'Проверяем подписанный каталог…');
-  } else if (update?.error) {
-    appendMessage('modules-alert', describeLifecycleFailure(update.error));
-  } else if (update?.checked) {
+  if (!lifecycleReady) return lines;
+  if (update?.loading) say('xk-summary-hint', 'Проверяем подписанный каталог…');
+  else if (update?.error) say('modules-alert', describeLifecycleFailure(update.error));
+  else if (update?.checked) {
     // The server answered from the catalog it kept: not today's word.
-    const stale = update.freshness === 'stale';
-    if (stale) appendMessage('modules-alert', `Не удалось связаться с GitHub. Показаны данные каталога от ${formatCatalogTime(update.fetched_at)}.`);
-    if (update.requires_installer) appendMessage('modules-alert', `Версия ${update.target_version || 'из каталога'} требует обновления через установщик.`);
-    else if (update.update_available) appendMessage('modules-update-available', `Доступна версия ${update.target_version}.`);
-    else appendMessage('modules-build-meta', stale ? 'По сохранённым данным новой версии нет.' : 'Установлена актуальная версия.');
+    const when = formatCheckedAt(update.fetched_at);
+    if (update.freshness === 'stale') say('modules-alert', `Не удалось связаться с GitHub. Показаны данные каталога от ${formatCatalogTime(update.fetched_at)}.`);
+    if (update.requires_installer) say('modules-alert', `Версия ${update.target_version || 'из каталога'} требует обновления через установщик.`);
+    else if (update.update_available) say('xk-summary-hint', `Обновит панель и все модули одним выпуском.${when ? ` Проверено ${when}.` : ''}`);
+    else say('xk-summary-hint', `${when ? `Проверено ${when}. ` : ''}Проверка не скачивает архив и не меняет панель.`);
   } else {
-    appendMessage('modules-build-meta', 'Проверка не скачивает архив и не изменяет панель.');
+    say('xk-summary-hint', 'Проверка не скачивает архив и не меняет панель.');
   }
-  summary.append(check);
+  return lines;
+}
+
+// Buttons stand in the grid of the counters above them, flush right.
+function summaryActions(buttons) {
+  const row = node('div', 'xk-summary-actions');
+  buttons.forEach((button) => row.append(button));
+  if (buttons.length && buttons.length < 3) buttons[0].classList.add(`is-from-${4 - buttons.length}`);
+  return row;
+}
+
+function renderSummary(snapshot, {
+  onPlan, busy, onRestart, canRestart, onCheckUpdate, update, onUpdateChannel, channelBusy,
+}) {
+  const summary = node('section', 'modules-summary card xk-summary is-wide');
+  const head = node('div', 'xk-summary-head');
+  head.append(node('span', 'modules-section-kicker', 'Состояние панели'));
+  summary.append(head);
+
+  const identity = node('div', 'xk-summary-col is-identity');
+  identity.append(...summaryHeading(snapshot, { level: 'h2' }));
+  identity.append(...summaryChannel(snapshot, {
+    onSelect: typeof onUpdateChannel === 'function' ? onUpdateChannel : null,
+    busy: channelBusy,
+    onError: (error, hint) => {
+      hint.textContent = 'Не удалось выбрать канал: ' + (error && error.message ? String(error.message) : 'нет ответа сервера');
+    },
+  }));
+
+  const ready = lifecycleAvailable(snapshot);
+  const restartPending = snapshot.restart_required === true || canRestart;
+  const controls = node('div', 'xk-summary-col is-controls');
+  controls.append(summaryStats(snapshot, update, summaryIssues(snapshot, { restartRequired: restartPending })));
+  if (restartPending) controls.append(node('p', 'modules-warning', 'Требуется перезапуск'));
+  const note = summaryLifecycleNote(snapshot, describeLifecycleFailure);
+  if (note) controls.append(note);
+
+  const buttons = [];
+  if (ready) {
+    // A found version is the main action. While the answer is unknown the plan
+    // itself tells whether there is anything to lay; a current panel has no button.
+    if (update?.checked && update.update_available && !update.requires_installer) {
+      const label = update.target_version ? `Обновить до ${update.target_version}` : ACTION_LABELS['panel-update'];
+      const button = actionButton('panel-update', null, label, onPlan, busy);
+      button.classList.replace('btn-secondary', 'btn-primary');
+      buttons.push(button);
+    } else if (!update?.checked) {
+      buttons.push(actionButton('panel-update', null, ACTION_LABELS['panel-update'], onPlan, busy || !!update?.loading));
+    }
+    if (snapshot.previous_version?.available) buttons.push(actionButton('panel-rollback', null, ACTION_LABELS['panel-rollback'], onPlan, busy));
+    if (snapshot.transition_required) buttons.push(actionButton('profile-transition', null, ACTION_LABELS['profile-transition'], onPlan, busy));
+  }
+  if (canRestart && typeof onRestart === 'function') {
+    const restart = node('button', 'btn-primary modules-restart-panel', 'Перезапустить панель');
+    restart.type = 'button';
+    restart.disabled = busy;
+    restart.addEventListener('click', onRestart);
+    buttons.push(restart);
+  }
+  if (ready) {
+    const check = node('button', 'btn-secondary modules-update-check-button', update?.checked ? 'Проверить ещё раз' : 'Проверить обновления');
+    check.type = 'button';
+    check.disabled = busy || !!update?.loading;
+    if (typeof onCheckUpdate === 'function') check.addEventListener('click', onCheckUpdate);
+    buttons.push(check);
+  }
+  if (buttons.length) controls.append(summaryActions(buttons));
+  controls.append(...updateMessages(update, ready));
+  summary.append(identity, controls);
+  return summary;
 }
 
 function planAction(plan, names) {
@@ -692,49 +663,14 @@ export function renderInstalled(host, snapshot, onToggle, onPlan = () => {}, bus
   onCheckUpdate = null,
   update = null,
   onEditorVariant = null,
-  showUpdateChannelControl = false,
   onUpdateChannel = null,
   channelBusy = false,
   openMenus = new Set(),
 } = {}) {
   host.replaceChildren();
-  const summary = node('section', 'modules-summary card');
-  const summaryIntro = node('div', 'modules-summary-intro');
-  summaryIntro.append(node('span', 'modules-section-kicker', 'Состояние панели'));
-  summaryIntro.append(node('h2', '', 'Панель и профиль'));
-  summary.append(summaryIntro);
-  const summaryIdentity = node('div', 'modules-summary-identity');
-  appendPanelIdentity(summaryIdentity, snapshot);
-  if (showUpdateChannelControl && typeof onUpdateChannel === 'function') {
-    appendUpdateChannelControl(summaryIdentity, snapshot, { onUpdateChannel, channelBusy });
-  }
-  appendModuleSets(summaryIdentity, snapshot);
-  summary.append(summaryIdentity);
-  const summaryControls = node('div', 'modules-summary-controls');
-  if (snapshot.restart_required || canRestart) summaryControls.append(node('p', 'modules-warning', 'Требуется перезапуск'));
-  const panelActions = node('div', 'modules-card-actions');
-  if (snapshot.lifecycle?.available === false) {
-    summaryControls.append(node('p', 'modules-alert', describeLifecycleFailure(snapshot.lifecycle)));
-  } else {
-    panelActions.append(actionButton('panel-update', null, ACTION_LABELS['panel-update'], onPlan, busy));
-    if (snapshot.previous_version?.available) panelActions.append(actionButton('panel-rollback', null, ACTION_LABELS['panel-rollback'], onPlan, busy));
-    if (snapshot.transition_required) panelActions.append(actionButton('profile-transition', null, ACTION_LABELS['profile-transition'], onPlan, busy));
-  }
-  if (canRestart && typeof onRestart === 'function') {
-    const restart = node('button', 'btn-primary modules-restart-panel', 'Перезапустить панель');
-    restart.type = 'button';
-    restart.disabled = busy;
-    restart.addEventListener('click', onRestart);
-    panelActions.append(restart);
-  }
-  if (panelActions.childElementCount) summaryControls.append(panelActions);
-  appendUpdateCheck(summaryControls, update, {
-    onCheckUpdate,
-    busy,
-    lifecycleAvailable: snapshot.lifecycle?.available,
-  });
-  summary.append(summaryControls);
-  host.append(summary);
+  host.append(renderSummary(snapshot, {
+    onPlan, busy, onRestart, canRestart, onCheckUpdate, update, onUpdateChannel, channelBusy,
+  }));
   const list = node('section', 'modules-list card');
   const listHeader = node('div', 'modules-list-header');
   listHeader.append(

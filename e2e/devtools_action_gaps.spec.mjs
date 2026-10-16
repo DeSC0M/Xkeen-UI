@@ -28,7 +28,7 @@ const READY = {
 
 // Tab strips and the update channel switch are segmented controls, not rows of
 // separate buttons.
-const NOT_A_BUTTON_ROW = ['top-tabs', 'dt-tabs', 'dt-panel-channel-switch'];
+const NOT_A_BUTTON_ROW = ['top-tabs', 'dt-tabs', 'xk-summary-switch'];
 
 async function buttonRows(page) {
   return page.evaluate((skip) => {

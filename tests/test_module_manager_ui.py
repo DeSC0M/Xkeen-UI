@@ -87,7 +87,7 @@ def test_modules_uses_the_panel_shell_and_stable_devtools_pointer_is_compact():
     template = (ROOT / "xkeen-ui/templates/modules.html").read_text(encoding="utf-8")
     manager_css = (ROOT / "xkeen-ui/static/modules-manager.css").read_text(encoding="utf-8")
     devtools_update = (ROOT / "xkeen-ui/static/js/features/devtools/update.js").read_text(encoding="utf-8")
-    devtools_css = (ROOT / "xkeen-ui/static/devtools.css").read_text(encoding="utf-8")
+    shell_css = (ROOT / "xkeen-ui/static/page-shell.css").read_text(encoding="utf-8")
 
     assert 'class="modules-workspace"' in template
     # Ширина и кнопки шапки — общие с DevTools и генератором Mihomo.
@@ -98,11 +98,14 @@ def test_modules_uses_the_panel_shell_and_stable_devtools_pointer_is_compact():
     assert ".modules-header-main .header-actions" not in manager_css
     assert "body.modules-page.panel-page" not in manager_css
     assert "createModuleLifecycleClient" in devtools_update
-    assert "dt-panel-summary-grid" in devtools_css
+    # Сводка о панели одна на шапку модулей и карточку DevTools.
+    assert "from '../panel_summary.js'" in devtools_update
+    assert ":root body .xk-summary-stats," in shell_css
     assert 'data-xk-devtools-available=' in template
     assert 'id="confirm-modal"' in template
     assert 'class="modules-update-channel"' not in template
-    assert "min-height: 24px !important" in manager_css
+    assert ".modules-channel-switch" not in manager_css
+    assert ".modules-update-check" not in manager_css
 
 
 def test_manager_source_is_isolated_and_entry_stays_thin():

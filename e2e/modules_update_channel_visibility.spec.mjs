@@ -7,7 +7,7 @@ const PROFILE = String(process.env.XKEEN_E2E_MODULE_PROFILE || 'full').toLowerCa
 const server = JSON.parse(readFileSync(new URL('./fixtures/module_manager_server.json', import.meta.url), 'utf8'));
 
 
-test(`Modules screen owns the update channel only without DevTools: ${PROFILE}`, async ({ page }) => {
+test(`Modules screen shows the update channel in its summary: ${PROFILE}`, async ({ page }) => {
   let selected = 'stable';
   await page.route('**/api/modules/installed', (route) => route.fulfill({
     json: { ...server.installed, update_channel: selected },
@@ -20,12 +20,13 @@ test(`Modules screen owns the update channel only without DevTools: ${PROFILE}`,
 
   await page.goto('/modules');
 
-  const channel = page.locator('.modules-update-channel');
-  const expected = PROFILE === 'full' ? 0 : 1;
-  await expect(channel).toHaveCount(expected);
+  // The summary is the same as the DevTools card: the channel is switched in
+  // both, whether DevTools is installed or not.
+  const channel = page.locator('.modules-summary .xk-summary-switch');
+  await expect(channel).toHaveCount(1);
+  await expect(page.locator('body')).toHaveAttribute('data-xk-devtools-available', PROFILE === 'full' ? '1' : '0');
 
-  if (expected === 1) {
-    await expect(page.locator('body')).toHaveAttribute('data-xk-devtools-available', '0');
+  {
     const prerelease = channel.locator('button[data-channel="prerelease"]');
     await prerelease.click();
     await expect(page.locator('#confirm-modal')).toBeVisible();
@@ -56,8 +57,6 @@ test(`Modules screen owns the update channel only without DevTools: ${PROFILE}`,
     await page.locator('#confirm-modal-ok-btn').click();
     await expect(prerelease).toHaveAttribute('aria-pressed', 'true');
     expect(selected).toBe('prerelease');
-  } else {
-    await expect(page.locator('body')).toHaveAttribute('data-xk-devtools-available', '1');
   }
 });
 
@@ -82,7 +81,7 @@ test('local builds still allow changing the selected update channel', async ({ p
   });
 
   await page.goto('/modules');
-  const channel = page.locator('.modules-update-channel');
+  const channel = page.locator('.modules-summary .xk-summary-switch');
   await expect(channel.locator('button[data-channel="stable"]')).toBeEnabled();
   await channel.locator('button[data-channel="prerelease"]').click();
   await expect(page.locator('#confirm-modal')).toBeVisible();

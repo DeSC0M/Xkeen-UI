@@ -34,7 +34,7 @@
             <span class="xk-visually-hidden" data-xk-global-spinner-text>Операция выполняется…</span>
           </div>
           <button type="button" id="theme-toggle-btn" class="theme-toggle-btn theme-toggle-header xk-header-btn xk-header-btn-theme" aria-label="Переключить тему">{{ op_icon('sun', 'theme-toggle-icon') }}<span class="theme-toggle-text">Светлая тема</span></button>
-          <a href="{{ url_for('index') }}" class="service-core-text xk-header-btn xk-header-btn-back" data-xk-top-nav="1">{{ op_icon('back') }}<span class="xk-action-label">Назад</span></a>
+          <a href="{{ url_for('index') }}" class="service-core-text xk-header-btn xk-header-btn-back" data-xk-top-nav="1" data-xk-back-return="1">{{ op_icon('back') }}<span class="xk-action-label">Назад</span></a>
           {% if ui_endpoint_available('devtools_page') %}
           <a href="{{ url_for('devtools_page') }}" class="service-core-text xk-header-btn" data-xk-top-nav="1">DevTools</a>
           {% endif %}

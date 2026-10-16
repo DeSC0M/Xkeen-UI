@@ -94,6 +94,48 @@ function emitTopLevelNavigationIntent(url, trigger) {
   } catch (e) {}
 }
 
+// Where the last move between the pages came from and where it went: a back
+// button marked data-xk-back-return returns there instead of to the panel.
+// Only the page the move arrived at may use it — after the browser's own
+// back and forward the record is someone else's and the link keeps its href.
+const RETURN_KEY = 'xkeen.nav.return.v1';
+
+function rememberReturn(target) {
+  const locationRef = getLocationRef();
+  if (!locationRef || !target) return;
+  try {
+    sessionStorage.setItem(RETURN_KEY, JSON.stringify({
+      from: String(locationRef.pathname || '') + String(locationRef.search || ''),
+      to: String(target.pathname || ''),
+    }));
+  } catch (e) {}
+}
+
+export function readReturnHref(fallback) {
+  const locationRef = getLocationRef();
+  if (!locationRef) return fallback;
+  let record = null;
+  try {
+    record = JSON.parse(sessionStorage.getItem(RETURN_KEY) || 'null');
+  } catch (e) {
+    record = null;
+  }
+  let from = record && record.to === locationRef.pathname && typeof record.from === 'string' ? record.from : '';
+  // Opened by an ordinary link: the browser knows where from.
+  if (!from) {
+    try {
+      const referrer = new URL(document.referrer);
+      if (referrer.origin === locationRef.origin) from = referrer.pathname + referrer.search;
+    } catch (e) {
+      from = '';
+    }
+  }
+  if (!from.startsWith('/') || from.startsWith('//')) return fallback;
+  const resolved = resolveInternalUrl(from);
+  if (!resolved || resolved.pathname === locationRef.pathname) return fallback;
+  return from;
+}
+
 export function navigateTopLevelHref(rawHref, opts) {
   const href = String(rawHref || '').trim();
   const locationRef = getLocationRef();
@@ -101,6 +143,7 @@ export function navigateTopLevelHref(rawHref, opts) {
 
   const resolved = resolveInternalUrl(href);
   const nextUrl = resolved ? resolved.toString() : href;
+  if (resolved) rememberReturn(resolved);
 
   try {
     emitTopLevelNavigationIntent(resolved || nextUrl, opts && opts.trigger);
@@ -145,7 +188,8 @@ export function wireTopLevelNavigation(root) {
     node.addEventListener('click', (event) => {
       if (shouldBypassNavigationInterception(event, node)) return;
 
-      const href = readNavigationHref(node);
+      let href = readNavigationHref(node);
+      if (node.hasAttribute('data-xk-back-return')) href = readReturnHref(href);
       if (!href) return;
 
       event.preventDefault();

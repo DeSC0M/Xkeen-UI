@@ -922,6 +922,11 @@
           "lazy_features": []
         },
         {
+          "path": "static/js/features/panel_summary.js",
+          "globals": [],
+          "lazy_features": []
+        },
+        {
           "path": "static/js/features/update_channel.js",
           "globals": [
             "XKeen.ui"
@@ -1492,6 +1497,11 @@
         },
         {
           "path": "static/js/features/module_manager/render.js",
+          "globals": [],
+          "lazy_features": []
+        },
+        {
+          "path": "static/js/features/panel_summary.js",
           "globals": [],
           "lazy_features": []
         },

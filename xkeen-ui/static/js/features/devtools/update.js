@@ -1,28 +1,28 @@
 import { setDevtoolsNamespaceApi } from '../devtools_namespace.js';
+import { wireTopLevelNavigation } from '../../pages/top_level_nav.shared.js';
 import { createModuleLifecycleClient } from '../module_manager/api.js';
 import { reconcileModulesUpdateCheck } from '../module_manager/badge.js';
-import { describeModuleSets } from '../module_manager/render.js';
+import { describeLifecycleFailure } from '../module_manager/render.js';
 import {
-  renderUpdateChannel,
-  wireUpdateChannel,
-} from '../update_channel.js';
+  lifecycleAvailable,
+  summaryChannel,
+  summaryHeading,
+  summaryIssueList,
+  summaryIssues,
+  summaryLifecycleNote,
+  summaryStats,
+} from '../panel_summary.js';
 
-// Справочная карточка «Сборка панели» на вкладке Tools: версия, источник и
-// состав установленных модулей. Сама она ничего не обновляет — команды живут
-// в разделе «Модули и обновления».
+// Справочная карточка «Сборка панели» на вкладке Tools — та же сводка, что
+// в шапке «Модулей и обновлений»: версия и канал, три счётчика и только те
+// модули, что требуют внимания. Сама карточка ничего не обновляет — кнопка
+// ведёт в «Модули и обновления».
 (() => {
   'use strict';
 
   const api = createModuleLifecycleClient();
   let _inited = false;
   let _loadSeq = 0;
-
-  const MODULE_STATES = {
-    enabled: { tone: 'ok', label: 'включён' },
-    disabled: { tone: 'off', label: 'выключен' },
-    failed: { tone: 'bad', label: 'ошибка' },
-    unavailable: { tone: 'warn', label: 'недоступен' },
-  };
 
   function byId(id) {
     return document.getElementById(id);
@@ -35,51 +35,6 @@ import {
     return el;
   }
 
-  function setText(id, text) {
-    const el = byId(id);
-    if (el) el.textContent = String(text || '');
-  }
-
-  // Полный хэш (40 символов) не влезает в строку «Версия» и рвёт её надвое.
-  // Короткого префикса хватает, чтобы сверить сборку.
-  function shortCommit(commit) {
-    const raw = String(commit || '').trim();
-    return /^[0-9a-f]{13,}$/i.test(raw) ? raw.slice(0, 12) : raw;
-  }
-
-  function formatDate(value, options) {
-    const date = new Date(value);
-    return Number.isFinite(date.getTime()) ? date.toLocaleString('ru-RU', options) : '';
-  }
-
-  const CORE_REQUIREMENTS = { xray: 'Xray', mihomo: 'Mihomo' };
-
-  function moduleState(module) {
-    const known = MODULE_STATES[String(module && module.status ? module.status : '')];
-    if (known) return known;
-    return module && module.enabled === false ? MODULE_STATES.disabled : MODULE_STATES.enabled;
-  }
-
-  // «Недоступен» читалось как «модуля нет», хотя чаще он установлен, а на
-  // роутере нет его ядра. Причина — словом в строке или в подсказке.
-  function moduleStateWithReason(module, names) {
-    const state = moduleState(module);
-    if (state !== MODULE_STATES.unavailable) return { ...state, hint: '' };
-    const missing = Array.isArray(module.missing_requirement_ids) ? module.missing_requirement_ids : [];
-    const core = missing.map((id) => CORE_REQUIREMENTS[id]).find(Boolean);
-    if (core) {
-      return { tone: 'off', label: 'нет ядра', hint: 'Модуль установлен, но ядро ' + core + ' на роутере не найдено.' };
-    }
-    if (missing.length) {
-      return { ...state, hint: 'На роутере не хватает: ' + missing.join(', ') + '.' };
-    }
-    const deps = Array.isArray(module.unavailable_dependency_ids) ? module.unavailable_dependency_ids : [];
-    if (deps.length) {
-      return { ...state, hint: 'Не работает модуль, от которого он зависит: ' + deps.map((id) => names[id] || id).join(', ') + '.' };
-    }
-    return { ...state, hint: '' };
-  }
-
   function setError(message) {
     const el = byId('dt-panel-status');
     if (!el) return;
@@ -87,123 +42,55 @@ import {
     el.hidden = !message;
   }
 
-  function renderBuild(data) {
-    const build = data && data.build && typeof data.build === 'object' ? data.build : {};
-    const version = String(build.version || (data && data.panel_version) || '').trim();
-    const commit = shortCommit(build.commit);
-    setText('dt-panel-version', version || '—');
-    // Метка о самой установленной версии; выбранный канал виден на переключателе.
-    const tag = byId('dt-panel-prerelease-tag');
-    if (tag) tag.hidden = !/^v?\d+\.\d+\.\d+-/.test(String(version || ''));
-    setText('dt-panel-commit', commit ? '(' + commit + ')' : '');
-    setText('dt-panel-built', (build.built_utc && (formatDate(build.built_utc) || String(build.built_utc))) || '—');
-    setText('dt-panel-repo', build.repo || '—');
-    renderChannel((data && data.update_channel) || 'stable');
-    // Те же слова, что в разделе «Модули и обновления»: набор называется
-    // по составу модулей, а не по сохранённой метке профиля.
-    const sets = data ? describeModuleSets(data) : null;
-    setText('dt-panel-installed-set', sets ? sets.installed : '—');
-    setText('dt-panel-enabled-set', sets ? sets.enabled : '—');
+  function modulesUrl() {
+    const card = byId('dt-update-card');
+    return (card && card.dataset.modulesUrl) || '/modules';
   }
 
-  function renderChannel(value) {
-    renderUpdateChannel(byId('dt-panel-channel'), byId('dt-panel-channel-hint'), value);
+  async function selectChannel(channel) {
+    const result = await api.setUpdateChannel(channel);
+    // У другого канала свой каталог и своя проверка обновлений.
+    await load();
+    return result;
   }
 
-  function wireChannel() {
-    const box = byId('dt-panel-channel');
-    if (!box) return;
-    wireUpdateChannel({
-      root: box,
-      hint: byId('dt-panel-channel-hint'),
-      onSelect: async (channel) => {
-        const result = await api.setUpdateChannel(channel);
-        renderChannel(result.channel);
-        // A change of channel has its own verified cache and update check.
-        await load();
-        return result;
-      },
+  function render(installed, update) {
+    const host = byId('dt-panel-summary');
+    if (!host) return;
+    const issues = summaryIssues(installed);
+    host.replaceChildren(...summaryHeading(installed, { level: 'h3' }));
+    host.append(summaryStats(installed, update, issues));
+    if (issues.length) host.append(summaryIssueList(issues));
+    host.append(...summaryChannel(installed, {
+      onSelect: selectChannel,
       onError: (error) => {
         setError('Не удалось выбрать канал: ' + ((error && error.message) || 'нет ответа сервера'));
       },
-    });
-  }
-
-  function renderModules(data) {
-    const host = byId('dt-panel-modules');
-    if (!host) return;
-    const modules = Array.isArray(data && data.modules) ? data.modules : [];
-    host.replaceChildren();
-    if (!modules.length) {
-      host.append(node('li', 'dt-panel-modules-empty', 'Нет данных об установленных модулях.'));
-      return;
-    }
-    const names = {};
-    modules.forEach((module) => {
-      if (module && module.id) names[module.id] = module.name || module.id;
-    });
-    modules.forEach((module) => {
-      const state = moduleStateWithReason(module || {}, names);
-      const row = node('li', 'dt-panel-module');
-      row.dataset.moduleId = String((module && module.id) || '');
-      row.dataset.state = state.tone;
-      if (state.hint) {
-        row.title = state.hint;
-        row.setAttribute('data-tooltip', state.hint);
-      }
-      const dot = node('span', 'dt-panel-module-dot');
-      dot.setAttribute('aria-hidden', 'true');
-      row.append(
-        dot,
-        node('span', 'dt-panel-module-name', (module && (module.name || module.id)) || '—'),
-        node('span', 'dt-panel-module-version', (module && module.version) || '—'),
-        node('span', 'dt-panel-module-state', state.label),
-      );
-      host.append(row);
-    });
-  }
-
-  function renderUpdateNote(tone, text) {
-    const el = byId('dt-panel-update-note');
-    if (!el) return;
-    el.replaceChildren();
-    el.hidden = !text;
-    if (!text) return;
-    el.dataset.tone = tone;
-    const dot = node('span', 'dt-panel-module-dot');
-    dot.setAttribute('aria-hidden', 'true');
-    el.append(dot, node('span', '', text));
-  }
-
-  function describeUpdate(check) {
-    const stale = check.freshness === 'stale';
-    const when = formatDate(Number(check.fetched_at) * 1000, { dateStyle: 'short', timeStyle: 'short' });
-    if (check.requires_installer) {
-      return ['warn', 'Версия ' + (check.target_version || 'из каталога') + ' ставится через установщик.'];
-    }
-    if (check.update_available) {
-      return ['warn', 'Доступна версия ' + check.target_version + '. Обновить можно в разделе «Модули и обновления».'];
-    }
-    if (stale) {
-      return ['off', 'Не удалось связаться с GitHub. По сохранённым данным' + (when ? ' от ' + when : '') + ' новой версии нет.'];
-    }
-    return ['ok', 'Обновлений нет.' + (when ? ' Проверено ' + when + '.' : '')];
+    }));
+    const note = summaryLifecycleNote(installed, describeLifecycleFailure);
+    if (note) host.append(note);
+    const ready = update && update.checked && update.update_available && !update.requires_installer;
+    const link = node('a', ready ? 'xk-summary-link is-primary' : 'xk-summary-link',
+      ready ? 'Обновить в «Модулях и обновлениях»' : 'Открыть «Модули и обновления»');
+    link.href = modulesUrl();
+    link.setAttribute('data-xk-top-nav', '1');
+    const actions = node('div', 'xk-summary-link-row');
+    actions.append(link);
+    host.append(actions);
+    // The card is drawn after the page wired its links: this one is wired here.
+    wireTopLevelNavigation(actions);
   }
 
   // Ответ берётся из каталога, который сервер хранит сутки: открытие вкладки
   // не ходит на GitHub каждый раз.
-  async function loadUpdateNote(installed, seq) {
-    if (!(installed && installed.lifecycle && installed.lifecycle.available === true)) {
-      renderUpdateNote('', '');
-      return;
-    }
+  async function loadUpdate(installed) {
+    if (!lifecycleAvailable(installed)) return null;
     try {
       const check = await api.checkPanelUpdate(false);
-      if (seq !== _loadSeq) return;
       reconcileModulesUpdateCheck(check);
-      renderUpdateNote(...describeUpdate(check));
+      return { ...check, checked: true };
     } catch (error) {
-      if (seq === _loadSeq) renderUpdateNote('off', 'Не удалось проверить обновления.');
+      return { checked: false, error };
     }
   }
 
@@ -214,24 +101,23 @@ import {
       installed = await api.loadInstalled();
     } catch (error) {
       if (seq !== _loadSeq) return null;
-      const host = byId('dt-panel-modules');
-      if (host) host.replaceChildren(node('li', 'dt-panel-modules-empty', '—'));
-      renderUpdateNote('', '');
+      const host = byId('dt-panel-summary');
+      if (host) host.replaceChildren(node('p', 'xk-summary-hint', '—'));
       setError('Не удалось загрузить сведения о панели: ' + ((error && error.message) || 'нет ответа сервера'));
       return null;
     }
     if (seq !== _loadSeq) return installed;
     setError('');
-    renderBuild(installed);
-    renderModules(installed);
-    await loadUpdateNote(installed, seq);
+    const pending = lifecycleAvailable(installed) ? { loading: true } : null;
+    render(installed, pending);
+    const update = await loadUpdate(installed);
+    if (seq === _loadSeq) render(installed, update);
     return installed;
   }
 
   function init() {
     if (_inited) return;
     _inited = true;
-    wireChannel();
     load().catch(() => {});
   }
 

@@ -119,8 +119,9 @@ test('devtools page renders update and env sections', async ({ page }) => {
 
   await expect(page).toHaveTitle(/DevTools/i);
   await expect(page.locator('#dt-update-card')).toBeVisible();
-  await expect(page.locator('#dt-panel-modules')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Модули и обновления', exact: true })).toHaveCount(1);
+  await expect(page.locator('#dt-panel-summary .xk-summary-stats')).toBeVisible();
+  await expect(page.locator('#dt-update-card a[href$="/modules"]')).toHaveCount(1);
+  await expect(page.locator('header a[href$="/modules"]')).toHaveCount(0);
   await expect(page.locator('#dt-update-check')).toHaveCount(0);
   await expect(page.locator('#dt-update-run')).toHaveCount(0);
   await expect(page.locator('#dt-env-card')).toBeVisible();

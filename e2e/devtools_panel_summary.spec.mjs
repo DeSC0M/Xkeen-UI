@@ -23,6 +23,10 @@ const noUpdate = {
   requires_installer: false, min_updater: null, freshness: 'fresh', stale_reason: null, fetched_at: 1791700000,
 };
 
+const summary = '#dt-panel-summary';
+const stat = (page, name) => page.locator(`${summary} .xk-summary-stat[data-stat="${name}"]`);
+const channelButton = (page, name) => page.locator(`${summary} .xk-summary-switch [data-channel="${name}"]`);
+
 async function mockPanelSummary(page, { snapshot = installed, check = noUpdate } = {}) {
   const checks = [];
   await page.route('**/api/modules/installed', (route) => route.fulfill({ json: snapshot }));
@@ -34,7 +38,7 @@ async function mockPanelSummary(page, { snapshot = installed, check = noUpdate }
 }
 
 test.describe('DevTools panel summary', () => {
-  test('persists the selected prerelease channel and refreshes the update note', async ({ page }) => {
+  test('persists the selected prerelease channel and refreshes the update counter', async ({ page }) => {
     let selected = 'stable';
     const changes = [];
     await page.route('**/api/modules/installed', (route) => route.fulfill({
@@ -51,11 +55,11 @@ test.describe('DevTools panel summary', () => {
       return route.fulfill({ json: { ok: true, channel: selected } });
     });
     await page.goto('/devtools');
-    await expect(page.locator('#dt-panel-version')).toHaveText('2.10.0');
-    const stable = page.locator('#dt-panel-channel [data-channel="stable"]');
-    const prerelease = page.locator('#dt-panel-channel [data-channel="prerelease"]');
+    await expect(page.locator(`${summary} .xk-summary-version`)).toHaveText('Xkeen UI 2.10.0');
+    const stable = channelButton(page, 'stable');
+    const prerelease = channelButton(page, 'prerelease');
     await expect(stable).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('#dt-panel-channel-hint')).toHaveText('Проверенные версии. Выбирайте, если панель просто должна работать.');
+    await expect(page.locator(`${summary} .xk-summary-channel-hint`)).toHaveText('Проверенные версии. Выбирайте, если панель просто должна работать.');
 
     // Тестовые версии — риск: переход спрашивают, отказ ничего не меняет.
     await prerelease.click();
@@ -69,13 +73,17 @@ test.describe('DevTools panel summary', () => {
 
     await prerelease.click();
     await page.locator('#confirm-modal-ok-btn').click();
-    await expect(prerelease).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('#dt-panel-channel-hint')).toHaveText('Тестовые версии с новыми функциями. Выбирайте, если готовы находить ошибки и сообщать о них.');
-    await expect(page.locator('#dt-panel-update-note')).toContainText('2.11.0-rc.1');
+    await expect(channelButton(page, 'prerelease')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator(`${summary} .xk-summary-channel-hint`)).toHaveText('Тестовые версии с новыми функциями. Выбирайте, если готовы находить ошибки и сообщать о них.');
+    await expect(page.locator(`${summary} .xk-summary-chip`)).toHaveText('Предрелизный канал');
+    await expect(stat(page, 'update').locator('b')).toHaveText('2.11.0-rc.1');
+    await expect(page.locator(`${summary} .xk-summary-link`)).toHaveText('Обновить в «Модулях и обновлениях»');
+
+    // Шапка «Модулей и обновлений» — та же сводка.
     await page.route('**/api/modules/operations/status', (route) => route.fulfill({ json: { ok: true, result: null } }));
     await page.goto('/modules');
-    await expect(page.getByText('Источник: umarcheh001/Xkeen-UI · канал сборки: stable')).toBeVisible();
-    await expect(page.getByText('Канал обновлений: Предрелиз')).toBeVisible();
+    await expect(page.locator('.modules-summary .xk-summary-meta-line')).toContainText('Источник: umarcheh001/Xkeen-UI');
+    await expect(page.locator('.modules-summary .xk-summary-chip')).toHaveText('Предрелизный канал');
     expect(changes).toEqual(['prerelease']);
   });
 
@@ -96,82 +104,85 @@ test.describe('DevTools panel summary', () => {
       return route.fulfill({ json: { ok: true, channel: selected } });
     });
     await page.goto('/devtools');
-    await expect(page.locator('#dt-panel-version')).toHaveText('2.11.0-rc.1');
-    // Установлена тестовая версия — это видно у самой версии.
-    await expect(page.locator('#dt-panel-prerelease-tag')).toBeVisible();
-    await expect(page.locator('#dt-panel-channel [data-channel="prerelease"]')).toHaveAttribute('aria-pressed', 'true');
+    // Установлена тестовая версия — это видно по самой версии.
+    await expect(page.locator(`${summary} .xk-summary-version`)).toHaveText('Xkeen UI 2.11.0-rc.1');
+    await expect(channelButton(page, 'prerelease')).toHaveAttribute('aria-pressed', 'true');
 
-    await page.locator('#dt-panel-channel [data-channel="stable"]').click();
+    await channelButton(page, 'stable').click();
 
-    await expect(page.locator('#dt-panel-channel [data-channel="stable"]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(channelButton(page, 'stable')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#confirm-modal')).toBeHidden();
     expect(changes).toEqual(['stable']);
   });
 
-  test('lists every module on its own row with version and state', async ({ page }) => {
+  test('counts modules and lists only those that need attention', async ({ page }) => {
     const checks = await mockPanelSummary(page);
     await page.goto('/devtools');
 
     const card = page.locator('#dt-update-card');
     await expect(card.locator('h2')).toHaveText('Сборка панели');
-    await expect(page.locator('#dt-panel-version')).toHaveText('2.10.0');
-    // Полный хэш рвал строку надвое: печатается короткий.
-    await expect(page.locator('#dt-panel-commit')).toHaveText('(abc123456789)');
-    await expect(page.locator('#dt-panel-repo')).toHaveText('umarcheh001/Xkeen-UI');
-    await expect(card.locator('dt')).toContainText(['Версия', 'Собрана', 'Источник', 'Канал обновлений', 'Установлено', 'Включено']);
-    await expect(page.locator('#dt-panel-channel [aria-pressed="true"]')).toHaveText('Стабильный');
-    await expect(page.locator('#dt-panel-prerelease-tag')).toBeHidden();
-    // Сохранённая метка профиля не печатается: наборы названы по составу.
-    await expect(page.locator('#dt-panel-installed-set')).toHaveText('полный набор');
-    await expect(page.locator('#dt-panel-enabled-set')).toHaveText('свой набор (2 из 3)');
+    await expect(page.locator(`${summary} .xk-summary-version`)).toHaveText('Xkeen UI 2.10.0');
+    await expect(page.locator(`${summary} .xk-summary-chip`)).toHaveText('Стабильный канал');
+    await expect(page.locator(`${summary} .xk-summary-meta-line`)).toContainText('Источник: umarcheh001/Xkeen-UI · собрано 09.10.2026');
+    // Сохранённая метка профиля не печатается.
     await expect(card).not.toContainText('custom');
 
-    const rows = page.locator('#dt-panel-modules .dt-panel-module');
-    await expect(rows).toHaveCount(3);
-    await expect(rows.nth(0)).toHaveAttribute('data-state', 'ok');
-    await expect(rows.nth(0).locator('.dt-panel-module-name')).toHaveText('Xkeen UI Core');
-    await expect(rows.nth(0).locator('.dt-panel-module-version')).toHaveText('1.0.0');
-    await expect(rows.nth(0).locator('.dt-panel-module-state')).toHaveText('включён');
-    await expect(rows.nth(1)).toHaveAttribute('data-state', 'off');
-    await expect(rows.nth(1).locator('.dt-panel-module-state')).toHaveText('выключен');
-    await expect(rows.nth(2)).toHaveAttribute('data-state', 'bad');
-    await expect(rows.nth(2).locator('.dt-panel-module-state')).toHaveText('ошибка');
+    // Полный хэш рвал строку: в подробностях о сборке он короткий.
+    const more = page.locator(`${summary} .xk-summary-more`);
+    await more.locator('summary').click();
+    await expect(more.locator('dd').filter({ hasText: 'abc123456789' })).toHaveText('abc123456789');
 
-    // Строки стоят друг под другом, а не в одну линию.
-    const tops = await rows.evaluateAll((items) => items.map((item) => Math.round(item.getBoundingClientRect().top)));
-    expect(new Set(tops).size).toBe(3);
+    await expect(stat(page, 'enabled').locator('b')).toHaveText('2 из 3');
+    await expect(stat(page, 'attention').locator('b')).toHaveText('1');
+    await expect(stat(page, 'attention').locator('span')).toHaveText('требует внимания');
+    await expect(stat(page, 'update').locator('b')).toHaveText('2.10.0');
+    await expect(stat(page, 'update').locator('span')).toHaveText('версия актуальна');
 
-    const note = page.locator('#dt-panel-update-note');
-    await expect(note).toBeVisible();
-    await expect(note).toContainText('Обновлений нет.');
-    await expect(note).toHaveAttribute('data-tone', 'ok');
+    // Полного списка модулей нет — только тот, что не запустился.
+    const issues = page.locator(`${summary} .xk-summary-issues li`);
+    await expect(issues).toHaveCount(1);
+    await expect(issues.first()).toHaveAttribute('data-module-id', 'tool.terminal');
+    await expect(issues.first()).toContainText('Не запустился при последнем старте панели');
+
     // Открытие вкладки берёт ответ из сохранённого каталога и на GitHub не ходит.
     expect(checks).toEqual([{ force_refresh: false }]);
 
-    // Карточка справочная: команд обновления в ней нет, плашка ошибки спрятана.
-    await expect(card.locator('#dt-panel-channel [data-channel]')).toHaveCount(2);
-    await expect(card.locator('#dt-panel-channel [data-channel="stable"]')).toHaveText('Стабильный');
-    await expect(card.locator('#dt-panel-channel [data-channel="prerelease"]')).toHaveText('Предрелизный');
-    // Подпись строки стоит по центру переключателя с пояснением, а не уезжает вверх.
-    const centers = await card.locator('.dt-panel-summary-row-channel').evaluate((row) => {
-      const mid = (el) => { const r = el.getBoundingClientRect(); return r.top + r.height / 2; };
-      return { label: mid(row.querySelector('dt')), value: mid(row.querySelector('dd')) };
+    // Карточка справочная: команд обновления в ней нет, только переход в «Модули и обновления».
+    await expect(card.locator('button.modules-update-check-button')).toHaveCount(0);
+    const link = page.locator(`${summary} .xk-summary-link`);
+    await expect(link).toHaveText('Открыть «Модули и обновления»');
+    await expect(link).toHaveAttribute('href', /\/modules$/);
+    await expect(channelButton(page, 'stable')).toHaveText('Стабильный');
+    await expect(channelButton(page, 'prerelease')).toHaveText('Предрелизный');
+
+    // Переключатель тянется до правого края плашек, пилюля канала — по центру заголовка.
+    const geometry = await page.locator(summary).evaluate((root) => {
+      const box = (selector) => root.querySelector(selector).getBoundingClientRect();
+      const mid = (r) => r.top + r.height / 2;
+      return {
+        switchRight: box('.xk-summary-switch').right,
+        statsRight: box('.xk-summary-stats').right,
+        chip: mid(box('.xk-summary-chip')),
+        version: mid(box('.xk-summary-version')),
+      };
     });
-    expect(Math.abs(centers.label - centers.value)).toBeLessThanOrEqual(2);
+    expect(Math.abs(geometry.switchRight - geometry.statsRight)).toBeLessThanOrEqual(1);
+    expect(Math.abs(geometry.chip - geometry.version)).toBeLessThanOrEqual(1.5);
     await expect(page.locator('#dt-panel-status')).toBeHidden();
     await expect(page.locator('#xk-update-link')).toHaveCount(0);
   });
 
-  test('announces a new panel version above the module list', async ({ page }) => {
+  test('a new panel version turns the link into the update action', async ({ page }) => {
     await mockPanelSummary(page, {
       check: { ...noUpdate, target_version: '2.10.1', update_available: true },
     });
     await page.goto('/devtools');
 
-    const note = page.locator('#dt-panel-update-note');
-    await expect(note).toContainText('Доступна версия 2.10.1.');
-    await expect(note).toContainText('Модули и обновления');
-    await expect(note).toHaveAttribute('data-tone', 'warn');
+    await expect(stat(page, 'update').locator('b')).toHaveText('2.10.1');
+    await expect(stat(page, 'update').locator('span')).toHaveText('доступно обновление');
+    await expect(stat(page, 'update')).toHaveClass(/is-accent/);
+    await expect(page.locator(`${summary} .xk-summary-link`)).toHaveClass(/is-primary/);
+    await expect(page.locator(`${summary} .xk-summary-link`)).toHaveText('Обновить в «Модулях и обновлениях»');
   });
 
   test('says the core is missing instead of calling an installed module unavailable', async ({ page }) => {
@@ -192,24 +203,25 @@ test.describe('DevTools panel summary', () => {
     });
     await page.goto('/devtools');
 
-    const rows = page.locator('#dt-panel-modules .dt-panel-module');
-    await expect(rows).toHaveCount(2);
-    await expect(rows.nth(0)).toHaveAttribute('data-state', 'off');
-    await expect(rows.nth(0).locator('.dt-panel-module-state')).toHaveText('нет ядра');
-    await expect(rows.nth(0)).toHaveAttribute('data-tooltip', 'Модуль установлен, но ядро Mihomo на роутере не найдено.');
-    await expect(rows.nth(1)).toHaveAttribute('data-state', 'warn');
-    await expect(rows.nth(1).locator('.dt-panel-module-state')).toHaveText('недоступен');
-    await expect(rows.nth(1)).toHaveAttribute('data-tooltip', 'Не работает модуль, от которого он зависит: core.');
+    const issues = page.locator(`${summary} .xk-summary-issues li`);
+    await expect(issues).toHaveCount(2);
+    await expect(issues.nth(0)).toContainText('Mihomo');
+    await expect(issues.nth(0)).toContainText('Ядро Mihomo на роутере не найдено');
+    await expect(issues.nth(1)).toContainText('Не работает без модуля: core');
+    await expect(stat(page, 'attention').locator('b')).toHaveText('2');
+    await expect(stat(page, 'attention').locator('span')).toHaveText('требуют внимания');
   });
 
-  test('a local build does not ask the catalog and shows no update line', async ({ page }) => {
+  test('a local build does not ask the catalog and says why updates are off', async ({ page }) => {
     const checks = await mockPanelSummary(page, {
       snapshot: { ...installed, panel_version: null, lifecycle: { available: false, code: 'panel_version_unsupported' } },
     });
     await page.goto('/devtools');
 
-    await expect(page.locator('#dt-panel-modules .dt-panel-module')).toHaveCount(3);
-    await expect(page.locator('#dt-panel-update-note')).toBeHidden();
+    await expect(page.locator(`${summary} .xk-summary-version`)).toHaveText('Локальная сборка 2.10.0');
+    await expect(stat(page, 'update').locator('span')).toHaveText('обновление из окна недоступно');
+    await expect(page.locator(`${summary} .xk-summary-note`)).toContainText('Локальная сборка.');
+    await expect(page.locator(`${summary} .xk-summary-channel-hint`)).toHaveText('Канал запомнится и сработает, когда панель будет поставлена из выпуска.');
     expect(checks).toEqual([]);
   });
 
@@ -224,14 +236,14 @@ test.describe('DevTools panel summary', () => {
     const status = page.locator('#dt-panel-status');
     await expect(status).toBeVisible();
     await expect(status).toContainText('Не удалось загрузить сведения о панели');
-    await expect(page.locator('#dt-panel-version')).toHaveText('—');
+    await expect(page.locator(summary)).toHaveText('—');
 
     fail = false;
     await page.evaluate(async () => {
       const { getDevtoolsNamespace } = await import('/static/js/features/devtools_namespace.js');
       getDevtoolsNamespace().devtoolsUpdate.activate();
     });
-    await expect(page.locator('#dt-panel-version')).toHaveText('2.10.0');
+    await expect(page.locator(`${summary} .xk-summary-version`)).toHaveText('Xkeen UI 2.10.0');
     await expect(status).toBeHidden();
   });
 });

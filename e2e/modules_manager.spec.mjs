@@ -64,12 +64,11 @@ test.describe('DevTools panel summary boundary', () => {
     await expect(page.locator('[data-dt-main-update-controls]')).toHaveCount(0);
     await expect(page.locator('#xk-update-link')).toHaveCount(0);
     await expect(updateCard).toContainText('2.10.0');
-    await expect(page.locator('#dt-panel-enabled-set')).toHaveText('свой набор (2 из 3)');
-    await expect(updateCard).toContainText('Xkeen UI Core');
-    await expect(updateCard).toContainText('Mihomo');
-    const modulesLinks = page.getByRole('link', { name: 'Модули и обновления', exact: true });
+    await expect(updateCard.locator('.xk-summary-stat[data-stat="enabled"] b')).toHaveText('2 из 3');
+    // Одна ссылка на «Модули и обновления» — в карточке, в шапке её больше нет.
+    const modulesLinks = page.locator('a[href$="/modules"]');
     await expect(modulesLinks).toHaveCount(1);
-    await expect(modulesLinks).toHaveAttribute('href', /\/modules$/);
+    await expect(updateCard.locator('a[href$="/modules"]')).toHaveText('Открыть «Модули и обновления»');
     await page.waitForTimeout(1000);
     expect(legacyRequests).toEqual([]);
   });
@@ -79,7 +78,7 @@ test.describe('DevTools panel summary boundary', () => {
     await installIdleLifecycleRoutes(page);
 
     await page.goto('/devtools');
-    await expect(page.locator('#dt-panel-modules .dt-panel-module')).toHaveCount(installedSnapshot.modules.length);
+    await expect(page.locator('#dt-panel-summary .xk-summary-stats')).toBeVisible();
 
     const metrics = await page.evaluate(() => {
       const update = document.getElementById('dt-update-card');
@@ -119,12 +118,17 @@ test.describe('Modules panel update surface', () => {
 
     await page.goto('/modules');
 
-    await expect(page.getByText('Локальная сборка d523ffcf')).toBeVisible();
-    await expect(page.getByText('Источник: umarcheh001/Xkeen-UI · канал сборки: stable')).toBeVisible();
-    await expect(page.getByText('Канал обновлений: Предрелиз')).toBeVisible();
-    await expect(page.getByText('Выбор канала обновлений этого не меняет.', { exact: false })).toBeVisible();
+    const summary = page.locator('.modules-summary');
+    await expect(summary.locator('.xk-summary-version')).toHaveText('Локальная сборка d523ffcf');
+    await expect(summary.locator('.xk-summary-meta-line')).toContainText('Источник: umarcheh001/Xkeen-UI');
+    await expect(summary.locator('.xk-summary-chip')).toHaveText('Предрелизный канал');
+    await expect(summary.locator('.xk-summary-channel-hint')).toHaveText('Канал запомнится и сработает, когда панель будет поставлена из выпуска.');
+    await expect(summary.locator('.xk-summary-note')).toContainText('Локальная сборка.');
+    await expect(summary.locator('.xk-summary-stat[data-stat="update"] span')).toHaveText('обновление из окна недоступно');
     await expect(page.getByText('Версия панели неизвестна')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Проверить обновления' })).toBeDisabled();
+    // Подписанные операции недоступны: кнопок проверки и обновления нет.
+    await expect(page.getByRole('button', { name: /Проверить/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /^Обновить/ })).toHaveCount(0);
   });
 
   test('checks the signed catalog before offering a panel update plan', async ({ page }) => {
@@ -133,12 +137,15 @@ test.describe('Modules panel update surface', () => {
     await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: panelUpdatePlan }));
 
     await page.goto('/modules');
-    await expect(page.getByText('Источник: umarcheh001/Xkeen-UI · канал сборки: stable')).toBeVisible();
-    await expect(page.getByText('Канал обновлений: Стабильный')).toBeVisible();
-    await page.getByRole('button', { name: 'Проверить обновления' }).click();
-    await expect(page.getByText('Доступна версия 2.11.0')).toBeVisible();
+    const summary = page.locator('.modules-summary');
+    await expect(summary.locator('.xk-summary-chip')).toHaveText('Стабильный канал');
+    // Сохранённый ответ каталога приходит сам, кнопка проверяет заново.
+    await expect(summary.locator('.xk-summary-stat[data-stat="update"] b')).toHaveText('2.11.0');
+    await expect(summary.locator('.xk-summary-stat[data-stat="update"] span')).toHaveText('доступно обновление');
+    await page.getByRole('button', { name: 'Проверить ещё раз' }).click();
+    await expect(summary).toContainText('Обновит панель и все модули одним выпуском.');
     await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem('xkeen.modules.update.v1'))?.targetVersion)).toBe('2.11.0');
-    await page.getByRole('button', { name: 'Обновить панель' }).click();
+    await page.getByRole('button', { name: 'Обновить до 2.11.0' }).click();
     await expect(page.getByRole('dialog', { name: 'План обновления панели' })).toContainText('2.11.0');
   });
 
@@ -150,13 +157,12 @@ test.describe('Modules panel update surface', () => {
     } }));
     await page.goto('/modules');
 
-    await page.getByRole('button', { name: 'Проверить обновления' }).click();
+    await page.getByRole('button', { name: 'Проверить ещё раз' }).click();
 
-    const check = page.locator('.modules-update-check');
+    const check = page.locator('.modules-summary .xk-summary-col.is-controls');
     await expect(check).toContainText('Не удалось связаться с GitHub');
     await expect(check).toContainText(await page.evaluate(() => new Date(1791000000500).toLocaleDateString('ru-RU')));
-    await expect(check).not.toContainText('Установлена актуальная версия');
-    await expect(check).toContainText('По сохранённым данным новой версии нет');
+    await expect(check.locator('.xk-summary-stat[data-stat="update"] span')).toHaveText('актуальна по сохранённым данным');
   });
 
   test('keeps update feedback focused and clears a stale badge after a failed check', async ({ page }) => {
@@ -175,8 +181,9 @@ test.describe('Modules panel update surface', () => {
 
     await page.getByRole('button', { name: 'Проверить обновления' }).click();
 
-    const check = page.locator('.modules-update-check');
+    const check = page.locator('.modules-summary .xk-summary-col.is-controls');
     await expect(check.getByRole('status')).toContainText('Каталог модулей временно недоступен.');
+    await expect(check.locator('.xk-summary-stat[data-stat="update"] span')).toHaveText('не удалось проверить');
     await expect(check.getByRole('button', { name: 'Проверить обновления' })).toBeFocused();
     await expect.poll(() => page.evaluate(() => sessionStorage.getItem('xkeen.modules.update.v1'))).toBeNull();
   });
@@ -191,11 +198,13 @@ test.describe('Modules build time', () => {
       build: { ...installedSnapshot.build, built_utc: '2026-10-13T15:52:13Z' },
     };
     await installLifecycleRoutes(page, { installed: snapshot });
-    await page.goto('/modules');
-    await expect(page.getByText('Собрано: 13.10.2026, 18:52:13')).toBeVisible();
-
-    await page.goto('/devtools');
-    await expect(page.locator('#dt-panel-built')).toHaveText('13.10.2026, 18:52:13');
+    for (const [path, root] of [['/modules', '.modules-summary'], ['/devtools', '#dt-panel-summary']]) {
+      await page.goto(path);
+      const summary = page.locator(root);
+      await expect(summary.locator('.xk-summary-meta-line')).toContainText('собрано 13.10.2026');
+      await summary.locator('.xk-summary-more > summary').click();
+      await expect(summary.locator('.xk-summary-facts')).toContainText('13.10.2026, 18:52:13');
+    }
   });
 });
 
@@ -387,14 +396,19 @@ test.describe('Module manager recovery and guards', () => {
       const restart = read(restartButton);
       const title = read(document.querySelector('header.modules-header h1'));
       const description = read(document.querySelector('.modules-tile-description'));
-      return { headerButton, theme, restart, title, description };
+      const probe = document.createElement('span');
+      probe.style.background = 'var(--op-accent)';
+      document.body.append(probe);
+      const accent = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return { headerButton, theme, restart, title, description, accent };
     });
 
     expect(styles.title.fontSize, JSON.stringify(styles)).toBeLessThanOrEqual(19);
     expect(styles.description.fontSize, JSON.stringify(styles)).toBeLessThanOrEqual(14);
     expect(styles.theme.background, JSON.stringify(styles)).toBe(styles.headerButton.background);
     expect(styles.theme.color, JSON.stringify(styles)).toBe(styles.headerButton.color);
-    expect(styles.restart.background, JSON.stringify(styles)).toBe('rgb(63, 58, 126)');
+    expect(styles.restart.background, JSON.stringify(styles)).toBe(styles.accent);
   });
 
   test('keeps update controls and tooltips on the neutral operator surface', async ({ page }) => {
@@ -403,23 +417,20 @@ test.describe('Module manager recovery and guards', () => {
     await page.goto('/modules');
 
     const layout = await page.evaluate(() => {
-      const update = document.querySelector('.modules-update-check');
       const updateButton = document.querySelector('.modules-update-check-button');
-      const headerButton = document.querySelector('header.modules-header .xk-header-btn');
-      const updateRect = update.getBoundingClientRect();
+      const stat = document.querySelector('.xk-summary-stat');
       const buttonRect = updateButton.getBoundingClientRect();
-      const headerStyle = getComputedStyle(headerButton);
-      const updateStyle = getComputedStyle(updateButton);
+      const statRect = stat.getBoundingClientRect();
       return {
-        buttonWidth: buttonRect.width,
-        updateWidth: updateRect.width,
-        updateBackground: updateStyle.backgroundColor,
-        headerBackground: headerStyle.backgroundColor,
+        buttonWidth: Math.round(buttonRect.width),
+        statWidth: Math.round(statRect.width),
+        updateBackground: getComputedStyle(updateButton).backgroundColor,
+        statBackground: getComputedStyle(stat).backgroundColor,
       };
     });
-
-    expect(layout.buttonWidth, JSON.stringify(layout)).toBeLessThan(layout.updateWidth / 2);
-    expect(layout.updateBackground, JSON.stringify(layout)).toBe(layout.headerBackground);
+    // The check button is as wide as a counter and lies on the same surface.
+    expect(layout.buttonWidth, JSON.stringify(layout)).toBe(layout.statWidth);
+    expect(layout.updateBackground, JSON.stringify(layout)).toBe(layout.statBackground);
 
     await page.getByRole('button', { name: 'Выйти' }).hover();
     const tooltip = page.locator('#xk-tooltip-portal .xk-tooltip-bubble');
@@ -463,7 +474,7 @@ test.describe('Module manager recovery and guards', () => {
     await page.goto('/modules');
 
     await expect(page.locator('body')).not.toHaveClass(/\bpanel-page\b/);
-    await expect(page.locator('.modules-summary')).toContainText('локальной сборки');
+    await expect(page.locator('.modules-summary')).toContainText('Локальная сборка.');
     await expect(page.getByRole('button', { name: 'Обновить панель' })).toHaveCount(0);
     await expect(page.getByRole('tab', { name: 'Доступные' })).toBeDisabled();
     await expect(page.getByRole('switch', { name: /Включить Mihomo/ })).toBeVisible();
@@ -498,7 +509,7 @@ test.describe('Module manager recovery and guards', () => {
     expect(catalogCalls).toBe(0);
 
     releaseInstalled();
-    await expect(page.locator('.modules-summary')).toContainText('локальной сборки');
+    await expect(page.locator('.modules-summary')).toContainText('Локальная сборка.');
     expect(catalogCalls).toBe(0);
   });
 
@@ -519,7 +530,7 @@ test.describe('Module manager recovery and guards', () => {
     await page.evaluate(async () => (await import('/static/js/pages/modules.init.js')).getModulesController().deactivate());
     installed = { ...withMihomo(true), transition_required: true };
     await page.evaluate(async () => (await import('/static/js/pages/modules.init.js')).getModulesController().activate());
-    await expect(page.locator('.modules-summary')).toContainText('Включено: все модули (3 из 3)');
+    await expect(page.locator('.modules-summary .xk-summary-stat[data-stat="enabled"] b')).toHaveText('3 из 3');
     await expect(page.getByRole('switch', { name: 'Включить Mihomo' })).toBeChecked();
     await expect(page.getByRole('button', { name: 'Применить профиль' })).toBeEnabled();
     await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toHaveCount(0);
@@ -850,11 +861,12 @@ test.describe('Module manager recovery and guards', () => {
     const control = row.getByRole('switch', { name: 'Включить Mihomo' });
     await expect(row.locator('.modules-switch-state')).toHaveText('Включён');
     await expect(row.locator('.modules-switch-state')).toHaveClass(/is-enabled/);
+    const enabledCount = page.locator('.modules-summary .xk-summary-stat[data-stat="enabled"] b');
     await control.locator('..').click();
-    await expect(page.locator('.modules-summary')).toContainText('Включено: свой набор (2 из 3)');
+    await expect(enabledCount).toHaveText('2 из 3');
     await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toBeVisible();
     await control.locator('..').click();
-    await expect(page.locator('.modules-summary')).toContainText('Включено: все модули (3 из 3)');
+    await expect(enabledCount).toHaveText('3 из 3');
     await expect(page.locator('.modules-summary')).not.toContainText('Требуется перезапуск');
     await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toHaveCount(0);
   });
@@ -1540,11 +1552,13 @@ test.describe('Module lifecycle review', () => {
     await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: server.panel_update_current }));
     await page.goto('/modules');
     await page.getByRole('button', { name: 'Обновить панель' }).click();
-    // A current panel is an answer, not a plan with nothing in it.
-    await expect(page.locator('.modules-update-check').getByRole('status')).toContainText('Установлена актуальная версия');
+    // A current panel is an answer, not a plan with nothing in it: the counter
+    // says so and the button that has nothing to lay goes away.
+    await expect(page.locator('.modules-summary .xk-summary-stat[data-stat="update"] span')).toHaveText('версия актуальна');
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page.locator('#modules-error')).toBeEmpty();
-    await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Обновить панель' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Проверить ещё раз' })).toBeEnabled();
     expect(await page.evaluate(() => sessionStorage.getItem('xkeen.modules.update.v1'))).toBeNull();
   });
 
@@ -1598,7 +1612,7 @@ test.describe('Module lifecycle review', () => {
   });
 });
 
-test.describe('Installed and enabled sets', () => {
+test.describe('Enabled modules counter', () => {
   const nine = ['core', 'engine.xray', 'engine.mihomo', 'tool.editor', 'tool.terminal', 'tool.files', 'tool.backups', 'integration.happ', 'tool.advanced-diagnostics'];
   const withSets = (off, sets) => ({
     ...installedSnapshot,
@@ -1606,33 +1620,24 @@ test.describe('Installed and enabled sets', () => {
     ...sets,
     modules: nine.map((id) => ({ id, name: id, version: '1.0.0', enabled: !off.includes(id), can_disable: id !== 'core' })),
   });
+  const enabled = (page) => page.locator('.modules-summary .xk-summary-stat[data-stat="enabled"]');
 
-  test('the summary names what is installed and what is enabled instead of the stored label', async ({ page }) => {
+  test('the summary counts enabled modules instead of printing the stored label', async ({ page }) => {
     await installLifecycleRoutes(page, { status: { ok: true, result: null }, installed: withSets([], { installed_set: 'full', enabled_set: 'full' }) });
     await page.goto('/modules');
-    const summary = page.locator('.modules-summary');
-    await expect(summary).toContainText('Установлено: полный набор');
-    await expect(summary).toContainText('Включено: все модули (9 из 9)');
-    await expect(summary).not.toContainText('custom');
-    await expect(summary).not.toContainText('Профиль:');
+    await expect(enabled(page).locator('b')).toHaveText('9 из 9');
+    await expect(enabled(page).locator('span')).toHaveText('модулей включено');
+    await expect(page.locator('.modules-summary')).not.toContainText('custom');
+    await expect(page.locator('.modules-summary')).not.toContainText('Профиль:');
   });
 
-  test('modules switched off change the enabled line only', async ({ page }) => {
+  test('modules switched off lower the counter', async ({ page }) => {
     await installLifecycleRoutes(page, {
       status: { ok: true, result: null },
       installed: withSets(['engine.mihomo', 'tool.terminal'], { installed_set: 'full', enabled_set: 'custom' }),
     });
     await page.goto('/modules');
-    const summary = page.locator('.modules-summary');
-    await expect(summary).toContainText('Установлено: полный набор');
-    await expect(summary).toContainText('Включено: свой набор (7 из 9)');
-  });
-
-  test('an enabled set equal to a preset is called by its name', async ({ page }) => {
-    const off = nine.filter((id) => !['core', 'engine.xray', 'tool.editor'].includes(id));
-    await installLifecycleRoutes(page, { status: { ok: true, result: null }, installed: withSets(off, { installed_set: 'full', enabled_set: 'xray-minimal' }) });
-    await page.goto('/modules');
-    await expect(page.locator('.modules-summary')).toContainText('Включено: только Xray (3 из 9)');
+    await expect(enabled(page).locator('b')).toHaveText('7 из 9');
   });
 });
 
@@ -1841,16 +1846,35 @@ test.describe('A screen that is not drawn anew without a reason', () => {
     expect(catalogCalls).toBe(0);
   });
 
-  test('the update check row holds no rules of a grid it is not', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
+  test('summary buttons stand in the grid of the counters', async ({ page }) => {
     await installIdleLifecycleRoutes(page);
-    await page.goto('/modules');
-    const row = await page.locator('.modules-update-check').evaluate((node) => {
-      const style = getComputedStyle(node);
-      const button = getComputedStyle(node.querySelector('.modules-update-check-button'));
-      return { display: style.display, columns: style.gridTemplateColumns, self: button.justifySelf };
-    });
-    expect(row).toEqual({ display: 'flex', columns: 'none', self: 'auto' });
+    await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({ json: server.update_check }));
+    for (const width of [1600, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/modules');
+      await expect(page.getByRole('button', { name: 'Обновить до 2.11.0' })).toBeVisible();
+      const grid = await page.locator('.modules-summary').evaluate((root, wide) => {
+        const box = (node) => node.getBoundingClientRect();
+        const stats = [...root.querySelectorAll('.xk-summary-stat')].map(box);
+        const buttons = [...root.querySelectorAll('.xk-summary-actions > button')].map(box);
+        const card = box(root);
+        return {
+          statGap: Math.round(stats[1].left - stats[0].right),
+          edge: Math.round(card.right - stats[2].right),
+          buttonsRight: Math.round(buttons[buttons.length - 1].right),
+          statsRight: Math.round(stats[2].right),
+          buttonGap: Math.round(buttons[1].left - buttons[0].right),
+          secondLeft: Math.round(buttons[0].left),
+          statLeft: Math.round(stats[wide ? 1 : 0].left),
+        };
+      }, width > 480);
+      // The gap between the counters equals their distance to the edge of the
+      // block; the buttons keep the same gap and end where the counters end.
+      expect(Math.abs(grid.statGap - (grid.edge - 1)), `${width}: ${JSON.stringify(grid)}`).toBeLessThanOrEqual(1);
+      expect(grid.buttonsRight, `${width}: ${JSON.stringify(grid)}`).toBe(grid.statsRight);
+      expect(grid.buttonGap, `${width}: ${JSON.stringify(grid)}`).toBe(grid.statGap);
+      expect(grid.secondLeft, `${width}: ${JSON.stringify(grid)}`).toBe(grid.statLeft);
+    }
   });
 });
 
@@ -1942,7 +1966,7 @@ test.describe('What the window says about operations and refusals', () => {
           alert: read('.modules-operation .modules-alert'),
           warning: read('.modules-operation .modules-warning'),
           restart: read('.modules-summary .modules-warning'),
-          plain: getComputedStyle(document.querySelector('.modules-summary .modules-build-version')).backgroundColor,
+          plain: getComputedStyle(document.querySelector('.modules-summary .xk-summary-version')).backgroundColor,
         };
       });
       expect(look.alert.stripe, theme).toBe('3px');
@@ -2065,19 +2089,15 @@ test.describe('What the window says about operations and refusals', () => {
     await expect(page.locator('#modules-card-host .modules-card')).toHaveCount(2);
   });
 
-  test('the update mark in the DevTools header is a mark, not text glued to the label', async ({ page }) => {
+  test('DevTools says about an update in its card, not in the header', async ({ page }) => {
     await page.addInitScript(() => {
       sessionStorage.setItem('xkeen.modules.update.v1', JSON.stringify({ schema: 1, sourceVersion: '2.10.0', targetVersion: '2.11.0' }));
     });
     await installIdleLifecycleRoutes(page);
     await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({ json: server.update_check }));
     await page.goto('/devtools');
-    const mark = page.locator('[data-xk-modules-update-badge]').first();
-    await expect(mark).toHaveText('Обновление');
-    const look = await mark.evaluate((node) => {
-      const style = getComputedStyle(node);
-      return { fill: style.backgroundColor, gap: style.marginLeft, ink: style.color };
-    });
-    expect(look).toEqual({ fill: 'rgb(168, 52, 50)', gap: '6px', ink: 'rgb(255, 255, 255)' });
+    await expect(page.locator('header [data-xk-modules-update-badge]')).toHaveCount(0);
+    await expect(page.locator('#dt-panel-summary .xk-summary-stat[data-stat="update"] b')).toHaveText('2.11.0');
+    await expect(page.locator('#dt-panel-summary .xk-summary-link')).toHaveClass(/is-primary/);
   });
 });

@@ -90,14 +90,17 @@ def test_panel_restart_is_named_in_russian():
 
 def test_update_card_messages_are_russian():
     update_js = (ROOT / "xkeen-ui/static/js/features/devtools/update.js").read_text(encoding="utf-8")
+    summary_js = (ROOT / "xkeen-ui/static/js/features/panel_summary.js").read_text(encoding="utf-8")
 
+    assert "'Не удалось загрузить сведения о панели: '" in update_js
+    assert "'Открыть «Модули и обновления»'" in update_js
     for phrase in (
-        "'Обновлений нет.'",
-        "'Не удалось проверить обновления.'",
-        "'Не удалось загрузить сведения о панели: '",
-        "'Нет данных об установленных модулях.'",
+        "'доступно обновление'",
+        "'версия актуальна'",
+        "'не удалось проверить'",
+        "'модулей включено'",
     ):
-        assert phrase in update_js, phrase
+        assert phrase in summary_js, phrase
 
     for stale in ("enabled'", "disabled'", "Update available", "No updates"):
         assert ("label: '" + stale) not in update_js, stale

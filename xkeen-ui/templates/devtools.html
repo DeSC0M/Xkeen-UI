@@ -72,7 +72,6 @@
             aria-label="Переключить тему" title="Переключить светлую/тёмную тему"
           >{{ op_icon('sun', 'theme-toggle-icon') }}<span class="theme-toggle-text">Светлая тема</span></button>
           <a href="{{ url_for('index') }}" class="btn-link xk-header-btn xk-header-btn-back" data-xk-top-nav="1">{{ op_icon('back') }}<span class="xk-action-label">Назад</span></a>
-          <a href="{{ url_for('modules_page') }}" class="btn-link xk-header-btn" data-xk-top-nav="1">Модули и обновления<span data-xk-modules-update-badge hidden></span></a>
           {% set logout_button_class = 'btn-link xk-header-btn xk-header-btn-logout' %}
           {% include '_logout_button.html' %}
         </div>
@@ -109,49 +108,12 @@
             </p>
           </section>
 
-          <section class="card" id="dt-update-card" data-xk-section="service update dt-update-card">
+          <section class="card" id="dt-update-card" data-xk-section="service update dt-update-card" data-modules-url="{{ url_for('modules_page') }}">
             <h2 class="dt-update-head" style="margin:0;">Сборка панели</h2>
             <div class="dt-update-body">
-              <p class="small dt-panel-summary-intro">Версия и состав установленной панели. Обновления и профиль управляются в разделе «Модули и обновления».</p>
-              <dl class="dt-panel-summary-grid">
-                <div class="dt-panel-summary-row">
-                  <dt>Версия</dt>
-                  <dd><span id="dt-panel-version" class="dt-value dt-value-neutral">—</span> <span id="dt-panel-prerelease-tag" class="dt-panel-prerelease-tag" title="Установлена тестовая версия панели." hidden>предрелиз</span> <span id="dt-panel-commit" class="dt-sub"></span></dd>
-                </div>
-                <div class="dt-panel-summary-row">
-                  <dt>Собрана</dt>
-                  <dd id="dt-panel-built">—</dd>
-                </div>
-                <div class="dt-panel-summary-row">
-                  <dt>Источник</dt>
-                  <dd><code id="dt-panel-repo" class="dt-badge dt-badge-info">—</code></dd>
-                </div>
-                <div class="dt-panel-summary-row dt-panel-summary-row-channel">
-                  <dt>Канал обновлений</dt>
-                  <dd class="dt-panel-channel-cell">
-                    <span id="dt-panel-channel" class="dt-panel-channel-switch" role="group" aria-label="Канал обновлений">
-                      <button type="button" data-channel="stable" aria-pressed="true"><span class="dt-panel-channel-dot" aria-hidden="true"></span>Стабильный</button>
-                      <button type="button" data-channel="prerelease" aria-pressed="false"><span class="dt-panel-channel-dot" aria-hidden="true"></span>Предрелизный</button>
-                    </span>
-                    <span id="dt-panel-channel-hint" class="dt-panel-channel-hint" data-channel="stable">Проверенные версии. Выбирайте, если панель просто должна работать.</span>
-                  </dd>
-                </div>
-                <div class="dt-panel-summary-row">
-                  <dt>Установлено</dt>
-                  <dd id="dt-panel-installed-set">—</dd>
-                </div>
-                <div class="dt-panel-summary-row">
-                  <dt>Включено</dt>
-                  <dd id="dt-panel-enabled-set">—</dd>
-                </div>
-              </dl>
-              <section class="dt-panel-modules-summary" aria-labelledby="dt-panel-modules-title">
-                <h3 id="dt-panel-modules-title">Установленные модули</h3>
-                <div id="dt-panel-update-note" class="dt-panel-update-note" role="status" aria-live="polite" hidden></div>
-                <ul id="dt-panel-modules" class="dt-panel-modules" aria-live="polite">
-                  <li class="dt-panel-modules-empty">Загрузка…</li>
-                </ul>
-              </section>
+              <div id="dt-panel-summary" class="xk-summary" aria-live="polite">
+                <p class="xk-summary-hint">Загрузка…</p>
+              </div>
               <div id="dt-panel-status" class="status" role="status" aria-live="polite" style="margin-top:12px;" hidden></div>
             </div>
           </section>
