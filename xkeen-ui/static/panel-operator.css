@@ -1297,7 +1297,7 @@ body.panel-page .dt-switch-slider::after {
   height: 12px;
   border: 0;
   border-radius: 50%;
-  background: var(--op-surface) !important;
+  background: var(--op-text) !important;
   box-shadow: none !important;
   transition: transform 0.15s ease, background-color 0.15s ease;
 }
@@ -5357,7 +5357,7 @@ body.panel-page #view-xray-logs .dt-switch-slider::after {
   left: 1px;
   width: 12px;
   height: 12px;
-  background: var(--op-surface) !important;
+  background: var(--op-text) !important;
 }
 
 body.panel-page #view-xray-logs .dt-switch input:checked + .dt-switch-slider {
@@ -23424,4 +23424,12 @@ html[data-theme="light"] body.panel-page #outbounds-subscriptions-modal .xk-sub-
 
 html[data-theme="light"] body.panel-page #outbounds-subscriptions-modal .xk-sub-master .dt-switch-slider::after {
   background: #ffffff !important;
+}
+
+/* An inactive switch reads the same everywhere (16.10.2026): the thumb takes the
+ * colour of the text, as in the UI settings — light in the dark theme, dark in
+ * the light one. These two windows kept a white thumb in the light theme. */
+html[data-theme="light"] body.panel-page #mihomo-dns-modal :is(.mihomo-dns-geodata-toggle, .mihomo-dns-option-switch) input:not(:checked) + .dt-switch-slider::after,
+html[data-theme="light"] body.panel-page #outbounds-subscriptions-modal .xk-sub-master input:not(:checked) + .dt-switch-slider::after {
+  background: var(--op-text) !important;
 }

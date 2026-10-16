@@ -618,7 +618,7 @@ body.devtools-page .dt-switch-slider::after {
   left: 1px;
   width: 12px;
   height: 12px;
-  background: var(--op-muted) !important;
+  background: var(--op-text) !important;
   box-shadow: none;
 }
 
