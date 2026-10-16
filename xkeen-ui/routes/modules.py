@@ -358,6 +358,10 @@ def create_modules_blueprint(
 
     def update_module(module_id: str, enabled: bool):
         try:
+            if not enabled:
+                # The last engine is said first: the other refusals would send
+                # the owner to undo the DNS guard only to be refused again.
+                module_registry.check_disable(module_id)
             if before_change is not None:
                 blocked = before_change(module_id, enabled)
                 if blocked:

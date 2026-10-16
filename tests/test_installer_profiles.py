@@ -220,6 +220,60 @@ def test_upgrade_keeps_custom_editor_variant(tmp_path):
     assert json.loads((dest / "modules.json").read_text(encoding="utf-8"))["editor"] == {"variant": "advanced"}
 
 
+def _engines(dest: Path) -> dict[str, bool]:
+    state = json.loads((dest / "modules.json").read_text(encoding="utf-8"))
+    return {module: state["modules"][module]["enabled"] for module in ("engine.xray", "engine.mihomo")}
+
+
+@pytest.mark.parametrize(
+    ("cores", "expected"),
+    [
+        ({"xray"}, {"engine.xray": True, "engine.mihomo": False}),
+        ({"mihomo"}, {"engine.xray": False, "engine.mihomo": True}),
+        # Both or none: nothing is guessed, both stay on.
+        ({"xray", "mihomo"}, {"engine.xray": True, "engine.mihomo": True}),
+        (set(), {"engine.xray": True, "engine.mihomo": True}),
+    ],
+)
+def test_full_switches_on_only_the_engines_whose_cores_lie_on_the_router(tmp_path, cores, expected):
+    helper = _module()
+    src = _source(tmp_path)
+    dest = tmp_path / "installed"
+
+    helper.commit_profile(helper.apply_profile(src, dest, "full", detect_core=lambda core: core in cores))
+
+    assert _engines(dest) == expected
+    # The files of both engines are laid: a core installed later needs only the switch.
+    assert (dest / "routes/mihomo.py").is_file()
+    assert (dest / "routes/routing/blueprint.py").is_file()
+
+
+def test_an_update_keeps_the_owner_switches_whatever_cores_lie(tmp_path):
+    helper = _module()
+    src = _source(tmp_path)
+    dest = tmp_path / "installed"
+    helper.commit_profile(helper.apply_profile(src, dest, "full", detect_core=lambda _core: False))
+
+    # Mihomo has been removed from the router since; the owner's set stays.
+    helper.commit_profile(helper.apply_profile(src, dest, "full", keep_switches=True, detect_core=lambda core: core == "xray"))
+
+    assert _engines(dest) == {"engine.xray": True, "engine.mihomo": True}
+
+
+def test_an_engine_left_off_for_a_missing_core_keeps_the_mark_through_updates(tmp_path):
+    helper = _module()
+    src = _source(tmp_path)
+    dest = tmp_path / "installed"
+    helper.commit_profile(helper.apply_profile(src, dest, "full", detect_core=lambda core: core == "xray"))
+    mihomo = json.loads((dest / "modules.json").read_text(encoding="utf-8"))["modules"]["engine.mihomo"]
+    assert mihomo == {"enabled": False, "off_reason": "core_missing"}
+
+    helper.commit_profile(helper.apply_profile(src, dest, "full", keep_switches=True, detect_core=lambda _core: True))
+
+    mihomo = json.loads((dest / "modules.json").read_text(encoding="utf-8"))["modules"]["engine.mihomo"]
+    assert mihomo == {"enabled": False, "off_reason": "core_missing"}
+
+
 def test_reinstalling_minimal_profile_does_not_restore_disabled_engine(tmp_path):
     helper = _module()
     src = _source(tmp_path)

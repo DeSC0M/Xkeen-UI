@@ -1,4 +1,4 @@
-import { renderInstalled, renderAvailable, renderCatalogError, renderPlan, renderPlanError, renderOperationStatus, hasOperationStatus, describeLifecycleFailure } from './render.js';
+import { renderInstalled, renderAvailable, renderCatalogError, renderPlan, renderPlanError, renderOperationStatus, hasOperationStatus, describeLifecycleFailure, renderPageAlert, TILE_REFUSAL_CODES } from './render.js';
 import { clearModulesUpdateBadge, reconcileModulesUpdateBadge, reconcileModulesUpdateCheck, reconcileModulesUpdatePlan, reconcileModulesUpdateStatus } from './badge.js';
 
 // The panel restarts at the end of every operation and after a restart
@@ -64,6 +64,8 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
   // A tile menu left open stays open across those redraws; nothing of it is
   // stored on the router.
   const openMenus = new Set();
+  // A switch the server refused: said in its tile until dismissed or tried again.
+  const refusals = new Map();
 
   // An interrupted operation is over: its record is gone and the server
   // has nothing to recover. Only a failed undo leaves the tree to be put back.
@@ -78,12 +80,38 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
 
   function showError(error) {
     const message = describeLifecycleFailure(error);
-    if (errorHost) errorHost.textContent = message;
+    if (errorHost) {
+      renderPageAlert(errorHost, error, { onRetry: () => { void refreshStatus(); }, onDismiss: clearError });
+      syncRefreshControls();
+    }
     if (!state.installed && state.selectedTab === 'installed') host.textContent = message;
     if (!state.catalog && state.selectedTab === 'available') host.textContent = message;
   }
 
-  function clearError() { if (errorHost) errorHost.textContent = ''; }
+  function clearError() {
+    if (errorHost) errorHost.replaceChildren();
+    syncRefreshControls();
+  }
+
+  // A stale screen is refreshed by one button: inside the alert when there is
+  // one, on its own otherwise.
+  function syncRefreshControls() {
+    const canRefresh = !((statusFresh && installedFresh) || !statusChecked || panelUnreachable || restartWait !== null);
+    const retry = errorHost?.querySelector('.modules-page-alert-retry');
+    if (retry) {
+      retry.hidden = !canRefresh;
+      retry.disabled = busy || statusRefreshPending;
+    }
+    if (refreshStatusButton) {
+      refreshStatusButton.hidden = !canRefresh || !!retry;
+      refreshStatusButton.disabled = busy || statusRefreshPending;
+    }
+  }
+
+  function dismissRefusal(moduleId) {
+    if (!refusals.delete(moduleId)) return;
+    if (active) render();
+  }
 
   // Names for the ids the server speaks in: every module the panel knows,
   // then what the catalog offers and what is installed.
@@ -169,10 +197,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     }
     host.setAttribute('aria-labelledby', tabs[state.selectedTab].id);
     const actionsDisabled = mutationsLocked();
-    if (refreshStatusButton) {
-      refreshStatusButton.hidden = (statusFresh && installedFresh) || !statusChecked || panelUnreachable || restartWait !== null;
-      refreshStatusButton.disabled = busy || statusRefreshPending;
-    }
+    syncRefreshControls();
     if (state.selectedTab === 'available') {
       if (state.catalog) renderAvailable(host, state.catalog, requestPlan, actionsDisabled, { names: moduleNames(), onRefresh: reloadCatalog });
       // The refusal stays until the next attempt: a redraw must not turn it into "loading".
@@ -188,6 +213,8 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
         onUpdateChannel: requestUpdateChannel,
         channelBusy,
         openMenus,
+        refusals,
+        onDismissRefusal: dismissRefusal,
       });
     } else {
       host.textContent = 'Загрузка модулей…';
@@ -456,6 +483,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     const focused = document.activeElement === input;
     // One change at a time: a plan asked for meanwhile would be built on the old set.
     busy = true;
+    refusals.delete(moduleId);
     render();
     try {
       await api.setModuleEnabled(moduleId, enabled);
@@ -463,7 +491,11 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
       reconcileModulesUpdateBadge(state.installed);
       clearError();
     } catch (error) {
-      showError(error);
+      if (TILE_REFUSAL_CODES.has(error?.code)) {
+        refusals.set(moduleId, { code: error.code, message: error.message, enabled });
+      } else {
+        showError(error);
+      }
     } finally {
       busy = false;
       if (active) {

@@ -90,14 +90,11 @@ def test_installed_names_the_sets_by_their_modules_not_by_the_stored_label(tmp_p
     assert payload["installed_set"] == "xray-minimal"
     assert payload["enabled_set"] == "xray-minimal"
 
-    # A switch turns the stored label into "custom" for good; the names do not follow it.
-    registry.set_enabled("engine.xray", False)
+    # The stored label says "custom"; the names follow the modules, not the label.
+    # (Xray is the only engine here and cannot be switched off to make a real change.)
+    registry.set_profile("custom", module_ids=["core", "tool.editor", "engine.xray"])
     payload = service.installed()
     assert payload["installed_set"] == "xray-minimal"
-    assert payload["enabled_set"] == "custom"
-
-    registry.set_enabled("engine.xray", True)
-    payload = service.installed()
     assert payload["enabled_set"] == "xray-minimal"
 
 

@@ -17,7 +17,16 @@ const committedStatus = server.install_committed;
 const terminalEntry = availableSnapshot.modules.find((item) => item.id === 'tool.terminal');
 const TERMINAL = terminalEntry.name;
 // The installed snapshot the way the server gives it once Mihomo is switched.
-const withMihomo = (enabled) => (enabled ? server.installed_mihomo_on : installedSnapshot);
+// These tests switch Mihomo on and off again. In the stored answer it is the
+// only engine, and the last engine is locked (modules_engine_guard.spec.mjs);
+// here another engine is taken to be on, so the switch stays open.
+const mihomoSwitchable = {
+  ...server.installed_mihomo_on,
+  modules: server.installed_mihomo_on.modules.map((item) => (
+    item.id === 'engine.mihomo' ? { ...item, can_disable: true, lock_reason: null } : item
+  )),
+};
+const withMihomo = (enabled) => (enabled ? mihomoSwitchable : installedSnapshot);
 
 async function installIdleLifecycleRoutes(page) {
   await page.route('**/api/modules/installed', (route) => route.fulfill({ json: installedSnapshot }));
@@ -554,11 +563,14 @@ test.describe('Module manager recovery and guards', () => {
     await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeDisabled();
     await expect(page.getByRole('switch', { name: 'Включить Mihomo' })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toHaveCount(0);
-    await expect(page.locator('#modules-error')).toContainText('module_state_unavailable');
-    await page.locator('#modules-refresh-status').click();
+    await expect(page.locator('#modules-error .modules-page-alert')).toHaveAttribute('data-code', 'module_state_unavailable');
+    // The refresh lives in the alert while there is one: one button, not two.
+    const retry = page.locator('#modules-error .modules-page-alert-retry');
+    await expect(page.locator('#modules-refresh-status')).toBeHidden();
+    await retry.click();
     await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeDisabled();
     unavailable = false;
-    await page.locator('#modules-refresh-status').click();
+    await retry.click();
     await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeEnabled();
     await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toBeEnabled();
   });
@@ -1002,7 +1014,7 @@ test.describe('Module manager recovery and guards', () => {
       ok: false, code: 'module_state_unavailable', message: '/private/state',
     } }));
     await page.goto('/modules');
-    await expect(page.locator('#modules-error')).toContainText('module_state_unavailable');
+    await expect(page.locator('#modules-error .modules-page-alert')).toHaveAttribute('data-code', 'module_state_unavailable');
     await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toHaveCount(0);
   });
 
@@ -1027,7 +1039,7 @@ test.describe('Module manager recovery and guards', () => {
     } }));
     await page.goto('/modules');
     await expect(page.locator('.modules-core')).toContainText('Xkeen UI Core');
-    await expect(page.locator('#modules-error')).toContainText('operation_in_progress');
+    await expect(page.locator('#modules-error .modules-page-alert')).toHaveAttribute('data-code', 'operation_in_progress');
     await expect(page.locator('#modules-error')).not.toContainText('/private/operation.log');
     await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeDisabled();
     await expect(page.getByRole('switch', { name: 'Включить Mihomo' })).toBeDisabled();
@@ -1247,8 +1259,8 @@ test.describe('Module lifecycle review', () => {
         await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeDisabled();
         await expect.poll(() => statusCalls).toBeGreaterThan(1);
         if (statusUnavailable) {
-          await expect(page.locator('#modules-error')).toContainText('module_status_unavailable');
-          await expect(page.locator('#modules-refresh-status')).toBeVisible();
+          await expect(page.locator('#modules-error .modules-page-alert')).toHaveAttribute('data-code', 'module_status_unavailable');
+          await expect(page.locator('#modules-error .modules-page-alert-retry')).toBeVisible();
         } else {
           await expect(page.locator('#modules-operation-status')).toContainText('Загрузка архива');
           await expect(page.getByRole('button', { name: 'Отменить операцию' })).toBeEnabled();
@@ -1516,7 +1528,7 @@ test.describe('Module lifecycle review', () => {
     await page.goto('/modules');
     await page.getByRole('button', { name: 'Обновить панель' }).click();
 
-    await expect(page.locator('#modules-error')).toContainText('panel_update_requires_installer');
+    await expect(page.locator('#modules-error .modules-page-alert')).toHaveAttribute('data-code', 'panel_update_requires_installer');
     await expect(page.getByRole('dialog')).toHaveCount(0);
     expect(applyCalls).toBe(0);
   });

@@ -23,7 +23,7 @@ from services.module_profile_plan import (
     build_profile_target_from_ownership,
     user_owned,
 )
-from services.module_registry import MODULE_IDS
+from services.module_registry import ENGINE_MODULE_IDS, MODULE_IDS
 
 from .previous_version import read_previous_version
 from .state import ModuleTransactionError, transactions_root
@@ -377,6 +377,9 @@ def build_plan(
             _fail("module_required_by", "installed modules depend on this module", module_ids=dependants)
         if module_id in active_engines:
             _fail("module_engine_active", "the engine is running; stop it before removing its module", module_id=module_id)
+        if module_id in ENGINE_MODULE_IDS and not (installed & set(ENGINE_MODULE_IDS)) - {module_id}:
+            # Without an engine the panel has nothing to manage.
+            _fail("module_last_engine", "the only engine of the panel is not removed", module_id=module_id)
         files_add: tuple[str, ...] = ()
         files_remove = tuple(path for path in files if (panel_root / path).is_file())
         archive = None

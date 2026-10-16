@@ -202,6 +202,15 @@ def test_remove_refuses_a_running_engine(tmp_path: Path) -> None:
     assert build_plan("remove", "engine.mihomo", **panel.kwargs, active_engines=frozenset({"engine.xray"}))
 
 
+def test_remove_refuses_the_only_engine(tmp_path: Path) -> None:
+    # Without an engine the panel has nothing to manage: the last one stays.
+    panel = make_panel(tmp_path, installed=("core", "tool.editor", "engine.xray"))
+    assert _code("remove", "engine.xray", panel) == "module_last_engine"
+
+    mirror = make_panel(tmp_path / "mihomo", installed=("core", "tool.editor", "engine.mihomo"))
+    assert _code("remove", "engine.mihomo", mirror) == "module_last_engine"
+
+
 def test_user_owned_path_in_the_map_is_refused(tmp_path: Path) -> None:
     panel = make_panel(tmp_path)
     data = json.loads(panel.path("module-ownership.json").read_text(encoding="utf-8"))

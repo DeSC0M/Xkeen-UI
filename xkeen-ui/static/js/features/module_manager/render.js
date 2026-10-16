@@ -112,6 +112,8 @@ const FAILURE_MESSAGES = {
   module_free_space: 'Недостаточно свободного места.',
   operation_free_space: 'Недостаточно свободного места.',
   module_engine_active: 'Модуль используется активным движком.',
+  module_last_engine: 'Единственное ядро панели не удаляется: без него панели нечем управлять.',
+  last_engine_module: 'Это единственное включённое ядро: без него панели нечем управлять.',
   module_dependency_missing: 'Не хватает зависимости.',
   panel_version_current: 'Обновлений нет.',
   module_conflict: 'Обнаружен конфликт модулей.',
@@ -154,6 +156,100 @@ function failureGuidance({ code, message } = {}) {
 export function describeLifecycleFailure(failure = {}) {
   const { safeCode, guidance } = failureGuidance(failure);
   return `${guidance} (${safeCode})`;
+}
+
+// A refusal for the page as a whole: a plate in the look of the page, the
+// code of the server kept for the curious in a tooltip, not in the text.
+export function renderPageAlert(host, failure, { onRetry = null, onDismiss = null } = {}) {
+  const { safeCode, guidance } = failureGuidance(failure);
+  const plate = node('div', 'modules-page-alert');
+  plate.dataset.code = safeCode;
+  plate.title = `Код: ${safeCode}`;
+  const dot = node('span', 'modules-page-alert-dot');
+  dot.setAttribute('aria-hidden', 'true');
+  const text = node('div', 'modules-page-alert-text');
+  text.append(node('strong', '', guidance));
+  plate.append(dot, text);
+  const actions = node('div', 'modules-page-alert-actions');
+  if (typeof onRetry === 'function') {
+    const retry = node('button', 'modules-page-alert-retry', 'Повторить');
+    retry.type = 'button';
+    retry.hidden = true;
+    retry.addEventListener('click', onRetry);
+    actions.append(retry);
+  }
+  if (typeof onDismiss === 'function') {
+    const close = node('button', 'modules-page-alert-close', '×');
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Скрыть сообщение');
+    close.addEventListener('click', onDismiss);
+    actions.append(close);
+  }
+  if (actions.childElementCount) plate.append(actions);
+  host.replaceChildren(plate);
+}
+
+// Refusals of a switch are said in its tile: what did not happen, why, and
+// where the owner can fix it.
+const DNS_WINDOWS = {
+  'engine.xray': { guard: 'DNS-защиту', label: 'Открыть DNS-over-VLESS', open: 'dns-over-vless' },
+  'engine.mihomo': { guard: 'защищённый DNS', label: 'Открыть защищённый DNS Mihomo', open: 'mihomo-dns' },
+};
+
+export const TILE_REFUSAL_CODES = new Set([
+  'dns_protection_active', 'dns_protection_state_unknown', 'active_core_module', 'last_engine_module',
+  'module_required_by', 'core_required', 'module_conflict',
+]);
+
+function refusalCopy(item, refusal) {
+  const name = item.name || item.id;
+  const title = `${name} не ${refusal.enabled ? 'включён' : 'выключен'}`;
+  const dns = DNS_WINDOWS[item.id] || null;
+  const link = dns ? { label: dns.label, open: dns.open } : null;
+  switch (refusal.code) {
+    case 'dns_protection_active':
+      return { title, why: `Сначала снимите ${dns ? dns.guard : 'DNS-защиту'}: без ${name} устройства сети останутся без DNS.`, link };
+    case 'dns_protection_state_unknown':
+      return { title, why: 'Не удалось проверить DNS-защиту. Откройте её окно и посмотрите, снята ли она.', link };
+    case 'active_core_module':
+      return { title, why: `Ядро ${name} сейчас работает. Сначала переключите роутер на другое ядро.`, link: null };
+    case 'last_engine_module':
+      return { title, why: 'Это единственное включённое ядро: без него панели нечем управлять. Сначала включите другое ядро.', link: null };
+    default:
+      return { title, why: failureGuidance(refusal).guidance, link: null };
+  }
+}
+
+function panelHref() {
+  return document.querySelector('header .xk-header-btn-back')?.getAttribute('href') || '/';
+}
+
+function tileRefusal(item, refusal, onDismiss) {
+  const copy = refusalCopy(item, refusal);
+  const box = node('div', 'modules-tile-refusal');
+  box.setAttribute('role', 'alert');
+  box.dataset.code = refusal.code;
+  box.title = `Код отказа: ${refusal.code}`;
+  const head = node('div', 'modules-tile-refusal-head');
+  const dot = node('span', 'modules-tile-refusal-dot');
+  dot.setAttribute('aria-hidden', 'true');
+  const text = node('div', 'modules-tile-refusal-text');
+  text.append(node('strong', '', copy.title), node('p', '', copy.why));
+  const close = node('button', 'modules-tile-refusal-close', '×');
+  close.type = 'button';
+  close.setAttribute('aria-label', 'Скрыть сообщение');
+  close.addEventListener('click', () => onDismiss(item.id));
+  head.append(dot, text, close);
+  box.append(head);
+  if (copy.link) {
+    const actions = node('div', 'modules-tile-refusal-actions');
+    const link = node('a', 'modules-tile-refusal-link', copy.link.label);
+    const base = panelHref();
+    link.href = `${base}${base.includes('?') ? '&' : '?'}open=${copy.link.open}`;
+    actions.append(link);
+    box.append(actions);
+  }
+  return box;
 }
 
 function alertLine(className, lead, rest) {
@@ -284,17 +380,29 @@ function coreStrip(item) {
 // The tile says nothing below the description while the module works as the
 // switch shows. A line appears only for what the switch cannot tell.
 function tileNotice(item, names) {
+  if (item.lock_reason === 'last_engine') return { tone: 'lock', text: 'Единственное ядро — не выключается' };
   if (item.id === 'tool.editor' && item.can_disable !== true) {
     return { tone: 'lock', text: 'Нужен, пока включено ядро' };
   }
   if (item.can_disable !== true) return { tone: 'lock', text: 'Не выключается' };
+  // Installed switched off because its core was not on the router.
+  if (item.off_reason === 'core_missing' && item.enabled !== true) {
+    const core = ENGINE_CORE_NAMES[item.id] || item.name || item.id;
+    return item.available === true
+      ? { tone: 'info', text: `Ядро ${core} найдено — модуль можно включить` }
+      : { tone: 'muted', text: `Ядра ${core} на роутере нет — модуль выключен` };
+  }
   return moduleProblem(item, names);
 }
+
+const ENGINE_CORE_NAMES = { 'engine.xray': 'Xray', 'engine.mihomo': 'Mihomo' };
 
 const MENU_LABELS = { repair: 'Восстановить файлы модуля', remove: 'Удалить модуль' };
 
 function tileMenu(item, names, { onPlan, busy, openMenus }) {
-  const actions = (Array.isArray(item.lifecycle_actions) ? item.lifecycle_actions : []).filter((action) => MENU_LABELS[action]);
+  // The last engine is not removed: the panel would have nothing to manage.
+  const actions = (Array.isArray(item.lifecycle_actions) ? item.lifecycle_actions : [])
+    .filter((action) => MENU_LABELS[action] && !(action === 'remove' && item.lock_reason === 'last_engine'));
   const deps = Array.isArray(item.dependencies) ? item.dependencies : [];
   if (!actions.length && !deps.length) return null;
   const label = item.name || item.id;
@@ -351,7 +459,7 @@ function moduleSwitch(item, { onToggle, busy }) {
   return label;
 }
 
-function moduleTile(item, snapshot, names, { onToggle, onPlan, onEditorVariant, busy, openMenus }) {
+function moduleTile(item, snapshot, names, { onToggle, onPlan, onEditorVariant, busy, openMenus, refusals, onDismissRefusal }) {
   const tile = node('article', 'modules-tile modules-module');
   tile.dataset.moduleId = item.id;
   if (item.enabled !== true) tile.classList.add('is-off');
@@ -370,6 +478,11 @@ function moduleTile(item, snapshot, names, { onToggle, onPlan, onEditorVariant, 
     ? EDITOR_VARIANTS.find((variant) => variant.id === snapshot.editor?.variant)
     : null;
   if (editorVariant) tile.append(editorVariantControl(snapshot, editorVariant, onEditorVariant, busy));
+  const refusal = refusals?.get(item.id);
+  if (refusal) {
+    tile.append(tileRefusal(item, refusal, onDismissRefusal));
+    return tile;
+  }
   const notice = tileNotice(item, names);
   if (notice) {
     const foot = node('div', `modules-tile-foot is-${notice.tone}`);
@@ -666,6 +779,8 @@ export function renderInstalled(host, snapshot, onToggle, onPlan = () => {}, bus
   onUpdateChannel = null,
   channelBusy = false,
   openMenus = new Set(),
+  refusals = new Map(),
+  onDismissRefusal = () => {},
 } = {}) {
   host.replaceChildren();
   host.append(renderSummary(snapshot, {
@@ -688,7 +803,7 @@ export function renderInstalled(host, snapshot, onToggle, onPlan = () => {}, bus
   if (others.length) {
     const grid = node('div', 'modules-grid');
     for (const item of others) {
-      grid.append(moduleTile(item, snapshot, names, { onToggle, onPlan, onEditorVariant, busy, openMenus }));
+      grid.append(moduleTile(item, snapshot, names, { onToggle, onPlan, onEditorVariant, busy, openMenus, refusals, onDismissRefusal }));
     }
     list.append(grid);
   }

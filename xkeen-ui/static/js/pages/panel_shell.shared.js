@@ -1313,8 +1313,45 @@ import { wireTopLevelNavigation } from './top_level_nav.shared.js';
     const remembered = restoreView();
     const initial = remembered || (activeBtn && activeBtn.dataset && activeBtn.dataset.view ? activeBtn.dataset.view : 'routing');
     showView(initial);
+    openRequestedWindow();
     initPanelCoreUiAutoDetect();
     return true;
+  }
+
+  // `?open=<window>` from another page (the Modules screen sends the owner to
+  // the DNS guard it has to undo): the screen of the window is shown and its
+  // button pressed once the window has wired it. A window whose module is off
+  // has no tab and no button — then the panel just opens as usual.
+  const OPEN_WINDOWS = Object.freeze({
+    'dns-over-vless': { view: 'routing', button: 'routing-dns-over-vless-btn' },
+    'mihomo-dns': { view: 'mihomo', button: 'mihomo-dns-btn' },
+  });
+
+  function openRequestedWindow() {
+    let url;
+    try {
+      url = new URL(window.location.href);
+    } catch (e) {
+      return;
+    }
+    const target = OPEN_WINDOWS[String(url.searchParams.get('open') || '')];
+    if (!target) return;
+    url.searchParams.delete('open');
+    try {
+      window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+    } catch (e) {}
+    if (!document.querySelector('.top-tab-btn[data-view="' + target.view + '"]')) return;
+    showView(target.view);
+    const deadline = Date.now() + 15000;
+    const press = () => {
+      const button = document.getElementById(target.button);
+      if (button && button.dataset.wired === '1') {
+        button.click();
+        return;
+      }
+      if (Date.now() < deadline) setTimeout(press, 150);
+    };
+    press();
   }
 
   function getCurrentView() {

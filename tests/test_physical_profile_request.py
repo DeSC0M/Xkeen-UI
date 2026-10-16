@@ -116,7 +116,8 @@ def test_a_toggle_leaves_a_pending_request_as_it_was(tmp_path):
     before = _state(panel)["physical_request"]
 
     registry.set_enabled("tool.editor", True)
-    registry.set_enabled("engine.xray", False)
+    # Xray is the last engine of the requested set and stays; another switch does.
+    registry.set_enabled("tool.terminal", True)
 
     assert _state(panel)["physical_request"] == before
 

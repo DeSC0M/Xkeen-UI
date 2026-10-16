@@ -182,19 +182,26 @@ def test_api_uses_running_core_for_deferred_disable_guard(tmp_path, monkeypatch)
     )
     client = app.test_client()
 
+    response = client.patch(
+        "/api/modules/engine.xray",
+        json={"enabled": False},
+    )
+    assert response.status_code == 409
+    assert response.get_json()["code"] == "active_core_module"
+
     allowed = client.patch(
         "/api/modules/engine.mihomo",
         json={"enabled": False},
     )
     assert allowed.status_code == 200
 
+    # Xray is the last engine now: that is said first, before the running core.
     response = client.patch(
         "/api/modules/engine.xray",
         json={"enabled": False},
     )
-
     assert response.status_code == 409
-    assert response.get_json()["code"] == "active_core_module"
+    assert response.get_json()["code"] == "last_engine_module"
 
 
 def test_advanced_diagnostics_routes_are_not_exposed_when_optional_module_is_off(tmp_path):

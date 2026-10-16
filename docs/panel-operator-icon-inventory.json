@@ -115,7 +115,7 @@
           "accessible_label": "Предупреждение"
         },
         {
-          "location": "xkeen-ui/static/js/features/module_manager/render.js:L561",
+          "location": "xkeen-ui/static/js/features/module_manager/render.js:L230",
           "control_type": "runtime-action",
           "accessible_label": "Предупреждение"
         },
@@ -1901,6 +1901,11 @@
           "accessible_label": "Информация"
         },
         {
+          "location": "xkeen-ui/static/js/features/module_manager/render.js:L392",
+          "control_type": "runtime-action",
+          "accessible_label": "Информация"
+        },
+        {
           "location": "xkeen-ui/static/js/features/outbounds.js:L96",
           "control_type": "runtime-action",
           "accessible_label": "Информация"
@@ -2124,7 +2129,7 @@
           "accessible_label": "Ограничить"
         },
         {
-          "location": "xkeen-ui/static/js/features/module_manager/render.js:L264",
+          "location": "xkeen-ui/static/js/features/module_manager/render.js:L360",
           "control_type": "runtime-action",
           "accessible_label": "Ограничить"
         },
@@ -2167,7 +2172,7 @@
           "accessible_label": "Дополнительные действия"
         },
         {
-          "location": "xkeen-ui/static/js/features/module_manager/render.js:L310",
+          "location": "xkeen-ui/static/js/features/module_manager/render.js:L418",
           "control_type": "runtime-action",
           "accessible_label": "Дополнительные действия"
         },
@@ -2940,7 +2945,7 @@
           "accessible_label": "Восстановить"
         },
         {
-          "location": "xkeen-ui/static/js/features/module_manager/render.js:L205",
+          "location": "xkeen-ui/static/js/features/module_manager/render.js:L301",
           "control_type": "runtime-action",
           "accessible_label": "Восстановить"
         },
@@ -3520,7 +3525,7 @@
           "accessible_label": "Удалить"
         },
         {
-          "location": "xkeen-ui/static/js/features/module_manager/render.js:L205",
+          "location": "xkeen-ui/static/js/features/module_manager/render.js:L301",
           "control_type": "runtime-action",
           "accessible_label": "Удалить"
         },

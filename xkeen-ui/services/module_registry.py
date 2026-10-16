@@ -366,6 +366,40 @@ def _normalize_editor_variant(raw: object, profile: object) -> str:
     return normalized if normalized in EDITOR_VARIANTS else _editor_default_variant(profile)
 
 
+ENGINE_MODULE_IDS: tuple[str, ...] = ("engine.xray", "engine.mihomo")
+# The core each engine module manages: the name of the binary on the router.
+ENGINE_CORES: dict[str, str] = {"engine.xray": "xray", "engine.mihomo": "mihomo"}
+# The installer switched the module off because its core was not on the router.
+# The tile then says so once the core appears; a switch by hand forgets it.
+OFF_REASON_CORE_MISSING = "core_missing"
+
+
+def _is_executable(path: str) -> bool:
+    try:
+        return os.path.isfile(path) and os.access(path, os.X_OK)
+    except OSError:
+        return False
+
+
+def core_binary_available(core: str, *, which=shutil.which, environ=None) -> bool:
+    """Whether the binary of a core lies on the router.
+
+    One answer for the registry (a module without its core is unavailable)
+    and for the installer (a core that is not there is installed switched off).
+    """
+
+    env = environ if environ is not None else os.environ
+    if core == "xray":
+        return bool(_is_executable("/opt/sbin/xray") or _is_executable("/opt/bin/xray") or which("xray"))
+    if core == "mihomo":
+        return bool(
+            _is_executable("/opt/sbin/mihomo")
+            or _is_executable("/opt/bin/mihomo")
+            or which(str(env.get("MIHOMO_BIN", "mihomo")))
+        )
+    return bool(which(core))
+
+
 class ModuleRegistryError(ValueError):
     """Expected, client-safe error from a module registry operation."""
 
@@ -374,6 +408,15 @@ class ModuleRegistryError(ValueError):
         self.code = code
         self.status = status
         self.details = details
+
+
+def _last_engine_error(module_id: str) -> "ModuleRegistryError":
+    return ModuleRegistryError(
+        "last_engine_module",
+        "Это единственное включённое ядро: без него панели нечем управлять. Сначала включите другое ядро.",
+        status=409,
+        module_id=module_id,
+    )
 
 
 class ModuleRegistry:
@@ -771,6 +814,9 @@ class ModuleRegistry:
                     module_id=normalized_id,
                 )
 
+            if not enabled and self._is_last_engine(normalized_id, state):
+                raise _last_engine_error(normalized_id)
+
             if not enabled:
                 dependents = self._enabled_dependents(normalized_id, state)
                 if dependents:
@@ -807,6 +853,7 @@ class ModuleRegistry:
                     state[MODULE_SWITCH_BASELINE_KEY] = switch_baseline
                 state["modules"][normalized_id]["enabled"] = enabled
                 state["modules"][normalized_id].pop("blocked_reason", None)
+                state["modules"][normalized_id].pop("off_reason", None)
                 state["profile"] = CUSTOM_PROFILE
                 if definition.requires_restart:
                     state["restart_required"] = True
@@ -834,6 +881,29 @@ class ModuleRegistry:
                 },
                 changed,
             )
+
+    def check_disable(self, module_id: str) -> None:
+        """Refuse to switch off the last enabled engine before any other check.
+
+        The route asks this first: a refusal about the DNS guard or a running
+        core sends the owner to undo things only to be refused again.
+        """
+
+        normalized_id = self._require_known_module(module_id)
+        with self._lock:
+            state, _normalized = self._load_state_locked()
+            if self._is_last_engine(normalized_id, state):
+                raise _last_engine_error(normalized_id)
+
+    @staticmethod
+    def _is_last_engine(module_id: str, state: Mapping[str, Any]) -> bool:
+        if module_id not in ENGINE_MODULE_IDS:
+            return False
+        if not bool(state["modules"][module_id]["enabled"]):
+            return False
+        return not any(
+            bool(state["modules"][other]["enabled"]) for other in ENGINE_MODULE_IDS if other != module_id
+        )
 
     def set_profile(
         self,
@@ -1150,6 +1220,11 @@ class ModuleRegistry:
             item: dict[str, Any] = {"enabled": enabled}
             if isinstance(raw_item, dict) and isinstance(raw_item.get("blocked_reason"), str):
                 item["blocked_reason"] = raw_item["blocked_reason"].strip()
+            if isinstance(raw_item, dict) and raw_item.get("off_reason") is not None:
+                if not enabled and raw_item.get("off_reason") == OFF_REASON_CORE_MISSING:
+                    item["off_reason"] = OFF_REASON_CORE_MISSING
+                else:
+                    changed = True
             if last_error:
                 item["last_error"] = last_error
             modules[definition.id] = item
@@ -1309,8 +1384,9 @@ class ModuleRegistry:
                 blocked_reason = "deferred_disable_blocked"
             editor_required_by_engine = module_id == "tool.editor" and any(
                 bool(state["modules"][engine_id]["enabled"])
-                for engine_id in ("engine.xray", "engine.mihomo")
+                for engine_id in ENGINE_MODULE_IDS
             )
+            last_engine = self._is_last_engine(module_id, state)
 
             if not installed:
                 status = "not_installed"
@@ -1345,7 +1421,14 @@ class ModuleRegistry:
                 "system_requirements": requirements,
                 "size_bytes": definition.size_bytes,
                 "removable": definition.removable,
-                "can_disable": definition.can_disable and not editor_required_by_engine,
+                "can_disable": definition.can_disable and not editor_required_by_engine and not last_engine,
+                # Why the switch is locked, for the words under the tile.
+                "lock_reason": (
+                    "core" if not definition.can_disable
+                    else "editor_required" if editor_required_by_engine
+                    else "last_engine" if last_engine
+                    else None
+                ),
                 "requires_restart": definition.requires_restart,
                 "frontend": {
                     "bundles": list(definition.frontend_bundles),
@@ -1366,6 +1449,8 @@ class ModuleRegistry:
                 payload["last_error"] = last_error
             if isinstance(blocked_reason, str) and blocked_reason:
                 payload["blocked_reason"] = blocked_reason
+            if module_state.get("off_reason") == OFF_REASON_CORE_MISSING and not requested_enabled:
+                payload["off_reason"] = OFF_REASON_CORE_MISSING
 
             resolving.remove(module_id)
             results[module_id] = payload
@@ -1425,18 +1510,8 @@ class ModuleRegistry:
                     or self._executable_path("/opt/etc/init.d/S05xkeen")
                     or self._executable_path("/opt/etc/init.d/S99xkeen")
                 )
-            if requirement_id == "xray":
-                return bool(
-                    self._executable_path("/opt/sbin/xray")
-                    or self._executable_path("/opt/bin/xray")
-                    or self._which("xray")
-                )
-            if requirement_id == "mihomo":
-                return bool(
-                    self._executable_path("/opt/sbin/mihomo")
-                    or self._executable_path("/opt/bin/mihomo")
-                    or self._which(str(env.get("MIHOMO_BIN", "mihomo")))
-                )
+            if requirement_id in ("xray", "mihomo"):
+                return core_binary_available(requirement_id, which=self._which, environ=env)
             if requirement_id == SUBSCRIPTION_LINK_UTILITY_REQUIREMENT:
                 root = os.path.dirname(os.path.dirname(__file__))
                 return bool(

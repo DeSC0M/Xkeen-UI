@@ -25,6 +25,7 @@ if str(_PACKAGE_ROOT) not in sys.path:
     sys.path.insert(0, str(_PACKAGE_ROOT))
 
 from services.module_profile_plan import ProfilePlanError, build_profile_target, user_owned as _profile_user_owned
+from services.module_registry import ENGINE_CORES, OFF_REASON_CORE_MISSING, core_binary_available
 
 
 MODULE_IDS = (
@@ -524,6 +525,31 @@ def _keep_switches(document: dict, old_state, selected) -> dict:
             item = old_modules.get(module)
             if module != "core" and isinstance(item, dict) and item.get("enabled") is False:
                 result["modules"][module]["enabled"] = False
+                if item.get("off_reason") == OFF_REASON_CORE_MISSING:
+                    result["modules"][module]["off_reason"] = OFF_REASON_CORE_MISSING
+    return result
+
+
+def _engines_by_cores(document: dict, profile: str, selected, detect) -> dict:
+    """Full on a router with one core: the module of the missing core is
+    installed switched off. Both cores or none — both stay on, nothing is guessed.
+
+    Only for a first install or a profile chosen anew: an update keeps the
+    owner's switches as they are.
+    """
+
+    if profile not in ("full", "legacy-full"):
+        return document
+    engines = [module for module in ENGINE_CORES if module in selected]
+    found = [module for module in engines if detect(ENGINE_CORES[module])]
+    if len(found) != 1 or len(engines) < 2:
+        return document
+    result = json.loads(json.dumps(document))
+    for module in engines:
+        if module not in found:
+            result["modules"][module]["enabled"] = False
+            result["modules"][module]["off_reason"] = OFF_REASON_CORE_MISSING
+            print(f"[*] Ядро {ENGINE_CORES[module]} на роутере не найдено: его модуль установлен выключенным.")
     return result
 
 
@@ -536,6 +562,7 @@ def apply_profile(
     transaction_root=None,
     editor_variant=None,
     keep_switches: bool = False,
+    detect_core=core_binary_available,
 ) -> Path:
     source, target = Path(source).resolve(), Path(target).resolve()
     if source == target or source in target.parents or target in source.parents:
@@ -659,11 +686,15 @@ def apply_profile(
             for filename, document in profile_target.state_files.items():
                 if filename == "modules.json" and keep_switches:
                     document = _keep_switches(dict(document), old_state, selected)
+                elif filename == "modules.json":
+                    document = _engines_by_cores(dict(document), profile, selected, detect_core)
                 _write_json(target / filename, document)
         else:
             modules_document = _state(profile, selected, variant)
             if keep_switches:
                 modules_document = _keep_switches(modules_document, old_state, selected)
+            else:
+                modules_document = _engines_by_cores(modules_document, profile, selected, detect_core)
             _write_json(target / "modules.json", modules_document)
             _write_json(target / "module-installed.json", {"schema_version": 1, "modules": {
                 module: module in selected and all((target / marker).is_file() for marker in INSTALL_MARKERS[module])

@@ -64,6 +64,7 @@ _PLAN_BLOCKERS = frozenset(
         "module_conflict",
         "module_required_by",
         "module_engine_active",
+        "module_last_engine",
         "module_free_space",
     }
 )

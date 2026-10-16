@@ -71,8 +71,13 @@ def _panel(tmp: Path, name: str):
         record = panel.read_json(relative)
         record["profile"] = "mihomo-minimal"
         _write_json(panel.path(relative), record)
+    # The only engine switched off: a state the switch no longer makes (the last
+    # engine stays on), but older panels keep it, so it is written as it lies.
+    state = panel.read_json("modules.json")
+    state["profile"] = "custom"
+    state["modules"]["engine.mihomo"]["enabled"] = False
+    _write_json(panel.path("modules.json"), state)
     registry = ModuleRegistry(str(panel.state), which=lambda _name: "/bin/tool")
-    registry.set_enabled("engine.mihomo", False)
     # The panel has been restarted since: the switch is no longer pending.
     registry.initialize_for_startup()
     return panel, registry

@@ -315,11 +315,13 @@ def test_reversing_a_switch_keeps_the_restart_for_a_dependency_it_enabled(tmp_pa
     registry.initialize_for_startup()
 
     first, _ = registry.set_enabled("engine.xray", True)
+    registry.set_enabled("engine.mihomo", True)
     reversed_, _ = registry.set_enabled("engine.xray", False)
 
     assert "tool.editor" in first["configured_module_ids"]
     # The editor was switched on along the way and is still on: the set
-    # differs from the one the panel started with.
+    # differs from the one the panel started with. (Xray alone could not be
+    # switched off again: it would be the last engine.)
     assert "tool.editor" in reversed_["configured_module_ids"]
     assert reversed_["restart_required"] is True
     assert reversed_["profile"] == "custom"
@@ -893,10 +895,61 @@ def test_editor_reports_non_disableable_while_an_engine_depends_on_it(tmp_path):
     full = registry.get_registry()
     assert _module(full, "tool.editor")["can_disable"] is False
 
-    registry.set_enabled("engine.xray", False)
-    registry.set_enabled("engine.mihomo", False)
+    # Without an engine the editor is free; such a set comes only from a profile:
+    # the last engine cannot be switched off.
+    registry.set_profile("custom", module_ids=["core", "tool.editor"])
     reduced = registry.get_registry()
     assert _module(reduced, "tool.editor")["can_disable"] is True
+
+
+def test_an_engine_the_installer_left_off_says_why_until_switched_by_hand(tmp_path):
+    registry = _registry(tmp_path)
+    registry.get_registry()
+    state_path = tmp_path / "modules.json"
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    state["modules"]["engine.mihomo"] = {"enabled": False, "off_reason": "core_missing"}
+    # A mark on a module that is on means nothing and is dropped.
+    state["modules"]["engine.xray"] = {"enabled": True, "off_reason": "core_missing"}
+    state_path.write_text(json.dumps(state), encoding="utf-8")
+
+    payload = registry.get_registry()
+    assert _module(payload, "engine.mihomo")["off_reason"] == "core_missing"
+    assert "off_reason" not in _module(payload, "engine.xray")
+
+    registry.set_enabled("engine.mihomo", True)
+    registry.set_enabled("engine.mihomo", False)
+    assert "off_reason" not in _module(registry.get_registry(), "engine.mihomo")
+
+
+def test_the_last_enabled_engine_cannot_be_switched_off(tmp_path):
+    registry = _registry(tmp_path)
+    full = registry.get_registry()
+    assert _module(full, "engine.xray")["can_disable"] is True
+    assert _module(full, "engine.xray")["lock_reason"] is None
+
+    registry.set_enabled("engine.mihomo", False)
+    reduced = registry.get_registry()
+    xray = _module(reduced, "engine.xray")
+    assert xray["can_disable"] is False
+    assert xray["lock_reason"] == "last_engine"
+    # The switched-off engine is free to come back.
+    assert _module(reduced, "engine.mihomo")["lock_reason"] is None
+    assert _module(reduced, "tool.editor")["lock_reason"] == "editor_required"
+    assert _module(reduced, "core")["lock_reason"] == "core"
+
+    with pytest.raises(ModuleRegistryError) as refused:
+        registry.set_enabled("engine.xray", False)
+    assert refused.value.code == "last_engine_module"
+    with pytest.raises(ModuleRegistryError):
+        registry.check_disable("engine.xray")
+    registry.check_disable("tool.terminal")
+
+    # The mirror case: Mihomo alone.
+    registry.set_enabled("engine.mihomo", True)
+    registry.set_enabled("engine.xray", False)
+    assert _module(registry.get_registry(), "engine.mihomo")["lock_reason"] == "last_engine"
+    with pytest.raises(ModuleRegistryError):
+        registry.set_enabled("engine.mihomo", False)
 
 
 def test_stage1_closure_is_reflected_in_documentation():

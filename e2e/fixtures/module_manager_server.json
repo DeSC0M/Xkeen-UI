@@ -92,6 +92,7 @@
         "size_bytes": 1048576,
         "removable": false,
         "can_disable": false,
+        "lock_reason": "core",
         "requires_restart": false,
         "frontend": {
           "bundles": [
@@ -142,6 +143,7 @@
         "size_bytes": 1048576,
         "removable": true,
         "can_disable": true,
+        "lock_reason": null,
         "requires_restart": true,
         "frontend": {
           "bundles": [
@@ -189,6 +191,7 @@
         "size_bytes": 1048576,
         "removable": true,
         "can_disable": true,
+        "lock_reason": null,
         "requires_restart": true,
         "frontend": {
           "bundles": [],
@@ -216,7 +219,7 @@
     "ok": true,
     "release_version": "2.10.0",
     "catalog_url": "https://github.com/umarcheh001/Xkeen-UI/releases/download/v2.10.0/catalog.json",
-    "fetched_at": 1791463143.2334564,
+    "fetched_at": 1791463142.4934566,
     "freshness": "fresh",
     "stale_reason": null,
     "modules": [
@@ -532,7 +535,7 @@
     "min_updater": null,
     "freshness": "fresh",
     "stale_reason": null,
-    "fetched_at": 1791463143.2334564
+    "fetched_at": 1791463142.4934566
   },
   "panel_update_current": {
     "ok": true,
@@ -572,12 +575,12 @@
       "result": "running",
       "error_code": null,
       "error": null,
-      "started_at": 1791463143.6034563,
+      "started_at": 1791463142.8634565,
       "finished_at": null,
       "log": [
         {
           "step": "prepared",
-          "at": 1791463143.9734561
+          "at": 1791463143.2334564
         }
       ]
     },
@@ -592,16 +595,16 @@
       "result": "running",
       "error_code": null,
       "error": null,
-      "started_at": 1791463143.6034563,
+      "started_at": 1791463142.8634565,
       "finished_at": null,
       "log": [
         {
           "step": "prepared",
-          "at": 1791463143.9734561
+          "at": 1791463143.2334564
         },
         {
           "step": "downloading",
-          "at": 1791463144.343456
+          "at": 1791463143.6034563
         }
       ]
     },
@@ -616,20 +619,20 @@
       "result": "running",
       "error_code": null,
       "error": null,
-      "started_at": 1791463143.6034563,
+      "started_at": 1791463142.8634565,
       "finished_at": null,
       "log": [
         {
           "step": "prepared",
-          "at": 1791463143.9734561
+          "at": 1791463143.2334564
         },
         {
           "step": "downloading",
-          "at": 1791463144.343456
+          "at": 1791463143.6034563
         },
         {
           "step": "verifying",
-          "at": 1791463144.713456
+          "at": 1791463143.9734561
         }
       ]
     },
@@ -644,24 +647,24 @@
       "result": "running",
       "error_code": null,
       "error": null,
-      "started_at": 1791463143.6034563,
+      "started_at": 1791463142.8634565,
       "finished_at": null,
       "log": [
         {
           "step": "prepared",
-          "at": 1791463143.9734561
+          "at": 1791463143.2334564
         },
         {
           "step": "downloading",
-          "at": 1791463144.343456
+          "at": 1791463143.6034563
         },
         {
           "step": "verifying",
-          "at": 1791463144.713456
+          "at": 1791463143.9734561
         },
         {
           "step": "applying",
-          "at": 1791463145.0834558
+          "at": 1791463144.343456
         }
       ]
     },
@@ -676,28 +679,28 @@
       "result": "running",
       "error_code": null,
       "error": null,
-      "started_at": 1791463143.6034563,
+      "started_at": 1791463142.8634565,
       "finished_at": null,
       "log": [
         {
           "step": "prepared",
-          "at": 1791463143.9734561
+          "at": 1791463143.2334564
         },
         {
           "step": "downloading",
-          "at": 1791463144.343456
+          "at": 1791463143.6034563
         },
         {
           "step": "verifying",
-          "at": 1791463144.713456
+          "at": 1791463143.9734561
         },
         {
           "step": "applying",
-          "at": 1791463145.0834558
+          "at": 1791463144.343456
         },
         {
           "step": "state",
-          "at": 1791463145.4534557
+          "at": 1791463144.713456
         }
       ]
     },
@@ -712,32 +715,32 @@
       "result": "running",
       "error_code": null,
       "error": null,
-      "started_at": 1791463143.6034563,
+      "started_at": 1791463142.8634565,
       "finished_at": null,
       "log": [
         {
           "step": "prepared",
-          "at": 1791463143.9734561
+          "at": 1791463143.2334564
         },
         {
           "step": "downloading",
-          "at": 1791463144.343456
+          "at": 1791463143.6034563
         },
         {
           "step": "verifying",
-          "at": 1791463144.713456
+          "at": 1791463143.9734561
         },
         {
           "step": "applying",
-          "at": 1791463145.0834558
+          "at": 1791463144.343456
         },
         {
           "step": "state",
-          "at": 1791463145.4534557
+          "at": 1791463144.713456
         },
         {
           "step": "restarting",
-          "at": 1791463145.8234556
+          "at": 1791463145.0834558
         }
       ]
     },
@@ -752,36 +755,36 @@
       "result": "running",
       "error_code": null,
       "error": null,
-      "started_at": 1791463143.6034563,
+      "started_at": 1791463142.8634565,
       "finished_at": null,
       "log": [
         {
           "step": "prepared",
-          "at": 1791463143.9734561
+          "at": 1791463143.2334564
         },
         {
           "step": "downloading",
-          "at": 1791463144.343456
+          "at": 1791463143.6034563
         },
         {
           "step": "verifying",
-          "at": 1791463144.713456
+          "at": 1791463143.9734561
         },
         {
           "step": "applying",
-          "at": 1791463145.0834558
+          "at": 1791463144.343456
         },
         {
           "step": "state",
-          "at": 1791463145.4534557
+          "at": 1791463144.713456
         },
         {
           "step": "restarting",
-          "at": 1791463145.8234556
+          "at": 1791463145.0834558
         },
         {
           "step": "health",
-          "at": 1791463146.1934555
+          "at": 1791463145.4534557
         }
       ]
     },
@@ -796,40 +799,40 @@
       "result": "running",
       "error_code": null,
       "error": null,
-      "started_at": 1791463143.6034563,
+      "started_at": 1791463142.8634565,
       "finished_at": null,
       "log": [
         {
           "step": "prepared",
-          "at": 1791463143.9734561
+          "at": 1791463143.2334564
         },
         {
           "step": "downloading",
-          "at": 1791463144.343456
+          "at": 1791463143.6034563
         },
         {
           "step": "verifying",
-          "at": 1791463144.713456
+          "at": 1791463143.9734561
         },
         {
           "step": "applying",
-          "at": 1791463145.0834558
+          "at": 1791463144.343456
         },
         {
           "step": "state",
-          "at": 1791463145.4534557
+          "at": 1791463144.713456
         },
         {
           "step": "restarting",
-          "at": 1791463145.8234556
+          "at": 1791463145.0834558
         },
         {
           "step": "health",
-          "at": 1791463146.1934555
+          "at": 1791463145.4534557
         },
         {
           "step": "committed",
-          "at": 1791463146.5634553
+          "at": 1791463145.8234556
         }
       ]
     }
@@ -845,40 +848,40 @@
     "result": "committed",
     "error_code": null,
     "error": null,
-    "started_at": 1791463143.6034563,
-    "finished_at": 1791463146.9334552,
+    "started_at": 1791463142.8634565,
+    "finished_at": 1791463146.1934555,
     "log": [
       {
         "step": "prepared",
-        "at": 1791463143.9734561
+        "at": 1791463143.2334564
       },
       {
         "step": "downloading",
-        "at": 1791463144.343456
+        "at": 1791463143.6034563
       },
       {
         "step": "verifying",
-        "at": 1791463144.713456
+        "at": 1791463143.9734561
       },
       {
         "step": "applying",
-        "at": 1791463145.0834558
+        "at": 1791463144.343456
       },
       {
         "step": "state",
-        "at": 1791463145.4534557
+        "at": 1791463144.713456
       },
       {
         "step": "restarting",
-        "at": 1791463145.8234556
+        "at": 1791463145.0834558
       },
       {
         "step": "health",
-        "at": 1791463146.1934555
+        "at": 1791463145.4534557
       },
       {
         "step": "committed",
-        "at": 1791463146.5634553
+        "at": 1791463145.8234556
       }
     ]
   },
@@ -976,6 +979,7 @@
         "size_bytes": 1048576,
         "removable": false,
         "can_disable": false,
+        "lock_reason": "core",
         "requires_restart": false,
         "frontend": {
           "bundles": [
@@ -1026,6 +1030,7 @@
         "size_bytes": 1048576,
         "removable": true,
         "can_disable": true,
+        "lock_reason": null,
         "requires_restart": true,
         "frontend": {
           "bundles": [
@@ -1073,6 +1078,7 @@
         "size_bytes": 1048576,
         "removable": true,
         "can_disable": true,
+        "lock_reason": null,
         "requires_restart": true,
         "frontend": {
           "bundles": [],
@@ -1114,6 +1120,7 @@
         "size_bytes": 1048576,
         "removable": true,
         "can_disable": true,
+        "lock_reason": null,
         "requires_restart": true,
         "frontend": {
           "bundles": [
@@ -1146,7 +1153,7 @@
     "ok": true,
     "release_version": "2.10.0",
     "catalog_url": "https://github.com/umarcheh001/Xkeen-UI/releases/download/v2.10.0/catalog.json",
-    "fetched_at": 1791463143.2334564,
+    "fetched_at": 1791463142.4934566,
     "freshness": "fresh",
     "stale_reason": null,
     "modules": [
@@ -1425,17 +1432,17 @@
     "result": "interrupted",
     "error_code": "operation_interrupted",
     "error": "the module operation was interrupted",
-    "started_at": 1791463148.043455,
-    "finished_at": 1791463149.1534545,
+    "started_at": 1791463146.5634553,
+    "finished_at": 1791463147.673455,
     "recovered": true,
     "log": [
       {
         "step": "prepared",
-        "at": 1791463148.4134548
+        "at": 1791463146.9334552
       },
       {
         "step": "downloading",
-        "at": 1791463148.7834547
+        "at": 1791463147.303455
       }
     ]
   },
@@ -1450,17 +1457,17 @@
     "result": "interrupted",
     "error_code": "operation_interrupted",
     "error": "the module operation was interrupted",
-    "started_at": 1791463148.043455,
-    "finished_at": 1791463149.1534545,
+    "started_at": 1791463146.5634553,
+    "finished_at": 1791463147.673455,
     "recovered": true,
     "log": [
       {
         "step": "prepared",
-        "at": 1791463148.4134548
+        "at": 1791463146.9334552
       },
       {
         "step": "downloading",
-        "at": 1791463148.7834547
+        "at": 1791463147.303455
       }
     ]
   },
@@ -1475,16 +1482,16 @@
     "result": "interrupted",
     "error_code": "operation_cancelled",
     "error": "the module operation was cancelled",
-    "started_at": 1791463150.2634542,
-    "finished_at": 1791463151.3734539,
+    "started_at": 1791463148.043455,
+    "finished_at": 1791463149.1534545,
     "log": [
       {
         "step": "prepared",
-        "at": 1791463150.633454
+        "at": 1791463148.4134548
       },
       {
         "step": "downloading",
-        "at": 1791463151.003454
+        "at": 1791463148.7834547
       }
     ]
   },
@@ -1500,38 +1507,38 @@
     "result": "rolled_back",
     "error_code": "operation_interrupted",
     "error": "the module operation was interrupted",
-    "started_at": 1791463152.4834535,
-    "finished_at": 1791463155.8134525,
+    "started_at": 1791463149.5234544,
+    "finished_at": 1791463152.8534534,
     "recovered": true,
     "restart_required": true,
     "log": [
       {
         "step": "prepared",
-        "at": 1791463152.8534534
+        "at": 1791463149.8934543
       },
       {
         "step": "downloading",
-        "at": 1791463153.2234533
+        "at": 1791463150.2634542
       },
       {
         "step": "verifying",
-        "at": 1791463153.963453
+        "at": 1791463151.003454
       },
       {
         "step": "applying",
-        "at": 1791463154.333453
+        "at": 1791463151.3734539
       },
       {
         "step": "state",
-        "at": 1791463154.7034528
+        "at": 1791463151.7434537
       },
       {
         "step": "restarting",
-        "at": 1791463155.0734527
+        "at": 1791463152.1134536
       },
       {
         "step": "health",
-        "at": 1791463155.4434526
+        "at": 1791463152.4834535
       }
     ]
   },
@@ -1546,38 +1553,38 @@
     "result": "rolled_back",
     "error_code": "operation_interrupted",
     "error": "the module operation was interrupted",
-    "started_at": 1791463152.4834535,
-    "finished_at": 1791463155.8134525,
+    "started_at": 1791463149.5234544,
+    "finished_at": 1791463152.8534534,
     "recovered": true,
     "restart_required": true,
     "log": [
       {
         "step": "prepared",
-        "at": 1791463152.8534534
+        "at": 1791463149.8934543
       },
       {
         "step": "downloading",
-        "at": 1791463153.2234533
+        "at": 1791463150.2634542
       },
       {
         "step": "verifying",
-        "at": 1791463153.963453
+        "at": 1791463151.003454
       },
       {
         "step": "applying",
-        "at": 1791463154.333453
+        "at": 1791463151.3734539
       },
       {
         "step": "state",
-        "at": 1791463154.7034528
+        "at": 1791463151.7434537
       },
       {
         "step": "restarting",
-        "at": 1791463155.0734527
+        "at": 1791463152.1134536
       },
       {
         "step": "health",
-        "at": 1791463155.4434526
+        "at": 1791463152.4834535
       }
     ]
   },
@@ -1592,40 +1599,40 @@
     "result": "rollback_failed",
     "error_code": "operation_health_failed",
     "error": "the panel did not become healthy after the module operation",
-    "started_at": 1791463156.9234521,
-    "finished_at": 1791463160.623451,
+    "started_at": 1791463153.2234533,
+    "finished_at": 1791463156.9234521,
     "log": [
       {
         "step": "prepared",
-        "at": 1791463157.293452
+        "at": 1791463153.5934532
       },
       {
         "step": "downloading",
-        "at": 1791463157.663452
+        "at": 1791463153.963453
       },
       {
         "step": "verifying",
-        "at": 1791463158.4034517
+        "at": 1791463154.7034528
       },
       {
         "step": "applying",
-        "at": 1791463158.7734516
+        "at": 1791463155.0734527
       },
       {
         "step": "state",
-        "at": 1791463159.1434515
+        "at": 1791463155.4434526
       },
       {
         "step": "restarting",
-        "at": 1791463159.5134513
+        "at": 1791463155.8134525
       },
       {
         "step": "health",
-        "at": 1791463159.8834512
+        "at": 1791463156.1834524
       },
       {
         "step": "rolling_back",
-        "at": 1791463160.253451
+        "at": 1791463156.5534523
       }
     ],
     "failed_path": "services/ws_pty.py"
@@ -1723,6 +1730,7 @@
         "size_bytes": 1048576,
         "removable": false,
         "can_disable": false,
+        "lock_reason": "core",
         "requires_restart": false,
         "frontend": {
           "bundles": [
@@ -1772,7 +1780,8 @@
         ],
         "size_bytes": 1048576,
         "removable": true,
-        "can_disable": true,
+        "can_disable": false,
+        "lock_reason": "last_engine",
         "requires_restart": true,
         "frontend": {
           "bundles": [
@@ -1820,6 +1829,7 @@
         "size_bytes": 1048576,
         "removable": true,
         "can_disable": false,
+        "lock_reason": "editor_required",
         "requires_restart": true,
         "frontend": {
           "bundles": [],
@@ -1852,7 +1862,7 @@
     "min_updater": null,
     "freshness": "fresh",
     "stale_reason": null,
-    "fetched_at": 1791463163.2134502
+    "fetched_at": 1791463158.0334518
   },
   "panel_update_plan": {
     "ok": true,
