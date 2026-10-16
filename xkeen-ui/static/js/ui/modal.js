@@ -354,8 +354,8 @@
     // (protects against cached/old CSS that can leave the handle in normal flow).
     try {
       handleEl.style.position = 'absolute';
-      handleEl.style.right = (modalEl && modalEl.id === 'xkeen-routing-help-modal') ? '10px' : '6px';
-      handleEl.style.bottom = (modalEl && modalEl.id === 'xkeen-routing-help-modal') ? '10px' : '6px';
+      handleEl.style.right = '6px';
+      handleEl.style.bottom = '6px';
       handleEl.style.left = 'auto';
       handleEl.style.top = 'auto';
       handleEl.style.zIndex = '50';

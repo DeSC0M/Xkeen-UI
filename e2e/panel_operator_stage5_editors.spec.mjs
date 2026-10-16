@@ -68,12 +68,6 @@ async function openBalancerHelp(page) {
   await expect(page.locator('#routing-balancer-help-modal')).toBeVisible();
 }
 
-async function openEditorHelp(page) {
-  await page.locator('#json-editor-format-btn').focus();
-  await page.evaluate(() => window.xkeenOpenCmHelp({}));
-  await expect(page.locator('#xkeen-cm-help-drawer')).toHaveClass(/\bis-open\b/);
-}
-
 async function switchToMonaco(page, { tab, select, host }) {
   await selectPanelView(page, tab);
   if (tab === 'mihomo') {
@@ -846,42 +840,32 @@ test.describe('Operator Console Stage 5 editor workbench contract', () => {
     expectWorkbench(await workbenchGeometry(page, 'json-editor-modal'), true);
   });
 
-  test('editor help is a desktop sidecar and never covers the JSON action row', async ({ page }) => {
+  test('editor toolbar has no obsolete help drawer or help button', async ({ page }) => {
     await openPanel(page, 'dark');
     await openJsonEditor(page);
-    await openEditorHelp(page);
-
-    const geometry = await page.evaluate(() => {
-      const rect = (selector) => {
-        const value = document.querySelector(selector)?.getBoundingClientRect();
-        return value && { left: value.left, right: value.right, top: value.top, bottom: value.bottom };
-      };
-      return { drawer: rect('#xkeen-cm-help-drawer'), footer: rect('#json-editor-modal .modal-actions') };
-    });
-    expect(geometry.drawer.left).toBeGreaterThanOrEqual(geometry.footer.right);
-
-    const sourceAction = page.locator('#json-editor-format-btn');
-    await sourceAction.focus();
-    await page.evaluate(() => window.xkeenOpenCmHelp({}));
-    await expect(page.locator('#xkeen-cm-help-drawer')).toHaveClass(/\bis-open\b/);
-    await expect(page.locator('.xkeen-cm-help-close')).toBeFocused();
-
-    await page.keyboard.press('Escape');
-    await expect(page.locator('#xkeen-cm-help-drawer')).not.toHaveClass(/\bis-open\b/);
-    await expect(sourceAction).toBeFocused();
+    await expect(page.locator('.xkeen-cm-tool[aria-label="Справка"]')).toHaveCount(0);
+    await expect(page.locator('.xkeen-cm-tool[aria-label*="комментарии"]')).toHaveCount(0);
+    await expect(page.locator('#xkeen-cm-help-drawer')).toHaveCount(0);
+    await expect(page.locator('#xkeen-routing-help-modal')).toHaveCount(0);
   });
 
-  test('editor help becomes a fullscreen mobile workbench', async ({ page }) => {
-    await openPanel(page, 'light', { width: 390, height: 844 });
-    await openJsonEditor(page);
-    await openEditorHelp(page);
+  test('Mihomo engine selector stays compact next to editor actions', async ({ page }) => {
+    await openPanel(page, 'dark');
+    await selectPanelView(page, 'mihomo');
+    await page.locator('#mihomo-clash-tab-config').click();
 
-    const geometry = await page.locator('#xkeen-cm-help-drawer').evaluate((drawer) => {
-      const rect = drawer.getBoundingClientRect();
-      return { width: rect.width, height: rect.height, viewportWidth: window.innerWidth, viewportHeight: window.innerHeight };
+    const metrics = await page.locator('#mihomo-editor-engine-select').evaluate((select) => {
+      const control = select.getBoundingClientRect();
+      const group = select.closest('.xk-editor-engine')?.getBoundingClientRect();
+      return {
+        width: control.width,
+        groupWidth: group?.width || 0,
+        toolbarWidth: select.closest('.xk-mihomo-toolbararea')?.getBoundingClientRect().width || 0,
+      };
     });
-    expect(geometry.width).toBeGreaterThanOrEqual(geometry.viewportWidth - 1);
-    expect(geometry.height).toBeGreaterThanOrEqual(geometry.viewportHeight - 1);
-    await expect(page.locator('.xkeen-cm-help-close')).toBeVisible();
+
+    expect(metrics.width).toBeLessThanOrEqual(128);
+    expect(metrics.groupWidth).toBeLessThanOrEqual(128);
+    expect(metrics.toolbarWidth).toBeGreaterThan(metrics.groupWidth);
   });
 });

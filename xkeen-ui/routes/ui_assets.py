@@ -132,7 +132,6 @@ _BASELINE_SECURITY_HEADERS = {
 # Static pages that are loaded inside modal iframes within the same UI.
 # For these paths X-Frame-Options is set to SAMEORIGIN instead of DENY.
 _SAMEORIGIN_FRAME_PATHS: frozenset[str] = frozenset({
-    "/static/routing-comments-help.html",
 })
 
 

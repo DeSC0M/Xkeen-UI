@@ -627,9 +627,7 @@
     effectiveItems.forEach((it) => {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'xkeen-cm-tool'
-        + ((it && (it.id === 'help' || it.isHelp)) ? ' is-help' : '')
-        + ((it && (it.id === 'help_comments' || it.isCommentsHelp)) ? ' is-comments-help' : '');
+      btn.className = 'xkeen-cm-tool';
       btn.setAttribute('aria-label', it.label || it.id || 'Action');
       if (it.id) btn.dataset.actionId = String(it.id);
       if (it.command) btn.dataset.command = String(it.command);
@@ -647,7 +645,7 @@
         event.stopPropagation();
         if (btn.disabled) return;
         runAction(raw, it, o);
-        const shouldRefocus = !(it && (it.command === 'findPersistent' || it.command === 'find' || it.command === 'replace' || it.isHelp || it.id === 'help'));
+        const shouldRefocus = !(it && (it.command === 'findPersistent' || it.command === 'find' || it.command === 'replace'));
         if (shouldRefocus) {
           try { if (isFn(raw.focus)) raw.focus(); } catch (e) {}
         }

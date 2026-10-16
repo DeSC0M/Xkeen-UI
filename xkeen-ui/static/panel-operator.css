@@ -3407,6 +3407,9 @@ body.panel-page .xk-mihomo-toolbararea {
 
 body.panel-page .xk-editor-engine {
   min-height: var(--op-control-h);
+  width: max-content;
+  min-width: 0;
+  flex: 0 0 auto;
   padding: 0;
   border: 0 !important;
   border-radius: 0;
@@ -3419,7 +3422,10 @@ body.panel-page .xk-editor-engine-label {
 }
 
 body.panel-page .xk-editor-engine-select {
+  width: auto !important;
   min-width: 106px;
+  max-width: 128px;
+  padding-right: 24px !important;
 }
 
 body.panel-page :is(.xk-icon-btn, .xkeen-cm-tool, .btn-icon) {
@@ -16539,171 +16545,6 @@ body.panel-page .modal[data-operator-modal-family="drawer-help"] .modal-content 
   width: min(680px, calc(100vw - 36px));
   height: min(100%, calc(100dvh - 36px));
 }
-
-/* Routing JSONC help is created at runtime. Keep the document inside the same
- * neutral drawer family instead of its legacy navy page/frame treatment. */
-body.panel-page #xkeen-routing-help-modal .xk-routing-help-shell {
-  grid-template-rows: 50px minmax(0, 1fr);
-  width: min(820px, calc(100vw - 36px));
-  height: min(900px, calc(100dvh - 36px));
-}
-
-body.panel-page #xkeen-routing-help-modal .xk-routing-help-body {
-  display: flex;
-  min-height: 0;
-  padding: 0 !important;
-  overflow: hidden;
-}
-
-body.panel-page #xkeen-routing-help-modal .xk-routing-help-host {
-  display: block;
-  flex: 1 1 auto;
-  width: 100%;
-  min-height: 0;
-  overflow: auto;
-  overscroll-behavior: contain;
-  border: 0;
-  border-radius: 0;
-  background: var(--op-surface-2);
-}
-
-body.panel-page #xkeen-routing-help-modal .modal-actions {
-  justify-content: flex-end;
-}
-
-body.panel-page #xkeen-routing-help-modal .xk-routing-help-fallback {
-  display: flex;
-  height: 100%;
-  padding: 28px;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  border: 0;
-  background: var(--op-surface-2);
-  color: var(--op-text);
-  text-align: center;
-}
-
-body.panel-page #xkeen-routing-help-modal .xk-routing-help-fallback-title {
-  margin-bottom: 8px;
-  color: var(--op-text-strong);
-  font-weight: 670;
-}
-
-body.panel-page #xkeen-routing-help-modal .xk-routing-help-fallback-hint {
-  max-width: 520px;
-  margin: 0 auto 16px;
-  color: var(--op-muted);
-  line-height: 1.45;
-}
-
-body.panel-page #xkeen-routing-help-modal .xk-routing-help-fallback-link {
-  display: inline-flex;
-  min-height: 32px;
-  padding: 0 12px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--op-border-strong);
-  border-radius: var(--op-radius-sm);
-  background: var(--op-surface);
-  color: var(--op-accent-hover);
-  font-weight: 630;
-  text-decoration: none;
-}
-
-body.panel-page #xkeen-routing-help-modal .xk-routing-help-fallback-link:hover {
-  border-color: var(--op-accent);
-  background: var(--op-surface-hover);
-}
-
-/* Stage 5 — the dynamic CodeMirror help is a workbench sidecar, rather than
- * a second full-screen overlay. On wide viewports the open editor is moved
- * into the remaining canvas, so the help never covers its Save/Cancel row. */
-body.panel-page {
-  --op-editor-help-drawer-width: min(420px, 30vw);
-}
-
-body.panel-page .xkeen-cm-help-overlay {
-  background: transparent !important;
-  pointer-events: none !important;
-}
-
-body.panel-page .xkeen-cm-help-drawer {
-  box-sizing: border-box;
-  width: var(--op-editor-help-drawer-width);
-  max-width: calc(100vw - 36px);
-  height: calc(100dvh - 36px);
-  max-height: calc(100dvh - 36px);
-  top: 18px;
-  right: 18px;
-  border: 1px solid var(--op-border) !important;
-  border-radius: var(--op-radius) !important;
-  background: #dbe5f2 !important;
-  box-shadow: var(--op-shadow-float) !important;
-  color: var(--op-text) !important;
-}
-
-body.panel-page .xkeen-cm-help-head {
-  box-sizing: border-box;
-  flex: 0 0 50px;
-  min-height: 50px;
-  padding: 0 12px;
-  border-bottom: 1px solid var(--op-border) !important;
-  background: var(--op-surface-2) !important;
-}
-
-body.panel-page .xkeen-cm-help-title {
-  color: var(--op-text-strong);
-  font-size: calc(13px * var(--xk-font-scale, 1));
-  letter-spacing: 0;
-}
-
-body.panel-page .xkeen-cm-help-close {
-  display: inline-grid;
-  width: 32px;
-  height: 32px;
-  place-items: center;
-  border: 1px solid var(--op-border) !important;
-  border-radius: var(--op-control-radius) !important;
-  background: transparent !important;
-  color: var(--op-text) !important;
-}
-
-body.panel-page .xkeen-cm-help-close:hover {
-  border-color: var(--op-border-strong) !important;
-  background: var(--op-surface-3) !important;
-}
-
-body.panel-page .xkeen-cm-help-body {
-  min-height: 0;
-  padding: 12px;
-  overscroll-behavior: contain;
-}
-
-body.panel-page .xkeen-cm-help-section {
-  margin: 0 0 8px;
-  padding: 10px 0;
-  border: 0 !important;
-  border-bottom: 1px solid var(--op-border) !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-}
-
-body.panel-page .xkeen-cm-help-section:last-child {
-  margin-bottom: 0;
-  border-bottom: 0 !important;
-}
-
-body.panel-page.xk-editor-help-open .modal[data-operator-modal-family="editor-workbench"]:not(.hidden) {
-  justify-content: flex-start;
-  padding-right: calc(18px + var(--op-editor-help-drawer-width));
-}
-
-body.panel-page.xk-editor-help-open :is(#json-editor-modal, #fm-editor-modal, #xray-snapshot-modal):not(.hidden) .modal-content {
-  width: min(1180px, calc(100vw - 54px - var(--op-editor-help-drawer-width)));
-  max-width: calc(100vw - 54px - var(--op-editor-help-drawer-width));
-}
-
 /* Stage 5 — presentation geometry belongs to the scoped modal layer. These
  * utility hooks replace static template max-width, gap and margin values while
  * leaving feature IDs, data hooks and dynamic visibility styles untouched. */
@@ -16918,38 +16759,6 @@ body.panel-page :is(#json-editor-modal, #fm-editor-modal) :is(#json-editor-save-
   body.panel-page #outbounds-pool-modal .xk-pool-preview-panel {
     border-top: 1px solid var(--op-border) !important;
     border-left: 0 !important;
-  }
-
-  body.panel-page.xk-editor-help-open .modal[data-operator-modal-family="editor-workbench"]:not(.hidden) {
-    align-items: flex-start;
-    padding: 18px 18px calc(18px + min(42dvh, 380px));
-  }
-
-  body.panel-page.xk-editor-help-open :is(#json-editor-modal, #fm-editor-modal, #xray-snapshot-modal):not(.hidden) .modal-content {
-    width: min(1180px, calc(100vw - 36px));
-    max-width: calc(100vw - 36px);
-    min-height: 0;
-    height: calc(100dvh - 36px - min(42dvh, 380px));
-  }
-
-  body.panel-page .xkeen-cm-help-drawer {
-    top: auto;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    width: 100vw;
-    max-width: 100vw;
-    height: min(42dvh, 380px);
-    max-height: min(42dvh, 380px);
-    border-right: 0 !important;
-    border-bottom: 0 !important;
-    border-left: 0 !important;
-    border-radius: var(--op-radius) var(--op-radius) 0 0 !important;
-    transform: translateY(100%);
-  }
-
-  body.panel-page .xkeen-cm-help-drawer.is-open {
-    transform: translateY(0);
   }
 
   body.panel-page #view-commands #commands-body {
@@ -17354,26 +17163,6 @@ body.panel-page :is(#json-editor-modal, #fm-editor-modal) :is(#json-editor-save-
     overscroll-behavior: contain;
   }
 
-  body.panel-page.xk-editor-help-open .modal[data-operator-modal-family="editor-workbench"]:not(.hidden) {
-    padding: 0;
-  }
-
-  body.panel-page.xk-editor-help-open :is(#json-editor-modal, #fm-editor-modal, #xray-snapshot-modal):not(.hidden) .modal-content {
-    width: 100vw;
-    max-width: 100vw;
-    height: 100dvh;
-  }
-
-  body.panel-page .xkeen-cm-help-drawer {
-    inset: 0;
-    width: 100vw;
-    max-width: 100vw;
-    height: 100dvh;
-    max-height: 100dvh;
-    border: 0 !important;
-    border-radius: 0 !important;
-  }
-
   body.panel-page .modal[data-operator-modal-family] {
     align-items: stretch;
     padding: 0;
@@ -17565,26 +17354,6 @@ body.panel-page :is(#json-editor-modal, #fm-editor-modal) :is(#json-editor-save-
 
   body.panel-page #mihomo-validation-modal .xk-mihomo-validation-footer-actions {
     display: none;
-  }
-
-  body.panel-page #xkeen-routing-help-modal .xk-routing-help-shell {
-    position: relative !important;
-    inset: auto !important;
-    width: 100% !important;
-    max-width: none !important;
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    min-height: 100dvh !important;
-    transform: none !important;
-    border-width: 0 !important;
-    border-radius: 0 !important;
-    grid-template-rows: 50px minmax(0, 1fr);
-  }
-
-  body.panel-page #xkeen-routing-help-modal {
-    align-items: stretch !important;
-    justify-content: flex-start !important;
-    overflow: hidden !important;
   }
 
   body.panel-page .modal[data-operator-modal-family="confirm-compact-form"] .modal-content {
@@ -18227,12 +17996,12 @@ body.panel-page :is(#json-editor-modal, #fm-editor-modal) :is(#json-editor-save-
   }
 
   body.panel-page .xk-editor-engine {
-    flex: 0 0 112px;
-    min-width: 112px;
+    flex: 0 0 auto;
+    min-width: 0;
   }
 
   body.panel-page .xk-editor-engine-select {
-    width: 100%;
+    width: auto !important;
   }
 
   body.panel-page #routing-body,

@@ -32,14 +32,11 @@ parameter hints получают непрозрачную operator surface, ко
 
 3 августа расположение меток уточнено по рабочему образцу главного Xray editor: `Комментарии` и `Schema` перенесены из верхней toolbar в компактную runtime-строку непосредственно под полотном JSON. Верхняя строка оставляет только selector движка, а нижняя мета-строка получает общий разделитель с editor; так статусы остаются видимыми, но не создают пустоты над рабочей областью.
 
-## 3. Responsive editor help drawer/workbench — закрыто
+## 3. Устаревшая справка редактора — удалено
 
-Динамический CodeMirror help (`#xkeen-cm-help-drawer`) теперь работает как scoped workbench sidecar:
-
-- на широком экране drawer имеет нейтральную поверхность и ширину до 420 px; открытый JSON/file/snapshot workbench сдвигается в свободную область, поэтому drawer не перекрывает его `save/cancel` footer;
-- на tablet drawer становится нижней панелью, а workbench занимает оставшуюся верхнюю область, сохраняя доступными header, editor и action row;
-- на mobile help сам становится fullscreen workbench с фиксированным 50 px header и собственной прокручиваемой body;
-- overlay больше не затемняет всю рабочую область и не перехватывает клики вне drawer; закрытие доступно кнопкой и `Escape`, после закрытия фокус возвращается на исходный toolbar action.
+Кнопка справки редактора, её боковая панель, JSONC-окно Routing и статический
+документ удалены. Поиск, замена, комментарии, сравнение и полноэкранный режим
+остаются отдельными toolbar-действиями без дублирующего справочного UI.
 
 ## 4. Fullscreen сложных модалов на mobile — закрыто
 
@@ -92,7 +89,7 @@ visibility/state inline hooks не менялись.
 
 - `data-operator-modal-family="editor-workbench"` не переопределяет API/modal lifecycle и остаётся общим family hook;
 - close/cancel nodes остаются в DOM; presentation-слой по-прежнему скрывает только визуальные дубликаты;
-- editor engine selectors и все toolbar actions остаются доступными по прежним ID и `aria-label`;
+- editor engine selectors и рабочие toolbar actions остаются доступными по прежним ID и `aria-label`;
 - CSS находится в секции `6. MODALS` `xkeen-ui/static/panel-operator.css`, полностью scoped к `body.panel-page`; `styles.css` не менялся.
 
 ## Проверка

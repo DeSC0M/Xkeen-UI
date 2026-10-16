@@ -139,7 +139,7 @@ def test_stage5_editor_tasks_are_documented_as_closed():
         "Статус: **семь связанных задач Этапа 5 закрыты 2–4 августа 2026 года**.",
         "## 1. Общий editor/workbench contract — закрыто",
         "## 2. Comments/schema status labels — закрыто",
-        "## 3. Responsive editor help drawer/workbench — закрыто",
+        "## 3. Устаревшая справка редактора — удалено",
         "## 4. Fullscreen сложных модалов на mobile — закрыто",
         "## 5. Четыре modal family применены ко всем 50 окнам — закрыто",
         "## Сохранённые контракты",
@@ -151,31 +151,18 @@ def test_stage5_editor_tasks_are_documented_as_closed():
     assert "panel-operator-stage5-editor-workbench.md" in index
 
 
-def test_stage5_editor_help_is_a_responsive_workbench_sidecar():
+def test_stage5_editor_help_surface_has_been_removed():
     css = CSS.read_text(encoding="utf-8")
     toolbar = (ROOT / "xkeen-ui/static/js/ui/editor_toolbar.js").read_text(encoding="utf-8")
+    actions = (ROOT / "xkeen-ui/static/js/ui/editor_actions.js").read_text(encoding="utf-8")
+    routing = (ROOT / "xkeen-ui/static/js/features/routing.js").read_text(encoding="utf-8")
 
-    for fragment in (
-        "Stage 5 — the dynamic CodeMirror help is a workbench sidecar",
-        "--op-editor-help-drawer-width: min(420px, 30vw);",
-        "body.panel-page.xk-editor-help-open .modal[data-operator-modal-family=\"editor-workbench\"]:not(.hidden)",
-        "body.panel-page.xk-editor-help-open :is(#json-editor-modal, #fm-editor-modal, #xray-snapshot-modal):not(.hidden) .modal-content",
-        "height: min(42dvh, 380px);",
-        "transform: translateY(100%);",
-        "body.panel-page .xkeen-cm-help-drawer {",
-        "inset: 0;",
-        "height: 100dvh;",
-    ):
-        assert fragment in css
-
-    for fragment in (
-        "drawer.dataset.operatorWorkbenchSidecar = 'editor-help';",
-        "drawer.setAttribute('aria-hidden', 'true');",
-        "document.body.classList.add('xk-editor-help-open');",
-        "document.body.classList.remove('xk-editor-help-open');",
-        "drawer._xkeenReturnFocus",
-    ):
-        assert fragment in toolbar
+    assert "xkeen-cm-help-drawer" not in css
+    assert "xkeen-cm-help-drawer" not in toolbar
+    assert "xkeenOpenCmHelp" not in toolbar
+    assert "help_comments" not in actions
+    assert "help_comments" not in routing
+    assert "openHelp" not in routing
 
 
 def test_stage5_modal_geometry_is_scoped_and_empty_or_error_restores_auto_height():

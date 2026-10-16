@@ -38,15 +38,6 @@ def test_ui_assets_exposes_conservative_baseline_security_headers():
     assert 'resp.headers.setdefault(key, value)' in text
 
 
-def test_routing_comments_help_static_page_allows_same_origin_framing():
-    app = Flask(__name__)
-
-    with app.test_request_context("/static/routing-comments-help.html?v=20260806a"):
-        resp = apply_response_security_headers(Response(""))
-
-    assert resp.headers["X-Frame-Options"] == "SAMEORIGIN"
-
-
 def test_regular_static_assets_keep_deny_framing_baseline():
     app = Flask(__name__)
 
@@ -54,20 +45,3 @@ def test_regular_static_assets_keep_deny_framing_baseline():
         resp = apply_response_security_headers(Response(""))
 
     assert resp.headers["X-Frame-Options"] == "DENY"
-
-
-def test_routing_comments_help_modal_uses_inline_shadow_dom_loader():
-    text = Path("xkeen-ui/static/js/features/routing.js").read_text(encoding="utf-8")
-
-    assert "const HELP_PATH = '/static/routing-comments-help.html';" in text
-    assert "const HELP_URL = HELP_PATH + '?v=20260806a';" in text
-    assert "modal.dataset.operatorModalFamily = 'drawer-help';" in text
-    assert "function showHelpFallback()" in text
-    assert "function renderRoutingHelpInline(htmlText)" in text
-    assert "function highlightRoutingHelpCodeBlocks(root)" in text
-    assert "fetch(HELP_URL, { cache: 'no-store', credentials: 'same-origin' })" in text
-    assert "helpHost.className = 'xk-routing-help-host';" in text
-    assert "attachShadow({ mode: 'open' })" in text
-    assert "new DOMParser()" in text
-    assert "05_routing" in text
-    assert "document.createElement('iframe')" not in text

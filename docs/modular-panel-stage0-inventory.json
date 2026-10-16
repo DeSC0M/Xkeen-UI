@@ -37,7 +37,7 @@
       ],
       "removable": false,
       "unit_count": 560,
-      "size_bytes": 7485459,
+      "size_bytes": 7473848,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -86,7 +86,7 @@
       ],
       "removable": true,
       "unit_count": 138,
-      "size_bytes": 3833238,
+      "size_bytes": 3819441,
       "kind_counts": {
         "backend_route": 13,
         "backend_service": 20,
@@ -175,7 +175,7 @@
       ],
       "removable": true,
       "unit_count": 25,
-      "size_bytes": 835500,
+      "size_bytes": 828158,
       "kind_counts": {
         "frontend_javascript": 3,
         "frontend_ui": 22
@@ -1133,7 +1133,7 @@
       "module_id": "core",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/ui_assets.py",
-      "size_bytes": 39966,
+      "size_bytes": 39924,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -5831,7 +5831,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_panel_operator_routing_comments_help.py",
-      "size_bytes": 2635,
+      "size_bytes": 591,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -6011,7 +6011,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_panel_operator_stage5_editors.py",
-      "size_bytes": 9800,
+      "size_bytes": 9271,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -6910,7 +6910,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_security_headers_contracts.py",
-      "size_bytes": 3279,
+      "size_bytes": 2084,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -10535,7 +10535,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/modules_update_channel_visibility.spec.mjs",
-      "size_bytes": 2984,
+      "size_bytes": 3462,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -10881,7 +10881,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/panel_operator_stage5_editors.spec.mjs",
-      "size_bytes": 43056,
+      "size_bytes": 42284,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11327,7 +11327,7 @@
       "module_id": "core",
       "kind": "frontend_ui",
       "path": "xkeen-ui/static/js/ui/modal.js",
-      "size_bytes": 40862,
+      "size_bytes": 40730,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11728,7 +11728,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/modules-manager.css",
-      "size_bytes": 41989,
+      "size_bytes": 44688,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11782,7 +11782,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/panel-operator.css",
-      "size_bytes": 755531,
+      "size_bytes": 748933,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11800,7 +11800,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/styles.css",
-      "size_bytes": 896778,
+      "size_bytes": 893302,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -18185,7 +18185,7 @@
       "module_id": "engine.xray",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/routing.js",
-      "size_bytes": 233824,
+      "size_bytes": 220027,
       "depends_on": [
         "core",
         "tool.editor"
@@ -21301,7 +21301,7 @@
       "module_id": "tool.editor",
       "kind": "frontend_ui",
       "path": "xkeen-ui/static/js/ui/editor_actions.js",
-      "size_bytes": 25974,
+      "size_bytes": 25775,
       "depends_on": [
         "core"
       ],
@@ -21407,7 +21407,7 @@
       "module_id": "tool.editor",
       "kind": "frontend_ui",
       "path": "xkeen-ui/static/js/ui/editor_toolbar.js",
-      "size_bytes": 11618,
+      "size_bytes": 4475,
       "depends_on": [
         "core"
       ],
@@ -31041,7 +31041,7 @@
       "evidence": {
         "tool.editor": {
           "unit_count": 25,
-          "size_bytes": 835500
+          "size_bytes": 828158
         },
         "tool.terminal": {
           "unit_count": 49,

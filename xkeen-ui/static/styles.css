@@ -1399,7 +1399,6 @@ html[data-xk-compact="1"] .actions { gap: 8px; }
 /* Hide hints/descriptions (keep statuses/errors visible) */
 html[data-xk-hide-hints="1"] header p { display: none !important; }
 html[data-xk-hide-hints="1"] .small { display: none !important; }
-html[data-xk-hide-hints="1"] #routing-help-line { display: none !important; }
 
 /* File Manager: hide the bottom hotkeys hints line */
 html[data-xk-hide-fm-hotkeys="1"] .fm-hints { display: none !important; }
@@ -4629,128 +4628,6 @@ html[data-theme="light"] .xkeen-cm-tool[data-tip]::after {
   border-color: rgba(15, 23, 42, 0.18);
 }
 
-/* --- CodeMirror help drawer (slides in from the right) --- */
-.xkeen-cm-help-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  z-index: 10040;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.16s ease;
-}
-
-.xkeen-cm-help-overlay.is-open {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.xkeen-cm-help-drawer {
-  position: fixed;
-  top: 0;
-  right: 0;
-  height: 100vh;
-  width: min(460px, 92vw);
-  z-index: 10041;
-  transform: translateX(100%);
-  transition: transform 0.18s ease;
-  border-left: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(2, 6, 23, 0.98);
-  color: rgba(226, 232, 240, 0.95);
-  box-shadow: -24px 0 48px rgba(0, 0, 0, 0.35);
-  display: flex;
-  flex-direction: column;
-}
-
-.xkeen-cm-help-drawer.is-open {
-  transform: translateX(0);
-}
-
-.xkeen-cm-help-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 14px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
-}
-
-.xkeen-cm-help-title {
-  font-weight: 700;
-  font-size: calc(14px * var(--xk-font-scale));
-  letter-spacing: 0.2px;
-}
-
-.xkeen-cm-help-close {
-  width: 34px;
-  height: 30px;
-  border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(15, 23, 42, 0.65);
-  color: rgba(226, 232, 240, 0.95);
-  cursor: pointer;
-}
-
-.xkeen-cm-help-close:hover {
-  background: rgba(15, 23, 42, 0.9);
-}
-
-.xkeen-cm-help-body {
-  padding: 12px 14px 18px;
-  overflow: auto;
-}
-
-.xkeen-cm-help-section {
-  padding: 10px 10px;
-  margin: 0 0 10px 0;
-  border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  background: rgba(15, 23, 42, 0.35);
-}
-
-.xkeen-cm-help-section h3 {
-  margin: 0 0 6px 0;
-  font-size: calc(13px * var(--xk-font-scale));
-}
-
-.xkeen-cm-help-section p {
-  margin: 6px 0;
-  font-size: calc(13px * var(--xk-font-scale));
-  line-height: 1.35;
-}
-
-.xkeen-cm-help-section ul {
-  margin: 8px 0 0 18px;
-  padding: 0;
-  font-size: calc(13px * var(--xk-font-scale));
-  line-height: 1.35;
-}
-
-html[data-theme="light"] .xkeen-cm-help-overlay {
-  background: rgba(15, 23, 42, 0.35);
-}
-
-html[data-theme="light"] .xkeen-cm-help-drawer {
-  background: rgba(255, 255, 255, 0.98);
-  color: rgba(15, 23, 42, 0.95);
-  border-left-color: rgba(15, 23, 42, 0.12);
-  box-shadow: -24px 0 48px rgba(0, 0, 0, 0.18);
-}
-
-html[data-theme="light"] .xkeen-cm-help-head {
-  border-bottom-color: rgba(15, 23, 42, 0.12);
-}
-
-html[data-theme="light"] .xkeen-cm-help-close {
-  background: rgba(255, 255, 255, 0.9);
-  color: rgba(15, 23, 42, 0.95);
-  border-color: rgba(15, 23, 42, 0.16);
-}
-
-html[data-theme="light"] .xkeen-cm-help-section {
-  background: rgba(248, 250, 252, 0.8);
-  border-color: rgba(15, 23, 42, 0.12);
-}
-
 /* Мини-терминал XKeen */
 .terminal-overlay {
   position: fixed;
@@ -7288,14 +7165,6 @@ html[data-theme="light"] .github-stale-pill{
   border-radius: 2px;
   user-select: none;
   touch-action: none;
-}
-
-/* Routing help modal: slightly larger resize handle (iframe makes pointer events trickier). */
-#xkeen-routing-help-modal .modal-resizer {
-  width: 20px;
-  height: 20px;
-  right: 10px;
-  bottom: 10px;
 }
 
 .modal-resizer::before {
@@ -12126,22 +11995,6 @@ html[data-theme="light"] .dt-env-help-table thead th {
   overflow: auto;
 }
 
-/* Routing help modal: inline Shadow DOM content owns the inner scroll. */
-#xkeen-routing-help-modal .modal-content {
-  height: 80vh;
-}
-
-#xkeen-routing-help-modal .modal-body {
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-#xkeen-routing-help-content {
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
 
 
 
@@ -13123,19 +12976,9 @@ textarea#json-editor-textarea {
 
 
 
-#routing-help-line {
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 6px 0;
-}
 
 
 
-#routing-help-line:hover {
-  animation: routing-help-blink 1s infinite;
-}
 
 @keyframes routing-help-blink {
   0%, 100% {

@@ -207,7 +207,6 @@ import { iconHtml } from '../ui/operator_icons.js';
     textarea: 'routing-editor',
     status: 'routing-status',
     error: 'routing-error',
-    helpLine: 'routing-help-line',
 
     // Editor engine toggle (CodeMirror / Monaco)
     engineSelect: 'routing-editor-engine-select',
@@ -522,8 +521,6 @@ import { iconHtml } from '../ui/operator_icons.js';
         gui: {
           validate: () => validate(),
           setError: (message, line) => setError(message, line),
-          openHelp: () => openHelp(),
-          closeHelp: () => closeHelp(),
         },
         raw: {
           getText: () => getEditorText(),
@@ -2222,348 +2219,6 @@ function _setRoutingMode(mode, reason) {
     return false;
   }
 
-
-const HELP_MODAL_ID = 'xkeen-routing-help-modal';
-const HELP_CONTENT_ID = 'xkeen-routing-help-content';
-
-function ensureHelpModal() {
-  let modal = document.getElementById(HELP_MODAL_ID);
-  if (modal) return modal;
-
-  modal = document.createElement('div');
-  modal.id = HELP_MODAL_ID;
-  modal.className = 'modal hidden';
-  modal.dataset.operatorModalFamily = 'drawer-help';
-  modal.dataset.modalNopos = '1';
-  modal.dataset.modalNoresize = '1';
-  modal.dataset.modalRemember = '0';
-  modal.setAttribute('role', 'dialog');
-  modal.setAttribute('aria-modal', 'true');
-  modal.setAttribute('aria-label', 'Routing help');
-
-  const content = document.createElement('div');
-  content.className = 'modal-content xk-routing-help-shell';
-
-  const header = document.createElement('div');
-  header.className = 'modal-header';
-
-  const title = document.createElement('span');
-  title.className = 'modal-title';
-  title.textContent = 'Справка по комментариям routing (JSONC)';
-
-  const closeBtn = document.createElement('button');
-  closeBtn.type = 'button';
-  closeBtn.className = 'modal-close';
-  closeBtn.setAttribute('aria-label', 'Закрыть');
-  closeBtn.innerHTML = iconHtml('close');
-
-  header.appendChild(title);
-  header.appendChild(closeBtn);
-
-  const body = document.createElement('div');
-  body.className = 'modal-body xk-routing-help-body';
-
-  const HELP_PATH = '/static/routing-comments-help.html';
-  const HELP_URL = HELP_PATH + '?v=20260806a';
-  let helpState = 'loading';
-
-  const helpHost = document.createElement('div');
-  helpHost.id = HELP_CONTENT_ID;
-  helpHost.className = 'xk-routing-help-host';
-
-  function showHelpFallback() {
-    if (helpState === 'fallback') return;
-    helpState = 'fallback';
-    try {
-      const fallback = document.createElement('div');
-      fallback.className = 'xk-routing-help-fallback';
-
-      const titleEl = document.createElement('div');
-      titleEl.className = 'xk-routing-help-fallback-title';
-      titleEl.textContent = 'Не удалось загрузить справку во встроенном окне';
-
-      const hintEl = document.createElement('div');
-      hintEl.className = 'xk-routing-help-fallback-hint';
-      hintEl.textContent = 'Не удалось получить документ справки. Его можно открыть в отдельной вкладке.';
-
-      const link = document.createElement('a');
-      link.href = HELP_URL;
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.className = 'xk-routing-help-fallback-link';
-      link.textContent = 'Открыть справку';
-
-      fallback.appendChild(titleEl);
-      fallback.appendChild(hintEl);
-      fallback.appendChild(link);
-
-      const target = helpHost.shadowRoot || helpHost;
-      while (target.firstChild) target.removeChild(target.firstChild);
-      target.appendChild(fallback);
-    } catch (e) {}
-  }
-
-  function normalizeRoutingHelpCss(cssText) {
-    return String(cssText || '')
-      .replace(/html\[data-theme="dark"\]\s+body/g, ':host([data-theme="dark"]) .routing-help-document')
-      .replace(/html\[data-theme="dark"\]/g, ':host([data-theme="dark"])')
-      .replace(/:root/g, ':host')
-      .replace(/\bbody\b/g, '.routing-help-document');
-  }
-
-  function getRoutingHelpTheme() {
-    try {
-      const attr = document.documentElement && document.documentElement.getAttribute('data-theme');
-      if (attr === 'light' || attr === 'dark') return attr;
-    } catch (e) {}
-    try {
-      const stored = window.localStorage && localStorage.getItem('xkeen-theme');
-      if (stored === 'light' || stored === 'dark') return stored;
-    } catch (e2) {}
-    try {
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
-    } catch (e3) {}
-    return 'light';
-  }
-
-  function syncRoutingHelpTheme() {
-    try { helpHost.setAttribute('data-theme', getRoutingHelpTheme()); } catch (e) {}
-  }
-
-  function escapeHelpHtml(str) {
-    return String(str || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-  }
-
-  function highlightRoutingHelpCodeBlocks(root) {
-    function wrap(cls, raw) {
-      return '<span class="' + cls + '">' + escapeHelpHtml(raw) + '</span>';
-    }
-    function isDigit(ch) {
-      return ch >= '0' && ch <= '9';
-    }
-    function isWordStart(ch) {
-      return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch === '_';
-    }
-    function highlightCodeBlock(codeEl) {
-      const text = codeEl.textContent || '';
-      const len = text.length;
-      let i = 0;
-      let out = '';
-      while (i < len) {
-        const ch = text[i];
-        const next = i + 1 < len ? text[i + 1] : '';
-        if (ch === '/' && next === '/') {
-          let j = i + 2;
-          while (j < len && text[j] !== '\n') j++;
-          out += wrap('cm-comment', text.slice(i, j));
-          i = j;
-          continue;
-        }
-        if (ch === '#') {
-          let j = i + 1;
-          while (j < len && text[j] !== '\n') j++;
-          out += wrap('cm-comment', text.slice(i, j));
-          i = j;
-          continue;
-        }
-        if (ch === '/' && next === '*') {
-          const end = text.indexOf('*/', i + 2);
-          const j = end === -1 ? len : end + 2;
-          out += wrap('cm-comment', text.slice(i, j));
-          i = j;
-          continue;
-        }
-        if (ch === '"') {
-          let j = i + 1;
-          let esc = false;
-          while (j < len) {
-            const c = text[j];
-            if (esc) esc = false;
-            else if (c === '\\') esc = true;
-            else if (c === '"') {
-              j++;
-              break;
-            }
-            j++;
-          }
-          const raw = text.slice(i, j);
-          let k = j;
-          while (k < len && (text[k] === ' ' || text[k] === '\t' || text[k] === '\r' || text[k] === '\n')) k++;
-          out += wrap((k < len && text[k] === ':') ? 'cm-property' : 'cm-string', raw);
-          i = j;
-          continue;
-        }
-        if (ch === '-' || isDigit(ch)) {
-          let j = i;
-          if (text[j] === '-') j++;
-          let hasDigits = false;
-          while (j < len && isDigit(text[j])) {
-            hasDigits = true;
-            j++;
-          }
-          if (j < len && text[j] === '.') {
-            j++;
-            while (j < len && isDigit(text[j])) {
-              hasDigits = true;
-              j++;
-            }
-          }
-          if (hasDigits && j < len && (text[j] === 'e' || text[j] === 'E')) {
-            let k = j + 1;
-            if (k < len && (text[k] === '+' || text[k] === '-')) k++;
-            let expDigits = 0;
-            while (k < len && isDigit(text[k])) {
-              expDigits++;
-              k++;
-            }
-            if (expDigits > 0) j = k;
-          }
-          if (hasDigits) {
-            out += wrap('cm-number', text.slice(i, j));
-            i = j;
-            continue;
-          }
-        }
-        if (isWordStart(ch)) {
-          let j = i + 1;
-          while (j < len) {
-            const c = text[j];
-            if (isWordStart(c) || isDigit(c)) j++;
-            else break;
-          }
-          const raw = text.slice(i, j);
-          out += (raw === 'true' || raw === 'false' || raw === 'null')
-            ? wrap('cm-atom', raw)
-            : escapeHelpHtml(raw);
-          i = j;
-          continue;
-        }
-        if (ch === '{' || ch === '}' || ch === '[' || ch === ']') {
-          out += wrap('cm-bracket', ch);
-          i++;
-          continue;
-        }
-        if (ch === ':' || ch === ',') {
-          out += wrap('cm-punctuation', ch);
-          i++;
-          continue;
-        }
-        out += escapeHelpHtml(ch);
-        i++;
-      }
-      codeEl.innerHTML = out;
-    }
-    try {
-      root.querySelectorAll('pre code').forEach(highlightCodeBlock);
-    } catch (e) {}
-  }
-
-  function renderRoutingHelpInline(htmlText) {
-    if (helpState === 'fallback') return;
-    try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(String(htmlText || ''), 'text/html');
-      const bodyText = doc && doc.body ? String(doc.body.textContent || '') : '';
-      const titleText = doc && doc.title ? String(doc.title || '') : '';
-      if (bodyText.indexOf('05_routing') === -1 && titleText.indexOf('05_routing') === -1) {
-        throw new Error('routing help marker missing');
-      }
-      if (!helpHost.attachShadow) {
-        throw new Error('shadow dom unavailable');
-      }
-
-      const shadow = helpHost.shadowRoot || helpHost.attachShadow({ mode: 'open' });
-      while (shadow.firstChild) shadow.removeChild(shadow.firstChild);
-
-      const style = document.createElement('style');
-      const sourceCss = Array.from(doc.querySelectorAll('style'))
-        .map((styleEl) => styleEl.textContent || '')
-        .join('\n');
-      style.textContent = [
-        ':host{display:block;height:100%;min-height:0;overflow:auto;background:var(--bg);color:var(--text);}',
-        '*{box-sizing:border-box;}',
-        normalizeRoutingHelpCss(sourceCss),
-        '.routing-help-document{min-height:100%;}'
-      ].join('\n');
-
-      const wrapper = document.createElement('div');
-      wrapper.className = 'routing-help-document';
-      Array.from(doc.body ? doc.body.childNodes : []).forEach((node) => {
-        if (node && String(node.nodeName || '').toLowerCase() === 'script') return;
-        wrapper.appendChild(document.importNode(node, true));
-      });
-
-      shadow.appendChild(style);
-      shadow.appendChild(wrapper);
-      syncRoutingHelpTheme();
-      highlightRoutingHelpCodeBlocks(shadow);
-      helpState = 'ready';
-    } catch (e) {
-      showHelpFallback();
-    }
-  }
-
-  function loadRoutingHelpInline() {
-    try {
-      fetch(HELP_URL, { cache: 'no-store', credentials: 'same-origin' })
-        .then((resp) => {
-          if (!resp || !resp.ok) throw new Error('routing help fetch failed');
-          return resp.text();
-        })
-        .then(renderRoutingHelpInline)
-        .catch(showHelpFallback);
-    } catch (e) {
-      showHelpFallback();
-    }
-  }
-
-  try {
-    syncRoutingHelpTheme();
-    const observer = new MutationObserver(syncRoutingHelpTheme);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  } catch (e) {}
-
-  body.appendChild(helpHost);
-  loadRoutingHelpInline();
-
-  content.appendChild(header);
-  content.appendChild(body);
-  modal.appendChild(content);
-
-  function close() { closeHelp(); }
-  closeBtn.addEventListener('click', close);
-
-  document.body.appendChild(modal);
-  return modal;
-}
-
-function openHelp() {
-  const modal = ensureHelpModal();
-  const api = getModalApi();
-  try {
-    if (api && typeof api.open === 'function') api.open(modal, { source: 'routing_help_modal' });
-    else modal.classList.remove('hidden');
-  } catch (e) {}
-  try {
-    if (!api || typeof api.open !== 'function') document.body.classList.add('modal-open');
-  } catch (e2) {}
-}
-
-function closeHelp() {
-  const modal = document.getElementById(HELP_MODAL_ID);
-  if (!modal) return;
-  const api = getModalApi();
-  try {
-    if (api && typeof api.close === 'function') api.close(modal, { source: 'routing_help_modal' });
-    else modal.classList.add('hidden');
-  } catch (e) {}
-  try {
-    if (!api || typeof api.close !== 'function') document.body.classList.remove('modal-open');
-  } catch (e2) {}
-}
 
   function shouldAutoRestartAfterSave() {
     const cb = $(IDS.autoRestart);
@@ -4662,16 +4317,6 @@ function closeHelp() {
       if (refreshBtn.dataset) refreshBtn.dataset.xkWired = '1';
     }
 
-    // Help line
-    const help = $(IDS.helpLine);
-    if (help && !(help.dataset && help.dataset.xkeenWired === '1')) {
-      help.addEventListener('click', (e) => {
-        e.preventDefault();
-        openHelp();
-      });
-      if (help.dataset) help.dataset.xkeenWired = '1';
-    }
-
 
     // Error line under editor: click/Enter to jump to exact JSON error location.
     const errEl = $(IDS.error);
@@ -4783,9 +4428,7 @@ function closeHelp() {
         cleanupRoutingCodeMirrorWrappers(wrapper);
         const base = getXkeenEditorToolbarDefaultItems();
         if (base.length) {
-          const icons = getXkeenEditorToolbarIcons();
           const items = [];
-          let inserted = false;
           base.forEach((it) => {
             // Replace fullscreen action: in routing card it must work for the active engine
             // (CodeMirror or Monaco), not just CodeMirror.
@@ -4795,35 +4438,8 @@ function closeHelp() {
               }));
               return;
             }
-            // Drop the default CodeMirror help button (red '?').
-            if (it && it.id === 'help') {
-              if (!inserted) {
-                items.push({
-                  id: 'help_comments',
-                  svg: icons.help || it.svg,
-                  label: 'Справка (комментарии)',
-                  fallbackHint: 'JSONC',
-                  isCommentsHelp: true,
-                  onClick: () => openHelp(),
-                });
-                inserted = true;
-              }
-              return;
-            }
             items.push(it);
           });
-
-          // If defaults did not contain a help button at all, still add JSONC help at the end.
-          if (!inserted) {
-            items.push({
-              id: 'help_comments',
-              svg: icons.help || '',
-              label: 'Справка (комментарии)',
-              fallbackHint: 'JSONC',
-              isCommentsHelp: true,
-              onClick: () => openHelp(),
-            });
-          }
           attachXkeenEditorToolbar(cm, items);
         }
       }
@@ -4898,8 +4514,7 @@ function closeHelp() {
     const o = opts || {};
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'xkeen-cm-tool'
-      + (o.commentsHelp ? ' is-comments-help' : '');
+    btn.className = 'xkeen-cm-tool';
     btn.setAttribute('aria-label', String(o.label || 'Действие'));
     if (o.actionId) btn.dataset.actionId = String(o.actionId);
     if (o.tip) btn.dataset.tip = String(o.tip);
@@ -4944,15 +4559,6 @@ function closeHelp() {
               return null;
             }).catch(() => {});
           },
-        }));
-        bar.appendChild(buildRoutingToolbarButton({
-          actionId: 'help_comments',
-          label: 'Справка (комментарии)',
-          tip: 'Справка (комментарии)',
-          commentsHelp: true,
-          svg: icons.help || '',
-          fallbackText: '?',
-          onClick: () => openHelp(),
         }));
         bar.appendChild(buildRoutingToolbarButton({
           actionId: 'fs',
@@ -5010,15 +4616,9 @@ function closeHelp() {
 
       const btns = bar.querySelectorAll('button.xkeen-cm-tool');
       (btns || []).forEach((btn) => {
-        const isCommentsHelp = !!(
-          btn.classList.contains('is-comments-help') ||
-          (btn.dataset && btn.dataset.actionId === 'help_comments')
-        );
-
         const isFs = !!(btn.dataset && btn.dataset.actionId === 'fs');
 
-        // In Monaco mode show only the yellow JSONC help + fullscreen.
-        btn.style.display = (isMonaco && !(isCommentsHelp || isFs)) ? 'none' : '';
+        btn.style.display = (isMonaco && !isFs) ? 'none' : '';
       });
     } catch (e) {}
   }
@@ -6348,8 +5948,6 @@ function closeHelp() {
     restoreAuto,
     refreshFragments: refreshFragmentsList,
     toggleCard,
-    openHelp,
-    closeHelp,
     setError,
     replaceEditorText,
   };
@@ -6415,13 +6013,6 @@ export function toggleRoutingCard(...args) {
   return callRoutingApi('toggleCard', ...args);
 }
 
-export function openRoutingHelp(...args) {
-  return callRoutingApi('openHelp', ...args);
-}
-
-export function closeRoutingHelp(...args) {
-  return callRoutingApi('closeHelp', ...args);
-}
 
 export function setRoutingError(...args) {
   return callRoutingApi('setError', ...args);
@@ -6448,8 +6039,6 @@ export const routingApi = Object.freeze({
   backup: backupRouting,
   restoreAuto: restoreRoutingAutoBackup,
   toggleCard: toggleRoutingCard,
-  openHelp: openRoutingHelp,
-  closeHelp: closeRoutingHelp,
   setError: setRoutingError,
   replaceEditorText: replaceRoutingEditorText,
   dispose: disposeRouting,
