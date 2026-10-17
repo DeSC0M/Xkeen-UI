@@ -16,7 +16,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 GENERATOR = ROOT / "scripts" / "generate_module_manager_e2e_fixtures.py"
 FIXTURES = ROOT / "e2e" / "fixtures" / "module_manager_server.json"
-SPEC = ROOT / "e2e" / "modules_manager.spec.mjs"
+SPEC_DIR = ROOT / "e2e"
+SUPPORT = SPEC_DIR / "modules_manager_support.mjs"
 REGENERATE = "python scripts/generate_module_manager_e2e_fixtures.py"
 
 
@@ -64,9 +65,14 @@ def test_stored_answers_keep_the_shape_hand_written_stubs_got_wrong():
 
 
 def test_browser_tests_read_the_stored_answers():
-    spec = SPEC.read_text(encoding="utf-8")
+    support = SUPPORT.read_text(encoding="utf-8")
+    specs = sorted(SPEC_DIR.glob("modules_manager_*.spec.mjs"))
 
-    assert "fixtures/module_manager_server.json" in spec
-    # A server answer written by hand at the top of the file is how it began.
-    assert "const installedSnapshot = {" not in spec
-    assert "result: 'idle'" not in spec
+    assert "fixtures/module_manager_server.json" in support
+    assert specs, "the browser tests of the Modules window are gone"
+    for spec_path in specs:
+        spec = spec_path.read_text(encoding="utf-8")
+        assert "./modules_manager_support.mjs" in spec, spec_path.name
+        # A server answer written by hand at the top of the file is how it began.
+        assert "const installedSnapshot = {" not in spec, spec_path.name
+        assert "result: 'idle'" not in spec, spec_path.name

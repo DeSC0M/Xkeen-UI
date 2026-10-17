@@ -58,7 +58,7 @@ performance baseline.
 `tests/test_module_lifecycle.py`,
 `tests/test_panel_profile_transactions.py`,
 `tests/test_panel_rollback_to_previous_version.py`,
-`e2e/modules_manager.spec.mjs`.
+`e2e/modules_manager_*.spec.mjs`.
 
 Покрыты trust/signature, SHA-256/size/API/architecture checks, traversal,
 symlink/hooks/ownership, corrupt archive/cache, transport stale fallback,
@@ -103,7 +103,7 @@ previous-version rollback без сети.
 - lazy loading/profile boundaries —
   `e2e/modular_panel_dynamic_loading.spec.mjs`;
 - manager/recovery/navigation —
-  `e2e/modules_manager.spec.mjs`,
+  `e2e/modules_manager_*.spec.mjs`,
   `e2e/panel_module_load_recovery.spec.mjs`,
   `e2e/top_level_back_before_bundle_screens.spec.mjs`.
 

@@ -38,8 +38,8 @@
         "gevent-websocket (optional)"
       ],
       "removable": false,
-      "unit_count": 566,
-      "size_bytes": 7600090,
+      "unit_count": 571,
+      "size_bytes": 7595389,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -51,7 +51,7 @@
         "frontend_feature": 33,
         "frontend_javascript": 37,
         "frontend_runtime": 2,
-        "frontend_test": 59,
+        "frontend_test": 64,
         "frontend_ui": 17,
         "stylesheet": 8,
         "template": 32
@@ -131,8 +131,8 @@
         "mihomo"
       ],
       "removable": true,
-      "unit_count": 129,
-      "size_bytes": 3069213,
+      "unit_count": 130,
+      "size_bytes": 3066122,
       "kind_counts": {
         "app_runtime": 4,
         "backend_route": 2,
@@ -144,7 +144,7 @@
         "frontend_entrypoint": 1,
         "frontend_feature": 22,
         "frontend_javascript": 5,
-        "frontend_test": 9,
+        "frontend_test": 10,
         "template": 6
       },
       "route_count": 89,
@@ -5750,7 +5750,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_module_manager_e2e_fixtures.py",
-      "size_bytes": 3114,
+      "size_bytes": 3478,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11571,8 +11571,68 @@
     {
       "module_id": "core",
       "kind": "frontend_test",
-      "path": "e2e/modules_manager.spec.mjs",
-      "size_bytes": 128694,
+      "path": "e2e/modules_manager_operations.spec.mjs",
+      "size_bytes": 26651,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_test",
+      "path": "e2e/modules_manager_recovery.spec.mjs",
+      "size_bytes": 31270,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_test",
+      "path": "e2e/modules_manager_screen.spec.mjs",
+      "size_bytes": 35468,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_test",
+      "path": "e2e/modules_manager_summary.spec.mjs",
+      "size_bytes": 34029,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -12219,8 +12279,48 @@
     {
       "module_id": "core",
       "kind": "frontend_test",
+      "path": "e2e/subscriptions_modal_form.spec.mjs",
+      "size_bytes": 44620,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_test",
       "path": "e2e/subscriptions_modal_layout.spec.mjs",
-      "size_bytes": 107670,
+      "size_bytes": 38909,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_test",
+      "path": "e2e/subscriptions_modal_status.spec.mjs",
+      "size_bytes": 20352,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -16814,8 +16914,29 @@
     {
       "module_id": "engine.mihomo",
       "kind": "frontend_test",
-      "path": "e2e/mihomo_clash_groups.spec.mjs",
-      "size_bytes": 75603,
+      "path": "e2e/mihomo_clash_groups_latency.spec.mjs",
+      "size_bytes": 40973,
+      "depends_on": [
+        "core",
+        "tool.editor"
+      ],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "xkeen",
+        "mihomo"
+      ],
+      "environment_variables": [],
+      "removable": true
+    },
+    {
+      "module_id": "engine.mihomo",
+      "kind": "frontend_test",
+      "path": "e2e/mihomo_clash_groups_workspace.spec.mjs",
+      "size_bytes": 31539,
       "depends_on": [
         "core",
         "tool.editor"
@@ -30897,7 +31018,7 @@
       {
         "from": "engine.mihomo",
         "to": "core",
-        "unit_count": 129,
+        "unit_count": 130,
         "examples": [
           "xkeen-ui/bootstrap_mihomo_env.py",
           "xkeen-ui/mihomo_config_generator.py",
@@ -30951,7 +31072,7 @@
       {
         "from": "engine.mihomo",
         "to": "tool.editor",
-        "unit_count": 129,
+        "unit_count": 130,
         "examples": [
           "xkeen-ui/bootstrap_mihomo_env.py",
           "xkeen-ui/mihomo_config_generator.py",

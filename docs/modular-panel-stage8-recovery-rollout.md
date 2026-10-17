@@ -24,7 +24,7 @@
 `tests/test_module_transactions_executor.py`,
 `tests/test_module_lifecycle.py`, `tests/test_panel_profile_transactions.py`,
 `tests/test_panel_rollback_to_previous_version.py` и
-`e2e/modules_manager.spec.mjs`.
+`e2e/modules_manager_*.spec.mjs`.
 
 ## Что ещё не закрыто
 

@@ -90,8 +90,16 @@ export const test = base.extend({
     await use(panelServer.storageState);
   },
 
-  page: async ({ page }, use) => {
+  page: async ({ page }, use, testInfo) => {
     let settings = clone(DEFAULT_UI_SETTINGS);
+    // What the page went through, said only when the test fails: a toast that
+    // covers a control or a request that broke is otherwise lost with the page.
+    const trouble = [];
+    const note = (line) => { if (trouble.length < 40) trouble.push(line); };
+    const pathOf = (url) => { try { return new URL(url).pathname; } catch (error) { return String(url); } };
+    page.on('requestfailed', (request) => note(`request failed: ${request.method()} ${pathOf(request.url())} (${request.failure()?.errorText || '?'})`));
+    page.on('response', (response) => { if (response.status() >= 500) note(`answer ${response.status()}: ${response.request().method()} ${pathOf(response.url())}`); });
+    page.on('pageerror', (error) => note(`page error: ${String(error?.message || error).slice(0, 300)}`));
 
     // A previous browser context can leave the last selected panel view in
     // origin storage. Tests navigate to '/', but they do not all declare the
@@ -135,6 +143,16 @@ export const test = base.extend({
     });
 
     await use(page);
+
+    if (testInfo.status !== testInfo.expectedStatus) {
+      const toasts = await page.locator('#toast-container .toast').allInnerTexts().catch(() => []);
+      for (const text of toasts) note(`toast on screen: ${text.replace(/\s+/g, ' ').trim().slice(0, 300)}`);
+      if (trouble.length) {
+        const report = trouble.join('\n');
+        console.log(`[panel diagnostics] ${testInfo.title}\n${report}`);
+        await testInfo.attach('panel-diagnostics', { body: report, contentType: 'text/plain' });
+      }
+    }
   },
 });
 

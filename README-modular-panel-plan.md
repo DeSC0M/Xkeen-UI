@@ -1755,7 +1755,7 @@ badge обновлений, diff зависимостей, явный Apply/Rest
 [`docs/modular-panel-stage8-manager-ui.md`](docs/modular-panel-stage8-manager-ui.md).
 
 Подэтап 8.6 закрыт 13 октября 2026 года. Закрытие подтверждено targeted backend-тестами менеджера и Lifecycle API,
-browser-приёмкой `e2e/modules_manager.spec.mjs` вместе с проверкой ранней
+browser-приёмкой `e2e/modules_manager_*.spec.mjs` вместе с проверкой ранней
 навигации и обновлением документационного guardrail для Stage 8. Следующий
 незакрытый подэтап Этапа 8 — 8.7 Notification center.
 
@@ -1892,7 +1892,7 @@ Notification center 8.7 и доказательной rollout-приёмки 8.8
 | Профили и физические файлы | full/minimal/custom, повторная установка, source/build import closure, disabled state, сохранение пользовательских данных | `tests/test_installer_profiles.py`, `tests/test_installer_profile_frontend_closure.py`, `tests/test_physical_profile_request.py`, `tests/test_module_packages_over_installer_profiles.py` |
 | Lifecycle и rollback | plan/apply digest, conflicts/locks, free space, install/repair/remove, panel/profile scopes, cancel, health, crash recovery, previous-version rollback | `tests/test_module_lifecycle*.py`, `tests/test_module_transactions_*.py`, `tests/test_panel_profile_transactions.py`, `tests/test_panel_rollback_to_previous_version.py` |
 | Composition и frontend isolation | active-module navigation/roots, allow-listed imports, missing-root no-op, inactive API/WS, lazy editor/terminal/files | `tests/test_modular_panel_stage4_*.py`, `tests/test_modular_panel_stage5_frontend_contract.py`, `e2e/modular_panel_dynamic_loading.spec.mjs` |
-| Manager UI и navigation recovery | stale authority, progress/log, plan/confirmation, restart/recovery, state refresh, early Back, failed lazy load | `tests/test_module_manager_ui.py`, `e2e/modules_manager.spec.mjs`, `e2e/top_level_back_before_bundle_screens.spec.mjs`, `e2e/panel_module_load_recovery.spec.mjs` |
+| Manager UI и navigation recovery | stale authority, progress/log, plan/confirmation, restart/recovery, state refresh, early Back, failed lazy load | `tests/test_module_manager_ui.py`, `e2e/modules_manager_*.spec.mjs`, `e2e/top_level_back_before_bundle_screens.spec.mjs`, `e2e/panel_module_load_recovery.spec.mjs` |
 | Installer/update hygiene | ownership, archive restrictions, `.gz`/stale assets cleanup, init recovery, pycache/environment recovery и PTY reconnect после self-update | `tests/test_installer_*.py`, `tests/test_python_pycache_recovery_contracts.py`, `tests/test_recovery_restores_environment.py`, `tests/test_ws_pty_replay.py` |
 
 Это неодинаковые уровни доказательства: static contract, unit, реальное
