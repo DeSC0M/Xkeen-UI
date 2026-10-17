@@ -624,10 +624,14 @@ class ModuleLifecycleService:
             "fetched_at": snapshot.fetched_at,
         }
 
-    def _release_context(self):
+    def _release_context(self, *, read_only: bool = False):
         try:
             version = read_panel_version(self.panel_root)
-            ensure_release_build(version)
+            if read_only:
+                # A local build is shown the catalog of the release it grew from.
+                version = version.partition("+")[0]
+            else:
+                ensure_release_build(version)
             architecture = self._architecture_provider()
             client = self._catalog_factory(version, architecture)
             snapshot = client.get_release_catalog(version)
@@ -773,7 +777,11 @@ class ModuleLifecycleService:
                 "modules": modules,
             }
 
-        version, _architecture, _client, snapshot = self._release_context()
+        try:
+            read_only = is_local_build(read_panel_version(self.panel_root))
+        except ModuleTransactionError as error:
+            _raise_domain(error)
+        version, _architecture, _client, snapshot = self._release_context(read_only=read_only)
         try:
             installed_ids = read_installed_modules(self.state_dir)
         except ModuleTransactionError as error:
@@ -792,7 +800,7 @@ class ModuleLifecycleService:
                 entry.update(name=definition.name, description=definition.description)
             entry.update(
                 installed=installed,
-                lifecycle_actions=_lifecycle_actions(module_id, installed),
+                lifecycle_actions=[] if read_only else _lifecycle_actions(module_id, installed),
                 update_available=False,
             )
             modules.append(entry)
@@ -800,6 +808,8 @@ class ModuleLifecycleService:
         return {
             "ok": True,
             "release_version": version,
+            # Modules are installed only by a release build: a local one looks.
+            "read_only": read_only,
             "catalog_url": snapshot.catalog_url,
             "fetched_at": snapshot.fetched_at,
             "freshness": snapshot.freshness,

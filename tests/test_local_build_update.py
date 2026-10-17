@@ -5,7 +5,8 @@
 версий не участвуют, поэтому панель считает себя этим выпуском и находит
 следующий. Пакеты модулей в релизе собраны под точную версию, а код
 локальной сборки может от неё отличаться: ставить, чинить и удалять модули
-и переходить на другой набор она не берётся.
+и переходить на другой набор она не берётся; каталог своего выпуска она
+показывает только для просмотра.
 """
 
 from __future__ import annotations
@@ -63,10 +64,21 @@ def test_a_local_build_plans_the_panel_update(tmp_path):
     assert payload["target_version"] == "2.11.0"
 
 
+def test_a_local_build_shows_the_catalog_of_its_release_read_only(tmp_path):
+    service, catalog = make_service(make_panel(tmp_path, version=LOCAL), make_release())
+
+    payload = service.available()
+
+    assert catalog.requested_versions == ["2.10.0"]
+    assert payload["release_version"] == "2.10.0"
+    assert payload["read_only"] is True
+    assert payload["modules"]
+    assert all(item["lifecycle_actions"] == [] for item in payload["modules"])
+
+
 @pytest.mark.parametrize(
     "call",
     [
-        lambda service: service.available(),
         lambda service: service.plan("install", "tool.files"),
         lambda service: service.plan("profile-transition", None),
     ],

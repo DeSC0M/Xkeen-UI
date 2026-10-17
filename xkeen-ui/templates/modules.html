@@ -55,12 +55,23 @@
       <div id="modules-card-host" class="modules-card-host" role="tabpanel" aria-labelledby="modules-tab-installed"></div>
     </main>
 
-    <dialog id="modules-plan-confirm" class="modules-plan-confirm" aria-labelledby="modules-plan-title">
-      <h2 id="modules-plan-title" tabindex="-1">План операции</h2>
-      <div id="modules-plan-summary"></div>
+    <dialog id="modules-plan-confirm" class="modules-plan-confirm" aria-labelledby="modules-plan-title" aria-describedby="modules-plan-description">
+      <div class="modules-plan-head">
+        <div>
+          <h2 id="modules-plan-title" tabindex="-1">План операции</h2>
+          <p id="modules-plan-description" class="modules-plan-description"></p>
+        </div>
+        <button type="button" id="modules-plan-close" class="btn-secondary modules-plan-close" aria-label="Закрыть окно" title="Закрыть окно">{{ op_icon('close') }}</button>
+      </div>
+      <div class="modules-plan-body">
+        <div id="modules-plan-summary"></div>
+        <section id="modules-plan-progress" class="modules-plan-progress" hidden></section>
+      </div>
       <div class="modules-plan-actions">
-        <button type="button" id="modules-plan-cancel" class="btn-secondary">Отменить</button>
-        <button type="button" id="modules-plan-apply" class="btn-primary">Применить план</button>
+        <button type="button" id="modules-plan-abort" class="btn-secondary" hidden>Отменить операцию</button>
+        <button type="button" id="modules-plan-cancel" class="btn-secondary">Отмена</button>
+        <button type="button" id="modules-plan-recheck" class="btn-primary" hidden>Проверить снова</button>
+        <button type="button" id="modules-plan-apply" class="btn-primary">Установить</button>
       </div>
     </dialog>
 

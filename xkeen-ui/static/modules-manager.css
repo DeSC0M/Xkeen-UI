@@ -258,22 +258,25 @@ body.modules-page .modules-plan-actions button {
 }
 
 body.modules-page .modules-plan-confirm {
-  width: min(760px, calc(100vw - 24px));
+  width: min(640px, calc(100vw - 24px));
   max-width: calc(100vw - 24px);
   box-sizing: border-box;
   max-height: calc(100vh - 32px);
   overflow: auto;
+  padding: 0;
   border: 1px solid var(--border-color, #c9d0da);
   border-radius: 8px;
 }
 body.modules-page .modules-plan-facts {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  gap: 4px 12px;
-  margin: 8px 0;
+  grid-template-columns: minmax(110px, .34fr) minmax(0, 1fr);
+  gap: 7px 12px;
+  margin: 0;
+  font-size: calc(12.5px * var(--xk-font-scale, 1));
 }
 body.modules-page .modules-plan-facts dt { color: var(--header-tab-text, #6b7480); }
 body.modules-page .modules-plan-facts dd { margin: 0; overflow-wrap: anywhere; }
+body.modules-page .modules-plan-facts dd.is-mono { font-family: var(--font-mono, ui-monospace, monospace); font-size: calc(12px * var(--xk-font-scale, 1)); }
 
 body.modules-page .modules-plan-confirm::backdrop {
   background: rgb(0 0 0 / 55%);
@@ -283,17 +286,17 @@ body.modules-page .modules-plan-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: 20px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-color, #c9d0da);
 }
+/* «Отменить операцию» stands apart, on the left. */
+body.modules-page .modules-plan-actions #modules-plan-abort { margin-right: auto; }
 
-body.modules-page .modules-plan-confirm p { margin: 7px 0; overflow-wrap: anywhere; }
-body.modules-page .modules-plan-confirm [hidden] { display: none; }
+body.modules-page .modules-plan-confirm p { margin: 0; overflow-wrap: anywhere; }
+body.modules-page .modules-plan-confirm [hidden] { display: none !important; }
 
 @media (max-width: 600px) {
   body.modules-page .modules-header { padding: 12px 16px !important; }
-
-  body.modules-page .modules-plan-actions { flex-wrap: wrap; }
-  body.modules-page .modules-plan-actions button { flex: 1 1 140px; }
 }
 
 /* ==========================================================================
@@ -1072,4 +1075,227 @@ body.modules-page .modules-page-alert-actions {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* Buttons of the module cards, the operation card and the operation window:
+   the size of the summary buttons, not of the panel's large .btn-secondary. */
+body.modules-page .modules-card-actions button,
+body.modules-page .modules-operation button,
+body.modules-page .modules-plan-actions button {
+  min-height: 32px;
+  padding: 0 12px !important;
+  font-size: calc(12.5px * var(--xk-font-scale, 1)) !important;
+  font-weight: 600;
+}
+
+/* The operation window, after the core installation window of the panel:
+   head, facts, how the operation goes, actions. */
+body.modules-page .modules-plan-confirm {
+  border-color: var(--modules-border-strong);
+}
+
+body.modules-page .modules-plan-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--modules-border);
+}
+
+body.modules-page .modules-plan-head > div { display: grid; gap: 6px; min-width: 0; }
+
+body.modules-page .modules-plan-head h2 {
+  margin: 0;
+  color: var(--op-text-strong, var(--modules-text));
+  font-size: calc(17px * var(--xk-font-scale, 1));
+  text-wrap: balance;
+}
+
+body.modules-page .modules-plan-head h2:focus { outline: none; }
+
+body.modules-page .modules-plan-description {
+  color: var(--modules-muted);
+  font-size: calc(12.5px * var(--xk-font-scale, 1));
+  line-height: 1.45;
+}
+
+body.modules-page .modules-plan-description:empty { display: none; }
+
+body.modules-page .modules-plan-close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0 !important;
+  border: 1px solid var(--modules-border-strong) !important;
+  border-radius: 6px !important;
+  background: var(--modules-surface-raised) !important;
+  color: var(--modules-muted) !important;
+}
+
+body.modules-page .modules-plan-close:hover { color: var(--modules-text) !important; border-color: var(--modules-accent) !important; }
+body.modules-page .modules-plan-close svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Warnings and refusals inside the window speak at the size of its facts. */
+body.modules-page .modules-plan-confirm :is(.modules-warning, .modules-alert) {
+  /* The grid of the window spaces them already. */
+  margin: 0 !important;
+  font-size: calc(12.5px * var(--xk-font-scale, 1));
+  line-height: 1.45;
+}
+
+body.modules-page .modules-plan-body {
+  display: grid;
+  gap: 12px;
+  padding: 14px 20px 16px;
+}
+
+body.modules-page #modules-plan-summary { display: grid; gap: 12px; }
+body.modules-page #modules-plan-summary:empty { display: none; }
+
+body.modules-page .modules-plan-progress { display: grid; gap: 10px; }
+
+body.modules-page .modules-plan-progress-box {
+  display: grid;
+  gap: 12px;
+  padding: 13px 14px;
+  border: 1px solid var(--op-accent-border, var(--modules-accent));
+  border-radius: 6px;
+  background: var(--modules-accent-soft);
+}
+
+body.modules-page .modules-plan-progress-box.is-ok {
+  border-color: color-mix(in srgb, var(--modules-success) 50%, var(--modules-border));
+  background: var(--modules-success-soft);
+}
+
+body.modules-page .modules-plan-progress-box.is-bad {
+  border-color: color-mix(in srgb, var(--modules-danger) 50%, var(--modules-border));
+  background: var(--modules-danger-soft);
+}
+
+body.modules-page .modules-plan-progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+body.modules-page .modules-plan-progress-head > div { display: grid; gap: 3px; min-width: 0; }
+
+body.modules-page .modules-plan-progress-head strong {
+  color: var(--op-text-strong, var(--modules-text));
+  font-size: calc(13.5px * var(--xk-font-scale, 1));
+}
+
+body.modules-page .modules-plan-progress-head small {
+  color: var(--modules-muted);
+  font-size: calc(12px * var(--xk-font-scale, 1));
+}
+
+body.modules-page .modules-plan-progress-head output {
+  flex: none;
+  white-space: nowrap;
+  color: var(--op-text-strong, var(--modules-text));
+  font-size: calc(17px * var(--xk-font-scale, 1));
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+body.modules-page .modules-plan-progress-bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--op-surface-3, var(--modules-border));
+}
+
+body.modules-page .modules-plan-progress-bar > i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--modules-accent);
+  transition: width 240ms ease;
+}
+
+body.modules-page .is-ok .modules-plan-progress-bar > i { background: var(--modules-success); }
+body.modules-page .is-bad .modules-plan-progress-bar > i { background: var(--modules-danger); }
+
+body.modules-page .modules-plan-steps {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+body.modules-page .modules-plan-steps li {
+  min-width: 0;
+  color: var(--modules-faint);
+  font-size: calc(11px * var(--xk-font-scale, 1));
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+body.modules-page .modules-plan-steps li::before {
+  content: '';
+  display: block;
+  width: 7px;
+  height: 7px;
+  margin: 0 auto 5px;
+  border-radius: 50%;
+  background: var(--modules-faint);
+}
+
+body.modules-page .modules-plan-steps li[data-state="active"] { color: var(--op-text-strong, var(--modules-text)); font-weight: 650; }
+body.modules-page .modules-plan-steps li[data-state="active"]::before { background: var(--modules-accent); box-shadow: 0 0 0 3px var(--modules-accent-soft); }
+body.modules-page .modules-plan-steps li[data-state="done"] { color: var(--modules-muted); }
+body.modules-page .modules-plan-steps li[data-state="done"]::before { background: var(--modules-success); }
+body.modules-page .modules-plan-steps li[data-state="failed"] { color: var(--modules-danger); font-weight: 650; }
+body.modules-page .modules-plan-steps li[data-state="failed"]::before { background: var(--modules-danger); }
+
+body.modules-page .modules-plan-actions {
+  border-top-color: var(--modules-border);
+}
+
+/* The main action of the window is the accent button, as in the core window. */
+html body.modules-page .modules-plan-actions button.btn-primary {
+  border-color: var(--modules-accent) !important;
+  background: var(--modules-accent) !important;
+  color: #ffffff !important;
+}
+
+html body.modules-page .modules-plan-actions button.btn-primary:hover:not(:disabled) {
+  border-color: var(--modules-accent-hover) !important;
+  background: var(--modules-accent-hover) !important;
+}
+
+html body.modules-page .modules-plan-actions button.btn-primary:disabled {
+  opacity: .7;
+  cursor: wait;
+}
+
+@media (max-width: 600px) {
+  body.modules-page .modules-plan-head { padding: 14px 16px 12px; }
+  body.modules-page .modules-plan-body { padding: 12px 16px 14px; }
+  body.modules-page .modules-plan-facts { grid-template-columns: 1fr; gap: 2px; }
+  body.modules-page .modules-plan-facts dd { margin-bottom: 6px; }
+  body.modules-page .modules-plan-steps { grid-template-columns: 1fr 1fr; gap: 8px; }
+  body.modules-page .modules-plan-steps li { text-align: left; }
+  body.modules-page .modules-plan-steps li::before { display: inline-block; margin: 0 6px 1px 0; }
+  body.modules-page .modules-plan-actions { flex-direction: column-reverse; padding: 12px 16px; }
+  body.modules-page .modules-plan-actions button { width: 100%; }
+  body.modules-page .modules-plan-actions #modules-plan-abort { margin-right: 0; }
 }

@@ -638,21 +638,80 @@ function describeBlocker(blocker, names) {
   return alertLine('modules-alert', guidance, `${details.join(' ')} (${safeCode})`.trim());
 }
 
-export function renderPlan(dialog, plan, names = null) {
-  const title = dialog.querySelector('#modules-plan-title');
-  const summary = dialog.querySelector('#modules-plan-summary');
-  const apply = dialog.querySelector('#modules-plan-apply');
-  const titles = {
-    install: 'установки', repair: 'восстановления', remove: 'удаления',
-    'panel-update': 'обновления панели', 'panel-rollback': 'отката панели',
-    'profile-transition': 'перехода профиля',
-  };
-  title.textContent = `План ${titles[plan.operation] || 'операции'}`;
-  summary.replaceChildren();
-  const blockers = Array.isArray(plan.blockers) ? plan.blockers : [];
+// The window of one operation: its plan, then how it goes, then how it ended.
+const APPLY_LABELS = {
+  install: 'Установить', repair: 'Восстановить', remove: 'Удалить',
+  'panel-update': 'Обновить', 'panel-rollback': 'Откатить', 'profile-transition': 'Применить',
+};
+
+const RUNNING_LABELS = {
+  install: 'Установка…', repair: 'Восстановление…', remove: 'Удаление…',
+  'panel-update': 'Обновление…', 'panel-rollback': 'Откат…', 'profile-transition': 'Применение…',
+};
+
+const DONE_VERBS = { install: 'установлен', repair: 'восстановлен', remove: 'удалён' };
+
+// The runner takes these steps in this order; «Готово» is the end of them.
+const PROGRESS_STEPS = [
+  ['prepared', 'Подготовка'], ['downloading', 'Загрузка архива'], ['verifying', 'Проверка подписи'],
+  ['applying', 'Замена файлов'], ['state', 'Запись состояния'], ['restarting', 'Перезапуск панели'],
+  ['health', 'Проверка панели'],
+];
+
+const KEEP_HINT = 'Текущие файлы панели будут сохранены. При ошибке проверки или перезапуска панель вернёт прежнюю версию.';
+
+function operationVersion(source) {
+  return source.target_version || source.version || '';
+}
+
+function dialogTitle(source, names) {
+  const version = operationVersion(source);
+  const module = source.module_id ? `«${moduleLabel(source.module_id, names)}»` : '';
+  switch (source.operation) {
+    case 'panel-update': return version ? `Обновить панель до ${version}` : 'Обновить панель';
+    case 'panel-rollback': return version ? `Откатить панель до ${version}` : 'Откатить панель';
+    case 'profile-transition': return 'Применить набор модулей';
+    default: return [APPLY_LABELS[source.operation] || 'Операция', module].filter(Boolean).join(' ');
+  }
+}
+
+function doneTitle(status, names) {
+  const version = operationVersion(status);
+  if (status.operation === 'panel-update') return version ? `Панель обновлена до ${version}` : 'Панель обновлена';
+  if (status.operation === 'panel-rollback') return version ? `Панель откачена до ${version}` : 'Панель откачена';
+  if (status.operation === 'profile-transition') return 'Набор модулей применён';
+  const verb = DONE_VERBS[status.operation];
+  return verb && status.module_id ? `«${moduleLabel(status.module_id, names)}» ${verb}` : 'Операция завершена';
+}
+
+function setDialogHead(dialog, title, description) {
+  dialog.querySelector('#modules-plan-title').textContent = title;
+  dialog.querySelector('#modules-plan-description').textContent = description;
+}
+
+function setDialogButtons(dialog, buttons) {
+  for (const [id, setup] of Object.entries(buttons)) {
+    const button = dialog.querySelector(`#modules-plan-${id}`);
+    if (!button) continue;
+    button.hidden = !setup;
+    if (!setup) continue;
+    if (setup.label) button.textContent = setup.label;
+    button.disabled = setup.disabled === true;
+  }
+}
+
+function planFacts(plan, names, blockers) {
   const facts = node('dl', 'modules-plan-facts');
-  const fact = (label, value) => { facts.append(node('dt', '', label), node('dd', '', value)); };
-  fact('Действие', planAction(plan, names));
+  const fact = (label, value, className = '') => { facts.append(node('dt', '', label), node('dd', className, value)); };
+  const version = operationVersion(plan);
+  if (plan.module_id) {
+    fact('Модуль', moduleLabel(plan.module_id, names));
+    if (version) fact('Версия', version, 'is-mono');
+  } else if (plan.operation === 'panel-update' || plan.operation === 'panel-rollback') {
+    if (version) fact('Версия', plan.source_version ? `${plan.source_version} → ${version}` : version, 'is-mono');
+  } else {
+    fact('Набор', planAction(plan, names));
+  }
   const affected = Array.isArray(plan.affected_module_ids) ? plan.affected_module_ids : [];
   if (affected.length && !(affected.length === 1 && affected[0] === plan.module_id)) fact('Модули', moduleList(affected, names));
   fact('Файлы', `добавить ${plan.files_add?.length || 0}, удалить ${plan.files_remove?.length || 0}`);
@@ -663,12 +722,124 @@ export function renderPlan(dialog, plan, names = null) {
   for (const [key, value] of Object.entries(diff)) {
     if (Array.isArray(value) && value.length) fact(DEPENDENCY_LABELS[key] || `Зависимости ${key}`, moduleList(value.map(String), names));
   }
-  summary.append(facts);
-  if (plan.restart_required) summary.append(node('p', 'modules-warning', 'После операции потребуется перезапуск панели.'));
+  return facts;
+}
+
+export function renderPlan(dialog, plan, names = null) {
+  const summary = dialog.querySelector('#modules-plan-summary');
+  const progress = dialog.querySelector('#modules-plan-progress');
+  const blockers = Array.isArray(plan.blockers) ? plan.blockers : [];
+  const applicable = plan.applicable === true && Boolean(plan.plan_id);
+  dialog.dataset.mode = 'plan';
+  setDialogHead(dialog, dialogTitle(plan, names), applicable ? KEEP_HINT : 'План проверен на роутере, но применить его сейчас нельзя.');
+  summary.replaceChildren(planFacts(plan, names, blockers));
+  // A plan that cannot be applied restarts nothing: only its refusal is said.
+  if (applicable && plan.restart_required) {
+    summary.append(alertLine('modules-warning', 'Панель перезапустится.', 'Страница переподключится сама, это займёт около минуты.'));
+  }
   for (const blocker of blockers) summary.append(describeBlocker(blocker, names));
-  apply.hidden = plan.applicable !== true || !plan.plan_id;
-  apply.disabled = false;
-  dialog.querySelector('#modules-plan-cancel').disabled = false;
+  progress.hidden = true;
+  progress.replaceChildren();
+  setDialogButtons(dialog, {
+    abort: null,
+    cancel: { label: applicable ? 'Отмена' : 'Закрыть' },
+    recheck: applicable ? null : {},
+    apply: applicable ? { label: APPLY_LABELS[plan.operation] || 'Применить' } : null,
+  });
+}
+
+function stepIndex(step) {
+  return PROGRESS_STEPS.findIndex(([id]) => id === step);
+}
+
+// The last step the runner reached: where a failed operation stopped.
+function lastLoggedStep(status) {
+  const log = Array.isArray(status.log) ? status.log : [];
+  for (let i = log.length - 1; i >= 0; i -= 1) {
+    const index = stepIndex(log[i]?.step);
+    if (index >= 0) return index;
+  }
+  return stepIndex(status.step);
+}
+
+function progressBox(status, notice) {
+  const tone = RESULT_TONES[status.result] || 'run';
+  const box = node('div', `modules-plan-progress-box is-${tone}`);
+  const total = PROGRESS_STEPS.length;
+  let reached;
+  let phase;
+  let note;
+  if (status.result === 'running') {
+    reached = Math.max(stepIndex(status.step), 0);
+    phase = STEP_LABELS[status.step] || 'Подготовка';
+    note = notice || 'Окно можно закрыть, операция продолжится на роутере.';
+  } else {
+    reached = status.result === 'committed' ? total : Math.max(lastLoggedStep(status), 0);
+    phase = RESULT_LABELS[status.result] || String(status.result);
+    const started = formatClock(status.started_at);
+    const duration = formatDuration(status.started_at, status.finished_at);
+    note = [started && `Начато ${started}`, duration && `длилось ${duration}`].filter(Boolean).join(' · ');
+  }
+  const head = node('div', 'modules-plan-progress-head');
+  const words = node('div');
+  words.append(node('strong', '', phase));
+  if (note) words.append(node('small', '', note));
+  const count = Math.min(status.result === 'running' ? reached + 1 : reached, total);
+  head.append(words, node('output', '', `${count} из ${total}`));
+  const bar = node('div', 'modules-plan-progress-bar');
+  bar.setAttribute('role', 'progressbar');
+  bar.setAttribute('aria-valuemin', '0');
+  bar.setAttribute('aria-valuemax', String(total));
+  bar.setAttribute('aria-valuenow', String(count));
+  bar.setAttribute('aria-label', 'Ход операции');
+  const fill = node('i');
+  const share = status.result === 'committed' ? 1 : (status.result === 'running' ? (reached + 0.5) / total : reached / total);
+  fill.style.width = `${Math.round(Math.min(share, 1) * 100)}%`;
+  bar.append(fill);
+  const steps = node('ol', 'modules-plan-steps');
+  steps.setAttribute('aria-label', 'Этапы операции');
+  PROGRESS_STEPS.forEach(([, label], index) => {
+    const item = node('li', '', label);
+    if (status.result === 'committed' || index < reached) item.dataset.state = 'done';
+    else if (index === reached) item.dataset.state = status.result === 'running' ? 'active' : 'failed';
+    steps.append(item);
+  });
+  box.append(head, bar, steps);
+  return box;
+}
+
+// The operation goes on in the window it was planned in, and the window
+// tells how it ended when the panel comes back.
+export function renderOperationDialog(dialog, status, { notice = '', busy = false, names = null, cancelPending = false } = {}) {
+  const summary = dialog.querySelector('#modules-plan-summary');
+  const progress = dialog.querySelector('#modules-plan-progress');
+  const running = status.result === 'running';
+  dialog.dataset.mode = 'operation';
+  let description = KEEP_HINT;
+  if (status.result === 'committed') {
+    description = Array.isArray(status.log) && status.log.some((record) => record?.step === 'restarting')
+      ? 'Панель перезапущена и прошла проверку.'
+      : 'Операция завершена.';
+  } else if (!running) {
+    description = status.result === 'rollback_failed'
+      ? 'Прежние файлы вернуть не удалось. Повторите восстановление на странице модулей.'
+      : 'Операция не выполнена.';
+  }
+  setDialogHead(dialog, status.result === 'committed' ? doneTitle(status, names) : dialogTitle(status, names), description);
+  // What was planned stays on the screen: the facts are not drawn again.
+  summary.querySelector('.modules-plan-error')?.remove();
+  summary.querySelectorAll('.modules-alert, .modules-warning').forEach((line) => line.remove());
+  progress.hidden = false;
+  progress.replaceChildren(progressBox(status, notice));
+  if (!running) appendOperationProblems(progress, status);
+  setDialogButtons(dialog, {
+    abort: running && status.operation_id ? { label: cancelPending ? 'Отменяем…' : 'Отменить операцию', disabled: busy || cancelPending } : null,
+    cancel: running ? { label: 'Свернуть' } : null,
+    recheck: null,
+    apply: running
+      ? { label: RUNNING_LABELS[status.operation] || 'Выполняется…', disabled: true }
+      : { label: status.result === 'committed' ? 'Готово' : 'Закрыть' },
+  });
 }
 
 // A refusal to apply is said where the owner is looking: inside the plan.
@@ -834,6 +1005,15 @@ export function renderAvailable(host, catalog, onPlan = () => {}, busy = false, 
     }
     host.append(note);
   }
+  // A local build looks at the catalog of its release: modules come with a release build.
+  const readOnly = catalog.read_only === true;
+  if (readOnly) {
+    host.append(alertLine(
+      'modules-warning modules-catalog-readonly',
+      'Только просмотр.',
+      `Это локальная сборка: модули ставятся на выпуске панели.${catalog.release_version ? ` Каталог — выпуска ${catalog.release_version}.` : ''}`,
+    ));
+  }
   const modules = Array.isArray(catalog.modules) ? catalog.modules : [];
   if (!modules.length) host.append(node('p', 'modules-empty', 'Доступных модулей нет.'));
   modules.forEach((item) => {
@@ -845,7 +1025,7 @@ export function renderAvailable(host, catalog, onPlan = () => {}, busy = false, 
     dependencies(card, 'Нужны модули', item.requires || item.dependencies, names);
     dependencies(card, 'Конфликтуют', item.conflicts, names);
     // What is installed is repaired and removed on its own tab.
-    const actions = item.installed === true ? [] : (Array.isArray(item.lifecycle_actions) ? item.lifecycle_actions : []);
+    const actions = item.installed === true || readOnly ? [] : (Array.isArray(item.lifecycle_actions) ? item.lifecycle_actions : []);
     if (actions.length) {
       const actionRow = node('div', 'modules-card-actions');
       actions.forEach((action) => {

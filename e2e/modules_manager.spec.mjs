@@ -155,7 +155,7 @@ test.describe('Modules panel update surface', () => {
     await expect(summary).toContainText('Обновит панель и все модули одним выпуском.');
     await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem('xkeen.modules.update.v1'))?.targetVersion)).toBe('2.11.0');
     await page.getByRole('button', { name: 'Обновить до 2.11.0' }).click();
-    await expect(page.getByRole('dialog', { name: 'План обновления панели' })).toContainText('2.11.0');
+    await expect(page.getByRole('dialog', { name: 'Обновить панель до 2.11.0' })).toContainText('2.10.0 → 2.11.0');
   });
 
   test('says that the update answer comes from an old copy of the catalog', async ({ page }) => {
@@ -197,18 +197,26 @@ test.describe('Modules panel update surface', () => {
     await expect(check.getByRole('button', { name: /Обновить/ })).toHaveCount(0);
   });
 
-  test('a local build of a release updates the panel but does not open the module catalog', async ({ page }) => {
+  test('a local build of a release updates the panel and shows the module catalog read-only', async ({ page }) => {
     const local = { ...installedSnapshot, panel_version: '2.10.0+local.f46f1f10', lifecycle: { available: true, code: null, local: true },
       modules: installedSnapshot.modules.map((item) => ({ ...item, lifecycle_actions: [] })) };
-    await installLifecycleRoutes(page, { installed: local });
+    const readOnly = { ...availableSnapshot, read_only: true,
+      modules: availableSnapshot.modules.map((item) => ({ ...item, lifecycle_actions: [] })) };
+    await installLifecycleRoutes(page, { installed: local, available: readOnly });
     await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({ json: {
       ...server.update_check_current, source_version: '2.10.0+local.f46f1f10', target_version: '2.11.0', update_available: true,
     } }));
     await page.goto('/modules');
 
     await expect(page.getByRole('button', { name: 'Обновить до 2.11.0' })).toBeVisible();
-    await expect(page.getByRole('tab', { name: 'Доступные' })).toBeDisabled();
     await expect(page.locator('.modules-summary .xk-summary-note')).toContainText('Локальная сборка.');
+    await page.getByRole('tab', { name: 'Доступные' }).click();
+    const host = page.locator('#modules-card-host');
+    await expect(host.locator('.modules-catalog-readonly')).toHaveText(
+      `Только просмотр. Это локальная сборка: модули ставятся на выпуске панели. Каталог — выпуска ${readOnly.release_version}.`,
+    );
+    await expect(host.locator('.modules-card').filter({ hasText: TERMINAL })).toBeVisible();
+    await expect(host.getByRole('button')).toHaveCount(0);
   });
 
   test('keeps update feedback focused and clears a stale badge after a failed check', async ({ page }) => {
@@ -1042,7 +1050,7 @@ test.describe('Module manager recovery and guards', () => {
     await page.goto('/modules');
     await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toHaveCount(0);
     await page.getByRole('button', { name: 'Применить профиль' }).click();
-    await expect(page.getByRole('dialog', { name: 'План перехода профиля' })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: 'Применить набор модулей' })).toBeVisible();
   });
 
   test('does not offer restart without an authoritative installed profile guard', async ({ page }) => {
@@ -1160,7 +1168,7 @@ test.describe('Module manager recovery and guards', () => {
     await expect(dialog).toBeVisible();
     expect(await dialog.evaluate((element) => element.getBoundingClientRect().right <= innerWidth)).toBe(true);
     expect(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
-    await dialog.getByRole('button', { name: 'Отменить' }).click();
+    await dialog.getByRole('button', { name: 'Отмена' }).click();
     await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeFocused();
   });
 });
@@ -1291,7 +1299,7 @@ test.describe('Module lifecycle review', () => {
         });
         await page.goto('/modules');
         await page.getByRole('button', { name: 'Обновить панель' }).click();
-        if (conflictAt === 'apply') await page.getByRole('button', { name: 'Применить план' }).click();
+        if (conflictAt === 'apply') await page.getByRole('dialog').getByRole('button', { name: 'Обновить', exact: true }).click();
         await expect(page.getByRole('dialog')).toHaveCount(0);
         await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeDisabled();
         await expect.poll(() => statusCalls).toBeGreaterThan(1);
@@ -1356,12 +1364,25 @@ test.describe('Module lifecycle review', () => {
     await page.evaluate(() => { window.xkBeforeInstall = true; });
     await page.getByRole('tab', { name: 'Доступные' }).click();
     await page.getByRole('button', { name: `Установить ${TERMINAL}` }).click();
-    await page.getByRole('button', { name: 'Применить план' }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('button', { name: 'Установить', exact: true }).click();
+    // The operation goes on in the window it was planned in.
+    await expect(dialog.locator('.modules-plan-progress-head strong')).toHaveText('Подготовка');
+    await expect(dialog.locator('.modules-plan-progress-head output')).toHaveText('1 из 7');
+    await expect(dialog.getByRole('button', { name: 'Установка…' })).toBeDisabled();
     await expect(page.locator('#modules-operation-status')).toContainText('Сейчас: Подготовка');
 
     // The runner restarted the panel on the way: the page must not go on with the old scripts.
     status = committedStatus;
-    await expect.poll(() => page.evaluate(() => window.xkBeforeInstall === true), { timeout: 15000 }).toBe(false);
+    // A question asked while the page is being reloaded counts as "not yet".
+    await expect.poll(() => page.evaluate(() => window.xkBeforeInstall === true).catch(() => true), { timeout: 15000 }).toBe(false);
+    // After the reload the window opens again and tells how it ended.
+    await expect(page.getByRole('dialog', { name: `«${TERMINAL}» установлен` })).toBeVisible();
+    await expect(dialog.locator('.modules-plan-progress-head output')).toHaveText('7 из 7');
+    await expect(dialog.locator('.modules-plan-steps li[data-state="done"]')).toHaveCount(7);
+    await dialog.getByRole('button', { name: 'Готово' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    expect(await page.evaluate(() => sessionStorage.getItem('xkeen.modules.operationDialog.v1'))).toBeNull();
     await expect(page.locator('.modules-module').filter({ hasText: TERMINAL })).toBeVisible();
     await expect(page.locator('#modules-operation-status')).toContainText('Готово');
     expect(catalogCalls).toBe(1);
@@ -1389,19 +1410,22 @@ test.describe('Module lifecycle review', () => {
       return route.fulfill({ status: 202, json: { ok: true, operation_id: 'op-2', cancel_requested: true } });
     });
     await page.goto('/modules');
+    const dialog = page.getByRole('dialog');
     await page.getByRole('button', { name: 'Обновить панель' }).click();
-    await page.getByRole('button', { name: 'Применить план' }).click();
-    await expect(page.getByRole('button', { name: 'Отменить операцию' })).toBeEnabled();
+    await dialog.getByRole('button', { name: 'Обновить', exact: true }).click();
+    await expect(dialog.getByRole('button', { name: 'Отменить операцию' })).toBeEnabled();
     status = { ...server.cancelled, operation_id: 'op-1' };
+    await expect(dialog.locator('.modules-plan-progress-head strong')).toHaveText('Прервана');
+    await dialog.getByRole('button', { name: 'Закрыть', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeEnabled();
     await page.getByRole('button', { name: 'Обновить панель' }).click();
-    const dismiss = page.getByRole('dialog').getByRole('button', { name: 'Отменить', exact: true });
+    const dismiss = dialog.getByRole('button', { name: 'Отмена', exact: true });
     await expect(dismiss).toBeEnabled();
     await dismiss.click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByRole('button', { name: 'Обновить панель' }).click();
-    await page.getByRole('button', { name: 'Применить план' }).click();
-    await page.getByRole('button', { name: 'Отменить операцию' }).click();
+    await dialog.getByRole('button', { name: 'Обновить', exact: true }).click();
+    await dialog.getByRole('button', { name: 'Отменить операцию' }).click();
     expect(applyCalls).toBe(2);
     expect(cancelCalls).toBe(1);
   });
@@ -1419,7 +1443,7 @@ test.describe('Module lifecycle review', () => {
       await page.goto('/modules');
       await page.getByRole('tab', { name: 'Доступные' }).click();
       await page.getByRole('button', { name: `Установить ${TERMINAL}` }).click();
-      const dialog = page.getByRole('dialog', { name: 'План установки' });
+      const dialog = page.getByRole('dialog', { name: `Установить «${TERMINAL}»` });
       await expect(dialog).toBeVisible();
 
       const geometry = await dialog.evaluate((element) => {
@@ -1437,9 +1461,9 @@ test.describe('Module lifecycle review', () => {
       expect(geometry.top).toBeGreaterThanOrEqual(0);
       expect(geometry.bottom).toBeLessThanOrEqual(height);
       expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.clientWidth);
-      await dialog.getByRole('button', { name: 'Применить план' }).scrollIntoViewIfNeeded();
-      await expect(dialog.getByRole('button', { name: 'Применить план' })).toBeInViewport();
-      await expect(dialog.getByRole('button', { name: 'Отменить' })).toBeInViewport();
+      await dialog.getByRole('button', { name: 'Установить', exact: true }).scrollIntoViewIfNeeded();
+      await expect(dialog.getByRole('button', { name: 'Установить', exact: true })).toBeInViewport();
+      await expect(dialog.getByRole('button', { name: 'Отмена' })).toBeInViewport();
       await page.screenshot({ path: `test-results/modules-plan-dialog-${name}.png` });
     });
   }
@@ -1460,7 +1484,7 @@ test.describe('Module lifecycle review', () => {
     await page.goto('/modules');
     await page.getByRole('tab', { name: 'Доступные' }).click();
     await page.getByRole('button', { name: `Установить ${TERMINAL}` }).click();
-    await page.getByRole('button', { name: 'Применить план' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Установить', exact: true }).click();
     await expect.poll(() => Boolean(releaseApply)).toBe(true);
     await page.evaluate(async () => {
       const { getModulesController } = await import('/static/js/pages/modules.init.js');
@@ -1492,14 +1516,20 @@ test.describe('Module lifecycle review', () => {
     await page.goto('/modules');
     await page.getByRole('tab', { name: 'Доступные' }).click();
     await page.getByRole('button', { name: `Установить ${TERMINAL}` }).click();
-    await page.getByRole('button', { name: 'Применить план' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Установить', exact: true }).click();
     await expect.poll(() => Boolean(releaseApply)).toBe(true);
-    await expect(page.getByRole('button', { name: 'Отменить', exact: true })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Отмена', exact: true })).toBeDisabled();
     await page.keyboard.press('Escape');
-    await expect(page.getByRole('dialog', { name: 'План установки' })).toBeVisible();
+    const dialog = page.getByRole('dialog', { name: `Установить «${TERMINAL}»` });
+    await expect(dialog).toBeVisible();
     expect(applyCalls).toBe(1);
     releaseApply();
+    // The plan turns into the operation: the window stays and can be folded away.
+    await expect(dialog.locator('.modules-plan-progress')).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Свернуть' })).toBeEnabled();
+    await dialog.getByRole('button', { name: 'Свернуть' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page.locator('#modules-operation-status')).toContainText('Подготовка');
   });
 
   test('requires a reviewed server plan before apply and returns focus on dismissal', async ({ page }) => {
@@ -1520,18 +1550,18 @@ test.describe('Module lifecycle review', () => {
     await page.getByRole('tab', { name: 'Доступные' }).click();
     const install = page.getByRole('button', { name: `Установить ${TERMINAL}` });
     await install.click();
-    const dialog = page.getByRole('dialog', { name: 'План установки' });
+    const dialog = page.getByRole('dialog', { name: `Установить «${TERMINAL}»` });
     await expect(dialog).toContainText('нужно 12 МБ');
-    await expect(dialog).toContainText(`Установить модуль «${TERMINAL}» 2.10.0`);
+    await expect(dialog.locator('.modules-plan-facts dd').first()).toHaveText(TERMINAL);
     await expect(dialog).not.toContainText('tool.terminal');
     await expect(page.locator('#modules-plan-title')).toBeFocused();
     expect(planBodies).toEqual([{ operation: 'install', module_id: 'tool.terminal' }]);
     expect(applyBodies).toEqual([]);
-    await dialog.getByRole('button', { name: 'Отменить' }).click();
+    await dialog.getByRole('button', { name: 'Отмена' }).click();
     await expect(install).toBeFocused();
 
     await install.click();
-    await dialog.getByRole('button', { name: 'Применить план' }).click();
+    await dialog.getByRole('button', { name: 'Установить', exact: true }).click();
     await expect(page.locator('#modules-operation-status')).toContainText('Загрузка архива');
     expect(applyBodies).toEqual([{ operation: 'install', module_id: 'tool.terminal', plan_id: installPlan.plan_id }]);
     await expect(install).toBeDisabled();
@@ -1546,9 +1576,31 @@ test.describe('Module lifecycle review', () => {
     await page.goto('/modules');
     await page.getByRole('tab', { name: 'Доступные' }).click();
     await page.getByRole('button', { name: `Установить ${TERMINAL}` }).click();
-    const dialog = page.getByRole('dialog', { name: 'План установки' });
+    const dialog = page.getByRole('dialog', { name: `Установить «${TERMINAL}»` });
     await expect(dialog).toContainText('Не хватает зависимости');
-    await expect(dialog.getByRole('button', { name: 'Применить план' })).toHaveCount(0);
+    await expect(dialog).toContainText('применить его сейчас нельзя');
+    await expect(dialog.getByRole('button', { name: 'Установить', exact: true })).toHaveCount(0);
+    await expect(dialog.getByRole('button', { name: 'Закрыть', exact: true })).toBeVisible();
+    // The plan is asked for again from the same window.
+    const planned = page.waitForRequest('**/api/modules/operations/plan');
+    await dialog.getByRole('button', { name: 'Проверить снова' }).click();
+    await planned;
+    await expect(dialog).toContainText('Не хватает зависимости');
+  });
+
+  test('buttons of the catalog and of the window have the size of the summary buttons', async ({ page }) => {
+    await installIdleLifecycleRoutes(page);
+    await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: installPlan }));
+    await page.goto('/modules');
+    const summarySize = await page.locator('.xk-summary-actions button').first()
+      .evaluate((element) => getComputedStyle(element).fontSize);
+    await page.getByRole('tab', { name: 'Доступные' }).click();
+    const install = page.getByRole('button', { name: `Установить ${TERMINAL}` });
+    expect(await install.evaluate((element) => getComputedStyle(element).fontSize)).toBe(summarySize);
+    await install.click();
+    const apply = page.getByRole('dialog').getByRole('button', { name: 'Установить', exact: true });
+    expect(await apply.evaluate((element) => getComputedStyle(element).fontSize)).toBe(summarySize);
+    expect(summarySize).toBe('12.5px');
   });
 
   test('installer-only stable panel update cannot reach apply', async ({ page }) => {
@@ -1586,7 +1638,7 @@ test.describe('Module lifecycle review', () => {
       await page.goto('/modules');
       if (catalog) await page.getByRole('tab', { name: 'Доступные' }).click();
       await page.getByRole('button', { name: catalog ? `Установить ${TERMINAL}` : 'Обновить панель' }).click();
-      await page.getByRole('dialog').getByRole('button', { name: 'Применить план' }).click();
+      await page.getByRole('dialog').getByRole('button', { name: catalog ? 'Установить' : 'Обновить', exact: true }).click();
       await expect(page.getByRole('dialog')).toHaveCount(0);
       await expect(page.locator('#modules-error')).toContainText('План устарел');
       expect(bodies).toHaveLength(1);
@@ -1617,7 +1669,7 @@ test.describe('Module lifecycle review', () => {
     await page.goto('/modules');
     expect(await page.evaluate(() => sessionStorage.getItem('xkeen.modules.update.v1'))).toBeNull();
     await page.getByRole('button', { name: 'Обновить панель' }).click();
-    await expect(page.getByRole('dialog', { name: 'План обновления панели' })).toContainText('2.11.0');
+    await expect(page.getByRole('dialog', { name: 'Обновить панель до 2.11.0' })).toContainText('2.11.0');
     expect(JSON.parse(await page.evaluate(() => sessionStorage.getItem('xkeen.modules.update.v1')))).toEqual({
       schema: 1, sourceVersion: '2.10.0', targetVersion: '2.11.0',
     });
@@ -1656,8 +1708,8 @@ test.describe('Module lifecycle review', () => {
     await expect.poll(() => installedLoads).toBe(2);
     await expect.poll(() => statusLoads).toBeGreaterThanOrEqual(3);
     await page.getByRole('button', { name: 'Обновить панель' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Применить план' }).click();
-    await expect(page.getByRole('button', { name: 'Отменить операцию' })).toBeEnabled();
+    await page.getByRole('dialog').getByRole('button', { name: 'Обновить', exact: true }).click();
+    await expect(page.getByRole('dialog').getByRole('button', { name: 'Отменить операцию' })).toBeEnabled();
   });
 });
 
@@ -2035,17 +2087,18 @@ test.describe('What the window says about operations and refusals', () => {
     await page.goto('/modules');
     await page.getByRole('tab', { name: 'Доступные' }).click();
     await page.getByRole('button', { name: 'Установить Терминал и команды' }).click();
-    const dialog = page.getByRole('dialog', { name: 'План установки' });
+    const dialog = page.getByRole('dialog', { name: 'Установить «Терминал и команды»' });
     const facts = dialog.locator('.modules-plan-facts');
-    await expect(facts.locator('dt')).toHaveText(['Действие', 'Файлы', 'Место', 'Нужны модули', 'От него зависят']);
+    await expect(facts.locator('dt')).toHaveText(['Модуль', 'Версия', 'Файлы', 'Место', 'Нужны модули', 'От него зависят']);
     await expect(facts.locator('dd')).toHaveText([
-      'Установить модуль «Терминал и команды» 2.10.0', 'добавить 2, удалить 0', 'нужно 12 МБ, свободно 3 МБ',
+      'Терминал и команды', '2.10.0', 'добавить 2, удалить 0', 'нужно 12 МБ, свободно 3 МБ',
       'Xkeen UI Core', 'Файловый менеджер',
     ]);
     await expect(dialog.locator('.modules-alert')).toContainText('Недостаточно свободного места. Нужно 12 МБ, свободно 3 МБ.');
-    await expect(dialog.locator('.modules-warning')).toContainText('потребуется перезапуск');
+    // A plan that cannot be applied restarts nothing.
+    await expect(dialog.locator('.modules-warning')).toHaveCount(0);
     for (const word of ['requires', 'required_by', 'module', 'tool.']) await expect(facts).not.toContainText(word);
-    await expect(dialog.getByRole('button', { name: 'Применить план' })).toBeHidden();
+    await expect(dialog.getByRole('button', { name: 'Установить', exact: true })).toBeHidden();
     const border = await dialog.evaluate((node) => getComputedStyle(node).borderTopWidth);
     expect(border).toBe('1px');
   });
@@ -2058,8 +2111,8 @@ test.describe('What the window says about operations and refusals', () => {
     await page.goto('/modules');
     await page.getByRole('tab', { name: 'Доступные' }).click();
     await page.getByRole('button', { name: 'Установить Терминал и команды' }).click();
-    const dialog = page.getByRole('dialog', { name: 'План установки' });
-    const apply = dialog.getByRole('button', { name: 'Применить план' });
+    const dialog = page.getByRole('dialog', { name: 'Установить «Терминал и команды»' });
+    const apply = dialog.getByRole('button', { name: 'Установить', exact: true });
     await apply.click();
     const error = dialog.locator('.modules-plan-error');
     await expect(error).toHaveText('План не применён. Сначала безопасно снимите активную DNS-защиту (dns_guard_refused)');

@@ -218,6 +218,7 @@
   "available": {
     "ok": true,
     "release_version": "2.10.0",
+    "read_only": false,
     "catalog_url": "https://github.com/umarcheh001/Xkeen-UI/releases/download/v2.10.0/catalog.json",
     "fetched_at": 1791463142.4934566,
     "freshness": "fresh",
@@ -1152,6 +1153,7 @@
   "available_after_install": {
     "ok": true,
     "release_version": "2.10.0",
+    "read_only": false,
     "catalog_url": "https://github.com/umarcheh001/Xkeen-UI/releases/download/v2.10.0/catalog.json",
     "fetched_at": 1791463142.4934566,
     "freshness": "fresh",

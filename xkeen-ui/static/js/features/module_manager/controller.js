@@ -1,5 +1,5 @@
-import { renderInstalled, renderAvailable, renderCatalogError, renderPlan, renderPlanError, renderOperationStatus, hasOperationStatus, describeLifecycleFailure, renderPageAlert, TILE_REFUSAL_CODES } from './render.js';
-import { modulesChangeable } from '../panel_summary.js';
+import { renderInstalled, renderAvailable, renderCatalogError, renderPlan, renderPlanError, renderOperationDialog, renderOperationStatus, hasOperationStatus, describeLifecycleFailure, renderPageAlert, TILE_REFUSAL_CODES } from './render.js';
+import { lifecycleAvailable } from '../panel_summary.js';
 import { clearModulesUpdateBadge, reconcileModulesUpdateBadge, reconcileModulesUpdateCheck, reconcileModulesUpdatePlan, reconcileModulesUpdateStatus } from './badge.js';
 
 // The panel restarts at the end of every operation and after a restart
@@ -8,6 +8,22 @@ const RETRY_DELAYS_MS = [1000, 2000, 4000, 8000, 10000];
 const RESTART_WAIT_LIMIT_MS = 90 * 1000;
 // From these steps on the runner may be restarting the panel.
 const RESTART_STEPS = ['applying', 'state', 'restarting', 'health', 'rolling_back'];
+
+// The operation the window was showing when the panel restarted: after the
+// reload the window opens again and tells how it ended.
+const DIALOG_OPERATION_KEY = 'xkeen.modules.operationDialog.v1';
+
+function keepDialogOperation(operationId) {
+  try { window.sessionStorage.setItem(DIALOG_OPERATION_KEY, operationId); } catch (error) { /* no storage: the card on the page tells it */ }
+}
+
+function takeDialogOperation() {
+  try {
+    const operationId = window.sessionStorage.getItem(DIALOG_OPERATION_KEY);
+    window.sessionStorage.removeItem(DIALOG_OPERATION_KEY);
+    return operationId;
+  } catch (error) { return null; }
+}
 
 function retryDelay(attempt) { return RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)]; }
 
@@ -47,6 +63,9 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
   let pollTimer = null;
   let pollGeneration = 0;
   let returnFocus = null;
+  // The window shows a plan, or the operation started from it.
+  let dialogMode = null;
+  let dialogOperationId = null;
   let terminalRefreshed = null;
   let restartWait = null;
   let restartTimedOut = false;
@@ -190,7 +209,8 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
   }
 
   function renderCards() {
-    const catalogAvailable = modulesChangeable(state.installed);
+    // A local build opens the catalog to look at it; the server gives it no actions.
+    const catalogAvailable = lifecycleAvailable(state.installed);
     for (const [name, tab] of Object.entries(tabs)) {
       tab.setAttribute('aria-selected', String(state.selectedTab === name));
       tab.classList.toggle('active', state.selectedTab === name);
@@ -236,9 +256,12 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     const notice = waitNotice();
     const names = moduleNames();
     // The block is a live region: the same words drawn again are read aloud again.
-    const drawing = JSON.stringify([shown, locked, notice, shown?.module_id ? names.get(shown.module_id) || null : null]);
+    const drawing = JSON.stringify([shown, locked, notice, shown?.module_id ? names.get(shown.module_id) || null : null, dialogMode, dialogOperationId]);
     if (drawing === drawnStatus) return;
     drawnStatus = drawing;
+    if (dialogMode === 'operation' && shown && shown.operation_id === dialogOperationId) {
+      renderOperationDialog(dialog, shown, { notice, busy: locked, names, cancelPending });
+    }
     const focused = statusHost.contains(document.activeElement) ? document.activeElement.textContent : null;
     if (shown) renderOperationStatus(statusHost, shown, {
       onCancel: requestCancel, onRecovery: requestRecovery, busy: locked, names,
@@ -255,19 +278,38 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     }
   }
 
-  function closePlan({ restoreFocus = true, force = false } = {}) {
+  // The page drops a plan it can no longer trust; an operation stays in its
+  // window until the owner closes it or leaves the screen.
+  function closePlan({ restoreFocus = true, force = false, operation = false } = {}) {
     if (busy && !force) return;
+    if (dialogMode === 'operation' && !operation) return;
     state.plan = null;
+    dialogMode = null;
+    dialogOperationId = null;
+    drawnStatus = null;
     if (dialog?.open) dialog.close();
     if (restoreFocus && returnFocus?.isConnected) returnFocus.focus();
     returnFocus = null;
+  }
+
+  function closeDialog() { closePlan({ operation: true }); }
+
+  function openOperationDialog(operationId) {
+    if (!dialog || !operationId) return;
+    state.plan = null;
+    dialogMode = 'operation';
+    dialogOperationId = operationId;
+    drawnStatus = null;
+    if (!dialog.open) dialog.showModal();
+    // The button that started it is disabled now: the window keeps the focus.
+    dialog.querySelector('#modules-plan-title')?.focus();
   }
 
   async function requestPlan(operation, moduleId, trigger) {
     if (mutationsLocked() || !dialog) return;
     busy = true;
     state.plan = null;
-    returnFocus = trigger || null;
+    if (trigger) returnFocus = trigger;
     if (trigger) trigger.disabled = true;
     try {
       const plan = await api.plan(operation, moduleId);
@@ -286,10 +328,11 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
         return;
       }
       state.plan = plan;
+      dialogMode = 'plan';
       clearError();
       reconcileModulesUpdatePlan(plan);
       renderPlan(dialog, plan, moduleNames());
-      dialog.showModal();
+      if (!dialog.open) dialog.showModal();
       dialog.querySelector('#modules-plan-title').focus();
     } catch (error) {
       if (error?.code === 'operation_in_progress') await refreshInstalledAfterTerminal();
@@ -297,8 +340,17 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     } finally {
       busy = false;
       if (trigger?.isConnected) trigger.disabled = mutationsLocked();
+      // A plan asked for again that did not come: the old one is gone with it.
+      if (!state.plan && dialogMode === 'plan') closePlan({ force: true });
       if (active && !state.plan) render();
     }
+  }
+
+  // A plan that cannot be applied is asked for again from its own window.
+  function recheckPlan() {
+    const plan = state.plan;
+    if (!plan || dialogMode !== 'plan') return;
+    void requestPlan(plan.operation, plan.module_id || null, null);
   }
 
   async function refreshInstalledAfterTerminal({ keepTab = false } = {}) {
@@ -346,7 +398,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     }
     if (active) render();
     void loadKeptUpdateCheck();
-    if (active && returnTo === 'available' && modulesChangeable(state.installed)) await selectTab('available');
+    if (active && returnTo === 'available' && lifecycleAvailable(state.installed)) await selectTab('available');
   }
 
   function observeStatus(status, operationId) {
@@ -366,6 +418,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
       if (active && watched && watched === state.status.operation_id && panelRestartedBy(state.status)) {
         // The operation this page was watching restarted the panel: other
         // modules are active now and, after an update, other scripts.
+        if (dialogMode === 'operation' && dialogOperationId === watched) keepDialogOperation(watched);
         reload();
         return;
       }
@@ -444,7 +497,8 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     dialog.querySelector('#modules-plan-cancel').disabled = true;
     try {
       const applied = await api.apply(plan.operation, plan.module_id, plan.plan_id);
-      closePlan({ restoreFocus: false, force: true });
+      // The screen was left meanwhile: the operation is told by its card on return.
+      if (active) openOperationDialog(applied.operation_id || applied.status?.operation_id);
       observeStatus(applied.status, applied.operation_id);
     } catch (error) {
       if (error?.code === 'operation_in_progress') await refreshInstalledAfterTerminal();
@@ -620,7 +674,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
 
   async function selectTab(name) {
     if (!tabs[name]) return;
-    if (name === 'available' && !modulesChangeable(state.installed)) return;
+    if (name === 'available' && !lifecycleAvailable(state.installed)) return;
     state.selectedTab = name;
     render();
     if (name === 'available' && !state.catalog) {
@@ -658,9 +712,15 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     if (!tabsWired) {
       tabs.installed.addEventListener('click', () => { void selectTab('installed'); });
       tabs.available.addEventListener('click', () => { void selectTab('available'); });
-      dialog?.querySelector('#modules-plan-cancel').addEventListener('click', () => closePlan());
-      dialog?.querySelector('#modules-plan-apply').addEventListener('click', () => { void applyReviewedPlan(); });
-      dialog?.addEventListener('cancel', (event) => { event.preventDefault(); closePlan(); });
+      dialog?.querySelector('#modules-plan-cancel').addEventListener('click', closeDialog);
+      dialog?.querySelector('#modules-plan-close')?.addEventListener('click', closeDialog);
+      dialog?.querySelector('#modules-plan-recheck')?.addEventListener('click', recheckPlan);
+      dialog?.querySelector('#modules-plan-abort')?.addEventListener('click', () => { void requestCancel(); });
+      dialog?.querySelector('#modules-plan-apply').addEventListener('click', () => {
+        if (dialogMode === 'operation') closeDialog();
+        else void applyReviewedPlan();
+      });
+      dialog?.addEventListener('cancel', (event) => { event.preventDefault(); closeDialog(); });
       refreshStatusButton?.addEventListener('click', () => { void refreshStatus(); });
       tabsWired = true;
     }
@@ -679,6 +739,10 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
         installedFresh = true;
         reconcileModulesUpdateBadge(state.installed);
       } else showError(installedResult.reason);
+      const reopened = takeDialogOperation();
+      if (active && statusFresh && reopened && reopened === state.status?.operation_id && hasOperationStatus(state.status)) {
+        openOperationDialog(reopened);
+      }
       if (active) {
         render();
         if (statusFresh && state.status?.result === 'running') schedulePoll();
@@ -711,10 +775,10 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
       }
       return init();
     },
-    deactivate() { active = false; stopPolling(); closePlan({ restoreFocus: false, force: true }); },
+    deactivate() { active = false; stopPolling(); closePlan({ restoreFocus: false, force: true, operation: true }); },
     serializeState() { return { selectedTab: state.selectedTab }; },
     restoreState(saved) {
-      closePlan({ restoreFocus: false, force: true });
+      closePlan({ restoreFocus: false, force: true, operation: true });
       if (saved?.selectedTab === 'available') return selectTab('available');
       return selectTab('installed');
     },
