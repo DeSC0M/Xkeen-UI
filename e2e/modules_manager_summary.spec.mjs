@@ -269,7 +269,7 @@ test.describe('Editor variant choice', () => {
     await expect(options).toHaveText(['Лёгкий', 'Стандартный', 'Расширенный']);
     await expect(options.nth(1)).toHaveAttribute('aria-pressed', 'true');
     await expect(row.locator('.modules-tile-foot')).toHaveText('Нужен, пока включено ядро');
-    await expect(row).toContainText('Стандартный: CodeMirror, Monaco и сравнение версий.');
+    await expect(row).toContainText('Стандартный: всё из лёгкого, редактор Monaco и сравнение версий.');
     await expect(row.getByRole('switch')).toHaveCount(0);
 
     await options.nth(2).click();

@@ -57,9 +57,9 @@ function moduleIcon(moduleId) {
 
 // Each next variant holds everything of the one before it.
 const EDITOR_VARIANTS = [
-  { id: 'light', label: 'Лёгкий', hint: 'CodeMirror и базовая проверка по схеме.' },
-  { id: 'full', label: 'Стандартный', hint: 'CodeMirror, Monaco и сравнение версий.' },
-  { id: 'advanced', label: 'Расширенный', hint: 'всё из стандартного, форматирование Prettier, быстрые исправления и расширенная схема.' },
+  { id: 'light', label: 'Лёгкий', hint: 'CodeMirror, подсказки и проверка конфига по схеме, аккуратное форматирование.' },
+  { id: 'full', label: 'Стандартный', hint: 'всё из лёгкого, редактор Monaco и сравнение версий.' },
+  { id: 'advanced', label: 'Расширенный', hint: 'всё из стандартного и готовые исправления ошибок: кнопки в подсказке у подчёркнутой ошибки, в Monaco также лампочка или Ctrl+.' },
 ];
 
 const MODULE_SET_LABELS = {

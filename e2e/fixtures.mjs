@@ -181,3 +181,21 @@ export async function switchTopView(page, view) {
 
 
 export { expect };
+
+// Quick fixes come with the advanced editor variant only; the bench
+// panel serves the standard one.
+export async function serveAdvancedEditorVariant(page) {
+  await page.route('/', async (route) => {
+    const response = await route.fetch();
+    const body = (await response.text())
+      .replace(
+        /(\{[^{}]*"key": "editor-diff"[^{}]*\})/,
+        (diff) => `${diff}, ${diff.replace('"editor-diff"', '"editor-enhancements"')}`
+      )
+      .replace(
+        /"editor": \{"availableVariants": (\[[^\]]*\]), "capabilities": \[[^\]]*\], "variant": "[a-z]+"\}/,
+        '"editor": {"availableVariants": $1, "capabilities": ["codemirror", "monaco", "diff", "prettier", "quick-fix", "schema-extended"], "variant": "advanced"}'
+      );
+    await route.fulfill({ response, body });
+  });
+}

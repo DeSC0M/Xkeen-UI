@@ -9736,7 +9736,7 @@
       {
         "locator": "#mihomo-format-yaml-btn",
         "name": "data-tooltip",
-        "value": "Отформатировать YAML (Prettier; оффлайн‑фолбэк через static/vendor)"
+        "value": "Аккуратно отформатировать YAML (Prettier)"
       },
       {
         "locator": "#mihomo-validate-btn",

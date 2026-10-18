@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures.mjs';
+import { test, expect, serveAdvancedEditorVariant } from './fixtures.mjs';
 
 const VALID_ROUTING = [
   '{',
@@ -545,6 +545,44 @@ test('routing CodeMirror schema hover tooltip scrolls long help content', async 
     const node = document.querySelector('.cm6-json-schema-hover');
     return node ? Number(node.scrollTop || 0) : 0;
   })).toBeGreaterThan(0);
+});
+
+const SCALAR_IP_ROUTING = [
+  '{',
+  '  "routing": {',
+  '    "rules": [',
+  '      {',
+  '        "type": "field",',
+  '        "ip": "1.1.1.1/32",',
+  '        "outboundTag": "direct"',
+  '      }',
+  '    ]',
+  '  }',
+  '}',
+  '',
+].join('\n');
+
+test('routing CodeMirror offers quick fixes as buttons of the diagnostic tooltip', async ({ page }) => {
+  await serveAdvancedEditorVariant(page);
+  await page.goto('/');
+  await expect.poll(() => page.evaluate(() => window.XKeen?.pageConfig?.frontendModules?.editor?.variant)).toBe('advanced');
+  await waitForRoutingEditor(page);
+  await ensureCodeMirrorRouting(page);
+  await waitForRoutingSchema(page);
+  await waitForUiSettings(page);
+
+  await replaceRoutingText(page, SCALAR_IP_ROUTING);
+  const fixButton = page.locator('.cm-tooltip-lint .cm-diagnosticAction', { hasText: 'Обернуть значение в массив' });
+  // The provider loads lazily; the underline gets its button on a later
+  // lint pass, and the tooltip shows only after a hover delay.
+  await expect(async () => {
+    await clearEditorTooltips(page);
+    await page.locator('.cm-lintRange-warning').first().hover();
+    await expect(fixButton).toBeVisible({ timeout: 2000 });
+  }).toPass({ timeout: 15000 });
+
+  await fixButton.first().click();
+  await waitForRoutingText(page, '"ip": [');
 });
 
 test('routing Monaco shows Xray schema hover in browser', async ({ page }) => {

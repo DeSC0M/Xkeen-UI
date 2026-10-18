@@ -39,7 +39,7 @@
       ],
       "removable": false,
       "unit_count": 571,
-      "size_bytes": 7595389,
+      "size_bytes": 7596939,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -88,7 +88,7 @@
       ],
       "removable": true,
       "unit_count": 138,
-      "size_bytes": 3819441,
+      "size_bytes": 3819487,
       "kind_counts": {
         "backend_route": 13,
         "backend_service": 20,
@@ -132,7 +132,7 @@
       ],
       "removable": true,
       "unit_count": 130,
-      "size_bytes": 3066122,
+      "size_bytes": 3066156,
       "kind_counts": {
         "app_runtime": 4,
         "backend_route": 2,
@@ -177,7 +177,7 @@
       ],
       "removable": true,
       "unit_count": 25,
-      "size_bytes": 828158,
+      "size_bytes": 830990,
       "kind_counts": {
         "frontend_javascript": 3,
         "frontend_ui": 22
@@ -9874,7 +9874,7 @@
       "module_id": "core",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/module_manager/render.js",
-      "size_bytes": 54926,
+      "size_bytes": 55098,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -12138,7 +12138,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/routing_schema.spec.mjs",
-      "size_bytes": 24247,
+      "size_bytes": 25606,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -12741,7 +12741,7 @@
       "module_id": "core",
       "kind": "frontend_ui",
       "path": "xkeen-ui/static/js/ui/settings_panel.js",
-      "size_bytes": 57900,
+      "size_bytes": 57919,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -16624,7 +16624,7 @@
       "module_id": "engine.mihomo",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/mihomo_panel.js",
-      "size_bytes": 138216,
+      "size_bytes": 138287,
       "depends_on": [
         "core",
         "tool.editor"
@@ -17146,7 +17146,7 @@
       "module_id": "engine.mihomo",
       "kind": "template",
       "path": "xkeen-ui/templates/panel/screens/mihomo.html",
-      "size_bytes": 57163,
+      "size_bytes": 57126,
       "depends_on": [
         "core",
         "tool.editor"
@@ -19552,7 +19552,7 @@
       "module_id": "engine.xray",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/routing.js",
-      "size_bytes": 220027,
+      "size_bytes": 220073,
       "depends_on": [
         "core",
         "tool.editor"
@@ -22484,7 +22484,7 @@
       "module_id": "tool.editor",
       "kind": "frontend_ui",
       "path": "xkeen-ui/static/js/ui/codemirror6_boot.js",
-      "size_bytes": 79655,
+      "size_bytes": 82487,
       "depends_on": [
         "core"
       ],
@@ -32212,7 +32212,7 @@
       "evidence": {
         "tool.editor": {
           "unit_count": 25,
-          "size_bytes": 828158
+          "size_bytes": 830990
         },
         "tool.terminal": {
           "unit_count": 47,

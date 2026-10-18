@@ -878,6 +878,7 @@ import { iconHtml } from '../ui/operator_icons.js';
     }
     _routingQuickFixProviderProxy = {
       kind: 'xray',
+      ready: _routingQuickFixProviderPromise,
       getQuickFixes(request = {}) {
         try {
           return _routingQuickFixProvider && typeof _routingQuickFixProvider.getQuickFixes === 'function'

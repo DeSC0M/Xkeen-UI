@@ -328,6 +328,7 @@ let mihomoPanelModuleApi = null;
     }
     _mihomoQuickFixProviderProxy = {
       kind: 'mihomo',
+      ready: _mihomoQuickFixProviderPromise,
       getQuickFixes(request = {}) {
         try {
           return _mihomoQuickFixProvider && typeof _mihomoQuickFixProvider.getQuickFixes === 'function'
@@ -2213,7 +2214,7 @@ let mihomoPanelModuleApi = null;
         const err = (r && r.error) ? String(r.error) : 'unknown';
         const msg =
           (err === 'prettier_not_available')
-            ? 'Prettier недоступен — форматирование YAML пропущено.'
+            ? 'Аккуратное форматирование недоступно — YAML оставлен как есть.'
             : ('Ошибка форматирования YAML: ' + err);
         try {
           const lc = extractYamlLineCol(err);

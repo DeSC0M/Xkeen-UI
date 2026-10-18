@@ -5,7 +5,7 @@ import { json, jsonLanguage } from '@codemirror/lang-json';
 import { yaml } from '@codemirror/lang-yaml';
 import { syntaxHighlighting, HighlightStyle, LanguageSupport, ensureSyntaxTree } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
-import { lintGutter, linter, setDiagnostics as cmSetDiagnostics } from '@codemirror/lint';
+import { forceLinting, lintGutter, linter, setDiagnostics as cmSetDiagnostics } from '@codemirror/lint';
 import { search, openSearchPanel, closeSearchPanel, findNext, findPrevious, replaceNext, replaceAll as cmReplaceAll } from '@codemirror/search';
 import { toggleComment, undo, redo } from '@codemirror/commands';
 import { autocompletion } from '@codemirror/autocomplete';
@@ -571,7 +571,7 @@ function jsonSchemaWithSyntaxLinter(opts) {
     if (syntax && syntax.ok === false) {
       return Array.isArray(syntax.diagnostics) ? syntax.diagnostics : [];
     }
-    return schemaLintSource(view);
+    return withQuickFixActions(view, schemaLintSource(view), options);
   };
 }
 
@@ -919,6 +919,73 @@ function normalizeDiagnostics(view, list) {
       message,
       source: raw.source ? asString(raw.source) : 'xkeen-cm6',
     };
+  });
+}
+
+function resolveQuickFixGetter(provider) {
+  if (!provider) return null;
+  if (typeof provider === 'function') return provider;
+  if (provider && typeof provider.getQuickFixes === 'function') {
+    return (ctx) => provider.getQuickFixes(ctx);
+  }
+  return null;
+}
+
+const QUICK_FIX_ACTIONS_PER_DIAGNOSTIC = 3;
+
+function readQuickFixes(view, opts) {
+  if (isEditorExpertModeEnabled(opts)) return [];
+  const getter = resolveQuickFixGetter(opts && opts.quickFixProvider);
+  if (!getter) return [];
+  let schema;
+  try { schema = getJSONSchema(view.state); } catch (e) {}
+  try {
+    const list = getter({
+      text: view.state.doc.toString(),
+      schema,
+      yamlAssist: (opts && opts.yamlAssist) || null,
+      language: opts && opts.mode,
+    });
+    return Array.isArray(list) ? list.filter((fix) => fix && Array.isArray(fix.edits) && fix.edits.length) : [];
+  } catch (e) {}
+  return [];
+}
+
+function quickFixChanges(fix) {
+  return fix.edits.map((item) => ({
+    from: Math.max(0, Number(item && item.from || 0)),
+    to: Math.max(0, Number(item && item.to != null ? item.to : item && item.from || 0)),
+    insert: asString(item && item.insert),
+  }));
+}
+
+// The fixes of the quick-fix provider become buttons of the diagnostic
+// they overlap: CodeMirror shows them in the tooltip of the underline.
+function withQuickFixActions(view, diagnostics, opts) {
+  if (!Array.isArray(diagnostics) || !diagnostics.length) return diagnostics;
+  const fixes = readQuickFixes(view, opts);
+  if (!fixes.length) return diagnostics;
+  const doc = view.state.doc;
+  return diagnostics.map((diagnostic) => {
+    const matching = fixes.filter((fix) => {
+      const from = Number(fix.rangeFrom);
+      const to = Number(fix.rangeTo);
+      return Number.isFinite(from) && Number.isFinite(to) && from <= diagnostic.to && to >= diagnostic.from;
+    }).slice(0, QUICK_FIX_ACTIONS_PER_DIAGNOSTIC);
+    if (!matching.length) return diagnostic;
+    const actions = matching.map((fix) => ({
+      name: fix.title || 'Исправить',
+      apply(target) {
+        let current = fix;
+        // The text changed after the lint pass: take the same fix anew.
+        if (target.state.doc !== doc) {
+          current = readQuickFixes(target, opts).find((item) => item.title === fix.title);
+          if (!current) return;
+        }
+        try { target.dispatch({ changes: quickFixChanges(current), scrollIntoView: true }); } catch (e) {}
+      },
+    }));
+    return { ...diagnostic, actions: (diagnostic.actions || []).concat(actions) };
   });
 }
 
@@ -1559,8 +1626,28 @@ function buildBridge(view, ctx) {
 
   function setDiagnosticsList(list) {
     lastDiagnostics = normalizeDiagnostics(view, list);
-    try { view.dispatch(cmSetDiagnostics(view.state, lastDiagnostics)); return true; } catch (e) {}
+    const shown = withQuickFixActions(view, lastDiagnostics, options);
+    try { view.dispatch(cmSetDiagnostics(view.state, shown)); return true; } catch (e) {}
     return false;
+  }
+
+  function refreshQuickFixActions() {
+    if (disposed) return;
+    if (ctx.schema) {
+      try { forceLinting(view); } catch (e) {}
+    } else if (lastDiagnostics.length) {
+      setDiagnosticsList(lastDiagnostics);
+    }
+  }
+
+  // A provider may arrive empty and fill in later: its fixes then need
+  // a new lint pass to reach the underlines.
+  function watchQuickFixProvider(provider) {
+    const ready = provider && provider.ready;
+    if (!ready || typeof ready.then !== 'function') return;
+    ready.then(() => {
+      if (options.quickFixProvider === provider) refreshQuickFixActions();
+    }, () => {});
   }
 
   function getModeForCompat() {
@@ -1616,15 +1703,6 @@ function buildBridge(view, ctx) {
     if (command === 'links') return bridge.setLinksEnabled(!bridge.getLinksEnabled());
     if (command === 'closeSearch') return closeSearchPanel(view);
     return false;
-  }
-
-  function resolveQuickFixGetter(provider) {
-    if (!provider) return null;
-    if (typeof provider === 'function') return provider;
-    if (provider && typeof provider.getQuickFixes === 'function') {
-      return (ctx) => provider.getQuickFixes(ctx);
-    }
-    return null;
   }
 
   bridge = {
@@ -1700,6 +1778,8 @@ function buildBridge(view, ctx) {
     },
     setQuickFixProvider(provider) {
       options.quickFixProvider = provider || null;
+      refreshQuickFixActions();
+      watchQuickFixProvider(options.quickFixProvider);
       return true;
     },
     getQuickFixProvider() {
@@ -1728,12 +1808,7 @@ function buildBridge(view, ctx) {
     applyQuickFix(fix) {
       if (!fix || typeof fix !== 'object') return false;
       if (Array.isArray(fix.edits) && fix.edits.length) {
-        const changes = fix.edits.map((item) => ({
-          from: Math.max(0, Number(item && item.from || 0)),
-          to: Math.max(0, Number(item && item.to != null ? item.to : item && item.from || 0)),
-          insert: asString(item && item.insert),
-        }));
-        return dispatch({ changes, scrollIntoView: true });
+        return dispatch({ changes: quickFixChanges(fix), scrollIntoView: true });
       }
       if (typeof fix.text === 'string') {
         bridge.setValue(fix.text);
@@ -1814,10 +1889,7 @@ function buildBridge(view, ctx) {
         options.snippetProvider = value || null;
         return bridge.refreshSchemaExtensions();
       }
-      if (key === 'quickFixProvider') {
-        options.quickFixProvider = value || null;
-        return true;
-      }
+      if (key === 'quickFixProvider') return bridge.setQuickFixProvider(value);
       return true;
     },
     getMode() { return getModeForCompat(); },
@@ -1846,6 +1918,7 @@ function buildBridge(view, ctx) {
 
   syncTextarea();
   applyThemeClasses(host, options.theme);
+  watchQuickFixProvider(options.quickFixProvider);
   return bridge;
 }
 
