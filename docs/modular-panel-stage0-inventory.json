@@ -39,7 +39,7 @@
       ],
       "removable": false,
       "unit_count": 571,
-      "size_bytes": 7596939,
+      "size_bytes": 7596972,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -131,8 +131,8 @@
         "mihomo"
       ],
       "removable": true,
-      "unit_count": 130,
-      "size_bytes": 3066156,
+      "unit_count": 131,
+      "size_bytes": 3068074,
       "kind_counts": {
         "app_runtime": 4,
         "backend_route": 2,
@@ -144,7 +144,7 @@
         "frontend_entrypoint": 1,
         "frontend_feature": 22,
         "frontend_javascript": 5,
-        "frontend_test": 10,
+        "frontend_test": 11,
         "template": 6
       },
       "route_count": 89,
@@ -11632,7 +11632,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/modules_manager_summary.spec.mjs",
-      "size_bytes": 34029,
+      "size_bytes": 34062,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -17042,6 +17042,27 @@
       "kind": "frontend_test",
       "path": "e2e/mihomo_operator_header.spec.mjs",
       "size_bytes": 15433,
+      "depends_on": [
+        "core",
+        "tool.editor"
+      ],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "xkeen",
+        "mihomo"
+      ],
+      "environment_variables": [],
+      "removable": true
+    },
+    {
+      "module_id": "engine.mihomo",
+      "kind": "frontend_test",
+      "path": "e2e/mihomo_quick_fixes.spec.mjs",
+      "size_bytes": 1918,
       "depends_on": [
         "core",
         "tool.editor"
@@ -31018,7 +31039,7 @@
       {
         "from": "engine.mihomo",
         "to": "core",
-        "unit_count": 130,
+        "unit_count": 131,
         "examples": [
           "xkeen-ui/bootstrap_mihomo_env.py",
           "xkeen-ui/mihomo_config_generator.py",
@@ -31072,7 +31093,7 @@
       {
         "from": "engine.mihomo",
         "to": "tool.editor",
-        "unit_count": 130,
+        "unit_count": 131,
         "examples": [
           "xkeen-ui/bootstrap_mihomo_env.py",
           "xkeen-ui/mihomo_config_generator.py",
