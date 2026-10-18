@@ -31,6 +31,26 @@
                 aria-disabled="true"
                 {% if not (has_xray or has_mihomo) %}aria-hidden="true" tabindex="-1"{% endif %}
               >Ядро</button>
+              {% if has_xray or has_mihomo %}
+              <div class="xk-svc-cores" data-xk-svc-cores data-state="pending">
+                <div class="xk-svc-cores-head">
+                  <span class="xk-svc-kicker">Активное ядро</span>
+                  <span class="xk-svc-state"><span class="xk-svc-state-dot" aria-hidden="true"></span><span data-xk-svc-state-text>Проверяем…</span></span>
+                </div>
+                <div class="xk-svc-seg" role="group" aria-label="Ядра XKeen">
+                  <button type="button" class="xk-svc-core" data-xk-svc-core data-core="xray" aria-pressed="false" data-loading="true" aria-busy="true" aria-disabled="true">
+                    {{ op_icon('engine-xray', 'xk-svc-core-icon') }}
+                    <span class="xk-svc-core-copy"><b>Xray</b><small data-xk-svc-core-note>…</small></span>
+                    <span class="xk-svc-core-dot" aria-hidden="true"></span>
+                  </button>
+                  <button type="button" class="xk-svc-core" data-xk-svc-core data-core="mihomo" aria-pressed="false" data-loading="true" aria-busy="true" aria-disabled="true">
+                    {{ op_icon('engine-mihomo', 'xk-svc-core-icon') }}
+                    <span class="xk-svc-core-copy"><b>Mihomo</b><small data-xk-svc-core-note>…</small></span>
+                    <span class="xk-svc-core-dot" aria-hidden="true"></span>
+                  </button>
+                </div>
+              </div>
+              {% endif %}
             </div>
 
             {% for header_badge_partial in page_context.header_badge_partials %}

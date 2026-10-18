@@ -257,10 +257,9 @@ SHELL_BOUNDARIES: tuple[dict[str, Any], ...] = (
             "xkeen-stop-btn",
             "xkeen-restart-btn",
             "global-autorestart-xkeen",
-            "routing-focus-switch",
         ],
         "template_context": ["has_xray"],
-        "asset_contract": ["service controls", "routing focus slot"],
+        "asset_contract": ["service controls"],
         "api_groups": ["/api/service/*", "/api/settings/*"],
     },
 )
@@ -566,8 +565,8 @@ def build_contract(root: Path) -> dict[str, Any]:
             {
                 "id": "global-controls",
                 "current_location": PANEL_TEMPLATE,
-                "decision": "Keep service controls in core shell; keep routing-focus markup as an engine.xray-owned slot.",
-                "owners": ["core", "engine.xray"],
+                "decision": "Keep service controls in core shell.",
+                "owners": ["core"],
             },
             {
                 "id": "routing-editor",

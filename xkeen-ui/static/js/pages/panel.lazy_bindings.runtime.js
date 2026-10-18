@@ -663,7 +663,7 @@ export function wirePanelLazyFeatureClicks() {
     const raw = event && event.target && typeof event.target.closest === 'function' ? event.target : null;
     if (!raw) return;
 
-    const serviceTrigger = raw.closest('#xkeen-start-btn, #xkeen-stop-btn, #xkeen-restart-btn, #xkeen-core-text');
+    const serviceTrigger = raw.closest('#xkeen-start-btn, #xkeen-stop-btn, #xkeen-restart-btn, #xkeen-core-text, [data-xk-svc-core]');
     if (serviceTrigger && !isPanelLazyFeatureReady('serviceStatus')) {
       event.preventDefault();
       event.stopImmediatePropagation();

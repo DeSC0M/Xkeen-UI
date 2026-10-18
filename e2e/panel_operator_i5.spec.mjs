@@ -87,7 +87,8 @@ test.describe('Operator Console I5 accessibility and responsive contract', () =>
 
     test(`keyboard focus, hover tooltip and zoom remain usable in ${theme}`, async ({ page }) => {
       await openPanel(page, theme);
-      const iconButton = page.locator('button:has(.xk-action-icon)[aria-label], button:has(.xk-action-icon)[data-tooltip]').first();
+      // Service buttons carry icons too but wait in the closed service menu.
+      const iconButton = page.locator('button:has(.xk-action-icon)[aria-label]:visible, button:has(.xk-action-icon)[data-tooltip]:visible').first();
       await expect(iconButton).toBeVisible();
       await iconButton.focus();
       const focus = await iconButton.evaluate((node) => {

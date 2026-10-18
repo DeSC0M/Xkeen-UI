@@ -83,7 +83,7 @@ test.describe(`single-engine core source selection: ${PROFILE}`, () => {
     await selectPanelView(page, VIEW);
     await page.locator('.xk-brand-service-trigger').click();
     await expect(page.locator('#xk-mihomo-service-menu')).toBeVisible();
-    await page.locator('#xkeen-core-text').click();
+    await page.locator(`#xk-mihomo-service-menu [data-xk-svc-core][data-core="${ENGINE}"]`).click();
 
     const card = page.locator(`[data-core-source][data-core-engine="${ENGINE}"]`);
     await expect(card).toBeVisible();

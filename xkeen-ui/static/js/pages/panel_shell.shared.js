@@ -149,25 +149,26 @@ import { wireTopLevelNavigation } from './top_level_nav.shared.js';
     if (isLoading) {
       el.dataset.loading = 'true';
       el.setAttribute('aria-busy', 'true');
-      if (el.id === 'xkeen-core-text') {
+      if (el.id === 'xkeen-core-text' || el.hasAttribute('data-xk-svc-core')) {
         // Не `disabled`: выключенный элемент браузер лишает фокуса, и
         // пользователь, добравшийся до кнопки клавиатурой, оказывался ни на
         // чём. `aria-disabled` объявляет то же самое, но фокус оставляет —
         // действие отбивает сам обработчик клика.
         el.setAttribute('aria-disabled', 'true');
-        if (!String(el.textContent || '').trim()) el.textContent = 'Ядро';
+        if (el.id === 'xkeen-core-text' && !String(el.textContent || '').trim()) el.textContent = 'Ядро';
       }
       return;
     }
 
     try { delete el.dataset.loading; } catch (e) { el.removeAttribute('data-loading'); }
     el.removeAttribute('aria-busy');
-    if (el.id === 'xkeen-core-text') el.removeAttribute('aria-disabled');
+    if (el.id === 'xkeen-core-text' || el.hasAttribute('data-xk-svc-core')) el.removeAttribute('aria-disabled');
   }
 
   function renderHeaderAsyncShell(snapshot) {
     const loading = readUiShellLoadingState(snapshot);
     setHeaderAsyncChipLoading(document.getElementById('xkeen-core-text'), loading.currentCore);
+    document.querySelectorAll('[data-xk-svc-core]').forEach((el) => setHeaderAsyncChipLoading(el, loading.currentCore));
   }
 
   let _headerShellLoadingUnsubscribe = null;
@@ -354,6 +355,7 @@ import { wireTopLevelNavigation } from './top_level_nav.shared.js';
   }
 
   function setLightweightXkeenHeaderState(state, core) {
+    try { getServiceStatusApi()?.renderServiceMenu?.(state, core); } catch (e) {}
     const lamp = document.getElementById('xkeen-service-lamp');
     const textEl = document.getElementById('xkeen-service-text');
     const coreEl = document.getElementById('xkeen-core-text');
@@ -618,15 +620,6 @@ import { wireTopLevelNavigation } from './top_level_nav.shared.js';
       const hidden = (btn.style.display === 'none') || isForceHidden(btn);
       btn.classList.toggle('active', !hidden && btn.dataset.view === name);
     });
-
-    try {
-      const routingFocusGroup = document.querySelector('.xkeen-ctrl-group-routing-focus');
-      if (routingFocusGroup) {
-        const isRoutingView = name === 'routing';
-        routingFocusGroup.style.display = isRoutingView ? '' : 'none';
-        routingFocusGroup.setAttribute('aria-hidden', isRoutingView ? 'false' : 'true');
-      }
-    } catch (e) {}
 
     try { rememberView(name); } catch (e) {}
   }

@@ -20,28 +20,24 @@
           <button type="button" class="modal-close" id="core-modal-close-btn" aria-label="Закрыть" title="Закрыть">{{ op_icon('close') }}</button>
         </div>
         <div class="modal-body xk-core-modal-body">
-          <div class="core-select-row xk-core-engine-list" role="radiogroup" aria-label="Выбор ядра XKeen">
-            <div class="xk-core-engine-row">
-              <button type="button" class="core-option xk-core-option" data-core="xray" role="radio" aria-checked="false">
-                <span class="xk-core-option-mark" aria-hidden="true">XR</span>
-                <span class="xk-core-option-copy">
-                  <span class="xk-core-option-title">Xray</span>
-                  <span class="xk-core-option-note">Ядро прокси-сервиса</span>
-                </span>
+          <div class="core-select-row xk-core-engine-list" role="tablist" aria-label="Ядра XKeen">
+            <div class="xk-core-engine-row" data-core="xray">
+              <button type="button" class="core-option xk-core-option" data-core="xray" role="tab" aria-selected="false" aria-controls="core-source-management">
+                <span class="xk-core-option-mark" aria-hidden="true">{{ op_icon('engine-xray') }}</span>
+                <span class="xk-core-option-title">Xray</span>
+                <span class="xk-core-option-state">…</span>
               </button>
             </div>
-            <div class="xk-core-engine-row">
-              <button type="button" class="core-option xk-core-option" data-core="mihomo" role="radio" aria-checked="false">
-                <span class="xk-core-option-mark" aria-hidden="true">MH</span>
-                <span class="xk-core-option-copy">
-                  <span class="xk-core-option-title">Mihomo</span>
-                  <span class="xk-core-option-note">Ядро прокси-сервиса</span>
-                </span>
+            <div class="xk-core-engine-row" data-core="mihomo">
+              <button type="button" class="core-option xk-core-option" data-core="mihomo" role="tab" aria-selected="false" aria-controls="core-source-management">
+                <span class="xk-core-option-mark" aria-hidden="true">{{ op_icon('engine-mihomo') }}</span>
+                <span class="xk-core-option-title">Mihomo</span>
+                <span class="xk-core-option-state">…</span>
               </button>
             </div>
           </div>
-          <section class="xk-core-source-management" aria-labelledby="core-source-management-title">
-            <h2 id="core-source-management-title">Источники и обновления</h2>
+          <section id="core-source-management" class="xk-core-source-management" role="tabpanel" aria-labelledby="core-source-management-title">
+            <h2 id="core-source-management-title" class="xk-visually-hidden">Сборка ядра</h2>
             {% for core_source_control_partial in page_context.core_source_control_partials %}
             {% include core_source_control_partial %}
             {% else %}
@@ -50,13 +46,17 @@
             {% for unmanaged_core_source_partial in page_context.unmanaged_core_source_partials %}
             {% include unmanaged_core_source_partial %}
             {% endfor %}
+            <div class="xk-core-source-control xk-core-source-control-absent" data-core-absent hidden>
+              <p data-core-absent-text></p>
+              <a class="btn-secondary xk-core-source-action" href="{{ url_for('modules_page') }}">{{ op_icon('open') }}<span>Открыть модули</span></a>
+            </div>
           </section>
           <p id="core-modal-status" class="modal-hint xk-core-status" role="status" aria-live="polite"></p>
         </div>
         <div class="modal-actions xk-core-modal-actions">
           <div class="xk-core-actions-row">
-            <button type="button" id="core-modal-cancel-btn" class="btn-secondary btn-compact" data-operator-dismiss-duplicate="true">Отмена</button>
-            <button type="button" id="core-modal-confirm-btn" class="btn-primary btn-compact">Переключить</button>
+            <button type="button" id="core-modal-cancel-btn" class="btn-secondary btn-compact" data-operator-dismiss-duplicate="true">Закрыть</button>
+            <button type="button" id="core-modal-confirm-btn" class="btn-primary btn-compact" hidden>Сделать активным</button>
           </div>
         </div>
       </div>

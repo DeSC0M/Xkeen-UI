@@ -19,7 +19,7 @@ test('Xray uses the compact routing header in desktop and mobile layouts', async
 
   await page.locator('.xk-brand-service-trigger').click();
   await expect(page.locator('#xkeen-restart-btn')).toBeVisible();
-  await expect(page.locator('#routing-focus-switch')).toBeVisible();
+  await expect(page.locator('#xk-mihomo-service-menu [data-xk-svc-cores]')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.locator('.xk-brand-service-trigger')).toBeFocused();
 

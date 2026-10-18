@@ -1,18 +1,11 @@
 {% from "panel/macros.html" import op_icon %}
 {% macro render_core_source_unavailable(engine_id, engine_label, module_id) -%}
 <section class="xk-core-source-control xk-core-source-control-unavailable" data-core-source-unavailable data-core-engine="{{ engine_id }}" aria-labelledby="{{ engine_id }}-core-source-title">
-  <div class="xk-core-source-control-copy">
-    <div class="xk-core-source-control-heading">
-      <h3 id="{{ engine_id }}-core-source-title">{{ engine_label }}</h3>
-      <span class="xk-core-source-status" data-core-source-status role="status">Модуль управления не установлен</span>
-    </div>
-    <div class="xk-core-source-summary">
-      <span>Ядро найдено на роутере, но панель не управляет им в текущем профиле.</span>
-    </div>
-  </div>
+  <h3 id="{{ engine_id }}-core-source-title" class="xk-visually-hidden">{{ engine_label }}</h3>
+  <p class="xk-core-source-note"><span class="xk-core-source-status" data-core-source-status role="status">Модуль управления не установлен</span>. Ядро {{ engine_label }} есть на роутере, но панель не управляет им в текущем профиле.</p>
   <div class="xk-core-source-actions" aria-label="Доступность управления ядром {{ engine_label }}">
     <a class="btn-secondary xk-core-source-action" href="{{ url_for('modules_page') }}" data-tooltip="Установить модуль {{ module_id }} для управления ядром">
-      <span>Установить модуль</span>
+      {{ op_icon('open') }}<span>Установить модуль</span>
     </a>
   </div>
 </section>
@@ -20,19 +13,20 @@
 
 {% macro render_core_source_controls(engine_id, engine_label) -%}
 <section class="xk-core-source-control" data-core-source data-core-engine="{{ engine_id }}" aria-labelledby="{{ engine_id }}-core-source-title">
-  <div class="xk-core-source-control-copy">
-    <div class="xk-core-source-control-heading">
-      <h3 id="{{ engine_id }}-core-source-title">{{ engine_label }}</h3>
-      <span class="xk-core-source-status" data-core-source-status role="status" aria-live="polite">Загружаем состояние</span>
-    </div>
-    <div class="xk-core-source-summary" data-core-source-summary>
-      <span data-core-source-installed>Установленный профиль: неизвестен</span>
-      <span data-core-source-selected>Источник: проверяется</span>
-    </div>
-  </div>
+  <h3 id="{{ engine_id }}-core-source-title" class="xk-visually-hidden">Сборка {{ engine_label }}</h3>
+  <dl class="xk-core-source-facts" data-core-source-summary>
+    <dt>Версия</dt>
+    <dd data-core-source-version>Проверяем</dd>
+    <dt>Установлено из</dt>
+    <dd data-core-source-installed>Проверяем</dd>
+    <dt>Обновлять из</dt>
+    <dd data-core-source-selected>Проверяем</dd>
+    <dt>Состояние</dt>
+    <dd class="xk-core-source-status" data-core-source-status role="status" aria-live="polite">Загружаем состояние</dd>
+  </dl>
   <div class="xk-core-source-actions" aria-label="Действия с ядром {{ engine_label }}">
     <button type="button" class="btn-secondary xk-core-source-action" data-core-source-action="open" data-tooltip="Выбрать проверенный источник сборки">
-      {{ op_icon('github') }}<span>Источник</span>
+      {{ op_icon('github') }}<span>Выбрать источник</span>
     </button>
     <button type="button" class="btn-primary xk-core-source-action" data-core-source-action="prepare" data-tooltip="Проверить релиз и подготовить безопасную установку" disabled>
       {{ op_icon('download') }}<span data-core-source-prepare-label>Проверить и установить</span>

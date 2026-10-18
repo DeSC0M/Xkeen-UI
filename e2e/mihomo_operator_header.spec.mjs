@@ -179,7 +179,7 @@ test('Mihomo header preserves controls, service state and navigation in both the
         }
         if (id === 'xk-mihomo-service-menu') {
           const toggle = await page.locator('#xk-mihomo-service-menu .dt-switch').boundingBox();
-          const core = await page.locator('#xkeen-core-text').boundingBox();
+          const core = await page.locator('#xk-mihomo-service-menu [data-xk-svc-cores]').boundingBox();
           expect(Math.abs(toggle.x - core.x)).toBeLessThanOrEqual(1);
         }
         if (id === 'xk-mihomo-sections-menu') {

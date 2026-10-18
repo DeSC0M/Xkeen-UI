@@ -444,11 +444,13 @@ def test_core_switch_modal_keeps_only_core_cards_without_redundant_status_chrome
     modal = element_markup(markup, "core-modal")
 
     assert 'xk-core-engine-list' in modal
+    # One tab per engine, each with its state badge (active, installed or not).
     assert 'data-core="xray"' in modal
     assert 'data-core="mihomo"' in modal
+    assert 'role="tab"' in modal
+    assert 'class="xk-core-option-state"' in modal
     assert 'Выберите активное ядро' not in modal
     assert 'class="xk-core-lead"' not in modal
-    assert 'class="xk-core-option-state"' not in modal
     assert 'class="xk-core-option-indicator"' not in modal
 
 

@@ -52,13 +52,6 @@
       "template": "panel/slots/diagnostics_actions.html"
     },
     {
-      "collection": "control_partials",
-      "owners": [
-        "engine.xray"
-      ],
-      "template": "panel/slots/routing_focus.html"
-    },
-    {
       "collection": "routing_inbounds_action_partials",
       "owners": [
         "engine.xray",
@@ -933,7 +926,6 @@
         "view-xray-logs",
         "xray-log-output",
         "xray-logs-badge",
-        "routing-focus-switch",
         "xray-core-source-modal",
         "xray-core-install-modal",
         "view-commands",
@@ -1061,7 +1053,6 @@
         "terminal-overlay",
         "fm-root",
         "xray-logs-badge",
-        "routing-focus-switch",
         "xray-core-source-modal",
         "xray-core-install-modal",
         "mihomo-core-source-modal",
@@ -1159,7 +1150,6 @@
         "terminal-overlay",
         "fm-root",
         "xray-logs-badge",
-        "routing-focus-switch",
         "xray-core-source-modal",
         "xray-core-install-modal",
         "mihomo-core-source-modal",

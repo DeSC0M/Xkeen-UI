@@ -54,8 +54,9 @@ def test_one_engine_keeps_the_core_management_entry_point_visible():
 
 
 def test_single_core_modal_points_to_fork_installation_controls():
-    branch_start = STATUS.index("if (cores.length < 2) {")
-    branch_end = STATUS.index("        setCoreModalStatus('', 'hint');", branch_start)
-    branch = STATUS[branch_start:branch_end]
-
-    assert "Ниже можно выбрать форк или обновить текущую сборку." in branch
+    # One installed engine no longer dims the tabs: every engine keeps its
+    # tab, and the chosen one shows its build with the source controls.
+    assert "if (cores.length < 2) {" not in STATUS
+    assert "btn.dataset.installed = String(cores.includes(" in STATUS
+    assert "function showCoreModalEngine(" in STATUS
+    assert "включите модуль ${label} на странице модулей" in STATUS

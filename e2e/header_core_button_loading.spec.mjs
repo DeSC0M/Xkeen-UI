@@ -32,8 +32,14 @@ async function openServiceMenu(page) {
   await expect(page.locator('#xk-mihomo-service-menu')).toBeVisible();
 }
 
-async function activeElementId(page) {
-  return page.evaluate(() => document.activeElement?.id || document.activeElement?.nodeName || null);
+// The engine switch replaced the core button; its buttons are told apart
+// by the engine they stand for.
+function coreSwitch(page) {
+  return page.locator('#xk-mihomo-service-menu [data-xk-svc-core][data-core="xray"]');
+}
+
+async function focusedCore(page) {
+  return page.evaluate(() => document.activeElement?.getAttribute('data-core') || document.activeElement?.nodeName || null);
 }
 
 test('фокус на кнопке ядра переживает окончание загрузки', async ({ page }) => {
@@ -41,16 +47,16 @@ test('фокус на кнопке ядра переживает окончан�
   await page.goto('/');
   await openServiceMenu(page);
 
-  const core = page.locator('#xkeen-core-text');
+  const core = coreSwitch(page);
   await expect(core).toHaveAttribute('data-loading', 'true');
   await core.focus();
-  expect(await activeElementId(page)).toBe('xkeen-core-text');
+  expect(await focusedCore(page)).toBe('xray');
 
   release();
   await expect(core).not.toHaveAttribute('data-loading', 'true');
   // Будь кнопка на время загрузки `disabled`, браузер отобрал бы фокус молча,
   // а снятие выключения его уже не вернуло бы.
-  expect(await activeElementId(page)).toBe('xkeen-core-text');
+  expect(await focusedCore(page)).toBe('xray');
 });
 
 
@@ -58,14 +64,14 @@ test('во время загрузки кнопка ядра не открыва
   const release = await holdStatus(page);
   await page.goto('/');
   await openServiceMenu(page);
-  const core = page.locator('#xkeen-core-text');
+  const core = coreSwitch(page);
   await expect(core).toHaveAttribute('data-loading', 'true');
   await expect(core).toHaveAttribute('aria-disabled', 'true');
 
   // Мышиный клик гасит pointer-events, а клавиатура доходит до обработчика —
   // значит отбой нужен в нём самом.
   await core.focus();
-  expect(await activeElementId(page)).toBe('xkeen-core-text');
+  expect(await focusedCore(page)).toBe('xray');
   await page.keyboard.press('Enter');
   await expect(page.locator('#core-modal')).toBeHidden();
 

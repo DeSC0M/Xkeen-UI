@@ -149,7 +149,6 @@ def test_stage0_inventory_classifies_all_inline_styles_and_dom_hooks(tmp_path):
     assert dom["hidden_runtime_node_count"] > 0
     assert dom["js_referenced_template_id_count"] > 0
     for required_id in (
-        "routing-focus-note",
         "json-editor-file-label",
         "inbounds-file-code",
         "outbounds-file-code",

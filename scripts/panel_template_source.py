@@ -37,7 +37,7 @@ DYNAMIC_COMPOSITION_INCLUDE_PATHS: dict[str, tuple[str, ...]] = {
         "panel/slots/diagnostics_summary.html",
     ),
     "header_action_partial": ("panel/slots/diagnostics_actions.html",),
-    "control_partial": ("panel/slots/routing_focus.html",),
+    "control_partial": (),
     "routing_inbounds_action_partial": ("panel/slots/backups_inbounds_actions.html",),
     "routing_outbounds_action_partial": ("panel/slots/backups_outbounds_actions.html",),
     "routing_side_card_partial": ("panel/slots/backups_xray_card.html",),

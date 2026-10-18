@@ -160,6 +160,12 @@ let serviceStatusModuleApi = null;
     else delete statusEl.dataset.state;
   }
 
+  const CORE_LABELS = { xray: 'Xray', mihomo: 'Mihomo' };
+
+  function coreLabel(core) {
+    return CORE_LABELS[normalizeCore(core)] || 'Ядро';
+  }
+
   function resetCoreModalUi() {
     _coreModalLoading = false;
     setCoreModalCurrentCore('');
@@ -173,12 +179,50 @@ let serviceStatusModuleApi = null;
       btn.disabled = false;
       setCoreModalButtonVisible(btn, true);
       btn.classList.remove('active', 'is-current');
+      delete btn.dataset.installed;
       const row = getCoreModalButtonRow(btn);
-      if (row) row.classList.remove('active', 'is-current', 'is-disabled');
-      try { btn.setAttribute('aria-checked', 'false'); } catch (e) {}
+      if (row) row.classList.remove('active', 'is-current', 'is-disabled', 'is-absent');
+      try { btn.setAttribute('aria-selected', 'false'); } catch (e) {}
       const stateEl = getCoreModalButtonState(btn);
-      if (stateEl) stateEl.textContent = 'Доступно';
+      if (stateEl) stateEl.textContent = '…';
     });
+  }
+
+  // Only the chosen engine's build is shown under the tabs. An engine the
+  // panel has no controls for gets a note that leads to the modules page.
+  function showCoreModalEngine(core, installed) {
+    const modal = getCoreModal();
+    if (!modal) return;
+    const value = normalizeCore(core);
+    let shown = 0;
+    modal.querySelectorAll('[data-core-source], [data-core-source-unavailable]').forEach((el) => {
+      const match = !!value && normalizeCore(el.getAttribute('data-core-engine')) === value;
+      el.hidden = !match;
+      if (!match) return;
+      shown += 1;
+      if (installed === true || installed === false) {
+        el.dataset.coreInstalled = String(installed);
+        // The binary's own answer stands in when the source state has none.
+        if (_coreVersions[value]) el.dataset.coreVersion = _coreVersions[value];
+        const version = el.querySelector('[data-core-source-version]');
+        if (version && version.textContent === 'не определена') {
+          if (!installed) version.textContent = 'не установлено';
+          else if (_coreVersions[value]) version.textContent = _coreVersions[value];
+        }
+      }
+    });
+    const empty = modal.querySelector('.xk-core-source-empty');
+    if (empty) empty.hidden = true;
+    const absent = modal.querySelector('[data-core-absent]');
+    if (!absent) return;
+    absent.hidden = !value || shown > 0;
+    const textEl = absent.querySelector('[data-core-absent-text]');
+    if (textEl && value) {
+      const label = coreLabel(value);
+      textEl.textContent = installed
+        ? `Ядро ${label} есть на роутере, но панель им не управляет. Включите модуль ${label} на странице модулей.`
+        : `${label} не установлено на роутере. Чтобы ставить и обновлять его из панели, включите модуль ${label} на странице модулей.`;
+    }
   }
 
   function syncCoreModalSelectionUi() {
@@ -189,53 +233,51 @@ let serviceStatusModuleApi = null;
 
     const currentCore = getCoreModalCurrentCore();
     let selectedCore = '';
-    let anyEnabled = false;
+    let selectedInstalled = null;
 
     coreButtons.forEach((btn) => {
       const core = normalizeCore(btn.getAttribute('data-core'));
-      const isVisible = isCoreModalButtonVisible(btn);
-      const isDisabled = !!btn.disabled || !isVisible;
-      const isSelected = isVisible && btn.classList.contains('active');
+      const isSelected = isCoreModalButtonVisible(btn) && btn.classList.contains('active');
       const isCurrent = !!core && core === currentCore;
+      const known = btn.dataset.installed === 'true' || btn.dataset.installed === 'false';
+      const installed = btn.dataset.installed === 'true';
       const row = getCoreModalButtonRow(btn);
 
-      if (isVisible && !btn.disabled) anyEnabled = true;
-      if (isSelected && !isDisabled) selectedCore = core;
+      if (isSelected) {
+        selectedCore = core;
+        selectedInstalled = known ? installed : null;
+      }
 
       btn.classList.toggle('is-current', isCurrent);
       if (row) {
         row.classList.toggle('active', isSelected);
         row.classList.toggle('is-current', isCurrent);
-        row.classList.toggle('is-disabled', isDisabled);
+        row.classList.toggle('is-absent', known && !installed);
+        row.classList.remove('is-disabled');
       }
-      try { btn.setAttribute('aria-checked', isSelected ? 'true' : 'false'); } catch (e) {}
+      try {
+        btn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+        btn.tabIndex = isSelected ? 0 : -1;
+      } catch (e) {}
 
       const stateEl = getCoreModalButtonState(btn);
-      if (!stateEl) return;
-      if (isSelected && isCurrent) stateEl.textContent = 'Активно';
-      else if (isSelected) stateEl.textContent = 'Выбрано';
-      else if (isCurrent) stateEl.textContent = 'Текущее';
-      else stateEl.textContent = isDisabled ? 'Недоступно' : 'Доступно';
+      if (stateEl && known) stateEl.textContent = isCurrent ? 'Активно' : installed ? 'Установлено' : 'Не установлено';
     });
 
-    const canSubmit = !!selectedCore && anyEnabled && (!currentCore || selectedCore !== currentCore) && !_coreModalLoading;
-    confirmBtn.disabled = !canSubmit;
+    showCoreModalEngine(selectedCore, selectedInstalled);
+
+    const canSwitch = !!selectedCore && selectedInstalled === true && selectedCore !== currentCore && !_coreModalLoading;
+    confirmBtn.hidden = !canSwitch;
+    confirmBtn.disabled = !canSwitch;
+    if (canSwitch) confirmBtn.textContent = `Сделать ${coreLabel(selectedCore)} активным`;
 
     const state = statusEl.dataset ? String(statusEl.dataset.state || '') : '';
     if (state === 'loading' || state === 'busy' || state === 'error') return;
-    if (!anyEnabled) return;
-
-    if (!selectedCore) {
-      setCoreModalStatus('Выберите ядро для переключения.', 'hint');
+    if (canSwitch) {
+      setCoreModalStatus(`Активным станет ${coreLabel(selectedCore)}. Служба xkeen перезапустится.`, 'hint');
       return;
     }
-
-    if (currentCore && selectedCore === currentCore) {
-      setCoreModalStatus(`Сейчас активно ядро ${currentCore}. Выберите другой вариант для переключения.`, 'hint');
-      return;
-    }
-
-    setCoreModalStatus(`Будет активировано ядро ${selectedCore}. После применения сервис xkeen перезапустится.`, 'hint');
+    setCoreModalStatus('', '');
   }
 
   function readShellSnapshot() {
@@ -1011,6 +1053,7 @@ let serviceStatusModuleApi = null;
     }
 
     textEl.textContent = text;
+    renderServiceMenuCores(st, core);
 
     const hasCore = !!core;
     if (hasCore) {
@@ -1155,7 +1198,7 @@ let serviceStatusModuleApi = null;
 
   // ---------- Core selection modal ----------
 
-  function openXkeenCoreModal() {
+  function openXkeenCoreModal(preferredCore) {
     const modal = getCoreModal();
     const statusEl = $('core-modal-status');
     const confirmBtn = $('core-modal-confirm-btn');
@@ -1173,19 +1216,23 @@ let serviceStatusModuleApi = null;
     } catch (e) {}
 
     showModal(modal, 'service_status_core_open');
+    void loadServiceMenuCores().then(() => syncCoreModalSelectionUi());
     setCoreModalCurrentCore('');
     setCoreModalStatus('Загрузка списка ядер...', 'loading');
     confirmBtn.disabled = true;
 
+    confirmBtn.hidden = true;
+    showCoreModalEngine('', null);
     coreButtons.forEach((btn) => {
       btn.disabled = true;
       setCoreModalButtonVisible(btn, true);
       btn.classList.remove('active', 'is-current');
+      delete btn.dataset.installed;
       const row = getCoreModalButtonRow(btn);
-      if (row) row.classList.remove('active', 'is-current', 'is-disabled');
-      try { btn.setAttribute('aria-checked', 'false'); } catch (e) {}
+      if (row) row.classList.remove('active', 'is-current', 'is-disabled', 'is-absent');
+      try { btn.setAttribute('aria-selected', 'false'); } catch (e) {}
       const stateEl = getCoreModalButtonState(btn);
-      if (stateEl) stateEl.textContent = 'Недоступно';
+      if (stateEl) stateEl.textContent = '…';
     });
 
     _coreModalLoading = true;
@@ -1207,65 +1254,19 @@ let serviceStatusModuleApi = null;
         const cores = Array.isArray(data.cores) ? data.cores.map((core) => normalizeCore(core)).filter(Boolean) : [];
         const current = normalizeCore(data.currentCore || '');
         setCoreModalCurrentCore(current);
+        rememberInstalledCores(cores, current);
 
-        if (cores.length < 2) {
-          setCoreModalStatus(
-            cores.length
-              ? 'Установлено одно ядро. Ниже можно выбрать форк или обновить текущую сборку.'
-              : 'Ядро не установлено. Ниже можно выбрать форк и установить сборку.',
-            'hint'
-          );
-          confirmBtn.disabled = true;
-          coreButtons.forEach((btn) => {
-            const isCurrent = normalizeCore(btn.getAttribute('data-core')) === current;
-            btn.disabled = true;
-            btn.classList.toggle('is-current', isCurrent);
-            btn.classList.toggle('active', isCurrent);
-            const row = getCoreModalButtonRow(btn);
-            if (row) {
-              row.classList.toggle('active', isCurrent);
-              row.classList.toggle('is-current', isCurrent);
-              row.classList.add('is-disabled');
-            }
-            const stateEl = getCoreModalButtonState(btn);
-            if (stateEl) stateEl.textContent = isCurrent ? 'Активно' : 'Недоступно';
-          });
-          return;
-        }
-
-        setCoreModalStatus('', 'hint');
-
-        let anyVisible = false;
-        let hasActiveSelection = false;
+        // Every engine keeps its tab: an absent one explains how to get it.
         coreButtons.forEach((btn) => {
-          const value = normalizeCore(btn.getAttribute('data-core'));
-          if (!value || !cores.includes(value)) {
-            setCoreModalButtonVisible(btn, false);
-            btn.disabled = true;
-            btn.classList.remove('active', 'is-current');
-            const row = getCoreModalButtonRow(btn);
-            if (row) row.classList.remove('active', 'is-current');
-            const stateEl = getCoreModalButtonState(btn);
-            if (stateEl) stateEl.textContent = 'Недоступно';
-            return;
-          }
-          anyVisible = true;
-          setCoreModalButtonVisible(btn, true);
           btn.disabled = false;
-          btn.classList.toggle('active', !!current && value === current);
-          if (btn.classList.contains('active')) hasActiveSelection = true;
+          setCoreModalButtonVisible(btn, true);
+          btn.dataset.installed = String(cores.includes(normalizeCore(btn.getAttribute('data-core'))));
+          btn.classList.remove('active');
         });
-
-        if (!hasActiveSelection) {
-          const fallbackButton = coreButtons.find((btn) => isCoreModalButtonVisible(btn) && !btn.disabled);
-          if (fallbackButton) fallbackButton.classList.add('active');
-        }
-
-        if (!anyVisible) {
-          setCoreModalStatus('Не найдено доступных ядер для переключения.', 'error');
-          confirmBtn.disabled = true;
-          return;
-        }
+        const wanted = [preferredCore ? normalizeCore(preferredCore) : '', current, cores[0], 'xray'].find(Boolean);
+        const pick = coreButtons.find((btn) => normalizeCore(btn.getAttribute('data-core')) === wanted) || coreButtons[0];
+        pick.classList.add('active');
+        setCoreModalStatus('', '');
 
         syncCoreModalSelectionUi();
       })
@@ -1424,12 +1425,141 @@ let serviceStatusModuleApi = null;
           if (btn.disabled) return;
           coreOptionButtons.forEach((b) => b.classList.remove('active'));
           btn.classList.add('active');
-          setCoreModalStatus('', 'hint');
+          setCoreModalStatus('', '');
           syncCoreModalSelectionUi();
+        });
+        btn.addEventListener('keydown', (e) => {
+          if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+          e.preventDefault();
+          const index = coreOptionButtons.indexOf(btn);
+          const next = coreOptionButtons[(index + (e.key === 'ArrowRight' ? 1 : -1) + coreOptionButtons.length) % coreOptionButtons.length];
+          if (!next || next.disabled) return;
+          next.focus();
+          next.click();
         });
       });
     }
 
+    bindServiceMenuCores();
+
+  }
+
+  // ---------- Core switch of the service menu ----------
+
+  const SERVICE_STATE_TEXT = {
+    running: 'Работает',
+    stopped: 'Остановлено',
+    pending: 'Проверяем…',
+    error: 'Нет связи со службой',
+  };
+
+  let _installedCores = null;
+  let _coreVersions = {};
+  let _menuCoresRequest = null;
+
+  function rememberInstalledCores(cores, current) {
+    _installedCores = Array.isArray(cores) ? cores.slice() : null;
+    renderServiceMenuCores(undefined, current);
+  }
+
+  function shortVersion(value) {
+    const text = String(value || '').trim();
+    return text ? text.replace(/^v(?=\d)/i, '') : '';
+  }
+
+  // Engines and their versions are read when the menu opens: asking the
+  // binaries for a version is too slow for every status poll.
+  function loadServiceMenuCores() {
+    if (_menuCoresRequest) return _menuCoresRequest;
+    const readJson = (url) => fetch(url, { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .catch(() => null);
+    _menuCoresRequest = Promise.all([readJson('/api/xkeen/core'), readJson('/api/cores/versions')])
+      .then(([coreData, versionData]) => {
+        if (coreData && coreData.ok !== false && Array.isArray(coreData.cores)) {
+          _installedCores = coreData.cores.map((core) => normalizeCore(core)).filter(Boolean);
+        }
+        const versions = {};
+        const found = versionData && versionData.cores && typeof versionData.cores === 'object' ? versionData.cores : {};
+        Object.keys(found).forEach((core) => {
+          const entry = found[core] || {};
+          if (entry.installed && entry.version) versions[normalizeCore(core)] = shortVersion(entry.version);
+        });
+        _coreVersions = versions;
+        renderServiceMenuCores();
+      })
+      .finally(() => {
+        _menuCoresRequest = null;
+      });
+    return _menuCoresRequest;
+  }
+
+  function renderServiceMenuCores(state, core) {
+    const block = document.querySelector('[data-xk-svc-cores]');
+    if (!block) return;
+    const shell = readShellSnapshot();
+    const st = String(state === undefined ? shell.serviceStatus || '' : state || '').toLowerCase();
+    const current = normalizeCore(core === undefined ? shell.currentCore : core);
+
+    block.dataset.state = st || 'pending';
+    const stateText = block.querySelector('[data-xk-svc-state-text]');
+    if (stateText) stateText.textContent = SERVICE_STATE_TEXT[st] || SERVICE_STATE_TEXT.pending;
+
+    block.querySelectorAll('[data-xk-svc-core]').forEach((btn) => {
+      const value = normalizeCore(btn.getAttribute('data-core'));
+      const isCurrent = !!current && value === current;
+      const installed = _installedCores ? _installedCores.includes(value) : isCurrent;
+      const version = _coreVersions[value] || '';
+      // An engine without a binary and without its module is one the owner
+      // does not use: the switch leaves it out instead of listing it absent.
+      const unused = !isCurrent && !installed && _installedCores !== null && !coreHasManagementModule(value);
+      btn.hidden = unused;
+      btn.setAttribute('aria-pressed', String(isCurrent));
+      btn.classList.toggle('is-absent', !installed);
+      const note = btn.querySelector('[data-xk-svc-core-note]');
+      if (!note) return;
+      if (isCurrent) note.textContent = version ? `${version} · активно` : 'активно';
+      else if (installed) note.textContent = version || 'установлено';
+      else note.textContent = _installedCores ? 'не установлено' : '…';
+      const label = coreLabel(value);
+      btn.setAttribute('aria-label', isCurrent
+        ? `${label}: активное ядро. Открыть управление ядром`
+        : installed ? `${label}: установлено. Открыть управление ядром` : `${label}: не установлено. Открыть управление ядром`);
+    });
+    block.dataset.cores = String(block.querySelectorAll('[data-xk-svc-core]:not([hidden])').length);
+  }
+
+  // Opening the menu reads engines and versions. It is bound as soon as the
+  // header renders: the rest of this module may still be waiting for a click.
+  let _menuOpenBound = false;
+  function bindServiceMenuOpen() {
+    if (_menuOpenBound) return;
+    _menuOpenBound = true;
+    document.addEventListener('click', (e) => {
+      const trigger = e.target && typeof e.target.closest === 'function' ? e.target.closest('.xk-brand-service-trigger') : null;
+      if (trigger) void loadServiceMenuCores();
+    });
+  }
+
+  function renderServiceMenu(state, core) {
+    bindServiceMenuOpen();
+    renderServiceMenuCores(state, core);
+  }
+
+  function bindServiceMenuCores() {
+    const block = document.querySelector('[data-xk-svc-cores]');
+    if (!block || block.dataset.bound === '1') return;
+    block.dataset.bound = '1';
+    block.querySelectorAll('[data-xk-svc-core]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        // While the core is loading the button is only announced as
+        // unavailable, so that it keeps keyboard focus.
+        if (btn.getAttribute('aria-disabled') === 'true') return;
+        openXkeenCoreModal(btn.getAttribute('data-core'));
+      });
+    });
+    renderServiceMenu();
   }
 
   function startPolling(intervalMs) {
@@ -1518,6 +1648,7 @@ let serviceStatusModuleApi = null;
     startPolling,
     stopPolling,
     openCoreModal: openXkeenCoreModal,
+    renderServiceMenu,
     closeCoreModal: closeXkeenCoreModal,
     confirmCoreChange: confirmXkeenCoreChange,
   };

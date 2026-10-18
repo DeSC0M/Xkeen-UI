@@ -76,7 +76,6 @@ PANEL_COMPOSITION: tuple[PanelCompositionEntry, ...] = (
     PanelCompositionEntry("header_summary_partials", ("core",), "panel/slots/resource_monitor_unavailable.html"),
     PanelCompositionEntry("header_summary_partials", ("tool.advanced-diagnostics",), "panel/slots/diagnostics_summary.html"),
     PanelCompositionEntry("header_action_partials", ("tool.advanced-diagnostics",), "panel/slots/diagnostics_actions.html"),
-    PanelCompositionEntry("control_partials", ("engine.xray",), "panel/slots/routing_focus.html"),
     # The backup API belongs to tool.backups, so the routing screen gets its
     # backup card and buttons only together with that module.
     PanelCompositionEntry("routing_inbounds_action_partials", ("engine.xray", "tool.backups"), "panel/slots/backups_inbounds_actions.html"),

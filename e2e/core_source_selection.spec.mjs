@@ -62,12 +62,13 @@ async function openView(page, view, viewport = { width: 1440, height: 900 }) {
 }
 
 
-async function openCoreManagement(page) {
+async function openCoreManagement(page, engine = 'xray') {
   const trigger = page.locator('.xk-brand-service-trigger');
   await expect(trigger).toBeVisible();
   await trigger.click();
 
-  const core = page.locator('#xkeen-core-text');
+  // The engine switch of the service menu opens the core dialog on that engine.
+  const core = page.locator(`#xk-mihomo-service-menu [data-xk-svc-core][data-core="${engine}"]`);
   await expect(core).toBeVisible();
   await expect(core).not.toHaveAttribute('aria-disabled', 'true');
   await core.click();
@@ -178,7 +179,7 @@ test.describe('Curated core source selection', () => {
     });
 
     await openView(page, 'mihomo', { width: 390, height: 844 });
-    await openCoreManagement(page);
+    await openCoreManagement(page, 'mihomo');
     const card = page.locator('[data-core-source][data-core-engine="mihomo"]');
     await card.getByRole('button', { name: 'Источник' }).click();
     const modal = page.locator('#mihomo-core-source-modal');
@@ -215,7 +216,7 @@ test.describe('Curated core source selection', () => {
     });
 
     await openView(page, 'mihomo');
-    await openCoreManagement(page);
+    await openCoreManagement(page, 'mihomo');
     const card = page.locator('[data-core-source][data-core-engine="mihomo"]');
     const prepare = card.getByRole('button', { name: 'Подготовить установку Prizrak-Core' });
     await expect(prepare).toBeVisible();
@@ -260,7 +261,7 @@ test.describe('Curated core source selection', () => {
     });
 
     await openView(page, 'mihomo');
-    await openCoreManagement(page);
+    await openCoreManagement(page, 'mihomo');
     const card = page.locator('[data-core-source][data-core-engine="mihomo"]');
     await card.getByRole('button', { name: 'Источник' }).click();
     const modal = page.locator('#mihomo-core-source-modal');

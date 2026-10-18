@@ -264,9 +264,14 @@ export function initCoreSource(root) {
         : 'Проверить и установить';
     }
     const installed = data.state?.installed_profile_id;
-    const installedVersion = data.state?.detected_version || data.state?.installed_release_tag || 'версия не определена';
-    text(root.querySelector('[data-core-source-installed]'), `Установлено: ${installed ? profileLabel(data.profiles, installed) : 'профиль не отмечен'} · ${installedVersion}`);
-    text(root.querySelector('[data-core-source-selected]'), `Источник: ${profileLabel(data.profiles, selected)}`);
+    // The core dialog marks a card whose engine is absent from the router.
+    const installedVersion = data.state?.detected_version || data.state?.installed_release_tag || root.dataset.coreVersion
+      || (root.dataset.coreInstalled === 'false' ? 'не установлено' : 'не определена');
+    text(root.querySelector('[data-core-source-version]'), installedVersion);
+    // Without a recorded profile the core came from outside the panel (the
+    // XKeen installer or by hand), so its source is not known.
+    text(root.querySelector('[data-core-source-installed]'), installed ? profileLabel(data.profiles, installed) : 'неизвестно — ядро ставили не через панель');
+    text(root.querySelector('[data-core-source-selected]'), profileLabel(data.profiles, selected));
     const state = data.state || {};
     const hasStaleRelease = (data.profiles || []).some((profile) => profile.release?.stale);
     const status = state.last_status === 'running'
@@ -275,9 +280,10 @@ export function initCoreSource(root) {
         ? `Откат: ${state.last_error || 'предыдущая версия восстановлена'}`
         : state.last_status === 'failed'
           ? `Ошибка установки: ${state.last_error || 'проверьте источник'}`
-          : hasStaleRelease
-            ? 'Последние проверенные релизы · GitHub временно недоступен'
-            : 'Проверенные стабильные релизы';
+          : !selectedProfile?.release?.installable
+            // The install button is off for this reason: say it next to it.
+            ? `Установка недоступна: ${unavailableReason(selectedProfile?.release?.reason).replace(/\.$/, '').replace(/^./, (c) => c.toLowerCase())}`
+            : `Доступен релиз ${selectedProfile.release.stable?.tag || '—'}${hasStaleRelease ? ' · GitHub временно недоступен, показан последний проверенный' : ''}`;
     text(root.querySelector('[data-core-source-status]'), status);
     if (state.last_status === 'running' && state.last_operation_id && activeOperationId !== state.last_operation_id) startPolling(state.last_operation_id);
     text(sourceModal?.querySelector('[data-core-source-platform]'), `Архитектура: ${data.platform?.opkg_arch || data.platform?.machine || 'не определена'}`);

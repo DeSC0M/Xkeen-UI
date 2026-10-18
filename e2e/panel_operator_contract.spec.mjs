@@ -128,9 +128,6 @@ test.describe('Operator Console Stage 0 runtime contract', () => {
   test('runtime duplicate nodes remain attached but visually suppressed', async ({ page }) => {
     await openPanel(page, 'dark');
 
-    await expect(page.locator('#routing-focus-note')).toBeAttached();
-    await expect(page.locator('#routing-focus-note')).toBeHidden();
-
     if (!(await page.locator('#inbounds-body').isVisible())) {
       await page.locator('#inbounds-header').click();
     }

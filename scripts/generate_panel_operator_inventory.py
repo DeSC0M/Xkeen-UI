@@ -122,7 +122,6 @@ BASELINE_VIEWPORTS = [
 BASELINE_THEMES = ["dark", "light"]
 
 CRITICAL_HIDDEN_RUNTIME_SELECTORS = [
-    "#routing-focus-note",
     "#json-editor-file-label",
     "#inbounds-file-code",
     "#outbounds-file-code",

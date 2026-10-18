@@ -155,7 +155,6 @@ async function openStage4Routing(page, theme, text = STAGE4_ROUTING) {
     localStorage.setItem('xkeen-theme', nextTheme);
     localStorage.setItem('xkeen.editor.engine', 'codemirror');
     localStorage.setItem('xk.routing.rules.open.v2', '0');
-    localStorage.setItem('xk.routing.focus-mode.v1', 'gui');
   }, theme);
   await mockStage4Dependencies(page);
   await page.goto('/');

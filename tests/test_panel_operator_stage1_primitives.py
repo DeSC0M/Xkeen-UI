@@ -114,7 +114,6 @@ def test_stage1_primitives_use_low_specificity_scope_and_existing_anchors():
         ".modal-actions",
         ".btn-icon",
         '[role="status"]',
-        ".routing-focus-switch",
         ".fm-empty",
     ):
         assert anchor in primitives
@@ -137,12 +136,14 @@ def test_stage1_flat_effect_and_geometry_contract_is_static():
         flags=re.DOTALL,
     )
     # Pills are intentionally reserved for the switch track, compact count
-    # badge, and device alias. Keep this as an explicit allow-list so a new
-    # rounded component cannot silently reintroduce legacy visual language.
-    assert len(pill_blocks) == 3
+    # badge, device alias and the engine state badge of the core dialog. Keep
+    # this as an explicit allow-list so a new rounded component cannot
+    # silently reintroduce legacy visual language.
+    assert len(pill_blocks) == 4
     assert ".fm-toggle-slider" in pill_blocks[0]
     assert ".xk-mihomo-connections-view-tab span" in pill_blocks[1]
     assert ".xk-mihomo-device-name" in pill_blocks[2]
+    assert "#core-modal .xk-core-option-state" in pill_blocks[3]
 
     assert ")::before," in css
     assert ")::after {" in css

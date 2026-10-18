@@ -364,9 +364,6 @@ test.describe('Operator Console Stage 2 shell and workspace contract', () => {
             read('#xkeen-stop-btn'),
             read('#xkeen-restart-btn'),
           ],
-          gui: read('#routing-focus-gui-btn'),
-          raw: read('#routing-focus-raw-btn'),
-          activeFocus: document.querySelector('.routing-focus-btn[aria-pressed="true"]')?.id || '',
         };
       });
 
@@ -375,15 +372,6 @@ test.describe('Operator Console Stage 2 shell and workspace contract', () => {
       expect(styles.service[0].shadow).toBe('none');
       expect(styles.service[0].beforeContent).toBe('none');
       expect(styles.service[0].beforeDisplay).toBe('none');
-
-      const focusStyles = [styles.gui, styles.raw];
-      for (const style of focusStyles) {
-        expect(style.image).toBe('none');
-        expect(style.shadow).toBe('none');
-      }
-      expect(styles.activeFocus).not.toBe('');
-      const inactiveFocus = styles.activeFocus === 'routing-focus-gui-btn' ? styles.raw : styles.gui;
-      expect(inactiveFocus.background).toBe('rgba(0, 0, 0, 0)');
     });
   }
 });

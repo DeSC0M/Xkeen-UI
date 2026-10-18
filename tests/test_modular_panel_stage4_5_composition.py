@@ -113,7 +113,6 @@ def test_composition_declares_only_known_static_template_paths():
         "panel/slots/resource_monitor_unavailable.html",
         "panel/slots/diagnostics_summary.html",
         "panel/slots/diagnostics_actions.html",
-        "panel/slots/routing_focus.html",
         "panel/slots/backups_inbounds_actions.html",
         "panel/slots/backups_outbounds_actions.html",
         "panel/slots/backups_xray_card.html",

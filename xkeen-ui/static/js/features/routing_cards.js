@@ -10,7 +10,6 @@
 import { getRoutingCardsNamespace } from './routing_cards_namespace.js';
 import {
   getXkeenEditorEngineApi,
-  getXkeenPanelShellApi,
   getXkeenSettingsApi,
   isXkeenDebugRuntime,
   toastXkeen,
@@ -318,63 +317,6 @@ let routingCardsModuleApi = null;
     return false;
   }
 
-  function _currentPanelView() {
-    try {
-      const shell = getXkeenPanelShellApi();
-      if (shell && typeof shell.getCurrentView === 'function') {
-        const name = String(shell.getCurrentView() || '').trim();
-        if (name) return name;
-      }
-    } catch (e) {}
-    try {
-      const activeBtn = document.querySelector('.top-tab-btn.active[data-view]');
-      const name = activeBtn && activeBtn.dataset ? String(activeBtn.dataset.view || '').trim() : '';
-      if (name) return name;
-    } catch (e) {}
-    try {
-      const sections = {
-        routing: document.getElementById('view-routing'),
-        mihomo: document.getElementById('view-mihomo'),
-        xkeen: document.getElementById('view-xkeen'),
-        'xray-logs': document.getElementById('view-xray-logs'),
-        commands: document.getElementById('view-commands'),
-        files: document.getElementById('view-files'),
-      };
-      for (const [name, el] of Object.entries(sections)) {
-        if (!el) continue;
-        const style = window.getComputedStyle ? window.getComputedStyle(el) : null;
-        const visible = style ? (style.display !== 'none' && style.visibility !== 'hidden') : (el.style.display !== 'none');
-        if (visible) return name;
-      }
-    } catch (e) {}
-    return '';
-  }
-
-  function _syncFocusGroupVisibility(guiEnabled) {
-    try {
-      const focusGroup = document.querySelector('.xkeen-ctrl-group-routing-focus');
-      if (!focusGroup) return;
-      const isRoutingView = _currentPanelView() === 'routing';
-      const shouldShow = !!guiEnabled && isRoutingView;
-      focusGroup.style.display = shouldShow ? '' : 'none';
-      focusGroup.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
-    } catch (e) {}
-  }
-
-  const FOCUS_LS_KEY = 'xk.routing.focus-mode.v1';
-
-  function _getPreferredFocusMode() {
-    try {
-      const v = String((localStorage && localStorage.getItem && localStorage.getItem(FOCUS_LS_KEY)) || '').toLowerCase();
-      return v === 'gui' ? 'gui' : 'raw';
-    } catch (e) {}
-    return 'raw';
-  }
-
-  function _setPreferredFocusMode(mode) {
-    try { localStorage.setItem(FOCUS_LS_KEY, String(mode || 'raw')); } catch (e) {}
-  }
-
   function _setSectionOpen(bodyId, arrowId, open) {
     try {
       const body = document.getElementById(bodyId);
@@ -385,96 +327,16 @@ let routingCardsModuleApi = null;
     } catch (e) {}
   }
 
-  function applyFocusMode(mode, opts) {
-    const o = opts || {};
-    const guiEnabled = _routingGuiEnabled();
-    let next = String(mode || '').toLowerCase() === 'gui' ? 'gui' : 'raw';
-    if (next === 'gui' && !guiEnabled) next = 'raw';
-
-    try { _setPreferredFocusMode(next); } catch (e) {}
-
+  // The GUI/RAW focus switch is gone. Forget a mode stored by older builds
+  // and keep the editor open, as the default RAW mode did.
+  function openRoutingEditor() {
+    try { localStorage.removeItem('xk.routing.focus-mode.v1'); } catch (e) {}
     try {
-      const view = document.getElementById('view-routing');
-      if (view) view.setAttribute('data-routing-focus', next);
+      const body = document.getElementById('routing-body');
+      const arrow = document.getElementById('routing-arrow');
+      if (body) body.style.display = 'block';
+      if (arrow) arrow.textContent = '▼';
     } catch (e) {}
-
-    try {
-      const rulesCard = document.getElementById('routing-rules-card');
-      const editorCard = document.getElementById('routing-editor-card');
-      if (rulesCard) {
-        rulesCard.classList.toggle('is-focus-active', next === 'gui');
-        rulesCard.classList.toggle('is-focus-muted', next !== 'gui');
-      }
-      if (editorCard) {
-        editorCard.classList.toggle('is-focus-active', next === 'raw');
-        editorCard.classList.toggle('is-focus-muted', next !== 'raw');
-      }
-    } catch (e) {}
-
-    try {
-      const guiBtn = document.getElementById('routing-focus-gui-btn');
-      const rawBtn = document.getElementById('routing-focus-raw-btn');
-      const note = document.getElementById('routing-focus-note');
-      if (guiBtn) {
-        guiBtn.classList.toggle('is-active', next === 'gui');
-        guiBtn.setAttribute('aria-pressed', next === 'gui' ? 'true' : 'false');
-        guiBtn.disabled = !guiEnabled;
-      }
-      if (rawBtn) {
-        rawBtn.classList.toggle('is-active', next === 'raw');
-        rawBtn.setAttribute('aria-pressed', next === 'raw' ? 'true' : 'false');
-      }
-      if (note) {
-        const shortText = !guiEnabled
-          ? 'Только RAW'
-          : (next === 'gui' ? 'GUI: карточки' : 'RAW: JSON/JSONC');
-        const fullText = !guiEnabled
-          ? 'GUI-карточка выключена в UI Settings — доступен только RAW.'
-          : (next === 'gui'
-              ? 'GUI focus: быстрые карточки на первом плане, raw-редактор остаётся рядом.'
-              : 'RAW focus: точный JSON/JSONC на первом плане, GUI остаётся как безопасный помощник.');
-        note.textContent = shortText;
-        note.title = fullText;
-      }
-    } catch (e) {}
-
-    if (next === 'gui') {
-      try { _setSectionOpen('routing-rules-body', 'routing-rules-arrow', true); } catch (e) {}
-      if (o.scroll) {
-        try { const card = document.getElementById('routing-rules-card'); if (card && card.scrollIntoView) card.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
-      }
-    } else {
-      try {
-        const body = document.getElementById('routing-body');
-        const arrow = document.getElementById('routing-arrow');
-        if (body) body.style.display = 'block';
-        if (arrow) arrow.textContent = '▼';
-      } catch (e) {}
-      if (o.scroll) {
-        try { const card = document.getElementById('routing-editor-card'); if (card && card.scrollIntoView) card.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
-      }
-    }
-
-    try {
-      document.dispatchEvent(new CustomEvent('xkeen:routing-focus-mode', { detail: { mode: next, guiEnabled } }));
-    } catch (e) {}
-    return next;
-  }
-
-  function wireFocusToggle() {
-    try {
-      const guiBtn = document.getElementById('routing-focus-gui-btn');
-      const rawBtn = document.getElementById('routing-focus-raw-btn');
-      if (guiBtn && guiBtn.dataset.xkWired !== '1') {
-        guiBtn.addEventListener('click', (e) => { try { e.preventDefault(); } catch (e2) {} applyFocusMode('gui', { scroll: true }); });
-        guiBtn.dataset.xkWired = '1';
-      }
-      if (rawBtn && rawBtn.dataset.xkWired !== '1') {
-        rawBtn.addEventListener('click', (e) => { try { e.preventDefault(); } catch (e2) {} applyFocusMode('raw', { scroll: true }); });
-        rawBtn.dataset.xkWired = '1';
-      }
-    } catch (e) {}
-    applyFocusMode(_getPreferredFocusMode(), { scroll: false });
   }
 
   function applyUiSettings() {
@@ -483,8 +345,6 @@ let routingCardsModuleApi = null;
       const card = document.getElementById('routing-rules-card');
       if (card) card.style.display = guiEnabled ? '' : 'none';
     } catch (e) {}
-    try { _syncFocusGroupVisibility(guiEnabled); } catch (e) {}
-    try { wireFocusToggle(); } catch (e) {}
   }
 
   function onShow(opts) {
@@ -585,7 +445,7 @@ let routingCardsModuleApi = null;
     // later bundle-level call wires newly available controls.
     initAvailableModules();
 
-    try { wireFocusToggle(); } catch (e) {}
+    try { openRoutingEditor(); } catch (e) {}
     try { applyUiSettings(); } catch (e) {}
     if (firstRun) {
       try {
@@ -619,8 +479,6 @@ let routingCardsModuleApi = null;
     init,
     onShow,
     applyUiSettings,
-    applyFocusMode,
-    getPreferredFocusMode: _getPreferredFocusMode,
     getDatRoutingTargets,
     applyDatSelector,
     getUsedDatTags,
@@ -669,14 +527,6 @@ export function applyRoutingCardsUiSettings(...args) {
   return callRoutingCardsApi('applyUiSettings', ...args);
 }
 
-export function applyRoutingCardsFocusMode(...args) {
-  return callRoutingCardsApi('applyFocusMode', ...args);
-}
-
-export function getPreferredRoutingCardsFocusMode(...args) {
-  return callRoutingCardsApi('getPreferredFocusMode', ...args);
-}
-
 export function getRoutingCardsDatTargets(...args) {
   return callRoutingCardsApi('getDatRoutingTargets', ...args);
 }
@@ -699,8 +549,6 @@ export const routingCardsApi = Object.freeze({
   load: loadRoutingCards,
   onShow: onShowRoutingCards,
   applyUiSettings: applyRoutingCardsUiSettings,
-  applyFocusMode: applyRoutingCardsFocusMode,
-  getPreferredFocusMode: getPreferredRoutingCardsFocusMode,
   getDatRoutingTargets: getRoutingCardsDatTargets,
   applyDatSelector: applyRoutingCardsDatSelector,
   getUsedDatTags: getRoutingCardsUsedDatTags,

@@ -1,3 +1,4 @@
+{% from "panel/macros.html" import op_icon %}
 <body class="panel-page xk-panel-startup xk-operator-header-pending{% if is_mips %} xk-perf-lite{% endif %}">
   <script>
     window.__xkPanelStartupAt = window.performance ? window.performance.now() : Date.now();
@@ -25,9 +26,9 @@
     
 <div class="xkeen-ctrl-row">
   <div class="xkeen-ctrl-group xkeen-ctrl-group-main">
-    <button id="xkeen-start-btn" class="xkeen-ctrl-btn xkeen-ctrl-btn-start" data-tooltip="Запустить сервис xkeen.">Запустить</button>
-    <button id="xkeen-stop-btn" class="xkeen-ctrl-btn xkeen-ctrl-btn-stop" data-tooltip="Остановить сервис xkeen.">Остановить</button>
-    <button id="xkeen-restart-btn" class="xkeen-ctrl-btn xkeen-ctrl-btn-restart" data-tooltip="Перезапустить сервис xkeen.">Перезапустить</button>
+    <button id="xkeen-start-btn" class="xkeen-ctrl-btn xkeen-ctrl-btn-start" data-tooltip="Запустить сервис xkeen.">{{ op_icon('play', 'xkeen-ctrl-icon') }}<span>Запустить</span></button>
+    <button id="xkeen-stop-btn" class="xkeen-ctrl-btn xkeen-ctrl-btn-stop" data-tooltip="Остановить сервис xkeen.">{{ op_icon('stop', 'xkeen-ctrl-icon') }}<span>Остановить</span></button>
+    <button id="xkeen-restart-btn" class="xkeen-ctrl-btn xkeen-ctrl-btn-restart" data-tooltip="Перезапустить сервис xkeen.">{{ op_icon('restart', 'xkeen-ctrl-icon') }}<span>Перезапустить</span></button>
     {% for control_partial in page_context.control_partials %}
     {% include control_partial %}
     {% endfor %}
@@ -37,7 +38,7 @@
            title="Автоматически перезапускать xkeen после сохранения конфигов.">
       <input type="checkbox" id="global-autorestart-xkeen" checked>
       <span class="dt-switch-slider" aria-hidden="true"></span>
-      <span class="dt-switch-label">Авто‑рестарт</span>
+      <span class="dt-switch-label">Авто‑рестарт<small class="xk-autorestart-hint">Перезапускать после сохранения конфигов</small></span>
     </label>
   </div>
 </div>

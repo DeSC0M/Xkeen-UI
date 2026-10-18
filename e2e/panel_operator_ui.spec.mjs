@@ -34,8 +34,6 @@ test('operator stylesheet is isolated and loaded last', async ({ page }) => {
   await openInteractivePanel(page);
 
   await expect(page.locator('body')).toHaveClass(/\bpanel-page\b/);
-  await expect(page.locator('#routing-focus-note')).toBeAttached();
-  await expect(page.locator('#routing-focus-note')).toBeHidden();
 
   const stylesheets = await page.evaluate(() => {
     return Array.from(document.styleSheets).map((sheet) => sheet.href || 'inline');

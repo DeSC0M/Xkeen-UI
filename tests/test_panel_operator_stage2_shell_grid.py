@@ -122,8 +122,6 @@ def test_stage2_command_row_overrides_coloured_legacy_theme_buttons():
         'html:is([data-theme="dark"], [data-theme="light"]) body.panel-page .xkeen-ctrl-btn.xkeen-ctrl-btn-start',
         'html:is([data-theme="dark"], [data-theme="light"]) body.panel-page .xkeen-ctrl-btn.xkeen-ctrl-btn-stop',
         'html:is([data-theme="dark"], [data-theme="light"]) body.panel-page .xkeen-ctrl-btn.xkeen-ctrl-btn-restart',
-        'html:is([data-theme="dark"], [data-theme="light"]) body.panel-page .routing-focus-btn.routing-focus-btn-gui',
-        'html:is([data-theme="dark"], [data-theme="light"]) body.panel-page .routing-focus-btn.routing-focus-btn-raw',
         "content: none !important;",
         "background: var(--op-surface) !important;",
         "background: transparent !important;",
