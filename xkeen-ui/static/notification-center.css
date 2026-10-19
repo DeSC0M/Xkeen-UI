@@ -121,12 +121,29 @@ body .xk-notification-popover .xk-notification-status.is-error { color: var(--op
 body .xk-notification-popover .xk-notification-status.is-stale { color: var(--op-warning, #fbbf24); }
 
 body .xk-notification-popover .xk-notification-close {
-  border: 0;
+  display: inline-flex;
+  flex: 0 0 28px;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--op-border, rgba(148, 163, 184, .2));
+  border-radius: 6px;
   background: transparent;
   color: inherit;
-  font-size: 20px;
+  font-size: 16px;
+  font-weight: 400;
   line-height: 1;
   cursor: pointer;
+}
+
+body .xk-notification-popover .xk-notification-close:hover {
+  border-color: var(--op-border-strong, rgba(148, 163, 184, .45));
+  background: var(--op-surface-3, rgba(148, 163, 184, .1));
 }
 
 body .xk-notification-popover .xk-notification-list {

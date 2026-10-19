@@ -1185,7 +1185,7 @@ body.panel-page .xk-global-autorestart-switch {
   gap: 6px;
   min-height: 28px;
   margin: 0;
-  padding: 0;
+  padding: 0 8px;
   border: 0 !important;
   background: transparent !important;
   color: var(--op-muted);
@@ -1281,6 +1281,29 @@ body.panel-page .dt-switch-label {
   font-size: calc(10.5px * var(--xk-font-scale, 1));
   font-weight: 560;
   opacity: 1 !important;
+}
+
+/* The service popover uses the same compact control as the header. Keep the
+ * title and its explanation readable without letting generic switch rules
+ * inflate the two-line label or pin it against the popover edge. */
+body.panel-page .xk-global-autorestart-switch .dt-switch-label {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+  padding-left: 2px;
+  font-size: calc(11px * var(--xk-font-scale, 1)) !important;
+  line-height: 1.2;
+}
+
+body.panel-page .xk-global-autorestart-switch .xk-autorestart-hint {
+  display: block;
+  color: var(--op-faint);
+  font-size: calc(9px * var(--xk-font-scale, 1)) !important;
+  font-weight: 400;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 /* Переключатель формы, а не панели инструментов.
