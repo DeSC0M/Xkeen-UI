@@ -1106,10 +1106,25 @@ let serviceStatusModuleApi = null;
     }
   }
 
+  // An open core window follows the service: a stop or a crash turns its
+  // switch into a start, a start turns it back, without reopening it.
+  function followServiceInCoreModal(state, core) {
+    const modal = getCoreModal();
+    if (!modal || _coreModalLoading || modal.classList.contains('hidden') || !modal.getClientRects().length) return;
+    const st = String(state || '').toLowerCase();
+    if (st !== 'running' && st !== 'stopped') return;
+    const running = st === 'running' ? normalizeCore(core) : '';
+    // What runs now is what the window will name once the service stops.
+    if (running) _lastCore = running;
+    setCoreModalCurrentCore(running);
+    syncCoreModalSelectionUi();
+  }
+
   function applyXkeenServiceShell(snapshot) {
     const shell = snapshot || readShellSnapshot();
     if (!shell.serviceStatus && !shell.currentCore) return;
     renderXkeenServiceStatus(shell.serviceStatus, shell.currentCore, shell.control);
+    followServiceInCoreModal(shell.serviceStatus, shell.currentCore);
   }
 
   function ensureShellBinding() {

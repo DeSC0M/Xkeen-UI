@@ -263,3 +263,34 @@ for (const [running, other] of [['xray', 'mihomo'], ['mihomo', 'xray']]) {
     await expect(update(running)).toHaveClass(/btn-primary/);
   });
 }
+
+test('an open core window follows the service when it stops and starts again', async ({ page }) => {
+  await page.clock.install();
+  let status = { ok: true, running: true, status: 'running', core: 'mihomo' };
+  await page.route('**/api/xkeen/status', (route) => route.fulfill({ json: status }));
+  await page.route('**/api/xkeen/core', (route) => route.fulfill({ json: {
+    ok: true, cores: ['xray', 'mihomo'], currentCore: status.running ? status.core : null, lastCore: 'mihomo',
+  } }));
+  await page.route('**/api/cores/versions', (route) => route.fulfill({ json: { ok: true, cores: {
+    xray: { installed: true, version: '26.9.9' }, mihomo: { installed: true, version: 'v1.19.14' },
+  } } }));
+  await page.goto('/');
+  const menu = await openServiceMenu(page);
+  await engineSwitch(menu, 'xray').click();
+  const confirm = page.locator('#core-modal-confirm-btn');
+  await expect(tab(page, 'mihomo')).toContainText('Активно');
+  await expect(confirm).toHaveText('Сделать Xray активным');
+
+  // The core crashed: the next status poll turns the switch into a start.
+  status = { ok: true, running: false, status: 'stopped', core: null };
+  await page.clock.fastForward(16000);
+  await expect(tab(page, 'mihomo')).toContainText('Было активным');
+  await expect(confirm).toHaveText('Запустить xkeen с Xray');
+  await expect(page.locator('#core-modal-status')).toHaveText('Служба xkeen остановлена. Последним работало ядро Mihomo. Кнопка выберет Xray и запустит службу.');
+
+  // Started again from the console: the window says so without reopening.
+  status = { ok: true, running: true, status: 'running', core: 'mihomo' };
+  await page.clock.fastForward(16000);
+  await expect(tab(page, 'mihomo')).toContainText('Активно');
+  await expect(confirm).toHaveText('Сделать Xray активным');
+});
