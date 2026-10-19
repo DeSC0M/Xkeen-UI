@@ -97,19 +97,54 @@ class LifecycleFake:
         )
 
 
+class NotificationCenterFake:
+    def __init__(self):
+        self.calls = []
+
+    def snapshot(self):
+        self.calls.append(("snapshot",))
+        return {
+            "ok": True,
+            "channel": "stable",
+            "records": [],
+            "unread_count": 0,
+            "status": {},
+        }
+
+    def check(self, *, force_refresh=False):
+        self.calls.append(("check", force_refresh))
+        return self.snapshot()
+
+    def mark_seen(self, record_ids=None):
+        self.calls.append(("mark_seen", record_ids))
+        return self.snapshot()
+
+    def set_record_state(self, record_id, action, *, snooze_seconds=None):
+        self.calls.append(("set_record_state", record_id, action, snooze_seconds))
+        return self.snapshot()
+
+    def wake_background(self):
+        self.calls.append(("wake_background",))
+
+
 @pytest.fixture
 def app_with_lifecycle():
     service = LifecycleFake()
+    notifications = NotificationCenterFake()
     app = Flask(__name__)
     app.config["TESTING"] = True
     app.register_blueprint(
-        create_modules_blueprint(RegistryFake(), lifecycle_service=service)
+        create_modules_blueprint(
+            RegistryFake(),
+            lifecycle_service=service,
+            notification_center=notifications,
+        )
     )
-    return app.test_client(), service
+    return app.test_client(), service, notifications
 
 
 def test_lifecycle_read_and_control_routes_delegate_with_no_store(app_with_lifecycle):
-    client, service = app_with_lifecycle
+    client, service, _notifications = app_with_lifecycle
     requests = [
         ("get", "/api/modules/installed", None, 200, "installed"),
         ("get", "/api/modules/available", None, 200, "available"),
@@ -135,11 +170,12 @@ def test_lifecycle_read_and_control_routes_delegate_with_no_store(app_with_lifec
 
 
 def test_update_channel_route_requires_a_single_channel_field(app_with_lifecycle):
-    client, service = app_with_lifecycle
+    client, service, notifications = app_with_lifecycle
     response = client.post("/api/modules/update-channel", json={"channel": "prerelease"})
     assert response.status_code == 200
     assert response.get_json()["channel"] == "prerelease"
     assert service.calls[-1] == ("set_update_channel", "prerelease")
+    assert ("wake_background",) in notifications.calls
 
     invalid = client.post("/api/modules/update-channel", json={"channel": "stable", "repository": "other"})
     assert invalid.status_code == 400
@@ -147,7 +183,7 @@ def test_update_channel_route_requires_a_single_channel_field(app_with_lifecycle
 
 
 def test_lifecycle_plan_and_apply_routes_validate_and_delegate(app_with_lifecycle):
-    client, service = app_with_lifecycle
+    client, service, _notifications = app_with_lifecycle
 
     planned = client.post(
         "/api/modules/operations/plan",
@@ -173,7 +209,7 @@ def test_lifecycle_plan_and_apply_routes_validate_and_delegate(app_with_lifecycl
 
 
 def test_panel_update_check_is_core_owned_and_does_not_create_a_plan(app_with_lifecycle):
-    client, service = app_with_lifecycle
+    client, service, _notifications = app_with_lifecycle
 
     response = client.post(
         "/api/modules/panel/update-check",
@@ -193,8 +229,31 @@ def test_panel_update_check_is_core_owned_and_does_not_create_a_plan(app_with_li
     assert service.calls == [("panel_update_check", True)]
 
 
+def test_notification_routes_are_core_owned_and_support_state_actions(app_with_lifecycle):
+    client, _service, notifications = app_with_lifecycle
+
+    snapshot = client.get("/api/notifications")
+    assert snapshot.status_code == 200
+    assert snapshot.get_json()["unread_count"] == 0
+    assert notifications.calls[-1] == ("snapshot",)
+
+    checked = client.post("/api/modules/notifications/check", json={"force_refresh": True})
+    assert checked.status_code == 200
+    assert notifications.calls[-2:] == [("check", True), ("snapshot",)]
+
+    updated = client.patch(
+        "/api/notifications/" + "a" * 64,
+        json={"action": "dismiss"},
+    )
+    assert updated.status_code == 200
+    assert notifications.calls[-2:] == [
+        ("set_record_state", "a" * 64, "dismiss", None),
+        ("snapshot",),
+    ]
+
+
 def test_full_scope_plan_and_apply_routes_omit_module_id(app_with_lifecycle):
-    client, service = app_with_lifecycle
+    client, service, _notifications = app_with_lifecycle
 
     planned = client.post("/api/modules/operations/plan", json={"operation": "panel-update"})
     applied = client.post(
@@ -211,7 +270,7 @@ def test_full_scope_plan_and_apply_routes_omit_module_id(app_with_lifecycle):
 
 
 def test_profile_route_adds_physical_transition_status_without_applying_it(app_with_lifecycle):
-    client, service = app_with_lifecycle
+    client, service, _notifications = app_with_lifecycle
 
     response = client.post("/api/modules/profile", json={"profile": "xray-minimal"})
 
@@ -257,7 +316,7 @@ def test_profile_route_adds_physical_transition_status_without_applying_it(app_w
 def test_lifecycle_body_validation_rejects_bad_requests(
     app_with_lifecycle, path, body, code
 ):
-    client, service = app_with_lifecycle
+    client, service, _notifications = app_with_lifecycle
 
     response = client.post(path, json=body)
 
@@ -267,7 +326,7 @@ def test_lifecycle_body_validation_rejects_bad_requests(
 
 
 def test_lifecycle_body_validation_rejects_payload_over_8_kib(app_with_lifecycle):
-    client, service = app_with_lifecycle
+    client, service, _notifications = app_with_lifecycle
     body = json.dumps(
         {"operation": "install", "module_id": "tool.terminal", "padding": "x" * 8192}
     )
@@ -286,7 +345,7 @@ def test_lifecycle_body_validation_rejects_payload_over_8_kib(app_with_lifecycle
 def test_lifecycle_body_validation_bounds_stream_without_content_length(
     app_with_lifecycle,
 ):
-    client, service = app_with_lifecycle
+    client, service, _notifications = app_with_lifecycle
     body = json.dumps(
         {"operation": "install", "module_id": "tool.terminal", "padding": "x" * 8192}
     )
@@ -307,7 +366,7 @@ def test_lifecycle_body_validation_bounds_stream_without_content_length(
 def test_lifecycle_domain_error_preserves_safe_code_status_and_details(
     app_with_lifecycle,
 ):
-    client, service = app_with_lifecycle
+    client, service, _notifications = app_with_lifecycle
     service.failure = ModuleLifecycleError(
         "operation_not_found",
         "the module operation does not exist",
@@ -327,7 +386,7 @@ def test_lifecycle_domain_error_preserves_safe_code_status_and_details(
 
 
 def test_lifecycle_unexpected_error_is_sanitized(app_with_lifecycle):
-    client, service = app_with_lifecycle
+    client, service, _notifications = app_with_lifecycle
     service.failure = RuntimeError("secret archive path")
 
     response = client.get("/api/modules/available")

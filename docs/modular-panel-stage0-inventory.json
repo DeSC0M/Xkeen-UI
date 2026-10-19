@@ -38,25 +38,25 @@
         "gevent-websocket (optional)"
       ],
       "removable": false,
-      "unit_count": 571,
-      "size_bytes": 7656624,
+      "unit_count": 576,
+      "size_bytes": 7721664,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
-        "backend_service": 78,
-        "backend_test": 256,
+        "backend_service": 79,
+        "backend_test": 257,
         "configuration": 10,
         "frontend_bundle": 9,
         "frontend_entrypoint": 3,
-        "frontend_feature": 33,
+        "frontend_feature": 34,
         "frontend_javascript": 37,
         "frontend_runtime": 2,
-        "frontend_test": 65,
+        "frontend_test": 66,
         "frontend_ui": 17,
-        "stylesheet": 8,
+        "stylesheet": 9,
         "template": 31
       },
-      "route_count": 96,
+      "route_count": 104,
       "background_task_count": 4,
       "ui_surface_count": 36,
       "representative_paths": [
@@ -467,7 +467,7 @@
       "module_id": "core",
       "kind": "app_runtime",
       "path": "xkeen-ui/run_server.py",
-      "size_bytes": 8553,
+      "size_bytes": 8819,
       "depends_on": [
         "tool.terminal",
         "engine.mihomo"
@@ -538,7 +538,7 @@
       "module_id": "core",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/__init__.py",
-      "size_bytes": 23036,
+      "size_bytes": 23336,
       "depends_on": [
         "tool.files",
         "engine.xray",
@@ -920,7 +920,7 @@
       "module_id": "core",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/modules.py",
-      "size_bytes": 17657,
+      "size_bytes": 22047,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -948,12 +948,22 @@
         },
         {
           "method": "GET",
+          "path": "/api/modules/notifications",
+          "decorator": "bp.get"
+        },
+        {
+          "method": "GET",
           "path": "/api/modules/operations/status",
           "decorator": "bp.get"
         },
         {
           "method": "GET",
           "path": "/api/modules/update-channel",
+          "decorator": "bp.get"
+        },
+        {
+          "method": "GET",
+          "path": "/api/notifications",
           "decorator": "bp.get"
         },
         {
@@ -967,6 +977,16 @@
           "decorator": "bp.patch"
         },
         {
+          "method": "PATCH",
+          "path": "/api/modules/notifications/<record_id>",
+          "decorator": "bp.patch"
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/notifications/<record_id>",
+          "decorator": "bp.patch"
+        },
+        {
           "method": "POST",
           "path": "/api/modules/<module_id>/disable",
           "decorator": "bp.post"
@@ -974,6 +994,16 @@
         {
           "method": "POST",
           "path": "/api/modules/<module_id>/enable",
+          "decorator": "bp.post"
+        },
+        {
+          "method": "POST",
+          "path": "/api/modules/notifications/check",
+          "decorator": "bp.post"
+        },
+        {
+          "method": "POST",
+          "path": "/api/modules/notifications/mark-seen",
           "decorator": "bp.post"
         },
         {
@@ -1014,6 +1044,16 @@
         {
           "method": "POST",
           "path": "/api/modules/update-channel",
+          "decorator": "bp.post"
+        },
+        {
+          "method": "POST",
+          "path": "/api/notifications/check",
+          "decorator": "bp.post"
+        },
+        {
+          "method": "POST",
+          "path": "/api/notifications/mark-seen",
           "decorator": "bp.post"
         }
       ],
@@ -2261,7 +2301,7 @@
       "module_id": "core",
       "kind": "backend_service",
       "path": "xkeen-ui/services/module_lifecycle.py",
-      "size_bytes": 57460,
+      "size_bytes": 63014,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -2611,6 +2651,29 @@
       "environment_variables": [
         "XKEEN_NET_MAX_WORKERS"
       ],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "backend_service",
+      "path": "xkeen-ui/services/notification_center.py",
+      "size_bytes": 27740,
+      "depends_on": [],
+      "starts_background_task": true,
+      "background_markers": [
+        "daemon_thread",
+        "threading.Thread"
+      ],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [],
       "removable": false
     },
     {
@@ -5574,7 +5637,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_modular_panel_stage8_contract.py",
-      "size_bytes": 19024,
+      "size_bytes": 19035,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -5708,7 +5771,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_module_lifecycle.py",
-      "size_bytes": 33816,
+      "size_bytes": 35311,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -5730,7 +5793,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_module_lifecycle_routes.py",
-      "size_bytes": 12008,
+      "size_bytes": 14043,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -6131,6 +6194,26 @@
       "kind": "backend_test",
       "path": "tests/test_monaco_github_themes.py",
       "size_bytes": 2206,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "backend_test",
+      "path": "tests/test_notification_center.py",
+      "size_bytes": 4047,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -9822,7 +9905,7 @@
       "module_id": "core",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/module_manager/badge.js",
-      "size_bytes": 2428,
+      "size_bytes": 2715,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -9848,7 +9931,7 @@
       "module_id": "core",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/module_manager/controller.js",
-      "size_bytes": 31428,
+      "size_bytes": 31681,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -9875,6 +9958,32 @@
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/module_manager/render.js",
       "size_bytes": 55098,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [
+        "devtools-page",
+        "mihomo-generator-page",
+        "modules-page",
+        "panel-core",
+        "xkeen-page"
+      ],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_feature",
+      "path": "xkeen-ui/static/js/features/notification_center.js",
+      "size_bytes": 11100,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -10610,7 +10719,7 @@
       "module_id": "core",
       "kind": "frontend_javascript",
       "path": "xkeen-ui/static/js/pages/shell.shared.js",
-      "size_bytes": 556,
+      "size_bytes": 601,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11715,6 +11824,26 @@
       "kind": "frontend_test",
       "path": "e2e/monaco_yaml_alias_highlighting.spec.mjs",
       "size_bytes": 1017,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_test",
+      "path": "e2e/notification_center.spec.mjs",
+      "size_bytes": 3921,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -13044,6 +13173,26 @@
     {
       "module_id": "core",
       "kind": "stylesheet",
+      "path": "xkeen-ui/static/notification-center.css",
+      "size_bytes": 3490,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "stylesheet",
       "path": "xkeen-ui/static/operator-tokens.css",
       "size_bytes": 3169,
       "depends_on": [],
@@ -13185,7 +13334,7 @@
       "module_id": "core",
       "kind": "template",
       "path": "xkeen-ui/templates/_top_level_host_head_assets.html",
-      "size_bytes": 1316,
+      "size_bytes": 1422,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -26540,7 +26689,7 @@
     }
   ],
   "routes": {
-    "endpoint_count": 318,
+    "endpoint_count": 326,
     "files_with_routes": 51,
     "endpoint_files": [
       {
@@ -26806,12 +26955,22 @@
           },
           {
             "method": "GET",
+            "path": "/api/modules/notifications",
+            "decorator": "bp.get"
+          },
+          {
+            "method": "GET",
             "path": "/api/modules/operations/status",
             "decorator": "bp.get"
           },
           {
             "method": "GET",
             "path": "/api/modules/update-channel",
+            "decorator": "bp.get"
+          },
+          {
+            "method": "GET",
+            "path": "/api/notifications",
             "decorator": "bp.get"
           },
           {
@@ -26825,6 +26984,16 @@
             "decorator": "bp.patch"
           },
           {
+            "method": "PATCH",
+            "path": "/api/modules/notifications/<record_id>",
+            "decorator": "bp.patch"
+          },
+          {
+            "method": "PATCH",
+            "path": "/api/notifications/<record_id>",
+            "decorator": "bp.patch"
+          },
+          {
             "method": "POST",
             "path": "/api/modules/<module_id>/disable",
             "decorator": "bp.post"
@@ -26832,6 +27001,16 @@
           {
             "method": "POST",
             "path": "/api/modules/<module_id>/enable",
+            "decorator": "bp.post"
+          },
+          {
+            "method": "POST",
+            "path": "/api/modules/notifications/check",
+            "decorator": "bp.post"
+          },
+          {
+            "method": "POST",
+            "path": "/api/modules/notifications/mark-seen",
             "decorator": "bp.post"
           },
           {
@@ -26872,6 +27051,16 @@
           {
             "method": "POST",
             "path": "/api/modules/update-channel",
+            "decorator": "bp.post"
+          },
+          {
+            "method": "POST",
+            "path": "/api/notifications/check",
+            "decorator": "bp.post"
+          },
+          {
+            "method": "POST",
+            "path": "/api/notifications/mark-seen",
             "decorator": "bp.post"
           }
         ]
@@ -28727,7 +28916,7 @@
     {
       "id": "panel-core",
       "root": "xkeen-ui/static/js/pages/panel.entry.js",
-      "file_count": 281,
+      "file_count": 282,
       "module_ids": [
         "core",
         "engine.mihomo",
@@ -28834,6 +29023,7 @@
         "xkeen-ui/static/js/features/module_manager/badge.js",
         "xkeen-ui/static/js/features/module_manager/controller.js",
         "xkeen-ui/static/js/features/module_manager/render.js",
+        "xkeen-ui/static/js/features/notification_center.js",
         "xkeen-ui/static/js/features/outbounds.js",
         "xkeen-ui/static/js/features/panel_summary.js",
         "xkeen-ui/static/js/features/resource_monitor.js",
@@ -29383,7 +29573,7 @@
     {
       "id": "devtools-page",
       "root": "xkeen-ui/static/js/pages/devtools.entry.js",
-      "file_count": 281,
+      "file_count": 282,
       "module_ids": [
         "core",
         "engine.mihomo",
@@ -29490,6 +29680,7 @@
         "xkeen-ui/static/js/features/module_manager/badge.js",
         "xkeen-ui/static/js/features/module_manager/controller.js",
         "xkeen-ui/static/js/features/module_manager/render.js",
+        "xkeen-ui/static/js/features/notification_center.js",
         "xkeen-ui/static/js/features/outbounds.js",
         "xkeen-ui/static/js/features/panel_summary.js",
         "xkeen-ui/static/js/features/resource_monitor.js",
@@ -29682,7 +29873,7 @@
     {
       "id": "xkeen-page",
       "root": "xkeen-ui/static/js/pages/xkeen.entry.js",
-      "file_count": 281,
+      "file_count": 282,
       "module_ids": [
         "core",
         "engine.mihomo",
@@ -29789,6 +29980,7 @@
         "xkeen-ui/static/js/features/module_manager/badge.js",
         "xkeen-ui/static/js/features/module_manager/controller.js",
         "xkeen-ui/static/js/features/module_manager/render.js",
+        "xkeen-ui/static/js/features/notification_center.js",
         "xkeen-ui/static/js/features/outbounds.js",
         "xkeen-ui/static/js/features/panel_summary.js",
         "xkeen-ui/static/js/features/resource_monitor.js",
@@ -29981,7 +30173,7 @@
     {
       "id": "mihomo-generator-page",
       "root": "xkeen-ui/static/js/pages/mihomo_generator.entry.js",
-      "file_count": 281,
+      "file_count": 282,
       "module_ids": [
         "core",
         "engine.mihomo",
@@ -30088,6 +30280,7 @@
         "xkeen-ui/static/js/features/module_manager/badge.js",
         "xkeen-ui/static/js/features/module_manager/controller.js",
         "xkeen-ui/static/js/features/module_manager/render.js",
+        "xkeen-ui/static/js/features/notification_center.js",
         "xkeen-ui/static/js/features/outbounds.js",
         "xkeen-ui/static/js/features/panel_summary.js",
         "xkeen-ui/static/js/features/resource_monitor.js",
@@ -30280,7 +30473,7 @@
     {
       "id": "modules-page",
       "root": "xkeen-ui/static/js/pages/modules.entry.js",
-      "file_count": 281,
+      "file_count": 282,
       "module_ids": [
         "core",
         "engine.mihomo",
@@ -30387,6 +30580,7 @@
         "xkeen-ui/static/js/features/module_manager/badge.js",
         "xkeen-ui/static/js/features/module_manager/controller.js",
         "xkeen-ui/static/js/features/module_manager/render.js",
+        "xkeen-ui/static/js/features/notification_center.js",
         "xkeen-ui/static/js/features/outbounds.js",
         "xkeen-ui/static/js/features/panel_summary.js",
         "xkeen-ui/static/js/features/resource_monitor.js",

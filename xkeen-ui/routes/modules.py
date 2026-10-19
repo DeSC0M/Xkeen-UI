@@ -10,6 +10,7 @@ from routes.common.errors import error_response, exception_response
 from services import request_limits
 from services.module_lifecycle import FULL_SCOPE_OPERATIONS, ModuleLifecycleError, ModuleLifecycleService
 from services.module_registry import MODULE_IDS, PROFILE_PRESETS, ModuleRegistry, ModuleRegistryError
+from services.notification_center import NotificationCenter, NotificationCenterError
 
 
 _MAX_PATCH_BYTES = 8 * 1024
@@ -20,6 +21,7 @@ def create_modules_blueprint(
     *,
     before_change: Callable[[str, bool], dict[str, Any] | None] | None = None,
     lifecycle_service: ModuleLifecycleService | None = None,
+    notification_center: NotificationCenter | None = None,
 ) -> Blueprint:
     """Create the configuration-only module registry API blueprint."""
 
@@ -65,6 +67,33 @@ def create_modules_blueprint(
                 code="module_lifecycle_failed",
                 exc=exc,
                 log_tag="modules.lifecycle_failed",
+            )
+
+    def notification_response(call: Callable[[], dict[str, Any]], status: int = 200):
+        if notification_center is None:
+            return error_response(
+                "notification center is unavailable",
+                503,
+                ok=False,
+                code="notification_center_unavailable",
+            )
+        try:
+            return success(call(), status)
+        except NotificationCenterError as error:
+            return error_response(
+                error.message,
+                error.status,
+                ok=False,
+                code=error.code,
+            )
+        except Exception as exc:  # noqa: BLE001
+            return exception_response(
+                "Notification center failed.",
+                500,
+                ok=False,
+                code="notification_center_failed",
+                exc=exc,
+                log_tag="modules.notification_center_failed",
             )
 
     def lifecycle_body(
@@ -122,7 +151,12 @@ def create_modules_blueprint(
         payload, failure = lifecycle_body(allowed={"channel"}, required={"channel"})
         if failure is not None:
             return failure
-        return lifecycle_response(lambda: lifecycle_service.set_update_channel(payload["channel"]))
+        def update_channel():
+            result = lifecycle_service.set_update_channel(payload["channel"])
+            if notification_center is not None:
+                notification_center.wake_background()
+            return result
+        return lifecycle_response(update_channel)
 
     @bp.get("/api/modules/available")
     def api_modules_available():
@@ -148,6 +182,93 @@ def create_modules_blueprint(
         return lifecycle_response(
             lambda: lifecycle_service.panel_update_check(
                 force_refresh=force_refresh,
+            )
+        )
+
+    @bp.get("/api/notifications")
+    @bp.get("/api/modules/notifications")
+    def api_modules_notifications():
+        return notification_response(lambda: notification_center.snapshot())
+
+    @bp.post("/api/notifications/check")
+    @bp.post("/api/modules/notifications/check")
+    def api_modules_notifications_check():
+        payload, failure = lifecycle_body(
+            allowed={"force_refresh"},
+            required=set(),
+        )
+        if failure is not None:
+            return failure
+        force_refresh = payload.get("force_refresh", True)
+        if not isinstance(force_refresh, bool):
+            return error_response(
+                "force_refresh must be boolean",
+                400,
+                ok=False,
+                code="notification_check_field_invalid",
+                fields=["force_refresh"],
+            )
+        return notification_response(
+            lambda: notification_center.check(force_refresh=force_refresh),
+        )
+
+    @bp.post("/api/notifications/mark-seen")
+    @bp.post("/api/modules/notifications/mark-seen")
+    def api_modules_notifications_mark_seen():
+        payload, failure = lifecycle_body(
+            allowed={"record_ids"},
+            required=set(),
+        )
+        if failure is not None:
+            return failure
+        record_ids = payload.get("record_ids")
+        if record_ids is not None and (
+            not isinstance(record_ids, list)
+            or any(not isinstance(item, str) for item in record_ids)
+            or len(record_ids) > 160
+        ):
+            return error_response(
+                "record_ids must be a short list of notification ids",
+                400,
+                ok=False,
+                code="notification_record_ids_invalid",
+            )
+        return notification_response(
+            lambda: notification_center.mark_seen(record_ids),
+        )
+
+    @bp.patch("/api/notifications/<record_id>")
+    @bp.patch("/api/modules/notifications/<record_id>")
+    def api_modules_notification_state(record_id: str):
+        payload, failure = lifecycle_body(
+            allowed={"action", "snooze_seconds"},
+            required={"action"},
+        )
+        if failure is not None:
+            return failure
+        action = payload["action"]
+        snooze_seconds = payload.get("snooze_seconds")
+        if not isinstance(action, str):
+            return error_response(
+                "action must be a string",
+                400,
+                ok=False,
+                code="notification_action_invalid",
+            )
+        if snooze_seconds is not None and (
+            not isinstance(snooze_seconds, int) or isinstance(snooze_seconds, bool)
+        ):
+            return error_response(
+                "snooze_seconds must be an integer",
+                400,
+                ok=False,
+                code="notification_snooze_invalid",
+            )
+        return notification_response(
+            lambda: notification_center.set_record_state(
+                record_id,
+                action,
+                snooze_seconds=snooze_seconds,
             )
         )
 

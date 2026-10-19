@@ -226,6 +226,12 @@ def application(environ, start_response):
 
 if __name__ == "__main__":
     server_port = _server_port()
+    # Catalog discovery happens on its own daemon thread.  Startup and the
+    # first page render stay independent from an offline GitHub connection.
+    try:
+        app.extensions["xkeen.notification_center"].start_background()
+    except Exception:
+        pass
     try:
         start_memory_guard()
     except Exception:

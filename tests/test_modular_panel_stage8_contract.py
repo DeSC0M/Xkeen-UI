@@ -492,5 +492,5 @@ def test_remaining_stage_audit_matches_the_open_roadmap() -> None:
     ):
         assert fragment in audit
 
-    assert "8.7, 8.8, Этапы 9 и 10 частично подготовлены, но не закрыты" in plan
+    assert "подэтапы 8.0–8.7 закрыты. Остаются rollout-приёмка 8.8, Этапы 9 и 10." in plan
     assert "modular-panel-remaining-stages-audit.md" in docs_index

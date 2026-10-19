@@ -1,0 +1,600 @@
+"""Core-owned, local notification state for official panel releases.
+
+The center is intentionally a *catalog reader*, not another updater.  Its
+only remote operation is :meth:`ModuleLifecycleService.notification_catalog`,
+which verifies small signed catalog files and never downloads an archive.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import math
+import threading
+import time
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Callable, Mapping
+
+from services.io.atomic import _atomic_write_json
+from services.module_update_channel import CHANNELS, read_channel
+
+if TYPE_CHECKING:
+    from services.module_lifecycle import ModuleLifecycleService
+
+
+STATE_FILENAME = "module-notifications.json"
+STATE_SCHEMA_VERSION = 1
+BACKGROUND_INTERVAL_S = 24 * 60 * 60
+MAX_BACKOFF_S = 7 * BACKGROUND_INTERVAL_S
+MAX_STATE_RECORDS = 160
+STATE_RETENTION_S = 90 * 24 * 60 * 60
+SNOOZE_INTERVALS = frozenset({24 * 60 * 60, 7 * 24 * 60 * 60})
+_IDENTITY_HEX = frozenset("0123456789abcdef")
+
+_ERROR_MESSAGES = {
+    "catalog_unavailable": "Не удалось связаться с каталогом обновлений.",
+    "catalog_baseline_unavailable": "Не удалось прочитать каталог установленной версии панели.",
+    "catalog_cache_invalid": "Локальная копия каталога требует повторной проверки.",
+    "catalog_channel_unsupported": "Выбранный канал обновлений недоступен.",
+    "catalog_stable_unreleased": "Для стабильного канала пока нет модульного выпуска.",
+    "module_state_unavailable": "Не удалось прочитать состояние установленных модулей.",
+    "panel_version_unsupported": "Версия панели не поддерживает проверку обновлений.",
+}
+
+
+class NotificationCenterError(ValueError):
+    """A stable notification-center failure safe to return from the API."""
+
+    def __init__(self, code: str, message: str, *, status: int = 400):
+        super().__init__(message)
+        self.code = code
+        self.message = message
+        self.status = status
+
+
+def _now_number(value: Any) -> float | None:
+    try:
+        result = float(value)
+    except (TypeError, ValueError):
+        return None
+    return result if math.isfinite(result) and result >= 0 else None
+
+
+def _record_id(kind: str, module_id: str | None, version: str, channel: str) -> str:
+    canonical = "\0".join((kind, module_id or "panel", version, channel)).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
+def _safe_module_list(value: Any) -> list[str]:
+    return sorted({str(item) for item in value if isinstance(item, str) and item}) if isinstance(value, list) else []
+
+
+def _dependency_changes(previous: Mapping[str, Any] | None, current: Mapping[str, Any]) -> dict[str, list[str]]:
+    old_requires = set(_safe_module_list(previous.get("requires") if previous else []))
+    new_requires = set(_safe_module_list(current.get("requires")))
+    old_conflicts = set(_safe_module_list(previous.get("conflicts") if previous else []))
+    new_conflicts = set(_safe_module_list(current.get("conflicts")))
+    return {
+        "requires_added": sorted(new_requires - old_requires),
+        "requires_removed": sorted(old_requires - new_requires),
+        "conflicts_added": sorted(new_conflicts - old_conflicts),
+        "conflicts_removed": sorted(old_conflicts - new_conflicts),
+    }
+
+
+def _has_dependency_changes(changes: Mapping[str, list[str]]) -> bool:
+    return any(changes.get(key) for key in changes)
+
+
+class NotificationCenter:
+    """Persist notifications and quietly refresh their signed source once daily."""
+
+    def __init__(
+        self,
+        lifecycle_service: "ModuleLifecycleService",
+        *,
+        state_dir: Path,
+        now: Callable[[], float] = time.time,
+        background_interval_s: float = BACKGROUND_INTERVAL_S,
+    ) -> None:
+        self.lifecycle_service = lifecycle_service
+        self.state_dir = Path(state_dir)
+        self._path = self.state_dir / STATE_FILENAME
+        self._now = now
+        self._background_interval_s = max(60.0, float(background_interval_s))
+        self._lock = threading.RLock()
+        self._poll_lock = threading.Lock()
+        self._wake = threading.Event()
+        self._thread: threading.Thread | None = None
+
+    @staticmethod
+    def _empty_state() -> dict[str, Any]:
+        return {
+            "schema_version": STATE_SCHEMA_VERSION,
+            "records": {},
+            "channels": {
+                channel: {
+                    "records": [],
+                    "last_attempt_at": None,
+                    "last_success_at": None,
+                    "freshness": None,
+                    "stale_reason": None,
+                    "error_code": None,
+                    "failure_count": 0,
+                    "next_poll_at": None,
+                    "fetched_at": None,
+                    "baseline_error": None,
+                }
+                for channel in sorted(CHANNELS)
+            },
+        }
+
+    @staticmethod
+    def _valid_record_id(value: Any) -> bool:
+        return isinstance(value, str) and len(value) == 64 and set(value) <= _IDENTITY_HEX
+
+    @classmethod
+    def _normalize_record_state(cls, raw: Any) -> dict[str, float | None]:
+        data = raw if isinstance(raw, Mapping) else {}
+        return {
+            "seen_at": _now_number(data.get("seen_at")),
+            "dismissed_at": _now_number(data.get("dismissed_at")),
+            "snoozed_until": _now_number(data.get("snoozed_until")),
+            "updated_at": _now_number(data.get("updated_at")),
+        }
+
+    @classmethod
+    def _normalize_channel_state(cls, raw: Any) -> dict[str, Any]:
+        data = raw if isinstance(raw, Mapping) else {}
+        records = data.get("records")
+        normalized_records = [
+            dict(item)
+            for item in records if isinstance(item, Mapping) and cls._valid_record_id(item.get("id"))
+        ] if isinstance(records, list) else []
+        error_code = data.get("error_code")
+        try:
+            failure_count = min(16, max(0, int(data.get("failure_count") or 0)))
+        except (TypeError, ValueError):
+            failure_count = 0
+        return {
+            "records": normalized_records[:MAX_STATE_RECORDS],
+            "last_attempt_at": _now_number(data.get("last_attempt_at")),
+            "last_success_at": _now_number(data.get("last_success_at")),
+            "freshness": data.get("freshness") if data.get("freshness") in {"fresh", "stale", "local"} else None,
+            "stale_reason": str(data["stale_reason"])[:80] if isinstance(data.get("stale_reason"), str) else None,
+            "error_code": str(error_code)[:80] if isinstance(error_code, str) else None,
+            "failure_count": failure_count,
+            "next_poll_at": _now_number(data.get("next_poll_at")),
+            "fetched_at": _now_number(data.get("fetched_at")),
+            "baseline_error": str(data["baseline_error"])[:80] if isinstance(data.get("baseline_error"), str) else None,
+        }
+
+    def _read_state_locked(self) -> tuple[dict[str, Any], bool]:
+        state = self._empty_state()
+        try:
+            raw = json.loads(self._path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            return state, False
+        except (OSError, ValueError, TypeError):
+            return state, True
+        if not isinstance(raw, Mapping):
+            return state, True
+
+        # Schema 0 was never publicly released, but accepting its simple
+        # records map makes early test builds migrate without losing dismissals.
+        schema = raw.get("schema_version", 0)
+        if schema not in {0, STATE_SCHEMA_VERSION}:
+            return state, True
+        stored_records = raw.get("records")
+        if isinstance(stored_records, Mapping):
+            state["records"] = {
+                record_id: self._normalize_record_state(record)
+                for record_id, record in stored_records.items()
+                if self._valid_record_id(record_id)
+            }
+        stored_channels = raw.get("channels")
+        if isinstance(stored_channels, Mapping):
+            for channel in CHANNELS:
+                state["channels"][channel] = self._normalize_channel_state(stored_channels.get(channel))
+        return state, schema != STATE_SCHEMA_VERSION
+
+    def _write_state_locked(self, state: Mapping[str, Any]) -> None:
+        _atomic_write_json(str(self._path), state, mode=0o600)
+
+    @staticmethod
+    def _error_record(channel: str, code: str) -> dict[str, Any]:
+        normalized = code if code in _ERROR_MESSAGES else "catalog_unavailable"
+        return {
+            "id": _record_id("catalog-error", None, normalized, channel),
+            "kind": "catalog-error",
+            "channel": channel,
+            "version": normalized,
+            "title": "Проверка обновлений требует внимания",
+            "message": _ERROR_MESSAGES[normalized],
+            "retry_available": True,
+        }
+
+    @staticmethod
+    def _stale_record(channel: str, reason: str | None, fetched_at: float | None) -> dict[str, Any]:
+        code = str(reason or "catalog_unavailable")
+        return {
+            "id": _record_id("catalog-stale", None, code, channel),
+            "kind": "catalog-stale",
+            "channel": channel,
+            "version": code,
+            "title": "Каталог может быть неактуален",
+            "message": "Показана последняя проверенная копия каталога.",
+            "retry_available": True,
+            "fetched_at": fetched_at,
+        }
+
+    @staticmethod
+    def _baseline_record(channel: str, code: str) -> dict[str, Any]:
+        normalized = code if code in _ERROR_MESSAGES else "catalog_baseline_unavailable"
+        return {
+            "id": _record_id("catalog-baseline", None, normalized, channel),
+            "kind": "catalog-baseline",
+            "channel": channel,
+            "version": normalized,
+            "title": "Неполная информация о модулях",
+            "message": _ERROR_MESSAGES[normalized],
+            "retry_available": True,
+        }
+
+    def _records_from_catalog(self, payload: Mapping[str, Any]) -> list[dict[str, Any]]:
+        channel = str(payload.get("channel") or "stable")
+        if channel not in CHANNELS:
+            return []
+        if payload.get("update_available") is not True:
+            return []
+
+        target_version = str(payload.get("target_version") or "")
+        source_version = str(payload.get("source_version") or "")
+        records: list[dict[str, Any]] = []
+        target_panel = payload.get("target_panel")
+        if target_version:
+            panel_size = target_panel.get("size") if isinstance(target_panel, Mapping) else None
+            records.append(
+                {
+                    "id": _record_id("panel-update", None, target_version, channel),
+                    "kind": "panel-update",
+                    "channel": channel,
+                    "version": target_version,
+                    "source_version": source_version,
+                    "title": "Доступна новая версия панели",
+                    "message": "Обновление панели проверит совместимость и сохранит выбранный профиль.",
+                    "size": panel_size if isinstance(panel_size, int) and panel_size > 0 else None,
+                    "requires_restart": True,
+                    "requires_installer": payload.get("requires_installer") is True,
+                }
+            )
+
+        from services.module_package_contract import compare_semver
+        from services.module_registry import MODULE_DEFINITIONS
+
+        known = {definition.id: definition for definition in MODULE_DEFINITIONS}
+        installed = set(_safe_module_list(payload.get("installed_module_ids")))
+        previous = {
+            str(item.get("id")): item
+            for item in payload.get("current_modules", [])
+            if isinstance(item, Mapping) and isinstance(item.get("id"), str)
+        }
+        for target in payload.get("target_modules", []):
+            if not isinstance(target, Mapping):
+                continue
+            module_id = target.get("id")
+            version = target.get("version")
+            if not isinstance(module_id, str) or not isinstance(version, str):
+                continue
+            baseline = previous.get(module_id)
+            changes = _dependency_changes(baseline, target)
+            is_new = baseline is None
+            version_changed = False
+            if baseline is not None and isinstance(baseline.get("version"), str):
+                try:
+                    version_changed = compare_semver(version, str(baseline["version"])) > 0
+                except Exception:
+                    version_changed = version != str(baseline.get("version"))
+            if is_new:
+                kind = "module-new"
+            elif module_id in installed and (version_changed or _has_dependency_changes(changes)):
+                kind = "module-update"
+            else:
+                continue
+            definition = known.get(module_id)
+            module_name = definition.name if definition is not None else "Новый официальный модуль"
+            records.append(
+                {
+                    "id": _record_id(kind, module_id, version, channel),
+                    "kind": kind,
+                    "channel": channel,
+                    "module_id": module_id,
+                    "version": version,
+                    "source_version": source_version,
+                    "title": (
+                        f"Новый модуль: {module_name}"
+                        if kind == "module-new"
+                        else f"Изменён модуль: {module_name}"
+                    ),
+                    "message": (
+                        (
+                            "Этот модуль станет доступен после обновления панели; "
+                            "текущая панель ещё не знает его состав."
+                            if definition is None
+                            else "Этот модуль станет доступен после обновления панели."
+                        )
+                        if kind == "module-new"
+                        else "Изменения войдут в обновление панели; отдельное обновление модуля не запускается."
+                    ),
+                    "size": target.get("size") if isinstance(target.get("size"), int) and target["size"] > 0 else None,
+                    "requires_restart": target.get("requires_restart") is True,
+                    "dependency_changes": changes,
+                    "requires_panel_update": True,
+                }
+            )
+        return records
+
+    @staticmethod
+    def _sort_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        priority = {"catalog-error": 0, "catalog-stale": 1, "catalog-baseline": 2, "panel-update": 3, "module-new": 4, "module-update": 5}
+        return sorted(records, key=lambda record: (priority.get(str(record.get("kind")), 9), str(record.get("title") or "")))
+
+    def _prune_locked(self, state: dict[str, Any], active_ids: set[str], now: float) -> None:
+        records = state["records"]
+        candidates = sorted(
+            records,
+            key=lambda record_id: float(records[record_id].get("updated_at") or 0),
+            reverse=True,
+        )
+        keep = set(candidates[:MAX_STATE_RECORDS]) | active_ids
+        for record_id in list(records):
+            updated = float(records[record_id].get("updated_at") or 0)
+            if record_id not in keep or (record_id not in active_ids and updated < now - STATE_RETENTION_S):
+                records.pop(record_id, None)
+
+    def _public_snapshot_locked(self, state: dict[str, Any], channel: str, now: float) -> dict[str, Any]:
+        channel_state = state["channels"][channel]
+        visible: list[dict[str, Any]] = []
+        unread = 0
+        active_ids: set[str] = set()
+        for raw in self._sort_records(list(channel_state["records"])):
+            record_id = raw.get("id")
+            if not self._valid_record_id(record_id):
+                continue
+            active_ids.add(record_id)
+            persisted = state["records"].get(record_id, self._normalize_record_state(None))
+            if persisted.get("dismissed_at") is not None:
+                continue
+            snoozed_until = persisted.get("snoozed_until")
+            if snoozed_until is not None and snoozed_until > now:
+                continue
+            item = dict(raw)
+            item["seen"] = persisted.get("seen_at") is not None
+            item["snoozed_until"] = snoozed_until
+            visible.append(item)
+            if not item["seen"]:
+                unread += 1
+        self._prune_locked(state, active_ids, now)
+        return {
+            "ok": True,
+            "channel": channel,
+            "records": visible,
+            "unread_count": unread,
+            "status": {
+                key: channel_state.get(key)
+                for key in (
+                    "last_attempt_at",
+                    "last_success_at",
+                    "freshness",
+                    "stale_reason",
+                    "error_code",
+                    "next_poll_at",
+                    "fetched_at",
+                    "baseline_error",
+                )
+            },
+        }
+
+    def snapshot(self) -> dict[str, Any]:
+        with self._lock:
+            state, needs_write = self._read_state_locked()
+            result = self._public_snapshot_locked(state, read_channel(self.state_dir), float(self._now()))
+            if needs_write:
+                self._write_state_locked(state)
+            return result
+
+    def _finish_poll_locked(
+        self,
+        state: dict[str, Any],
+        *,
+        channel: str,
+        now: float,
+        records: list[dict[str, Any]] | None,
+        freshness: str | None,
+        stale_reason: str | None,
+        fetched_at: float | None,
+        error_code: str | None,
+        baseline_error: str | None,
+    ) -> dict[str, Any]:
+        channel_state = state["channels"][channel]
+        channel_state["last_attempt_at"] = now
+        channel_state["freshness"] = freshness
+        channel_state["stale_reason"] = stale_reason
+        channel_state["fetched_at"] = fetched_at
+        channel_state["baseline_error"] = baseline_error
+        if records is not None:
+            channel_state["records"] = self._sort_records(records)
+        if freshness in {"fresh", "local"} and error_code is None:
+            channel_state["last_success_at"] = now
+            channel_state["error_code"] = None
+            channel_state["failure_count"] = 0
+            channel_state["next_poll_at"] = now + self._background_interval_s
+        else:
+            failures = min(16, int(channel_state.get("failure_count") or 0) + 1)
+            channel_state["failure_count"] = failures
+            # A stale response still contains a verified catalog.  Keep its
+            # transport reason separately so the UI says “stale” rather than
+            # pretending it has no usable answer at all.
+            channel_state["error_code"] = None if freshness == "stale" else (error_code or "catalog_unavailable")
+            # Failed background probes never become noisy retries: each delay
+            # is at least a day and then backs off to a week.
+            delay = min(MAX_BACKOFF_S, self._background_interval_s * (2 ** min(failures - 1, 3)))
+            channel_state["next_poll_at"] = now + delay
+        result = self._public_snapshot_locked(state, channel, now)
+        self._write_state_locked(state)
+        return result
+
+    def check(self, *, force_refresh: bool = False, background: bool = False) -> dict[str, Any]:
+        """Refresh notification records through the single catalog source."""
+
+        if not self._poll_lock.acquire(blocking=False):
+            return self.snapshot()
+        try:
+            with self._lock:
+                state, migrated = self._read_state_locked()
+                channel = read_channel(self.state_dir)
+                now = float(self._now())
+                due_at = state["channels"][channel].get("next_poll_at")
+                if background and isinstance(due_at, (int, float)) and due_at > now:
+                    result = self._public_snapshot_locked(state, channel, now)
+                    if migrated:
+                        self._write_state_locked(state)
+                    return result
+            try:
+                payload = self.lifecycle_service.notification_catalog(force_refresh=bool(force_refresh))
+                payload_channel = str(payload.get("channel") or channel)
+                if payload_channel in CHANNELS:
+                    channel = payload_channel
+                records = self._records_from_catalog(payload)
+                freshness = str(payload.get("freshness") or "")
+                stale_reason = payload.get("stale_reason")
+                fetched_at = _now_number(payload.get("fetched_at"))
+                baseline_error = payload.get("baseline_error")
+                if freshness == "stale":
+                    records.append(self._stale_record(channel, str(stale_reason or ""), fetched_at))
+                if isinstance(baseline_error, str) and baseline_error:
+                    records.append(self._baseline_record(channel, baseline_error))
+                with self._lock:
+                    state, _ = self._read_state_locked()
+                    return self._finish_poll_locked(
+                        state,
+                        channel=channel,
+                        now=float(self._now()),
+                        records=records,
+                        freshness=freshness if freshness in {"fresh", "stale", "local"} else None,
+                        stale_reason=str(stale_reason)[:80] if isinstance(stale_reason, str) else None,
+                        fetched_at=fetched_at,
+                        error_code=None,
+                        baseline_error=baseline_error if isinstance(baseline_error, str) else None,
+                    )
+            except Exception as error:  # lifecycle maps trust/transport failures to a stable code
+                code = str(getattr(error, "code", None) or "catalog_unavailable")
+                with self._lock:
+                    state, _ = self._read_state_locked()
+                    channel_state = state["channels"][channel]
+                    retained = [
+                        dict(record)
+                        for record in channel_state.get("records", [])
+                        if isinstance(record, Mapping) and str(record.get("kind")) not in {
+                            "catalog-error",
+                            "catalog-stale",
+                            "catalog-baseline",
+                        }
+                    ]
+                    retained.append(self._error_record(channel, code))
+                    return self._finish_poll_locked(
+                        state,
+                        channel=channel,
+                        now=float(self._now()),
+                        records=retained,
+                        freshness=None,
+                        stale_reason=None,
+                        fetched_at=None,
+                        error_code=code,
+                        baseline_error=None,
+                    )
+        finally:
+            self._poll_lock.release()
+
+    def mark_seen(self, record_ids: list[str] | None = None) -> dict[str, Any]:
+        with self._lock:
+            state, _ = self._read_state_locked()
+            channel = read_channel(self.state_dir)
+            now = float(self._now())
+            active = {record.get("id") for record in state["channels"][channel]["records"] if isinstance(record, Mapping)}
+            targets = active if record_ids is None else set(record_ids) & active
+            for record_id in targets:
+                if self._valid_record_id(record_id):
+                    entry = state["records"].setdefault(record_id, self._normalize_record_state(None))
+                    entry["seen_at"] = now
+                    entry["updated_at"] = now
+            result = self._public_snapshot_locked(state, channel, now)
+            self._write_state_locked(state)
+            return result
+
+    def set_record_state(self, record_id: str, action: str, *, snooze_seconds: int | None = None) -> dict[str, Any]:
+        if not self._valid_record_id(record_id):
+            raise NotificationCenterError("notification_not_found", "notification was not found", status=404)
+        if action not in {"dismiss", "snooze", "restore"}:
+            raise NotificationCenterError("notification_action_invalid", "unsupported notification action")
+        with self._lock:
+            state, _ = self._read_state_locked()
+            channel = read_channel(self.state_dir)
+            active = {record.get("id") for record in state["channels"][channel]["records"] if isinstance(record, Mapping)}
+            if record_id not in active:
+                raise NotificationCenterError("notification_not_found", "notification was not found", status=404)
+            now = float(self._now())
+            entry = state["records"].setdefault(record_id, self._normalize_record_state(None))
+            if action == "dismiss":
+                entry["dismissed_at"] = now
+                entry["snoozed_until"] = None
+            elif action == "restore":
+                entry["dismissed_at"] = None
+                entry["snoozed_until"] = None
+            else:
+                seconds = int(snooze_seconds or 24 * 60 * 60)
+                if seconds not in SNOOZE_INTERVALS:
+                    raise NotificationCenterError("notification_snooze_invalid", "unsupported notification snooze interval")
+                entry["seen_at"] = now
+                entry["dismissed_at"] = None
+                entry["snoozed_until"] = now + seconds
+            entry["updated_at"] = now
+            result = self._public_snapshot_locked(state, channel, now)
+            self._write_state_locked(state)
+            return result
+
+    def start_background(self) -> None:
+        """Start one daemon poller without holding up Flask or the router."""
+
+        with self._lock:
+            if self._thread is not None and self._thread.is_alive():
+                return
+            self._thread = threading.Thread(
+                target=self._background_loop,
+                name="xkeen-notification-poll",
+                daemon=True,
+            )
+            self._thread.start()
+
+    def _background_loop(self) -> None:
+        while True:
+            try:
+                self.check(background=True)
+            except Exception:
+                pass
+            # Waking hourly lets an update-channel change become eligible
+            # promptly while still leaving network requests to the daily gate.
+            self._wake.wait(timeout=min(60 * 60, self._background_interval_s))
+            self._wake.clear()
+
+    def wake_background(self) -> None:
+        self._wake.set()
+
+
+__all__ = [
+    "BACKGROUND_INTERVAL_S",
+    "NotificationCenter",
+    "NotificationCenterError",
+    "SNOOZE_INTERVALS",
+    "STATE_FILENAME",
+]

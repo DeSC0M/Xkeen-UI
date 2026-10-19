@@ -1,9 +1,8 @@
 # План модульной архитектуры панели Xkeen UI
 
 **Статус:** Этапы 0, 1, 2, 3, 3R, 3R.1, 4, 5, 6 и 7, а также
-подэтапы 8.0–8.6 закрыты; следующим остаётся 8.7 Notification center.
-8.7, 8.8, Этапы 9 и 10 частично подготовлены, но не закрыты<br>
-**Дата:** 13 октября 2026 года
+подэтапы 8.0–8.7 закрыты. Остаются rollout-приёмка 8.8, Этапы 9 и 10.<br>
+**Дата:** 19 октября 2026 года
 **Область:** облегчение панели, профили установки и официальный каталог модулей
 
 **Текущий прогресс:** Этапы 0–3 и 3R, подэтапы 4.1, 4.2 и 4.3 закрыты;
@@ -19,12 +18,13 @@ manifest и единый `page_context`. Подэтап 4.6 закрепил ser
 Контракты и границы — закрыт 3 октября 2026 года. Подэтап 8.1 — Упаковка и
 release assets — также закрыт 3 октября 2026 года. Подэтап 8.2 — Trust и
 клиент каталога — закрыт 5 октября 2026 года. Подэтапы 8.3 и 8.4 закрыты 6 октября 2026 года. Подэтап 8.5 — Panel update и profile transition — закрыт
-7 октября 2026 года; подэтап 8.6 — UI менеджера — закрыт 13 октября 2026 года.
+7 октября 2026 года; подэтап 8.6 — UI менеджера — закрыт 13 октября 2026 года,
+а подэтап 8.7 — Notification center — закрыт 19 октября 2026 года.
 
-**Сверка оставшихся этапов с кодом: 13 октября 2026 года.** Catalog cache,
-update-check, channel selection, badge, recovery engine, профильные тесты и
-lazy loading уже реализованы. Они не означают готовность Notification center,
-завершённый rollout или доказанное снижение RSS/времени запуска.
+**Сверка оставшихся этапов с кодом: 19 октября 2026 года.** Notification
+center, catalog cache, update-check, channel selection, recovery engine,
+профильные тесты и lazy loading реализованы. Они не заменяют rollout-приёмку
+или доказанное снижение RSS/времени запуска.
 Карта доказательств и пробелов:
 [`docs/modular-panel-remaining-stages-audit.md`](docs/modular-panel-remaining-stages-audit.md).
 
@@ -1631,9 +1631,9 @@ immutable-хранилище артефактов:
 
 `core` удалить нельзя.
 
-### Уведомления о новых модулях — целевой контракт 8.7
+### Уведомления о новых модулях — контракт 8.7
 
-Будущий Notification center принадлежит core, а не advanced diagnostics.
+Notification center принадлежит core, а не advanced diagnostics.
 Ниже требования, а не описание уже работающего фонового сервиса:
 
 - тихий фоновый poll не чаще одного раза в сутки и ручная кнопка «Проверить
@@ -1757,11 +1757,15 @@ badge обновлений, diff зависимостей, явный Apply/Rest
 Подэтап 8.6 закрыт 13 октября 2026 года. Закрытие подтверждено targeted backend-тестами менеджера и Lifecycle API,
 browser-приёмкой `e2e/modules_manager_*.spec.mjs` вместе с проверкой ранней
 навигации и обновлением документационного guardrail для Stage 8. Следующий
-незакрытый подэтап Этапа 8 — 8.7 Notification center.
+открытый подэтап Этапа 8 — 8.8 recovery/device prerelease acceptance.
 
-#### 8.7. Notification center
+#### 8.7. Notification center — закрыт
 
-**Статус:** частично реализована основа; Notification center не закрыт.
+Закрыт 19 октября 2026 года. Core-owned `NotificationCenter` хранит
+ограниченное локальное состояние в `module-notifications.json`; UI доступен
+из общей шапки без DevTools. Источник данных — только verified catalog через
+`ModuleLifecycleService.notification_catalog()`: poll не запрашивает panel или
+module archives и не создаёт план/транзакцию.
 
 **Уже реализовано и должно переиспользоваться:**
 
@@ -1776,39 +1780,38 @@ browser-приёмкой `e2e/modules_manager_*.spec.mjs` вместе с про
 - `POST /api/modules/panel/update-check`: проверка версии панели без загрузки
   архива, `requires_installer`, `freshness`, `stale_reason`, `fetched_at`.
   `/modules` имеет ручную проверку, DevTools запрашивает ответ с обычным TTL.
-- `features/module_manager/badge.js`: hint об обновлении **панели** в меню
-  и точка на его trigger; запись в `sessionStorage` текущей вкладки
-  согласуется с update-check/plan/status. Это не история уведомлений и не
-  `seen/dismissed/snoozed`; ключ badge пока не включает канал.
+- `features/module_manager/badge.js`: лёгкий hint об обновлении **панели** в
+  меню и точка на его trigger; запись в `sessionStorage` текущей вкладки
+  согласуется с update-check/plan/status и включает канал. История и
+  `seen/dismissed/snoozed` принадлежат Notification center.
 - `/modules` показывает каталог и состояния offline/stale/error. Polling
   операции раз в секунду относится к текущему runner, не к поиску релизов.
 
-**Осталось реализовать:**
+**Реализовано:**
 
-1. Core-owned источник и UI уведомлений, работающие без DevTools; определить
-   место входа, модель записей и API без второго updater.
-2. Тихую проверку не чаще раза в сутки независимо от открытия этих экранов,
-   с backoff/deduplication, без блокировки startup и без фоновой загрузки
-   archives. Ручную проверку связать с тем же источником/refresh policy.
-3. Persisted local `seen/dismissed/snoozed`, миграцию схемы, bounded retention
-   и синхронизацию вкладок. Идентичность записи: тип, `module_id`/panel,
-   версия и канал; переключение канала не должно показывать чужой hint.
-4. Различать новый официальный модуль, новую версию панели и каталог текущего
-   установленного release. Сейчас `/available` читает exact-release catalog,
-   возвращает `update_available=false`, а module lifecycle поддерживает
-   install/repair/remove, **не независимый module update**. Уведомление о
-   модуле будущего release не должно обещать установку без совместимой панели
-   и известного registry id.
-5. Показывать timestamp/stale/error, доступную версию, размер и restart
-   metadata; dependency diff получать через существующий server plan при
-   явном действии. Рендерить недоверенные строки только как текст.
+1. `GET/POST /api/notifications`, state actions и совместимые
+   `/api/modules/notifications/*` routes. Manual check использует тот же
+   source и клиентский 5-минутный refresh limit.
+2. Daemon poller стартует из `run_server.py`, не блокирует запуск, проверяет
+   канал не чаще суток и применяет дневной/экспоненциальный backoff при
+   offline. Stale verified catalog остаётся читаемым.
+3. Идентичность записи включает тип, panel/module id, версию и канал.
+   `seen/dismissed/snoozed` переживают restart; retention ограничена, вкладки
+   синхронизируются через `BroadcastChannel` и `storage`, а каналы изолированы.
+4. Различаются panel update, новый официальный module и изменение
+   установленного module. Базой служит catalog установленного release; новые
+   неизвестные текущей панели модули только сообщают, что будут доступны после
+   panel update, без обещания отдельной установки.
+5. UI безопасно пишет все данные через `textContent`, показывает версию,
+   размер, restart/dependency metadata, freshness/stale/error и retry.
+   Dependency diff в уведомлении — каталоговый; точный install-state plan
+   по-прежнему строится только явным действием пользователя.
 
-**Критерий закрытия:** daily/manual check, deduplication и локальное состояние
-проверены для reload/restart, нескольких вкладок, смены канала и offline;
-core-only UI не импортирует diagnostics; ни poll, ни badge не скачивают пакет.
-Явный запрос плана может скачать/проверить archive — текущий lifecycle так
-работает; только `Apply` запускает транзакцию. Запрет скачивания «до Apply»
-не соответствует существующему contract.
+**Проверки закрытия:** unit/route tests покрывают manual/daily deduplication,
+persisted dismissal, channel isolation и offline fallback; frontend build
+подтверждает core-only bundle без импорта diagnostics. Catalog checks не
+скачивают archive; это остаётся разрешено лишь явным plan path, а mutation
+начинается только на `Apply`.
 
 #### 8.8. Матрица recovery и rollout
 
@@ -1850,7 +1853,7 @@ release на конкретном устройстве.
    конфигов; опасные fault injections не делать на рабочем роутере.
 3. Проверить legacy/full, оба minimal и custom, editor variants, отключённые
    модули, отсутствующие optional tools и несовместимый `min_updater`.
-4. После 8.7 проверить доставку уведомлений без downloads; затем оформить
+4. Проверить на стенде доставку уведомлений без downloads; затем оформить
    stable rollout, backup/restore инструкцию и stop/go критерии.
 
 **Критерий закрытия:** воспроизводимый отчёт с версией/архитектурой/профилем,
@@ -1875,8 +1878,8 @@ profile transition, получить уведомление и восстано�
 Module-only install/repair/remove не заменяют соседние модули; panel update,
 profile transition и panel rollback — отдельные full-scope операции.
 Независимые версии/module-update остаются вне текущей модели релиза и не
-должны подразумеваться в уведомлениях. Этап 8 в целом открыт до закрытия
-Notification center 8.7 и доказательной rollout-приёмки 8.8.
+должны подразумеваться в уведомлениях. Этап 8 в целом открыт до
+доказательной rollout-приёмки 8.8.
 
 ## Этап 9. Тестирование и миграции
 
@@ -1912,7 +1915,7 @@ Notification center 8.7 и доказательной rollout-приёмки 8.8
 - Дополнить existing legacy/schema tests сквозной проверкой обновления
   старого payload/state и возврата на прежнюю версию. Безопасный fallback
   неизвестной schema не доказывает сохранение всей семантики downgrade.
-- Добавить тесты нового 8.7: daily/manual poll, локальное
+- Расширить тесты 8.7: daily/manual poll, локальное
   `seen/dismissed/snoozed`, multi-tab/channel reconciliation, bounded state,
   offline и отсутствие archive downloads от уведомлений.
 - Повторить lifecycle boundary в реальном API/runner/installed payload,
@@ -2046,7 +2049,7 @@ profile/installed/enabled/editor variant, cache state, активный proxy co
 13. разделение редакторов и вариантов editor light/full;
 14. профили установщика, состав пакета и безопасное обновление;
 15. core-owned менеджер и transaction/lifecycle UI (8.0–8.6 закрыты);
-16. Notification center (8.7): переиспользовать catalog/check/badge;
+16. Notification center (8.7) закрыт: переиспользованы catalog/check/badge;
 17. recovery/device prerelease acceptance (8.8) и regression/profile matrix
     (Этап 9) — вести согласованно, без дублирования тестов;
 18. текущие runtime baseline-метрики, затем измеренная оптимизация (Этап 10);

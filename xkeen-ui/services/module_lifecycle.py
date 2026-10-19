@@ -624,6 +624,124 @@ class ModuleLifecycleService:
             "fetched_at": snapshot.fetched_at,
         }
 
+    def notification_catalog(self, *, force_refresh: bool = False) -> dict[str, Any]:
+        """Read the signed catalog for the core notification center.
+
+        This is deliberately discovery-only: it fetches catalog metadata (and,
+        when needed, the immutable catalog of the installed release), but never
+        asks the catalog client for a panel or module archive.  Lifecycle
+        planning remains the sole code path allowed to inspect an archive.
+        """
+
+        if self.local_demo:
+            return {
+                "ok": True,
+                "channel": read_channel(self.state_dir),
+                "source_version": "1.0.0",
+                "target_version": "1.0.0",
+                "update_available": False,
+                "requires_installer": False,
+                "min_updater": None,
+                "freshness": "local",
+                "stale_reason": None,
+                "fetched_at": time.time(),
+                "installed_module_ids": list(read_installed_modules(self.state_dir)),
+                "current_modules": [],
+                "target_modules": [],
+                "target_panel": {},
+                "baseline_error": None,
+            }
+
+        self._ensure_profile_settled("panel-update")
+        try:
+            from services.module_package_contract import compare_semver, validate_semver
+
+            source_version = read_panel_version(self.panel_root)
+            # A locally packed build may have SemVer build metadata.  It can
+            # discover its matching release catalog, but identity shown to the
+            # user remains the complete local version.
+            source_release = source_version.partition("+")[0]
+            validate_semver(source_release, "panel_version")
+            channel = read_channel(self.state_dir)
+            client = self._catalog_factory(source_version, self._architecture_provider())
+            try:
+                snapshot = client.get_catalog(force_refresh=bool(force_refresh))
+            except Exception as error:
+                if getattr(error, "code", None) != STABLE_UNRELEASED:
+                    raise
+                return {
+                    "ok": True,
+                    "channel": channel,
+                    "source_version": source_version,
+                    "target_version": None,
+                    "update_available": False,
+                    "stable_unreleased": True,
+                    "requires_installer": False,
+                    "min_updater": None,
+                    "freshness": "fresh",
+                    "stale_reason": None,
+                    "fetched_at": time.time(),
+                    "installed_module_ids": list(read_installed_modules(self.state_dir)),
+                    "current_modules": [],
+                    "target_modules": [],
+                    "target_panel": {},
+                    "baseline_error": None,
+                }
+
+            target_version = str(snapshot.catalog.get("release_version") or "")
+            update_available = compare_semver(target_version, source_release) > 0
+            descriptor = snapshot.catalog.get("panel")
+            target_panel = dict(descriptor) if isinstance(descriptor, Mapping) else {}
+            min_updater = target_panel.get("min_updater")
+            requires_installer = bool(
+                update_available
+                and isinstance(min_updater, str)
+                and compare_semver(source_release, min_updater) < 0
+            )
+            installed_module_ids = list(read_installed_modules(self.state_dir))
+
+            current_modules: list[dict[str, Any]] = []
+            baseline_error: str | None = None
+            if update_available:
+                # The installed release catalog is the baseline.  It tells the
+                # notification center whether an entry is genuinely new rather
+                # than merely absent from the current profile.
+                try:
+                    baseline = client.get_release_catalog(source_release)
+                    current_modules = [
+                        dict(item)
+                        for item in baseline.catalog.get("modules", [])
+                        if isinstance(item, Mapping)
+                    ]
+                except Exception as error:  # a panel update note is still useful
+                    baseline_error = str(getattr(error, "code", None) or "catalog_baseline_unavailable")
+
+            return {
+                "ok": True,
+                "channel": channel,
+                "source_version": source_version,
+                "target_version": target_version,
+                "update_available": update_available,
+                "requires_installer": requires_installer,
+                "min_updater": min_updater if requires_installer else None,
+                "freshness": snapshot.freshness,
+                "stale_reason": snapshot.stale_reason,
+                "fetched_at": snapshot.fetched_at,
+                "installed_module_ids": installed_module_ids,
+                "current_modules": current_modules,
+                "target_modules": [
+                    dict(item)
+                    for item in snapshot.catalog.get("modules", [])
+                    if isinstance(item, Mapping)
+                ],
+                "target_panel": target_panel,
+                "baseline_error": baseline_error,
+            }
+        except ModuleTransactionError as error:
+            _raise_domain(error)
+        except Exception as error:
+            self._raise_full_scope_error("panel-update", error)
+
     def _release_context(self, *, read_only: bool = False):
         try:
             version = read_panel_version(self.panel_root)

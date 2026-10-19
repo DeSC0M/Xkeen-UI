@@ -111,6 +111,50 @@ def test_update_channel_defaults_to_stable_and_persists(tmp_path):
         service.set_update_channel("main")
 
 
+def test_notification_catalog_reads_signed_metadata_without_downloading_archives(tmp_path):
+    panel = make_panel(tmp_path)
+    current = catalog_document(VERSION, OWNERSHIP)
+    future = catalog_document("2.11.0", OWNERSHIP)
+
+    class NotificationCatalog:
+        downloads = 0
+        forced = []
+
+        def get_catalog(self, *, force_refresh=False):
+            self.forced.append(force_refresh)
+            return SimpleNamespace(
+                catalog=future,
+                freshness="fresh",
+                stale_reason=None,
+                fetched_at=1234.0,
+            )
+
+        def get_release_catalog(self, version):
+            assert version == VERSION
+            return SimpleNamespace(catalog=current)
+
+        def download_verified_panel_archive(self, *_args, **_kwargs):
+            self.downloads += 1
+            raise AssertionError("notification discovery must not download archives")
+
+    catalog = NotificationCatalog()
+    service, _ = make_service(
+        panel,
+        make_release(),
+        catalog_factory=lambda _version, _architecture: catalog,
+    )
+
+    payload = service.notification_catalog(force_refresh=True)
+
+    assert catalog.forced == [True]
+    assert catalog.downloads == 0
+    assert payload["source_version"] == VERSION
+    assert payload["target_version"] == "2.11.0"
+    assert payload["update_available"] is True
+    assert payload["current_modules"] == current["modules"]
+    assert payload["target_modules"] == future["modules"]
+
+
 def test_module_set_name_knows_the_presets_and_nothing_else():
     assert module_set_name(MODULE_IDS) == "full"
     assert module_set_name(["tool.editor", "core", "engine.mihomo"]) == "mihomo-minimal"

@@ -162,6 +162,7 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
     from services import panel_service
     from services.local_module_demo import enabled as local_module_demo_enabled
     from services.module_lifecycle import ModuleLifecycleService
+    from services.notification_center import NotificationCenter
 
     def lifecycle_active_engines() -> frozenset[str]:
         from services.cores import detect_running_core
@@ -185,6 +186,11 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
         restart_panel=lambda source: panel_service.restart_panel(source),
         local_demo=local_module_demo_enabled(),
     )
+    notification_center = NotificationCenter(
+        lifecycle_service,
+        state_dir=lifecycle_root,
+    )
+    app.extensions["xkeen.notification_center"] = notification_center
     app.extensions["xkeen.module_lifecycle"] = lifecycle_service
 
     app.register_blueprint(create_utils_blueprint())
@@ -195,6 +201,7 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
             ctx.module_registry,
             before_change=module_change_guard,
             lifecycle_service=lifecycle_service,
+            notification_center=notification_center,
         )
     )
     app.register_blueprint(create_cores_status_blueprint(ctx.ui_state_dir))

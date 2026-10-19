@@ -317,7 +317,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
       if (plan.operation === 'panel-update' && plan.applicable !== true
         && plan.blockers?.some((blocker) => blocker?.code === 'panel_version_current')) {
         // A current panel is an answer to show, not a plan with nothing in it.
-        reconcileModulesUpdatePlan(plan);
+        reconcileModulesUpdatePlan(plan, state.installed?.update_channel);
         clearError();
         returnFocus = null;
         state.update = {
@@ -330,7 +330,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
       state.plan = plan;
       dialogMode = 'plan';
       clearError();
-      reconcileModulesUpdatePlan(plan);
+      reconcileModulesUpdatePlan(plan, state.installed?.update_channel);
       renderPlan(dialog, plan, moduleNames());
       if (!dialog.open) dialog.showModal();
       dialog.querySelector('#modules-plan-title').focus();
@@ -622,7 +622,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     try {
       const checked = await api.checkPanelUpdate(true);
       state.update = { ...checked, checked: true, loading: false, error: null };
-      reconcileModulesUpdateCheck(checked);
+      reconcileModulesUpdateCheck({ ...checked, channel: state.installed?.update_channel });
       clearError();
     } catch (error) {
       clearModulesUpdateBadge();
@@ -643,7 +643,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
       const checked = await api.checkPanelUpdate(false);
       if (state.installed !== installed || state.update.loading || state.update.checked) return;
       state.update = { ...checked, checked: true, loading: false, error: null };
-      reconcileModulesUpdateCheck(checked);
+      reconcileModulesUpdateCheck({ ...checked, channel: state.installed?.update_channel });
     } catch (error) {
       return;
     }
@@ -659,7 +659,8 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
       state.installed = await api.loadInstalled();
       // Another channel has its own catalog and its own answer.
       state.update = { checked: false, loading: false, error: null };
-      reconcileModulesUpdateBadge(state.installed);
+      clearModulesUpdateBadge();
+      try { window.dispatchEvent(new CustomEvent('xkeen:notification-channel-changed')); } catch (error) {}
       clearError();
       return result;
     } catch (error) {

@@ -1,6 +1,6 @@
-# Сверка незакрытых подэтапов 8.7–10 с текущим кодом
+# Сверка незакрытых подэтапов 8.8–10 с текущим кодом
 
-**Дата сверки:** 13 октября 2026 года
+**Дата сверки:** 19 октября 2026 года
 **Область:** Notification center, recovery/rollout, testing/migrations,
 runtime performance
 
@@ -11,7 +11,7 @@ performance baseline.
 
 ## 8.7 Notification center
 
-### Уже реализовано
+### Реализовано и закрыто 19 октября 2026 года
 
 - `services.module_catalog_client.ModuleCatalogClient`: verified catalog,
   отдельные stable/prerelease cache files, TTL 24 часа, forced-refresh
@@ -32,20 +32,22 @@ performance baseline.
   каталог entries помечает `update_available: false`.
 - Проверка обновлений читает catalog без panel archive; явный запрос plan
   может скачать и проверить archive. `Apply` запускает mutation transaction.
-  Будущий Notification center должен сохранить разделение check/plan/apply.
+  `NotificationCenter` сохраняет это разделение check/plan/apply.
+- Core-owned notification API/UI: `/api/notifications` и
+  `/api/modules/notifications/*`, общая шапка, без импорта DevTools.
+- Daemon daily poller в `run_server.py`: non-blocking startup, per-channel
+  daily gate и bounded exponential backoff; manual check продолжает уважать
+  catalog min-refresh.
+- Persisted `seen/dismissed/snoozed`, schema migration, bounded retention,
+  identity type/module-or-panel/version/channel и tab synchronization.
+- Notifications for panel version, new official modules and changed installed
+  modules; size/restart/dependency diff metadata; stale/error records with
+  retry/dismiss controls.
+- Poll and badge read only signed catalogs. No archive is downloaded before a
+  separate explicit plan request.
 
-### Не реализовано
-
-- core-owned notification center/list;
-- daily background poll, независимый от открытия экранов;
-- общий manual poll для panel + modules;
-- module-version notifications с size/dependency diff/restart metadata;
-- persisted `seen/dismissed/snoozed`, bounded retention, deduplication;
-- reconciliation across tabs and update channels;
-- stale/error retry/dismiss UI для notification records.
-
-**Вывод:** 8.7 частично подготовлен через catalog/update feedback, но не
-закрыт. Не переиспользовать per-tab badge как notification state.
+**Вывод:** 8.7 закрыт. Per-tab legacy badge сохранён как лёгкий hint, но
+источник правды и local notification state находятся в Notification center.
 
 ## 8.8 Recovery matrix и rollout
 
@@ -112,8 +114,9 @@ previous-version rollback без сети.
 - Нет обязательной CI matrix, которая запускает dynamic-loading E2E для всех
   `XKEEN_E2E_MODULE_PROFILE`; fixture умеет профили, но текущий CI запускает
   только Mihomo Clash acceptance slice.
-- Нет Notification center tests (daily/manual poll, local state,
-  multi-tab/channel deduplication, no-download).
+- Нужна browser-приёмка Notification center для настоящего
+  `BroadcastChannel`/нескольких вкладок; unit/route tests уже покрывают
+  daily/manual poll, local state, channel isolation, offline и no-download.
 - Нет единого cross-profile release/device report с сохранением конфигов и
   recovery evidence.
 - Unit/tmp-tree tests не заменяют acceptance signed lifecycle и ручного
