@@ -305,8 +305,9 @@ test('a release notification leads to the update screen without a reload', async
   await page.locator('.xk-notification-trigger:visible').click();
   const popover = page.locator('.xk-notification-popover');
   const panelRecord = popover.locator('.xk-notification-record').filter({ hasText: 'Доступна новая версия панели' });
+  // A new module arrives with the panel update: its note leads there too.
   await expect(popover.locator('.xk-notification-record').filter({ hasText: 'Новый модуль' })
-    .getByRole('link', { name: 'К модулям' })).toHaveAttribute('href', '/modules');
+    .getByRole('link', { name: 'К обновлению' })).toHaveAttribute('href', '/modules');
   await panelRecord.getByRole('link', { name: 'К обновлению' }).click();
   await expect(page.locator('#xk-modules-manager .modules-summary')).toBeVisible();
   await expect(popover).toBeHidden();
@@ -343,3 +344,54 @@ for (const width of [1440, 390]) {
     }
   });
 }
+
+test('a failed check still tells when the catalog last answered', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await mockLifecycle(page);
+  await page.route('**/api/notifications**', (route) => route.fulfill({ json: {
+    ok: true, channel: 'stable', records: [], unread_count: 0,
+    status: { error_code: 'catalog_unavailable', last_success_at: 1_791_700_000, freshness: null },
+  } }));
+  await page.goto('/modules');
+  await page.locator('.xk-notification-trigger:visible').click();
+  const status = page.locator('.xk-notification-popover .xk-notification-status');
+  await expect(status).toContainText('Проверка не выполнена · последняя удачная');
+  await expect(status).toHaveClass(/is-error/);
+});
+
+test('when the panel does not answer, the center offers a retry instead of actions on a missing note', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await mockLifecycle(page);
+  let answer = 'fail';
+  await page.route('**/api/notifications**', (route) => (answer === 'fail'
+    ? route.fulfill({ status: 500, json: { ok: false, error: 'internal' } })
+    : route.fulfill({ json: { ok: true, channel: 'stable', records: [], unread_count: 0, status: { last_success_at: 1_791_700_000, freshness: 'fresh' } } })));
+  await page.goto('/modules');
+  await page.locator('.xk-notification-trigger:visible').click();
+  const card = page.locator('.xk-notification-popover .xk-notification-record').filter({ hasText: 'Центр уведомлений недоступен' });
+  await expect(card).toBeVisible();
+  await expect(card.getByRole('button', { name: 'Скрыть' })).toHaveCount(0);
+  await expect(card.getByRole('button', { name: 'На день' })).toHaveCount(0);
+
+  answer = 'ok';
+  await card.getByRole('button', { name: 'Повторить' }).click();
+  await expect(page.locator('.xk-notification-popover')).toContainText('Новых уведомлений нет.');
+});
+
+test('a snoozed note comes back in an open tab when its day is over', async ({ page }) => {
+  await page.clock.install();
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await mockLifecycle(page);
+  const note = record('e'.repeat(64), 'panel-update', 'Доступна новая версия панели', 'Сохранит выбранный профиль.');
+  let snoozed = true;
+  await page.route('**/api/notifications**', (route) => route.fulfill({ json: snoozed
+    ? { ok: true, channel: 'prerelease', records: [], unread_count: 0, status: { last_success_at: 1_791_700_000, freshness: 'fresh', snooze_wake_in_s: 60 } }
+    : { ok: true, channel: 'prerelease', records: [note], unread_count: 1, status: { last_success_at: 1_791_700_000, freshness: 'fresh', snooze_wake_in_s: null } } }));
+  await page.goto('/modules');
+  const count = page.locator('.xk-notification-trigger:visible .xk-notification-trigger__count');
+  await expect(count).toBeHidden();
+
+  snoozed = false;
+  await page.clock.fastForward(61_000);
+  await expect(count).toHaveText('1');
+});

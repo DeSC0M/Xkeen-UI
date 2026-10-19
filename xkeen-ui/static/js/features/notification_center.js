@@ -5,11 +5,15 @@ const API_BASE = '/api/notifications';
 const CHANNEL_NAME = 'xkeen-notification-center.v1';
 const NARROW = '(max-width: 680px)';
 // Release notes lead to the screen where the update is planned and applied.
+// Modules arrive with the panel update: every release note leads there.
 const RECORD_LINKS = {
   'panel-update': 'К обновлению',
-  'module-new': 'К модулям',
-  'module-update': 'К модулям',
+  'module-new': 'К обновлению',
+  'module-update': 'К обновлению',
 };
+
+// The card drawn when the panel itself did not answer: no record behind it.
+const LOCAL_ERROR_ID = 'local-error';
 
 function text(value) {
   return String(value == null ? '' : value);
@@ -196,6 +200,7 @@ export function initNotificationCenter() {
   let loading = false;
   let open = false;
   let broadcast = null;
+  let snoozeTimer = null;
 
   function publish() {
     const at = Date.now();
@@ -234,14 +239,25 @@ export function initNotificationCenter() {
     }
   }
 
+  function scheduleSnoozeReturn() {
+    if (snoozeTimer) clearTimeout(snoozeTimer);
+    snoozeTimer = null;
+    const seconds = Number(snapshot.status?.snooze_wake_in_s);
+    if (!Number.isFinite(seconds) || seconds <= 0) return;
+    // setTimeout keeps 32 bits of milliseconds; a week fits, a day is typical.
+    snoozeTimer = setTimeout(() => { void load(); }, Math.min(seconds * 1000 + 500, 2 ** 31 - 1));
+  }
+
   function render() {
+    scheduleSnoozeReturn();
     const unread = Number(snapshot.unread_count || 0);
     count.hidden = unread <= 0;
     count.textContent = unread > 99 ? '99+' : text(unread);
     trigger.classList.toggle('has-unread', unread > 0);
     const info = snapshot.status || {};
     if (info.error_code) {
-      status.textContent = 'Проверка не выполнена';
+      const last = formatTime(info.last_success_at);
+      status.textContent = last ? `Проверка не выполнена · последняя удачная ${last}` : 'Проверка не выполнена';
       status.className = 'xk-notification-status is-error';
     } else if (info.freshness === 'stale') {
       status.textContent = `Старая копия${formatTime(info.fetched_at) ? ` · ${formatTime(info.fetched_at)}` : ''}`;
@@ -286,10 +302,14 @@ export function initNotificationCenter() {
         link.addEventListener('click', () => setOpen(false, { returnFocus: false }));
         actions.append(link);
       }
-      actions.append(
-        button('Скрыть', 'xk-notification-action', () => void changeRecord(record.id, 'dismiss')),
-        button('На день', 'xk-notification-action', () => void changeRecord(record.id, 'snooze', 24 * 60 * 60)),
-      );
+      if (record.id === LOCAL_ERROR_ID) {
+        actions.append(button('Повторить', 'xk-notification-action is-primary', () => void load()));
+      } else {
+        actions.append(
+          button('Скрыть', 'xk-notification-action', () => void changeRecord(record.id, 'dismiss')),
+          button('На день', 'xk-notification-action', () => void changeRecord(record.id, 'snooze', 24 * 60 * 60)),
+        );
+      }
       card.append(title, message);
       if (meta.textContent) card.append(meta);
       card.append(actions);
@@ -304,7 +324,7 @@ export function initNotificationCenter() {
       render();
     } catch (error) {
       snapshot = {
-        records: [{ id: 'local-error', title: 'Центр уведомлений недоступен', message: error.message, kind: 'catalog-error' }],
+        records: [{ id: LOCAL_ERROR_ID, title: 'Центр уведомлений недоступен', message: error.message, kind: 'catalog-error' }],
         unread_count: 0,
         status: { error_code: error.code },
       };

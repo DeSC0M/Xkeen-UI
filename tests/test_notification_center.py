@@ -194,11 +194,13 @@ def test_offline_after_update_falls_back_to_the_daily_gate(tmp_path: Path):
     version[0] = "2.11.0"
     lifecycle.notification_catalog = unavailable
     now[0] = 2_600.0
-    center.check(background=True)
-    now[0] = 2_600.0 + 60 * 60
-    center.check(background=True)
-    # One probe right after the update; the failure then waits a day, not an hour.
-    assert lifecycle.calls == [False, False]
+    center.check(background=True)  # right after the update
+    for minutes in (10, 16, 60, 77, 120, 300, 600):
+        now[0] = 2_600.0 + minutes * 60
+        center.check(background=True)
+    # Two short retries (15 min, then an hour), then the failure waits a day:
+    # never an hourly retry for the rest of the day.
+    assert lifecycle.calls == [False, False, False, False]
 
 
 def _offline(lifecycle, code="catalog_unavailable"):
@@ -293,21 +295,42 @@ def test_unsettled_profile_is_not_called_a_network_failure(tmp_path: Path):
     assert "связаться" not in record["message"]
 
 
-def test_failed_background_polls_back_off_from_a_day_to_a_week(tmp_path: Path):
+def test_failed_background_polls_retry_soon_then_back_off_from_a_day_to_a_week(tmp_path: Path):
     now = [2_000.0]
     lifecycle = FakeLifecycle(_payload())
     lifecycle.notification_catalog = _offline(lifecycle)
     center = NotificationCenter(lifecycle, state_dir=tmp_path, now=lambda: now[0])
     day = 24 * 60 * 60
     delays = []
-    for _ in range(5):
+    for _ in range(7):
         status = center.check(background=True)["status"]
         delays.append(status["next_poll_at"] - now[0])
         now[0] = status["next_poll_at"] - 1
         center.check(background=True)  # not due yet: no request
         now[0] += 1
-    assert delays == [day, 2 * day, 4 * day, 7 * day, 7 * day]
-    assert len(lifecycle.calls) == 5
+    # A router that has just booted meets the network a few minutes later.
+    assert delays == [15 * 60, 60 * 60, day, 2 * day, 4 * day, 7 * day, 7 * day]
+    assert len(lifecycle.calls) == 7
+
+
+def test_a_snoozed_note_comes_back_unread_and_the_page_knows_when(tmp_path: Path):
+    now = [2_000.0]
+    center = NotificationCenter(FakeLifecycle(_payload()), state_dir=tmp_path, now=lambda: now[0])
+    snapshot = center.check(force_refresh=True)
+    record_id = snapshot["records"][0]["id"]
+    center.mark_seen()
+    assert center.snapshot()["unread_count"] == 0
+
+    snapshot = center.set_record_state(record_id, "snooze", snooze_seconds=24 * 60 * 60)
+    assert record_id not in {record["id"] for record in snapshot["records"]}
+    assert snapshot["status"]["snooze_wake_in_s"] == 24 * 60 * 60
+
+    now[0] += 24 * 60 * 60 + 1
+    snapshot = center.snapshot()
+    back = next(record for record in snapshot["records"] if record["id"] == record_id)
+    assert back["seen"] is False
+    assert snapshot["unread_count"] == 1
+    assert snapshot["status"]["snooze_wake_in_s"] is None
 
 
 def test_notification_state_is_kept_by_the_installer():

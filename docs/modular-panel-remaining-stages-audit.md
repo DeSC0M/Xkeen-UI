@@ -36,7 +36,8 @@ performance baseline.
 - Core-owned notification API/UI: `/api/notifications` и
   `/api/modules/notifications/*`, общая шапка, без импорта DevTools.
 - Daemon daily poller в `run_server.py`: non-blocking startup, per-channel
-  daily gate и bounded exponential backoff; manual check продолжает уважать
+  daily gate и bounded exponential backoff (first two retries after a failure
+  are 15 minutes and an hour); manual check продолжает уважать
   catalog min-refresh.
 - Persisted `seen/dismissed/snoozed`, schema migration, bounded retention,
   identity type/module-or-panel/version/channel и tab synchronization.

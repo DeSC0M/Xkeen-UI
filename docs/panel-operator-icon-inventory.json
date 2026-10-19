@@ -274,7 +274,7 @@
       "tabler_asset": "bell",
       "usage": [
         {
-          "location": "xkeen-ui/static/js/features/notification_center.js:L90",
+          "location": "xkeen-ui/static/js/features/notification_center.js:L94",
           "control_type": "runtime-action",
           "accessible_label": "bell"
         }
@@ -3354,7 +3354,7 @@
           "accessible_label": "Хранилище"
         },
         {
-          "location": "xkeen-ui/static/js/features/notification_center.js:L366",
+          "location": "xkeen-ui/static/js/features/notification_center.js:L386",
           "control_type": "runtime-action",
           "accessible_label": "Хранилище"
         },

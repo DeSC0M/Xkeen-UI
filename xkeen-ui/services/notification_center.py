@@ -26,6 +26,9 @@ STATE_FILENAME = "module-notifications.json"
 STATE_SCHEMA_VERSION = 1
 BACKGROUND_INTERVAL_S = 24 * 60 * 60
 MAX_BACKOFF_S = 7 * BACKGROUND_INTERVAL_S
+# A probe that fails right after the router boots usually meets a network
+# that is not up yet: the first retries come soon, then the daily backoff.
+SHORT_RETRY_S = (15 * 60, 60 * 60)
 MAX_STATE_RECORDS = 160
 STATE_RETENTION_S = 90 * 24 * 60 * 60
 SNOOZE_INTERVALS = frozenset({24 * 60 * 60, 7 * 24 * 60 * 60})
@@ -405,6 +408,7 @@ class NotificationCenter:
         visible: list[dict[str, Any]] = []
         unread = 0
         active_ids: set[str] = set()
+        snooze_ends: list[float] = []
         panel_version = self._current_panel_version()
         for raw in self._sort_records(list(channel_state["records"])):
             record_id = raw.get("id")
@@ -418,6 +422,7 @@ class NotificationCenter:
                 continue
             snoozed_until = persisted.get("snoozed_until")
             if snoozed_until is not None and snoozed_until > now:
+                snooze_ends.append(snoozed_until)
                 continue
             item = dict(raw)
             item["seen"] = persisted.get("seen_at") is not None
@@ -426,24 +431,27 @@ class NotificationCenter:
             if not item["seen"]:
                 unread += 1
         self._prune_locked(state, active_ids, now)
+        status = {
+            key: channel_state.get(key)
+            for key in (
+                "last_attempt_at",
+                "last_success_at",
+                "freshness",
+                "stale_reason",
+                "error_code",
+                "next_poll_at",
+                "fetched_at",
+                "baseline_error",
+            )
+        }
+        # Relative, so a page with another clock still wakes on time.
+        status["snooze_wake_in_s"] = max(1.0, min(snooze_ends) - now) if snooze_ends else None
         return {
             "ok": True,
             "channel": channel,
             "records": visible,
             "unread_count": unread,
-            "status": {
-                key: channel_state.get(key)
-                for key in (
-                    "last_attempt_at",
-                    "last_success_at",
-                    "freshness",
-                    "stale_reason",
-                    "error_code",
-                    "next_poll_at",
-                    "fetched_at",
-                    "baseline_error",
-                )
-            },
+            "status": status,
         }
 
     def snapshot(self) -> dict[str, Any]:
@@ -497,9 +505,13 @@ class NotificationCenter:
             # transport reason separately so the UI says “stale” rather than
             # pretending it has no usable answer at all.
             channel_state["error_code"] = None if freshness == "stale" else (error_code or "catalog_unavailable")
-            # Failed background probes never become noisy retries: each delay
-            # is at least a day and then backs off to a week.
-            delay = min(MAX_BACKOFF_S, self._background_interval_s * (2 ** min(failures - 1, 3)))
+            # Failed probes never become noisy retries: two short ones for a
+            # network that is still coming up, then a day backing off to a week.
+            if failures <= len(SHORT_RETRY_S):
+                delay = min(SHORT_RETRY_S[failures - 1], self._background_interval_s)
+            else:
+                steps = failures - len(SHORT_RETRY_S) - 1
+                delay = min(MAX_BACKOFF_S, self._background_interval_s * (2 ** min(steps, 3)))
             channel_state["next_poll_at"] = now + delay
         result = self._public_snapshot_locked(state, channel, now)
         self._write_state_locked(state)
@@ -632,7 +644,8 @@ class NotificationCenter:
                 seconds = int(snooze_seconds or 24 * 60 * 60)
                 if seconds not in SNOOZE_INTERVALS:
                     raise NotificationCenterError("notification_snooze_invalid", "unsupported notification snooze interval")
-                entry["seen_at"] = now
+                # Back from the snooze it is news again: the bell counts it.
+                entry["seen_at"] = None
                 entry["dismissed_at"] = None
                 entry["snoozed_until"] = now + seconds
             entry["updated_at"] = now
@@ -655,13 +668,16 @@ class NotificationCenter:
 
     def _background_loop(self) -> None:
         while True:
+            wait = min(60 * 60, self._background_interval_s)
             try:
-                self.check(background=True)
+                due_at = self.check(background=True).get("status", {}).get("next_poll_at")
+                if isinstance(due_at, (int, float)):
+                    wait = max(60.0, min(wait, float(due_at) - float(self._now())))
             except Exception:
                 pass
-            # Waking hourly lets an update-channel change become eligible
-            # promptly while still leaving network requests to the daily gate.
-            self._wake.wait(timeout=min(60 * 60, self._background_interval_s))
+            # Waking at least hourly lets an update-channel change become
+            # eligible promptly; a short retry wakes the loop when it is due.
+            self._wake.wait(timeout=wait)
             self._wake.clear()
 
     def wake_background(self) -> None:
