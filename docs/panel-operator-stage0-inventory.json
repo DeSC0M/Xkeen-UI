@@ -8407,7 +8407,7 @@
       "xray-snapshot-status",
       "xray-snapshot-title"
     ],
-    "data_attribute_count": 645,
+    "data_attribute_count": 647,
     "data_attributes": [
       {
         "locator": "header.panel-header.panel-header-shell@L95",
@@ -8481,6 +8481,11 @@
       },
       {
         "locator": "button.xk-svc-core@L134",
+        "name": "data-tooltip",
+        "value": "Открыть управление ядром Xray"
+      },
+      {
+        "locator": "button.xk-svc-core@L134",
         "name": "data-xk-svc-core",
         "value": ""
       },
@@ -8498,6 +8503,11 @@
         "locator": "button.xk-svc-core@L139",
         "name": "data-loading",
         "value": "true"
+      },
+      {
+        "locator": "button.xk-svc-core@L139",
+        "name": "data-tooltip",
+        "value": "Открыть управление ядром Mihomo"
       },
       {
         "locator": "button.xk-svc-core@L139",

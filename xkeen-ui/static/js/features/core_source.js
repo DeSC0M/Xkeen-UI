@@ -90,7 +90,7 @@ function riskLabel(value) {
 
 function releaseDate(value) {
   if (!value) return '';
-  try { return new Date(value).toLocaleDateString(); } catch (e) { return ''; }
+  try { return new Date(value).toLocaleDateString('ru-RU'); } catch (e) { return ''; }
 }
 
 async function request(url, options = {}) {
@@ -104,44 +104,278 @@ async function request(url, options = {}) {
   return data;
 }
 
+// The operator icon sprite, read from an icon the dialog already has.
+function iconSprite(scope) {
+  return String(scope?.querySelector('use')?.getAttribute('href') || '').split('#')[0];
+}
+
+function icon(sprite, name, className = '') {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', `xk-action-icon${className ? ` ${className}` : ''}`);
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  use.setAttribute('href', `${sprite}#xk-${name}`);
+  svg.append(use);
+  return svg;
+}
+
+function element(tag, className, value) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (value != null) node.textContent = String(value);
+  return node;
+}
+
+function shortTag(tag) {
+  return String(tag || '').trim().replace(/^v(?=\d)/i, '');
+}
+
+// The numeric part of a version or a release tag: "Xray 26.9.9 (…)",
+// "v1.19.14" and "v26.9.9-uwu.1" all compare by their first x.y[.z].
+function versionNumbers(value) {
+  const match = String(value || '').match(/(\d+)\.(\d+)(?:\.(\d+))?/);
+  return match ? [Number(match[1]), Number(match[2]), Number(match[3] || 0)] : null;
+}
+
+function compareVersions(left, right) {
+  for (let i = 0; i < 3; i += 1) {
+    if (left[i] !== right[i]) return left[i] < right[i] ? -1 : 1;
+  }
+  return 0;
+}
+
+// The commit of a Mihomo Alpha build: "alpha-94b13ae" in its version output
+// and in its file name.
+function alphaBuild(value) {
+  const match = String(value || '').match(/alpha-([0-9a-f]{6,})/i);
+  return match ? match[1].toLowerCase() : '';
+}
+
+// The name a release goes by: its tag, or, for a rolling pre-release such as
+// Mihomo "Prerelease-Alpha", the build its file carries.
+function releaseLabel(release) {
+  const tag = String(release?.stable?.tag || '').trim();
+  if (/\d/.test(tag)) return tag;
+  const build = alphaBuild(release?.asset?.name);
+  return build ? `alpha-${build}` : tag;
+}
+
+// A release channel belongs to the source it is a channel of.
+function sourceGroup(profiles, profileId) {
+  const profile = (profiles || []).find((item) => item.profile_id === profileId);
+  return profile?.channel_of || profileId;
+}
+
+// What the core card says about the selected source's release, and what its
+// install button does about it.
+function releaseState(data, selectedProfile, coreInstalled) {
+  const state = data.state || {};
+  const release = selectedProfile?.release || {};
+  const tag = releaseLabel(release);
+  const stale = (data.profiles || []).some((profile) => profile.release?.stale)
+    ? 'GitHub временно недоступен, показан последний проверенный релиз'
+    : '';
+  if (!release.installable) {
+    return {
+      kind: 'warn', icon: 'alert', title: 'Установка недоступна',
+      note: unavailableReason(release.reason).replace(/\.$/, '').replace(/^./, (c) => c.toLowerCase()),
+      button: { label: 'Проверить и установить', primary: true, icon: 'download', disabled: true },
+    };
+  }
+  const profiles = data.profiles || [];
+  const group = sourceGroup(profiles, selectedProfile.profile_id);
+  // A channel of the installed source is not another source: its release is
+  // compared with the running core like any other.
+  if (group !== sourceGroup(profiles, state.installed_profile_id || 'official')) {
+    const name = profiles.find((item) => item.profile_id === group)?.display_name || selectedProfile.display_name;
+    return {
+      kind: 'update', icon: 'download', title: 'Выбран другой источник', note: `${selectedProfile.display_name} ${tag}`, stale,
+      button: { label: `Установить ${name}`, primary: true, icon: 'download' },
+    };
+  }
+  const offeredBuild = alphaBuild(release.asset?.name);
+  if (offeredBuild) {
+    const runningBuild = alphaBuild(state.detected_version) || alphaBuild(state.installed_asset_name);
+    if (!runningBuild) {
+      return {
+        kind: 'update', icon: 'download', title: 'Выбраны предварительные сборки', note: tag, stale,
+        button: { label: `Установить ${tag}`, primary: true, icon: 'download' },
+      };
+    }
+    if (runningBuild.startsWith(offeredBuild) || offeredBuild.startsWith(runningBuild)) {
+      return {
+        kind: 'ok', icon: 'check', title: 'Установлена последняя сборка', note: tag, stale,
+        button: { label: 'Переустановить', primary: false, icon: 'reload' },
+      };
+    }
+    return {
+      kind: 'update', icon: 'download', title: 'Доступна новая сборка', note: `alpha-${runningBuild} → ${tag}`, stale,
+      button: { label: `Обновить до ${tag}`, primary: true, icon: 'download' },
+    };
+  }
+  const installedVersion = versionNumbers(state.detected_version) || versionNumbers(state.installed_release_tag);
+  const latestVersion = versionNumbers(tag);
+  if (!coreInstalled && !installedVersion) {
+    return {
+      kind: 'update', icon: 'download', title: 'Ядро не установлено', note: `доступен ${tag}`, stale,
+      button: { label: `Установить ${shortTag(tag)}`, primary: true, icon: 'download' },
+    };
+  }
+  if (!installedVersion || !latestVersion) {
+    return {
+      kind: 'info', icon: 'info', title: 'Доступен релиз', note: tag, stale,
+      button: { label: `Установить ${shortTag(tag)}`, primary: true, icon: 'download' },
+    };
+  }
+  let order = compareVersions(installedVersion, latestVersion);
+  // A fork can publish a new build of the same upstream version.
+  if (order === 0 && state.installed_release_tag && shortTag(state.installed_release_tag) !== shortTag(tag)) order = -1;
+  const pre = release.stable?.prerelease ? ' · предварительный' : '';
+  if (order < 0) {
+    const from = state.detected_version ? installedVersion.join('.') : shortTag(state.installed_release_tag);
+    return {
+      kind: 'update', icon: 'download', title: 'Доступно обновление', note: `${from} → ${shortTag(tag)}${pre}`, stale,
+      button: { label: `Обновить до ${shortTag(tag)}`, primary: true, icon: 'download' },
+    };
+  }
+  // The router runs a build newer than the source offers (put there by
+  // XKeen or by hand): installing the offer would be a downgrade.
+  if (order > 0) {
+    return {
+      kind: 'info', icon: 'info', title: 'Установлена версия новее источника', note: `в источнике ${tag}${pre}`, stale,
+      button: { label: `Установить ${shortTag(tag)}`, primary: false, icon: 'download' },
+    };
+  }
+  return {
+    kind: 'ok', icon: 'check', title: 'Установлена последняя версия', note: `${tag}${pre}`, stale,
+    button: { label: 'Переустановить', primary: false, icon: 'reload' },
+  };
+}
+
+function renderReleaseState(node, sprite, view) {
+  if (!node) return;
+  const badge = element('span', `xk-core-release is-${view.kind}`);
+  badge.append(icon(sprite, view.icon), element('span', 'xk-core-release-title', view.title));
+  if (view.note) badge.append(element('span', 'xk-core-release-note', view.note));
+  node.replaceChildren(badge);
+  if (view.stale) node.append(element('small', 'xk-core-release-stale', view.stale));
+}
+
+// The channel switch of a source with release channels: stable first.
+function channelSwitch(group, shown) {
+  const host = element('span', 'xk-core-source-channels');
+  host.setAttribute('role', 'group');
+  host.setAttribute('aria-label', 'Канал выпусков');
+  group.forEach((item, index) => {
+    const button = element('button', 'xk-core-source-channel');
+    button.type = 'button';
+    button.dataset.coreSourceChannel = item.profile_id;
+    button.setAttribute('aria-pressed', String(item.profile_id === shown.profile_id));
+    button.disabled = !item.release?.installable;
+    button.append(
+      element('span', '', index === 0 ? 'Стабильные' : 'Предварительные'),
+      element('small', '', item.release?.installable ? releaseLabel(item.release) : 'нет сборки'),
+    );
+    host.append(button);
+  });
+  return host;
+}
+
+function profileCard(data, profile, { selectedProfileId, installedProfileId, sprite, group = null }) {
+  const release = profile.release || {};
+  const source = group ? group[0] : profile;
+  const members = group || [profile];
+  const selected = profile.profile_id === selectedProfileId;
+  const available = members.some((item) => item.release?.installable);
+  const card = element('label', 'xk-core-source-profile');
+  card.classList.toggle('is-selected', selected);
+  card.classList.toggle('is-unavailable', !available);
+  const input = document.createElement('input');
+  input.type = 'radio';
+  input.name = `${data.engine_id}-core-profile`;
+  input.value = profile.profile_id;
+  input.checked = selected;
+  input.disabled = !available;
+  input.setAttribute('aria-label', source.display_name);
+
+  const body = element('span', 'xk-core-source-profile-body');
+  const head = element('span', 'xk-core-source-profile-head');
+  head.append(
+    element('strong', '', source.display_name),
+    element('span', `xk-core-source-risk is-${source.risk_level || 'experimental'}`, riskLabel(source.risk_level)),
+  );
+  body.append(head);
+  if (group) body.append(channelSwitch(group, profile));
+
+  const repo = element('a', 'xk-core-source-repo');
+  repo.href = `https://github.com/${profile.repo}`;
+  repo.target = '_blank';
+  repo.rel = 'noopener';
+  repo.append(icon(sprite, 'github'), element('span', '', profile.repo));
+  repo.addEventListener('click', (event) => event.stopPropagation());
+  const meta = element('span', 'xk-core-source-profile-meta');
+  if (release.installable) {
+    meta.append(element('span', '', [releaseLabel(release), releaseDate(release.stable?.published_at)].filter(Boolean).join(' · ')));
+    if (release.stable?.prerelease) meta.append(element('span', 'xk-core-source-prerelease', 'предварительный'));
+    meta.append(repo);
+  } else {
+    meta.append(element('span', 'xk-core-source-profile-off', releaseText(profile)), repo);
+  }
+  body.append(meta, element('span', 'xk-core-source-profile-desc', source.description));
+  if (release.stale) body.append(element('span', 'xk-core-source-profile-off', 'GitHub временно недоступен, показан последний проверенный релиз'));
+
+  // Only the chosen build shows its file and checksum: they matter for the
+  // one about to be installed, and repeated on every card they are noise.
+  if (selected && release.installable) {
+    const details = element('details', 'xk-core-source-profile-details');
+    details.append(element('summary', '', 'Файл и контрольная сумма'));
+    const list = document.createElement('dl');
+    list.append(
+      element('dt', '', 'Файл'), element('dd', '', release.asset?.name || '—'),
+      element('dt', '', 'SHA-256'), element('dd', '', release.checksum?.sha256 || '—'),
+    );
+    details.append(list);
+    details.addEventListener('click', (event) => event.stopPropagation());
+    body.append(details);
+  }
+
+  const side = element('span', 'xk-core-source-profile-side');
+  if (members.some((item) => item.profile_id === installedProfileId)) {
+    const mark = element('span', 'xk-core-source-installed');
+    mark.append(icon(sprite, 'check'), element('span', '', 'Установлен'));
+    side.append(mark);
+  }
+  card.append(input, icon(sprite, `engine-${data.engine_id}`, 'xk-core-source-profile-icon'), body, side);
+  return card;
+}
+
 function renderProfiles(root, data, selectedProfileId) {
   const host = root.querySelector('[data-core-source-profiles]');
   if (!host) return;
-  host.replaceChildren();
-  for (const profile of data.profiles || []) {
-    const release = profile.release || {};
-    const row = document.createElement('label');
-    row.className = 'xk-core-source-profile';
-    row.classList.toggle('is-unavailable', !release.installable);
-    const input = document.createElement('input');
-    input.type = 'radio';
-    input.name = `${data.engine_id}-core-profile`;
-    input.value = profile.profile_id;
-    input.checked = profile.profile_id === selectedProfileId;
-    input.disabled = !release.installable;
-    const body = document.createElement('span');
-    body.className = 'xk-core-source-profile-body';
-    const title = document.createElement('strong');
-    title.textContent = profile.display_name;
-    const repo = document.createElement('a');
-    repo.href = `https://github.com/${profile.repo}`;
-    repo.target = '_blank';
-    repo.rel = 'noopener';
-    repo.textContent = profile.repo;
-    repo.addEventListener('click', (event) => event.stopPropagation());
-    const meta = document.createElement('small');
-    const releaseMeta = [
-      riskLabel(profile.risk_level),
-      release.stable?.tag,
-      releaseDate(release.stable?.published_at),
-      release.asset?.name,
-      release.checksum?.sha256 ? `SHA-256 ${release.checksum.sha256}` : '',
-      release.stale ? 'Последние проверенные данные · GitHub временно недоступен' : '',
-    ].filter(Boolean).join(' · ');
-    meta.textContent = `${profile.description} ${release.installable ? releaseMeta : releaseText(profile)}`;
-    body.append(title, repo, meta);
-    row.append(input, body);
-    host.append(row);
+  const sprite = iconSprite(root);
+  const profiles = data.profiles || [];
+  const options = { selectedProfileId, installedProfileId: data.state?.installed_profile_id, sprite };
+  // One card per source; a release channel joins the card of its source and
+  // the card shows the chosen channel, or the stable one.
+  host.replaceChildren(...profiles.filter((profile) => !profile.channel_of).map((profile) => {
+    const channels = profiles.filter((item) => item.channel_of === profile.profile_id);
+    if (!channels.length) return profileCard(data, profile, options);
+    const group = [profile, ...channels];
+    const shown = group.find((item) => item.profile_id === selectedProfileId) || profile;
+    return profileCard(data, shown, { ...options, group });
+  }));
+  // The primary button names what it installs.
+  const chosen = profiles.find((profile) => profile.profile_id === selectedProfileId);
+  const install = root.querySelector('[data-core-source-action="choose-install"]');
+  const label = root.querySelector('[data-core-source-install-label]');
+  if (install && !install.classList.contains('is-working') && !install.classList.contains('is-success')) {
+    install.disabled = !chosen?.release?.installable;
+    const group = chosen && sourceGroup(profiles, chosen.profile_id);
+    const current = group === sourceGroup(profiles, data.state?.installed_profile_id || 'official');
+    text(label, !chosen ? 'Установить'
+      : current ? `Установить ${releaseLabel(chosen.release)}`.trim()
+        : `Установить ${profiles.find((item) => item.profile_id === group)?.display_name || chosen.display_name}`);
   }
 }
 
@@ -253,16 +487,17 @@ export function initCoreSource(root) {
     data = response.data;
     selected = data.state?.selected_profile_id || 'official';
     const selectedProfile = data.profiles?.find((profile) => profile.profile_id === selected);
+    const coreInstalled = root.dataset.coreInstalled !== 'false';
+    const release = releaseState(data, selectedProfile, coreInstalled);
     const updateButton = root.querySelector('[data-core-source-action="prepare"]');
-    if (updateButton) updateButton.disabled = !selectedProfile?.release?.installable || data.state?.last_status === 'running';
-    const prepareLabel = root.querySelector('[data-core-source-prepare-label]');
-    const installedProfile = data.state?.installed_profile_id;
-    const selectedFork = Boolean(selected && selected !== 'official' && selected !== installedProfile);
-    if (prepareLabel) {
-      prepareLabel.textContent = selectedFork
-        ? `Подготовить установку ${selectedProfile.display_name}`
-        : 'Проверить и установить';
+    if (updateButton) {
+      updateButton.disabled = Boolean(release.button.disabled) || data.state?.last_status === 'running';
+      updateButton.classList.toggle('btn-primary', release.button.primary);
+      updateButton.classList.toggle('btn-secondary', !release.button.primary);
+      const use = updateButton.querySelector('use');
+      if (use) use.setAttribute('href', `${iconSprite(root)}#xk-${release.button.icon}`);
     }
+    text(root.querySelector('[data-core-source-prepare-label]'), release.button.label);
     const installed = data.state?.installed_profile_id;
     // The core dialog marks a card whose engine is absent from the router.
     const installedVersion = data.state?.detected_version || data.state?.installed_release_tag || root.dataset.coreVersion
@@ -273,20 +508,19 @@ export function initCoreSource(root) {
     text(root.querySelector('[data-core-source-installed]'), installed ? profileLabel(data.profiles, installed) : 'неизвестно — ядро ставили не через панель');
     text(root.querySelector('[data-core-source-selected]'), profileLabel(data.profiles, selected));
     const state = data.state || {};
-    const hasStaleRelease = (data.profiles || []).some((profile) => profile.release?.stale);
-    const status = state.last_status === 'running'
+    const statusNode = root.querySelector('[data-core-source-status]');
+    // An operation in progress or its outcome outranks the release state.
+    const operation = state.last_status === 'running'
       ? `Установка: ${Number.isFinite(Number(state.last_progress)) ? `${Math.round(Number(state.last_progress))}% · ` : ''}${state.last_phase_label || state.last_phase}`
       : state.last_status === 'rolled_back'
         ? `Откат: ${state.last_error || 'предыдущая версия восстановлена'}`
         : state.last_status === 'failed'
           ? `Ошибка установки: ${state.last_error || 'проверьте источник'}`
-          : !selectedProfile?.release?.installable
-            // The install button is off for this reason: say it next to it.
-            ? `Установка недоступна: ${unavailableReason(selectedProfile?.release?.reason).replace(/\.$/, '').replace(/^./, (c) => c.toLowerCase())}`
-            : `Доступен релиз ${selectedProfile.release.stable?.tag || '—'}${hasStaleRelease ? ' · GitHub временно недоступен, показан последний проверенный' : ''}`;
-    text(root.querySelector('[data-core-source-status]'), status);
+          : '';
+    if (operation) text(statusNode, operation);
+    else renderReleaseState(statusNode, iconSprite(root), release);
     if (state.last_status === 'running' && state.last_operation_id && activeOperationId !== state.last_operation_id) startPolling(state.last_operation_id);
-    text(sourceModal?.querySelector('[data-core-source-platform]'), `Архитектура: ${data.platform?.opkg_arch || data.platform?.machine || 'не определена'}`);
+    text(sourceModal?.querySelector('[data-core-source-platform]'), data.platform?.opkg_arch || data.platform?.machine || 'архитектура не определена');
     renderProfiles(sourceModal, data, selected);
   };
 
@@ -344,10 +578,9 @@ export function initCoreSource(root) {
     if (!button) return;
     const action = button.dataset.coreSourceAction;
     if (action === 'close') { modalOpen(sourceModal, false); return; }
-    if (action === 'restore') selected = 'official';
-    if (action === 'save' || action === 'restore' || action === 'choose-install') {
+    if (action === 'save' || action === 'choose-install') {
       const checked = sourceModal.querySelector('input[type="radio"]:checked');
-      const profileId = action === 'restore' ? 'official' : (checked?.value || selected);
+      const profileId = checked?.value || selected;
       try {
         const feedbackButton = button;
         await withButtonFeedback(
@@ -359,17 +592,35 @@ export function initCoreSource(root) {
               text(root.querySelector('[data-core-source-status]'), 'Источник выбран · релиз готовится');
               await prepareInstallation({ closeSource: true });
             } else {
-              setMessage(sourceModal, 'Источник сохранён. Для установки нажмите «Проверить и установить».');
+              setMessage(sourceModal, 'Источник запомнен. Он будет использован при следующей установке из окна ядра.');
             }
           },
           action === 'choose-install'
             ? { busyLabel: 'Подготовка…', successLabel: 'Готово ✓' }
-            : action === 'restore'
-              ? { busyLabel: 'Возврат…', successLabel: 'Официальный ✓' }
-              : { busyLabel: 'Сохранение…', successLabel: 'Сохранено ✓' },
+            : { busyLabel: 'Сохранение…', successLabel: 'Запомнено ✓' },
         );
       } catch (error) { setMessage(sourceModal, error.message || 'Не удалось сохранить источник.'); }
     }
+  });
+
+  // A channel button picks that channel of the source, and its card.
+  sourceModal?.addEventListener('click', (event) => {
+    const channel = event.target.closest?.('[data-core-source-channel]');
+    if (!channel || !data) return;
+    event.preventDefault();
+    if (channel.disabled) return;
+    setMessage(sourceModal, '');
+    renderProfiles(sourceModal, data, channel.dataset.coreSourceChannel);
+    sourceModal.querySelector(`[data-core-source-channel="${CSS.escape(channel.dataset.coreSourceChannel)}"]`)?.focus();
+  });
+
+  // Picking a card only moves the choice: nothing is saved until a button says so.
+  sourceModal?.addEventListener('change', (event) => {
+    const input = event.target.closest?.('input[type="radio"]');
+    if (!input || !data) return;
+    setMessage(sourceModal, '');
+    renderProfiles(sourceModal, data, input.value);
+    sourceModal.querySelector(`input[type="radio"][value="${CSS.escape(input.value)}"]`)?.focus();
   });
 
   installModal?.addEventListener('click', async (event) => {

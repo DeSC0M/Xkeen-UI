@@ -22,7 +22,8 @@ from services import github_client
 
 EngineId = Literal["xray", "mihomo"]
 RiskLevel = Literal["official", "alternative", "experimental"]
-ReleasePolicy = Literal["stable_only", "prerelease_allowed"]
+# "newest" takes the latest published build whatever its pre-release mark.
+ReleasePolicy = Literal["stable_only", "prerelease_allowed", "newest"]
 
 _ENGINE_IDS: Final[frozenset[str]] = frozenset({"xray", "mihomo"})
 _SHA256_RE: Final[re.Pattern[str]] = re.compile(r"(?<![0-9a-fA-F])([0-9a-fA-F]{64})(?![0-9a-fA-F])")
@@ -39,6 +40,9 @@ class CoreProfile:
     binary_name: str
     release_policy: ReleasePolicy = "stable_only"
     asset_prefix: str | None = None
+    # A release channel of another profile from the same repository: the
+    # source dialog shows both as one card with a channel switch.
+    channel_of: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,16 +59,31 @@ CORE_PROFILES: Final[dict[str, tuple[CoreProfile, ...]]] = {
             "xray",
             "XTLS/Xray-core",
             "Официальный Xray",
-            "Базовая совместимость Xray.",
+            "Исходный проект XTLS. Подходит в большинстве случаев.",
             "official",
             "xray",
+        ),
+        # XTLS has published every Xray release as a pre-release since
+        # v26.3.27, and XKeen installs those, so the stable channel alone
+        # would lag months behind the router.
+        CoreProfile(
+            "official-prerelease",
+            "xray",
+            "XTLS/Xray-core",
+            "Официальный Xray, предварительные",
+            "Исходный проект XTLS. Подходит в большинстве случаев.",
+            "official",
+            "xray",
+            "newest",
+            channel_of="official",
         ),
         CoreProfile(
             "uwuray",
             "xray",
             "MakostaDev/UwuRay",
             "UwuRay",
-            "Снята проверка минимальной версии клиента REALITY.",
+            "Xray с правками, которых нет в основном проекте: снята проверка минимальной версии клиента REALITY, "
+            "улучшено распознавание HTTP и BitTorrent.",
             "alternative",
             "xray",
         ),
@@ -73,7 +92,7 @@ CORE_PROFILES: Final[dict[str, tuple[CoreProfile, ...]]] = {
             "xray",
             "GFW-knocker/Xray-core",
             "GFW-knocker",
-            "Сборка для MahsaNG; используйте как экспериментальный профиль.",
+            "Изменённый Xray из приложения MahsaNG. Что именно изменено, авторы не описывают.",
             "experimental",
             "xray",
         ),
@@ -82,7 +101,8 @@ CORE_PROFILES: Final[dict[str, tuple[CoreProfile, ...]]] = {
             "xray",
             "Jolymmiles/Xray-core",
             "Jolymmiles",
-            "Сборка Xray с изменениями TCP Brutal и SMUX.",
+            "Сборка с уклоном в сервер: мультиплексирование sing-mux (smux и h2mux), управление скоростью Brutal, "
+            "расширенное распознавание QUIC и BitTorrent.",
             "experimental",
             "xray",
         ),
@@ -91,7 +111,7 @@ CORE_PROFILES: Final[dict[str, tuple[CoreProfile, ...]]] = {
             "xray",
             "patterniha/Xray-core",
             "patterniha",
-            "Альтернативная сборка Xray с собственным циклом релизов.",
+            "Ответвление Xray со своими выпусками. Списка изменений к выпускам нет.",
             "experimental",
             "xray",
         ),
@@ -102,16 +122,30 @@ CORE_PROFILES: Final[dict[str, tuple[CoreProfile, ...]]] = {
             "mihomo",
             "MetaCubeX/mihomo",
             "Официальный Mihomo",
-            "Базовая совместимость Mihomo.",
+            "Исходный проект MetaCubeX. Подходит в большинстве случаев.",
             "official",
             "mihomo",
+        ),
+        # MetaCubeX keeps one rolling pre-release, "Prerelease-Alpha", whose
+        # files are rebuilt from the Alpha branch.
+        CoreProfile(
+            "official-prerelease",
+            "mihomo",
+            "MetaCubeX/mihomo",
+            "Официальный Mihomo, предварительные",
+            "Исходный проект MetaCubeX. Подходит в большинстве случаев.",
+            "official",
+            "mihomo",
+            "prerelease_allowed",
+            channel_of="official",
         ),
         CoreProfile(
             "mihomo-enhanced",
             "mihomo",
             "LOVECHEN/mihomo-enhanced",
             "mihomo-enhanced",
-            "REALITY client version следует за Xray; добавлены Bridge и Portal.",
+            "Каждый день догоняет официальный Mihomo и добавляет два изменения: подключение к свежим серверам Xray "
+            "с REALITY и обратный прокси Bridge/Portal, совместимый с Xray.",
             "alternative",
             "mihomo",
         ),
@@ -120,7 +154,7 @@ CORE_PROFILES: Final[dict[str, tuple[CoreProfile, ...]]] = {
             "mihomo",
             "legiz-ru/Prizrak-Core",
             "Prizrak-Core",
-            "Альтернативная сборка Mihomo.",
+            "Сборка Mihomo для Prizrak-Box с доработками XHTTP.",
             "experimental",
             "mihomo",
         ),
@@ -129,7 +163,8 @@ CORE_PROFILES: Final[dict[str, tuple[CoreProfile, ...]]] = {
             "mihomo",
             "vernesong/mihomo",
             "vernesong/mihomo",
-            "Альтернативная сборка Mihomo; используется опубликованный prerelease.",
+            "Добавляет группу прокси Smart: сервер выбирается по накопленной статистике и модели LightGBM. "
+            "Ставится предварительный выпуск.",
             "experimental",
             "mihomo",
             "prerelease_allowed",
@@ -139,7 +174,8 @@ CORE_PROFILES: Final[dict[str, tuple[CoreProfile, ...]]] = {
             "mihomo",
             "Miku0139oao/aster-core",
             "aster-core",
-            "Mihomo-based альтернативная сборка; используется опубликованный prerelease.",
+            "Клиентская сборка на основе Mihomo: AnyTLS вместе с REALITY, исправления ошибок основного проекта, "
+            "ускорение. Ставится предварительный выпуск.",
             "experimental",
             "mihomo",
             "prerelease_allowed",
@@ -305,7 +341,8 @@ def _asset_view(raw_asset: Any) -> dict[str, str] | None:
     if not name or not url:
         return None
     digest = str(raw_asset.get("digest") or "").strip()
-    return {"name": name, "url": url, "digest": digest}
+    updated_at = str(raw_asset.get("updated_at") or "").strip()
+    return {"name": name, "url": url, "digest": digest, "updated_at": updated_at}
 
 
 def _asset_prefixes(profile: CoreProfile, platform_key: str) -> tuple[str, ...]:
@@ -423,6 +460,9 @@ def resolve_release(profile: CoreProfile, platform: RouterPlatform, *, timeout_s
                 for release in _github_releases(profile.repo, timeout_s)
                 if not bool(release.get("draft")) and bool(release.get("prerelease"))
             ]
+        elif profile.release_policy == "newest":
+            # GitHub lists releases newest first.
+            releases = [release for release in _github_releases(profile.repo, timeout_s) if not bool(release.get("draft"))]
         else:
             releases = [_github_json(profile.repo, timeout_s)]
     except CoreProfileError as exc:
@@ -454,7 +494,12 @@ def resolve_release(profile: CoreProfile, platform: RouterPlatform, *, timeout_s
                 "tag": tag,
                 "url": str(release.get("html_url") or ""),
                 "name": str(release.get("name") or ""),
-                "published_at": str(release.get("published_at") or release.get("created_at") or ""),
+                # A rolling pre-release keeps its tag and date for years while
+                # its files are rebuilt; the file date is when this build appeared.
+                "published_at": str(
+                    asset.get("updated_at") or release.get("published_at") or release.get("created_at") or ""
+                ),
+                "prerelease": bool(release.get("prerelease")),
             },
             "asset": asset,
             "checksum": checksum,

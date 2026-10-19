@@ -76,9 +76,11 @@ def test_core_source_supports_quick_fork_install_flow():
     assert 'data-core-source-action="prepare"' in SOURCE
     assert "data-core-source-prepare-label" in SOURCE
     assert "Проверить и установить" in SOURCE
-    assert "Выбрать и подготовить" in SOURCE
+    assert 'data-core-source-action="choose-install"' in SOURCE
+    assert "Запомнить без установки" in SOURCE
     assert "Источник выбран · релиз готовится" in source
-    assert "Подготовить установку ${selectedProfile.display_name}" in source
+    assert "Выбран другой источник" in source
+    assert "button: { label: `Установить ${name}`" in source
 
 
 def test_core_modal_explains_missing_engine_modules():

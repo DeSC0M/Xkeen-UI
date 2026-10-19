@@ -6,7 +6,7 @@ const xrayProfiles = {
   data: {
     engine_id: 'xray',
     platform: { machine: 'mipsel', opkg_arch: 'mipsel_24kc', endianness: 'le' },
-    state: { selected_profile_id: 'official', installed_profile_id: 'official', last_status: 'idle' },
+    state: { selected_profile_id: 'official', installed_profile_id: 'official', last_status: 'idle', detected_version: '26.3.27' },
     profiles: [
       {
         profile_id: 'official', display_name: 'Официальный Xray', repo: 'XTLS/Xray-core', description: 'Базовая совместимость Xray.',
@@ -156,12 +156,12 @@ test.describe('Curated core source selection', () => {
     await card.getByRole('button', { name: 'Источник' }).click();
     const sourceModal = page.locator('#xray-core-source-modal');
     await sourceModal.locator('input[value="uwuray"]').check();
-    await sourceModal.getByRole('button', { name: 'Сохранить выбор' }).click();
+    await sourceModal.getByRole('button', { name: 'Запомнить без установки' }).click();
     await expect.poll(() => saved).toEqual({ profile_id: 'uwuray' });
-    await sourceModal.getByRole('button', { name: 'Отмена' }).click();
+    await sourceModal.getByRole('button', { name: 'Закрыть выбор источника' }).click();
     await expect(sourceModal).toBeHidden();
 
-    await card.getByRole('button', { name: 'Проверить и установить' }).click();
+    await card.getByRole('button', { name: 'Переустановить' }).click();
     const confirmation = page.locator('#xray-core-install-modal');
     await expect(confirmation).toContainText('Xray-linux-mips32le.zip');
     await expect(confirmation).toContainText('b'.repeat(64));
@@ -184,7 +184,7 @@ test.describe('Curated core source selection', () => {
     await card.getByRole('button', { name: 'Источник' }).click();
     const modal = page.locator('#mihomo-core-source-modal');
     await modal.locator('input[value="prizrak-core"]').check();
-    await modal.getByRole('button', { name: 'Сохранить выбор' }).click();
+    await modal.getByRole('button', { name: 'Запомнить без установки' }).click();
 
     await expect.poll(() => saved).toEqual({ profile_id: 'prizrak-core' });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
@@ -218,7 +218,8 @@ test.describe('Curated core source selection', () => {
     await openView(page, 'mihomo');
     await openCoreManagement(page, 'mihomo');
     const card = page.locator('[data-core-source][data-core-engine="mihomo"]');
-    const prepare = card.getByRole('button', { name: 'Подготовить установку Prizrak-Core' });
+    const prepare = card.getByRole('button', { name: 'Установить Prizrak-Core' });
+    await expect(card.locator('[data-core-source-status]')).toContainText('Выбран другой источник');
     await expect(prepare).toBeVisible();
     await expect(card.getByRole('button', { name: 'Проверить и установить' })).toHaveCount(0);
     await prepare.click();
@@ -266,7 +267,7 @@ test.describe('Curated core source selection', () => {
     await card.getByRole('button', { name: 'Источник' }).click();
     const modal = page.locator('#mihomo-core-source-modal');
     await modal.locator('input[value="prizrak-core"]').check();
-    await modal.getByRole('button', { name: 'Выбрать и подготовить' }).click();
+    await modal.getByRole('button', { name: 'Установить Prizrak-Core' }).click();
 
     await expect.poll(() => saved).toEqual({ profile_id: 'prizrak-core' });
     await expect.poll(() => prepared).toBe(true);
@@ -299,8 +300,159 @@ test.describe('Curated core source selection', () => {
     await openView(page, 'routing');
     await openCoreManagement(page);
     const card = page.locator('[data-core-source][data-core-engine="xray"]');
-    await card.getByRole('button', { name: 'Проверить и установить' }).click();
+    await card.getByRole('button', { name: 'Переустановить' }).click();
     await page.locator('#xray-core-install-modal').getByRole('button', { name: 'Установить' }).click();
     await expect(card).toContainText('Откат: Конфигурация не прошла проверку');
+  });
+  test('the core card names the release state and what its button will do', async ({ page }) => {
+    let payload = clone(xrayProfiles);
+    await page.route('**/api/xray/core-profiles', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(payload) }));
+    await openView(page, 'routing');
+    await openCoreManagement(page);
+    const card = page.locator('[data-core-source][data-core-engine="xray"]');
+    const status = card.locator('[data-core-source-status] .xk-core-release');
+    const action = card.locator('[data-core-source-action="prepare"]');
+
+    // The installed version is the latest one.
+    await expect(status).toHaveClass(/is-ok/);
+    await expect(status).toContainText('Установлена последняя версия');
+    await expect(action).toHaveText('Переустановить');
+    await expect(action).toHaveClass(/btn-secondary/);
+
+    // A newer release: the badge and the button say so.
+    payload = clone(xrayProfiles);
+    payload.data.profiles[0].release.stable.tag = 'v26.10.1';
+    await card.getByRole('button', { name: 'Выбрать источник' }).click();
+    await page.locator('#xray-core-source-modal').getByRole('button', { name: 'Закрыть выбор источника' }).click();
+    await expect(status).toHaveClass(/is-update/);
+    await expect(status).toContainText('26.3.27 → 26.10.1');
+    await expect(action).toHaveText('Обновить до 26.10.1');
+    await expect(action).toHaveClass(/btn-primary/);
+
+    // The badge text sits on the line of its "Состояние" label.
+    const [label, title] = await Promise.all([
+      card.locator('.xk-core-source-facts dt').nth(3).boundingBox(),
+      status.locator('.xk-core-release-title').boundingBox(),
+    ]);
+    expect(Math.abs((label.y + label.height / 2) - (title.y + title.height / 2))).toBeLessThanOrEqual(2);
+
+    // The router runs a newer build than the source offers (the case of
+    // official Xray before it followed pre-releases): no "latest" claim.
+    payload = clone(xrayProfiles);
+    payload.data.state.detected_version = '26.9.9';
+    payload.data.state.installed_profile_id = null;
+    payload.data.profiles[0].release.stable.prerelease = true;
+    await card.getByRole('button', { name: 'Выбрать источник' }).click();
+    await page.locator('#xray-core-source-modal').getByRole('button', { name: 'Закрыть выбор источника' }).click();
+    await expect(status).toHaveClass(/is-info/);
+    await expect(status).toContainText('Установлена версия новее источника');
+    await expect(status).toContainText('в источнике v26.3.27 · предварительный');
+    await expect(action).toHaveText('Установить 26.3.27');
+    await expect(action).toHaveClass(/btn-secondary/);
+
+    // No build for this router: a warning and a disabled button.
+    payload = clone(xrayProfiles);
+    payload.data.profiles[0].release = { installable: false, reason: 'asset_missing' };
+    await card.getByRole('button', { name: 'Выбрать источник' }).click();
+    await page.locator('#xray-core-source-modal').getByRole('button', { name: 'Закрыть выбор источника' }).click();
+    await expect(status).toHaveClass(/is-warn/);
+    await expect(status).toContainText('нет сборки для архитектуры этого роутера');
+    await expect(action).toBeDisabled();
+  });
+
+  test('source cards: the chosen one shows its file and names the install button', async ({ page }) => {
+    let saved = null;
+    await page.route('**/api/xray/core-profiles', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(xrayProfiles) }));
+    await page.route('**/api/xray/core-source', async (route) => {
+      saved = route.request().postDataJSON();
+      await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true }) });
+    });
+    await openView(page, 'routing');
+    await openCoreManagement(page);
+    await page.locator('[data-core-source][data-core-engine="xray"]').getByRole('button', { name: 'Выбрать источник' }).click();
+    const modal = page.locator('#xray-core-source-modal');
+    const official = modal.locator('.xk-core-source-profile').filter({ has: page.locator('input[value="official"]') });
+    const uwuray = modal.locator('.xk-core-source-profile').filter({ has: page.locator('input[value="uwuray"]') });
+
+    await expect(official).toContainText('Установлен');
+    await expect(uwuray).not.toContainText('Установлен');
+    await expect(modal.locator('.xk-core-source-profile-details')).toHaveCount(1);
+    await expect(official.locator('.xk-core-source-profile-details')).toHaveCount(1);
+    await expect(modal.getByRole('button', { name: 'Установить v26.3.27' })).toBeVisible();
+
+    // Picking another card moves the details and renames the button, and saves nothing.
+    await modal.locator('input[value="uwuray"]').check();
+    await expect(uwuray.locator('.xk-core-source-profile-details')).toHaveCount(1);
+    await expect(official.locator('.xk-core-source-profile-details')).toHaveCount(0);
+    await expect(modal.getByRole('button', { name: 'Установить UwuRay' })).toBeVisible();
+    expect(saved).toBeNull();
+
+    // Two equal buttons; the old Cancel and Restore buttons are gone.
+    const buttons = modal.locator('.modal-actions button');
+    await expect(buttons).toHaveCount(2);
+    const [first, second] = await Promise.all([buttons.nth(0).boundingBox(), buttons.nth(1).boundingBox()]);
+    expect(Math.abs(first.width - second.width)).toBeLessThanOrEqual(1);
+    expect(Math.abs(second.x - (first.x + first.width) - 12)).toBeLessThanOrEqual(1);
+  });
+  test('the official source shows its release channels as a switch in one card', async ({ page }) => {
+    const payload = clone(xrayProfiles);
+    payload.data.state = { selected_profile_id: 'official-prerelease', installed_profile_id: null, last_status: 'idle', detected_version: '26.9.9' };
+    payload.data.profiles.splice(1, 0, {
+      profile_id: 'official-prerelease', channel_of: 'official', display_name: 'Официальный Xray, предварительные', repo: 'XTLS/Xray-core',
+      description: 'Базовая совместимость Xray.', risk_level: 'official',
+      release: { installable: true, stable: { tag: 'v26.10.17', prerelease: true }, asset: { name: 'Xray-linux-mips32le.zip' }, checksum: { sha256: 'e'.repeat(64) } },
+    });
+    let saved = null;
+    await page.route('**/api/xray/core-profiles', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(payload) }));
+    await page.route('**/api/xray/core-source', async (route) => {
+      saved = route.request().postDataJSON();
+      await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true }) });
+    });
+    await openView(page, 'routing');
+    await openCoreManagement(page);
+    const card = page.locator('[data-core-source][data-core-engine="xray"]');
+    // 26.9.9 on the router, v26.10.17 in the chosen channel: an update.
+    await expect(card.locator('[data-core-source-status] .xk-core-release')).toContainText('26.9.9 → 26.10.17 · предварительный');
+
+    await card.getByRole('button', { name: 'Выбрать источник' }).click();
+    const modal = page.locator('#xray-core-source-modal');
+    await expect(modal.locator('.xk-core-source-profile')).toHaveCount(2);
+    const official = modal.locator('.xk-core-source-profile').first();
+    await expect(official.locator('.xk-core-source-profile-head strong')).toHaveText('Официальный Xray');
+    const stable = official.locator('[data-core-source-channel="official"]');
+    const pre = official.locator('[data-core-source-channel="official-prerelease"]');
+    await expect(pre).toHaveAttribute('aria-pressed', 'true');
+    await expect(official).toContainText('v26.10.17');
+    await expect(official.locator('.xk-core-source-profile-details')).toContainText('e'.repeat(64));
+    await expect(modal.getByRole('button', { name: 'Установить v26.10.17' })).toBeVisible();
+
+    await stable.click();
+    await expect(stable).toHaveAttribute('aria-pressed', 'true');
+    await expect(official.locator('.xk-core-source-profile-meta')).toContainText('v26.3.27');
+    await expect(official.locator('.xk-core-source-profile-details')).toContainText('a'.repeat(64));
+    await expect(modal.getByRole('button', { name: 'Установить v26.3.27' })).toBeVisible();
+    expect(saved).toBeNull();
+    await modal.getByRole('button', { name: 'Запомнить без установки' }).click();
+    await expect.poll(() => saved).toEqual({ profile_id: 'official' });
+  });
+
+  test('a Mihomo alpha build is named by its commit and compared by it', async ({ page }) => {
+    const payload = mihomoProfiles();
+    payload.data.state = { selected_profile_id: 'official-prerelease', installed_profile_id: null, last_status: 'idle', detected_version: 'alpha-1a2b3c4' };
+    payload.data.profiles.splice(1, 0, {
+      profile_id: 'official-prerelease', channel_of: 'official', display_name: 'Официальный Mihomo, предварительные', repo: 'MetaCubeX/mihomo',
+      description: 'Базовая совместимость Mihomo.', risk_level: 'official',
+      release: { installable: true, stable: { tag: 'Prerelease-Alpha', prerelease: true, published_at: '2026-10-13T14:00:00Z' }, asset: { name: 'mihomo-linux-mipsle-softfloat-alpha-94b13ae.gz' }, checksum: { sha256: 'f'.repeat(64) } },
+    });
+    await page.route('**/api/mihomo/core-profiles', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(payload) }));
+    await openView(page, 'mihomo');
+    await openCoreManagement(page, 'mihomo');
+    const card = page.locator('[data-core-source][data-core-engine="mihomo"]');
+    await expect(card.locator('[data-core-source-status] .xk-core-release')).toContainText('alpha-1a2b3c4 → alpha-94b13ae');
+    await expect(card.locator('[data-core-source-action="prepare"]')).toHaveText('Обновить до alpha-94b13ae');
+    await card.getByRole('button', { name: 'Выбрать источник' }).click();
+    const official = page.locator('#mihomo-core-source-modal .xk-core-source-profile').first();
+    await expect(official.locator('[data-core-source-channel="official-prerelease"]')).toContainText('alpha-94b13ae');
+    await expect(official.locator('.xk-core-source-profile-meta')).toContainText('alpha-94b13ae · 13.10.2026');
   });
 });

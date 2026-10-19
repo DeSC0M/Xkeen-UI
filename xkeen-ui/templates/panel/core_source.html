@@ -39,22 +39,20 @@
 <div id="{{ engine_id }}-core-source-modal" class="modal hidden xk-core-source-modal" data-core-source-modal data-operator-modal-family="confirm-compact-form" role="dialog" aria-modal="true" aria-labelledby="{{ engine_id }}-core-source-modal-title">
   <div class="modal-content xk-modal-width xk-modal-width-760">
     <div class="modal-header">
-      <div>
+      <div class="xk-core-source-head">
         <h2 id="{{ engine_id }}-core-source-modal-title">Источник {{ engine_label }}</h2>
-        <p class="modal-description" data-core-source-platform>Проверяем архитектуру роутера</p>
+        <span class="xk-core-source-arch" data-core-source-platform data-tooltip="Архитектура роутера: показаны только сборки для неё">…</span>
       </div>
       <button type="button" class="btn-secondary btn-icon" data-core-source-action="close" aria-label="Закрыть выбор источника" data-tooltip="Закрыть">{{ op_icon('close') }}</button>
     </div>
     <div class="modal-body xk-core-source-modal-body">
       <div class="xk-core-source-profiles" data-core-source-profiles role="radiogroup" aria-label="Проверенные источники {{ engine_label }}"></div>
-      <p class="xk-core-source-notice">Для установки используется только опубликованный релиз с совпавшей SHA-256. Неподходящие для роутера сборки недоступны.</p>
+      <p class="xk-core-source-notice">{{ op_icon('lock') }}<span>Ставится только опубликованный релиз с совпавшей SHA-256. Сборки не для этой архитектуры недоступны.</span></p>
       <div class="xk-core-source-message" data-core-source-message role="status" aria-live="polite"></div>
     </div>
     <div class="modal-actions xk-core-source-modal-actions">
-      <button type="button" class="btn-secondary" data-core-source-action="close" data-tooltip="Закрыть без изменения источника"><span data-core-source-button-label>Отмена</span></button>
-      <button type="button" class="btn-secondary" data-core-source-action="restore" data-tooltip="Выбрать официальный источник и сохранить его"><span data-core-source-button-label>Вернуть официальный</span></button>
-      <button type="button" class="btn-secondary" data-core-source-action="save" data-tooltip="Сохранить выбранный источник без подготовки установки"><span data-core-source-button-label>Сохранить выбор</span></button>
-      <button type="button" class="btn-primary" data-core-source-action="choose-install" data-tooltip="Сохранить источник, проверить релиз и открыть подтверждение установки"><span data-core-source-button-label>Выбрать и подготовить</span></button>
+      <button type="button" class="btn-secondary" data-core-source-action="save" data-tooltip="Запомнить источник для следующей установки, ничего не скачивая">{{ op_icon('save') }}<span data-core-source-button-label>Запомнить без установки</span></button>
+      <button type="button" class="btn-primary" data-core-source-action="choose-install" data-tooltip="Запомнить источник, проверить релиз и открыть подтверждение установки">{{ op_icon('download') }}<span data-core-source-button-label data-core-source-install-label>Установить</span></button>
     </div>
   </div>
 </div>

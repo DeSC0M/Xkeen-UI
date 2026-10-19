@@ -32,6 +32,17 @@ from services.github_client import latest_release_tag
 from services.io.atomic import _atomic_write_json
 
 
+_VERSION_RE = re.compile(r"(\d+)\.(\d+)(?:\.(\d+))?")
+
+
+def _version_numbers(value: str | None) -> tuple[int, int, int] | None:
+    """The numeric x.y.z of a version or a tag: "Xray 26.9.9 (...)", "v26.3.27"."""
+    match = _VERSION_RE.search(str(value or ""))
+    if not match:
+        return None
+    return int(match.group(1)), int(match.group(2)), int(match.group(3) or 0)
+
+
 class CoreInstallError(RuntimeError):
     def __init__(self, code: str, message: str):
         super().__init__(message)
@@ -116,22 +127,65 @@ class CoreInstaller:
         self._guard = threading.RLock()
         self._busy = False
 
+    def selected_profile_id(
+        self,
+        engine_id: str,
+        *,
+        detected_version: str | None = None,
+        releases: dict[str, dict[str, Any]] | None = None,
+    ) -> str:
+        """The source the panel installs from.
+
+        Until the owner picks one, it is the source the core came from: the
+        recorded one, or, for a core put there by XKeen, the channel whose
+        builds match the version on the router.
+        """
+        state = self.state_store.get(engine_id)
+        selected = str(state.get("selected_profile_id") or "official")
+        if state.get("selected_explicit"):
+            return selected
+        installed = state.get("installed_profile_id")
+        if installed:
+            try:
+                return get_profile(engine_id, str(installed)).profile_id
+            except ValueError:
+                return selected
+        channel = next((item for item in list_profiles(engine_id) if item.channel_of == selected), None)
+        if channel is None:
+            return selected
+        if detected_version is None:
+            detected_version = self._read_binary_version(engine_id)
+        # Mihomo pre-releases report a build, not a number: "alpha-94b13ae".
+        if "alpha" in str(detected_version or "").lower():
+            return channel.profile_id
+        running = _version_numbers(detected_version)
+        # Reuse what the page has already resolved: during a GitHub outage
+        # every extra resolve is one more failing request.
+        stable = (releases or {}).get(selected) or self._resolve(get_profile(engine_id, selected))
+        stable_tag = stable.get("stable", {}).get("tag") if stable.get("installable") else None
+        stable_numbers = _version_numbers(stable_tag)
+        if running and stable_numbers and running > stable_numbers:
+            return channel.profile_id
+        return selected
+
     def profiles(self, engine_id: str) -> dict[str, Any]:
-        selected = self.state_store.get(engine_id).get("selected_profile_id") or "official"
-        installed = self.state_store.get(engine_id).get("installed_profile_id")
         state = self.state_store.get(engine_id)
         state["detected_version"] = self._read_binary_version(engine_id)
-        items = []
-        for profile in list_profiles(engine_id):
-            release = self._resolve(profile)
-            items.append({**profile_view(profile), "selected": profile.profile_id == selected, "installed": profile.profile_id == installed, "release": self._public_release(release)})
+        installed = state.get("installed_profile_id")
+        releases = {profile.profile_id: self._resolve(profile) for profile in list_profiles(engine_id)}
+        selected = self.selected_profile_id(engine_id, detected_version=state["detected_version"], releases=releases)
+        state["selected_profile_id"] = selected
+        items = [
+            {**profile_view(profile), "selected": profile.profile_id == selected, "installed": profile.profile_id == installed, "release": self._public_release(releases[profile.profile_id])}
+            for profile in list_profiles(engine_id)
+        ]
         return {"engine_id": engine_id, "platform": asdict(self.platform), "profiles": items, "state": state}
 
     def select(self, engine_id: str, profile_id: str) -> dict[str, Any]:
         return self.state_store.set_selected(engine_id, profile_id)
 
     def prepare(self, engine_id: str) -> dict[str, Any]:
-        profile = get_profile(engine_id, self.state_store.get(engine_id).get("selected_profile_id") or "official")
+        profile = get_profile(engine_id, self.selected_profile_id(engine_id))
         self._require_active(engine_id)
         # The profile chooser has already resolved and verified release
         # metadata (including SHA-256). Reuse that cache for the short-lived
@@ -488,6 +542,11 @@ class CoreInstaller:
             return None
         if int(code) != 0:
             return None
+        # A Mihomo Alpha build names its commit instead of a number:
+        # "Mihomo Meta alpha-94b13ae linux arm64 with go1.25.1 ...".
+        alpha = re.search(r"\balpha-[0-9a-f]{6,}\b", str(output or ""))
+        if alpha:
+            return alpha.group(0)
         match = re.search(r"\bv?\d+(?:\.\d+){1,2}(?:[-+][0-9A-Za-z.-]+)?", str(output or ""))
         return match.group(0) if match else None
 

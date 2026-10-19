@@ -45,6 +45,9 @@ _LEGACY_PHASE_LABELS = {
 def _empty_engine_state() -> dict[str, Any]:
     return {
         "selected_profile_id": "official",
+        # False until the owner picks a source: until then the panel infers
+        # it (see CoreInstaller.selected_profile_id).
+        "selected_explicit": False,
         "installed_profile_id": None,
         "installed_release_tag": None,
         "installed_asset_name": None,
@@ -137,6 +140,7 @@ class CoreProfileStateStore:
         with self._lock:
             payload = self._read()
             payload[profile.engine_id]["selected_profile_id"] = profile.profile_id
+            payload[profile.engine_id]["selected_explicit"] = True
             self._write(payload)
             return deepcopy(payload[profile.engine_id])
 

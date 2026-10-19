@@ -136,14 +136,17 @@ def test_stage1_flat_effect_and_geometry_contract_is_static():
         flags=re.DOTALL,
     )
     # Pills are intentionally reserved for the switch track, compact count
-    # badge, device alias and the engine state badge of the core dialog. Keep
+    # badge, device alias, the engine state badge of the core dialog and the
+    # chips of the core source cards (architecture, risk, "installed"). Keep
     # this as an explicit allow-list so a new rounded component cannot
     # silently reintroduce legacy visual language.
-    assert len(pill_blocks) == 4
+    assert len(pill_blocks) == 6
     assert ".fm-toggle-slider" in pill_blocks[0]
     assert ".xk-mihomo-connections-view-tab span" in pill_blocks[1]
     assert ".xk-mihomo-device-name" in pill_blocks[2]
-    assert "#core-modal .xk-core-option-state" in pill_blocks[3]
+    assert ".xk-core-source-arch" in pill_blocks[3]
+    assert ".xk-core-source-risk, .xk-core-source-installed" in pill_blocks[4]
+    assert "#core-modal .xk-core-option-state" in pill_blocks[5]
 
     assert ")::before," in css
     assert ")::after {" in css

@@ -50,6 +50,7 @@ test('the service menu marks the active engine and lays the service buttons out 
   await expect(menu.locator('[data-xk-svc-state-text]')).toHaveText('Работает');
   await expect(engineSwitch(menu, 'xray')).toHaveAttribute('aria-pressed', 'true');
   await expect(engineSwitch(menu, 'xray')).toContainText('26.9.9 · активно');
+  await expect(engineSwitch(menu, 'xray')).toHaveAttribute('data-tooltip', 'Открыть управление ядром Xray');
   await expect(engineSwitch(menu, 'mihomo')).toHaveAttribute('aria-pressed', 'false');
   await expect(engineSwitch(menu, 'mihomo')).toContainText('1.19.14');
   await expect(menu.locator('#xkeen-core-text')).toBeHidden();
@@ -142,6 +143,9 @@ test('a Mihomo-only router shows one Mihomo card', async ({ page }) => {
 
   await expect(engineSwitch(menu, 'xray')).toBeHidden();
   await expect(engineSwitch(menu, 'mihomo')).toHaveAttribute('aria-pressed', 'true');
+  // The card shows its state itself; the hover hint only names the action.
+  // It used to keep the first aria-label, read before the engines arrived.
+  await expect(engineSwitch(menu, 'mihomo')).toHaveAttribute('data-tooltip', 'Открыть управление ядром Mihomo');
   await engineSwitch(menu, 'mihomo').click();
   await expect(tab(page, 'mihomo')).toHaveAttribute('aria-selected', 'true');
   await expect(tab(page, 'mihomo')).toContainText('Активно');

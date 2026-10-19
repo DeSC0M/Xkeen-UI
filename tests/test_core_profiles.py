@@ -29,6 +29,7 @@ def _release(tag: str, assets: list[dict[str, str]], *, prerelease: bool = False
 def test_catalogs_are_engine_scoped_and_use_stable_ids():
     assert [p.profile_id for p in profiles.list_profiles("xray")] == [
         "official",
+        "official-prerelease",
         "uwuray",
         "gfw-knocker",
         "jolymmiles",
@@ -36,6 +37,7 @@ def test_catalogs_are_engine_scoped_and_use_stable_ids():
     ]
     assert [p.profile_id for p in profiles.list_profiles("mihomo")] == [
         "official",
+        "official-prerelease",
         "mihomo-enhanced",
         "prizrak-core",
         "vernesong",
@@ -186,6 +188,36 @@ def test_resolve_rejects_missing_asset_and_checksum(monkeypatch):
     )
     assert result["installable"] is False
     assert result["reason"] == "asset_missing"
+
+
+def test_official_xray_prerelease_channel_takes_the_newest_build(monkeypatch):
+    # XTLS marks every Xray release as a pre-release since v26.3.27.
+    draft = _release("v26.11.1", [_asset("Xray-linux-32.zip"), _asset("Xray-linux-32.zip.dgst")])
+    draft["draft"] = True
+    newest = _release("v26.10.17", [_asset("Xray-linux-32.zip"), _asset("Xray-linux-32.zip.dgst")], prerelease=True)
+    older = _release("v26.3.27", [_asset("Xray-linux-32.zip"), _asset("Xray-linux-32.zip.dgst")])
+    monkeypatch.setattr(profiles, "_github_releases", lambda *_args, **_kwargs: [draft, newest, older])
+    monkeypatch.setattr(profiles, "_download_text", lambda *_args, **_kwargs: "SHA-256= " + "c" * 64 + "\n")
+    result = profiles.resolve_release(
+        profiles.get_profile("xray", "official-prerelease"),
+        profiles.RouterPlatform("i386", "i386_pentium", "le"),
+        timeout_s=1,
+    )
+    assert result["installable"] is True
+    assert result["stable"]["tag"] == "v26.10.17"
+    assert result["stable"]["prerelease"] is True
+
+
+def test_only_the_official_sources_have_a_prerelease_channel():
+    channels = [(item.engine_id, item.profile_id, item.channel_of) for engine in ("xray", "mihomo") for item in profiles.list_profiles(engine) if item.channel_of]
+    assert channels == [("xray", "official-prerelease", "official"), ("mihomo", "official-prerelease", "official")]
+    for engine in ("xray", "mihomo"):
+        channel = profiles.get_profile(engine, "official-prerelease")
+        assert channel.repo == profiles.get_profile(engine, "official").repo
+        assert profiles.get_profile(engine, "official").release_policy == "stable_only"
+    # Xray publishes numbered pre-releases; Mihomo keeps one rolling alpha.
+    assert profiles.get_profile("xray", "official-prerelease").release_policy == "newest"
+    assert profiles.get_profile("mihomo", "official-prerelease").release_policy == "prerelease_allowed"
 
 
 def test_resolve_rejects_prerelease_and_draft(monkeypatch):

@@ -154,7 +154,7 @@ def test_resolved_release_metadata_is_cached_per_profile_and_architecture(tmp_pa
     install.profiles("xray")
     install.profiles("xray")
 
-    assert calls == ["official", "uwuray", "gfw-knocker", "jolymmiles", "patterniha"]
+    assert calls == ["official", "official-prerelease", "uwuray", "gfw-knocker", "jolymmiles", "patterniha"]
 
 
 def test_prepare_reuses_verified_release_metadata_already_shown_to_the_user(tmp_path):
@@ -383,7 +383,7 @@ def test_release_that_cannot_be_installed_is_not_requested_again_on_every_page_l
     install.profiles("xray")
     first = install.profiles("xray")
 
-    assert len(calls) == 5
+    assert len(calls) == 6
     assert first["profiles"][0]["release"]["reason"] == "asset_missing"
 
 
@@ -398,7 +398,7 @@ def test_release_that_cannot_be_installed_is_checked_again_after_a_short_while(t
 
     install.profiles("xray")
 
-    assert len(calls) == 5
+    assert len(calls) == 6
 
 
 def test_github_outage_result_is_never_stored(tmp_path):
@@ -410,7 +410,7 @@ def test_github_outage_result_is_never_stored(tmp_path):
     install.profiles("xray")
     install.profiles("xray")
 
-    assert len(calls) == 10
+    assert len(calls) == 12
 
 
 def test_expired_stable_release_is_confirmed_by_tag_without_the_api(tmp_path):
@@ -427,7 +427,9 @@ def test_expired_stable_release_is_confirmed_by_tag_without_the_api(tmp_path):
     value = install.profiles("xray")
     install.profiles("xray")
 
-    assert calls == []
+    # The pre-release channel follows the newest build, which the cheap tag
+    # check (it sees stable releases only) cannot confirm.
+    assert calls == ["official-prerelease"]
     assert tag_checks == [
         "XTLS/Xray-core",
         "MakostaDev/UwuRay",
@@ -450,7 +452,8 @@ def test_expired_stable_release_is_fetched_again_when_the_tag_has_moved(tmp_path
 
     install.profiles("xray")
 
-    assert calls == ["official"]
+    # The pre-release channel is fetched as well: no tag check confirms it.
+    assert calls == ["official", "official-prerelease"]
 
 
 def test_prerelease_sources_are_not_confirmed_by_the_stable_tag(tmp_path):
@@ -467,6 +470,56 @@ def test_prerelease_sources_are_not_confirmed_by_the_stable_tag(tmp_path):
     install.profiles("mihomo")
 
     prerelease_ids = [item.profile_id for item in profiles.list_profiles("mihomo") if item.release_policy == "prerelease_allowed"]
-    prerelease_repos = [item.repo for item in profiles.list_profiles("mihomo") if item.release_policy == "prerelease_allowed"]
+    stable_repos = [item.repo for item in profiles.list_profiles("mihomo") if item.release_policy == "stable_only"]
     assert prerelease_ids and calls == prerelease_ids
-    assert not set(tag_checks) & set(prerelease_repos)
+    # Only stable sources are confirmed by the tag; the official pre-release
+    # channel shares the repository with the stable one, hence the list.
+    assert tag_checks == stable_repos
+
+
+def _channel_installer(tmp_path, *, running_version: str):
+    install, store, _target = _installer(tmp_path)
+    stable = _release_for(b"new-xray")
+    newest = {**stable, "stable": {**stable["stable"], "tag": "v26.10.17", "prerelease": True}}
+    install.release_resolver = lambda profile, *_args, **_kwargs: newest if profile.profile_id == "official-prerelease" else stable
+    install._read_binary_version = lambda _engine: running_version
+    return install, store
+
+
+def test_a_core_newer_than_the_stable_channel_selects_the_prerelease_channel(tmp_path):
+    # XKeen installed 26.9.9 while the last stable Xray is v26.3.27.
+    install, _store = _channel_installer(tmp_path, running_version="26.9.9")
+    value = install.profiles("xray")
+    assert value["state"]["selected_profile_id"] == "official-prerelease"
+    assert install.prepare("xray")["profile"]["profile_id"] == "official-prerelease"
+
+
+def test_a_core_on_the_stable_line_keeps_the_stable_channel(tmp_path):
+    install, _store = _channel_installer(tmp_path, running_version="26.3.27")
+    assert install.profiles("xray")["state"]["selected_profile_id"] == "official"
+
+
+def test_an_explicit_choice_and_a_recorded_install_outrank_the_version_guess(tmp_path):
+    install, store = _channel_installer(tmp_path, running_version="26.9.9")
+    store.set_installed("xray", profile_id="official", release_tag="v26.3.27", asset_name="Xray-linux-64.zip")
+    assert install.profiles("xray")["state"]["selected_profile_id"] == "official"
+    install.select("xray", "uwuray")
+    assert install.profiles("xray")["state"]["selected_profile_id"] == "uwuray"
+    install.select("xray", "official")
+    assert install.profiles("xray")["state"]["selected_profile_id"] == "official"
+
+
+def test_a_mihomo_alpha_build_selects_the_mihomo_prerelease_channel(tmp_path):
+    install, _store, _target = _installer(tmp_path)
+    install.release_resolver = lambda *_args, **_kwargs: {**_release_for(b"new-mihomo"), "binary_name": "mihomo"}
+    install._read_binary_version = lambda _engine: "alpha-94b13ae"
+    assert install.profiles("mihomo")["state"]["selected_profile_id"] == "official-prerelease"
+
+
+def test_the_version_of_a_mihomo_alpha_build_is_its_commit(tmp_path):
+    install, _store, _target = _installer(tmp_path)
+    (tmp_path / "mihomo").write_bytes(b"binary")
+    install.run_command = lambda *_args, **_kwargs: (0, "Mihomo Meta alpha-94b13ae linux arm64 with go1.25.1 Mon Oct 13 2026")
+    assert install._read_binary_version("mihomo") == "alpha-94b13ae"
+    install.run_command = lambda *_args, **_kwargs: (0, "Mihomo Meta v1.19.32 linux arm64 with go1.25.1")
+    assert install._read_binary_version("mihomo") == "v1.19.32"

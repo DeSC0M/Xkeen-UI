@@ -22731,19 +22731,65 @@ body.panel-page .xk-core-source-modal[data-core-source-modal] .modal-body {
   max-height: none;
   overflow: auto;
 }
+/* Source cards speak the language of the engine switch in the service menu:
+ * the chosen one is raised, risk and "installed" are chips. */
+/* A one-line header: the title, the router architecture and the close button. */
+html body.panel-page .xk-core-source-modal[data-core-source-modal] .modal-header {
+  flex-wrap: nowrap;
+  align-items: center;
+  padding: 10px 14px 10px 18px !important;
+}
+body.panel-page .xk-core-source-head { display: flex; flex: 1 1 0%; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; }
+html body.panel-page .xk-core-source-modal[data-core-source-modal] .xk-core-source-head h2 {
+  margin: 0;
+  font-size: calc(16px * var(--xk-font-scale, 1));
+  line-height: 1.25;
+}
+body.panel-page .xk-core-source-arch {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border: 1px solid var(--op-border);
+  border-radius: 999px;
+  background: var(--op-surface-3);
+  color: var(--op-muted);
+  font-family: var(--op-font-mono);
+  font-size: calc(11px * var(--xk-font-scale, 1));
+}
 body.panel-page .xk-core-source-profiles { display: grid; gap: 8px; margin: 0; }
 body.panel-page .xk-core-source-profile {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: 18px 22px minmax(0, 1fr) auto;
+  align-items: start;
   gap: 10px;
-  padding: 10px;
+  padding: 11px 12px;
   border: 1px solid var(--op-border);
-  border-radius: var(--op-radius-sm);
+  border-radius: var(--op-radius);
   background: var(--op-surface-2);
   cursor: pointer;
 }
-body.panel-page .xk-core-source-profile:has(input:checked) { border-color: var(--op-accent-border); background: var(--op-accent-soft); }
-body.panel-page .xk-core-source-profile.is-unavailable { opacity: .58; cursor: not-allowed; }
+body.panel-page .xk-core-source-profile:hover:not(.is-unavailable) { border-color: var(--op-border-strong); }
+body.panel-page .xk-core-source-profile.is-selected {
+  border-color: var(--op-accent-border);
+  background: var(--op-surface);
+  box-shadow: var(--op-shadow);
+}
+body.panel-page .xk-core-source-profile.is-unavailable { opacity: .55; cursor: not-allowed; }
+body.panel-page .xk-core-source-profile input[type="radio"] {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  border: 1.5px solid var(--op-border-strong);
+  border-radius: 50%;
+  background: transparent;
+  cursor: inherit;
+}
+body.panel-page .xk-core-source-profile input[type="radio"]:checked { border: 5px solid var(--op-accent); }
+body.panel-page .xk-core-source-profile input[type="radio"]:focus-visible { outline: 2px solid var(--op-accent); outline-offset: 2px; }
+body.panel-page .xk-core-source-profile-icon { width: 20px; height: 20px; color: var(--op-muted); }
+body.panel-page .xk-core-source-profile.is-selected .xk-core-source-profile-icon { color: var(--op-accent); }
 body.panel-page .xk-core-source-control-unavailable {
   border-color: var(--op-warning-border, var(--op-border));
   background: color-mix(in srgb, var(--op-warning-soft, var(--op-surface-2)) 48%, var(--op-surface-2));
@@ -22751,11 +22797,133 @@ body.panel-page .xk-core-source-control-unavailable {
 body.panel-page .xk-core-source-control-unavailable .xk-core-source-status {
   color: var(--op-warning, #d9a441);
 }
-body.panel-page .xk-core-source-profile-body { display: grid; gap: 3px; min-width: 0; }
-body.panel-page .xk-core-source-profile-body a { color: var(--op-accent-hover); font-size: .82rem; overflow-wrap: anywhere; }
-body.panel-page .xk-core-source-profile-body small { color: var(--op-muted); line-height: 1.35; }
+body.panel-page .xk-core-source-profile-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  font-size: calc(12.5px * var(--xk-font-scale, 1));
+  line-height: 1.4;
+}
+body.panel-page .xk-core-source-profile-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* Release channels of one source, styled like the engine switch. */
+body.panel-page .xk-core-source-channels {
+  display: inline-grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: 3px;
+  align-self: flex-start;
+  max-width: 100%;
+  margin: 4px 0 2px;
+  padding: 3px;
+  border: 1px solid var(--op-border);
+  border-radius: var(--op-radius-sm);
+  background: var(--op-surface-3);
+}
+html body.panel-page .xk-core-source-profile .xk-core-source-channel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 3px 10px;
+  border: 1px solid transparent !important;
+  border-radius: calc(var(--op-radius-sm) - 2px) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--op-muted) !important;
+  font: inherit;
+  font-size: calc(12px * var(--xk-font-scale, 1));
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+html body.panel-page .xk-core-source-profile .xk-core-source-channel small { font-weight: 450; opacity: .85; font-variant-numeric: tabular-nums; }
+html body.panel-page .xk-core-source-profile .xk-core-source-channel:hover:not([disabled]):not([aria-pressed="true"]) { color: var(--op-text-strong) !important; }
+html body.panel-page .xk-core-source-profile .xk-core-source-channel[aria-pressed="true"] {
+  border-color: var(--op-accent-border) !important;
+  background: var(--op-surface) !important;
+  color: var(--op-text-strong) !important;
+  box-shadow: var(--op-shadow) !important;
+}
+html body.panel-page .xk-core-source-profile .xk-core-source-channel:focus-visible { outline: 2px solid var(--op-accent); outline-offset: 1px; }
+body.panel-page .xk-core-source-profile-head strong {
+  color: var(--op-text-strong);
+  font-size: calc(13.5px * var(--xk-font-scale, 1));
+  font-weight: 650;
+}
+body.panel-page :is(.xk-core-source-risk, .xk-core-source-installed) {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: calc(11px * var(--xk-font-scale, 1));
+  font-weight: 600;
+  white-space: nowrap;
+}
+body.panel-page .xk-core-source-risk.is-official { background: var(--op-success-soft); color: var(--op-success-strong, var(--op-success)); }
+body.panel-page .xk-core-source-risk.is-alternative { background: var(--op-accent-soft); color: var(--op-accent-hover); }
+body.panel-page .xk-core-source-risk.is-experimental { background: var(--op-warning-soft); color: var(--op-warning-strong, var(--op-warning)); }
+body.panel-page .xk-core-source-installed { border-color: var(--op-border); background: var(--op-surface-3); color: var(--op-text); }
+body.panel-page .xk-core-source-installed .xk-action-icon { width: 12px; height: 12px; }
+body.panel-page .xk-core-source-profile-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; color: var(--op-text); }
+html body.panel-page .xk-core-source-profile .xk-core-source-repo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: var(--op-muted);
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+html body.panel-page .xk-core-source-profile .xk-core-source-repo:hover { color: var(--op-accent-hover); }
+body.panel-page .xk-core-source-repo .xk-action-icon { flex: 0 0 auto; width: 13px; height: 13px; }
+body.panel-page .xk-core-source-profile-off { color: var(--op-warning-strong, var(--op-warning)); }
+body.panel-page .xk-core-source-prerelease { color: var(--op-warning-strong, var(--op-warning)); }
+body.panel-page .xk-core-source-profile-desc { color: var(--op-muted); }
+body.panel-page .xk-core-source-profile-details { margin-top: 4px; color: var(--op-muted); font-size: calc(12px * var(--xk-font-scale, 1)); }
+body.panel-page .xk-core-source-profile-details summary { width: max-content; color: var(--op-accent-hover); cursor: pointer; }
+body.panel-page .xk-core-source-profile-details dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 4px 14px;
+  margin: 6px 0 0;
+}
+body.panel-page .xk-core-source-profile-details dd {
+  margin: 0;
+  color: var(--op-text);
+  font-family: var(--op-font-mono);
+  font-size: calc(11.5px * var(--xk-font-scale, 1));
+  overflow-wrap: anywhere;
+}
+body.panel-page .xk-core-source-profile-side { display: flex; align-items: center; gap: 6px; }
+body.panel-page .xk-core-source-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+body.panel-page .xk-core-source-notice .xk-action-icon { flex: 0 0 auto; width: 14px; height: 14px; margin-top: 2px; }
 body.panel-page .xk-core-source-notice,
-body.panel-page .xk-core-source-message { margin: 10px 0 0; color: var(--op-muted); font-size: .84rem; line-height: 1.4; }
+body.panel-page .xk-core-source-message { margin: 12px 0 0; color: var(--op-muted); font-size: .84rem; line-height: 1.4; }
+/* Two equal buttons, the gap equal to the dialog padding. */
+body.panel-page .xk-core-source-modal[data-core-source-modal] .modal-actions {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+body.panel-page .xk-core-source-modal[data-core-source-modal] .modal-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+body.panel-page .xk-core-source-modal[data-core-source-modal] .modal-actions .xk-action-icon { flex: 0 0 auto; width: 16px; height: 16px; }
 body.panel-page .xk-core-source-message:not(:empty) { color: var(--op-text); }
 body.panel-page .xk-core-install-details { display: grid; grid-template-columns: minmax(100px, .34fr) minmax(0, 1fr); gap: 8px 12px; margin: 14px 0; }
 body.panel-page .xk-core-install-details dt { color: var(--op-muted); }
@@ -22815,9 +22983,6 @@ body.panel-page .xk-core-source-modal-actions button.is-success {
 }
 
 @media (max-width: 680px) {
-  body.panel-page #core-modal .xk-core-source-facts { grid-template-columns: 1fr; row-gap: 2px; }
-  body.panel-page #core-modal .xk-core-source-facts dd { margin-bottom: 8px; }
-  body.panel-page #core-modal .xk-core-source-actions { grid-template-columns: 1fr; }
   body.panel-page .xk-core-install-details { grid-template-columns: 1fr; gap: 2px; }
   body.panel-page .xk-core-install-steps { grid-template-columns: 1fr 1fr; gap: 8px; text-align: left; }
   body.panel-page .xk-core-install-steps li::before { display: inline-block; margin: 0 6px 0 0; }
@@ -23182,6 +23347,37 @@ body.panel-page #core-modal .xk-core-source-facts dd.xk-core-source-status {
   font-weight: 450;
 }
 
+/* The badge keeps the row's baseline: its padding is taken back by the
+ * negative margin, so "Состояние" and the badge text sit on one line. */
+body.panel-page #core-modal .xk-core-release {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 1px 7px;
+  margin-block: -4px;
+  padding: 3px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--op-radius-sm);
+  font-weight: 600;
+  line-height: 1.35;
+}
+body.panel-page #core-modal .xk-core-release .xk-action-icon { flex: 0 0 auto; align-self: flex-start; width: 14px; height: 14px; margin-top: 2px; }
+body.panel-page #core-modal .xk-core-release-note { font-weight: 450; opacity: .8; font-variant-numeric: tabular-nums; }
+body.panel-page #core-modal .xk-core-release.is-ok { background: var(--op-success-soft); color: var(--op-success-strong, var(--op-success)); }
+body.panel-page #core-modal .xk-core-release.is-update { border-color: var(--op-accent-border); background: var(--op-accent-soft); color: var(--op-accent-hover); }
+body.panel-page #core-modal .xk-core-release.is-warn { background: var(--op-warning-soft); color: var(--op-warning-strong, var(--op-warning)); }
+body.panel-page #core-modal .xk-core-release.is-info { border-color: var(--op-border); background: var(--op-surface-3); color: var(--op-text); }
+body.panel-page #core-modal .xk-core-release-stale { display: block; margin-top: 6px; color: var(--op-muted); font-size: calc(12px * var(--xk-font-scale, 1)); }
+body.panel-page #core-modal .xk-core-source-action.btn-primary:not([disabled]) {
+  border-color: var(--op-accent) !important;
+  background: var(--op-accent) !important;
+  color: #fff !important;
+}
+body.panel-page #core-modal .xk-core-source-action.btn-primary:not([disabled]):hover {
+  border-color: var(--op-accent-hover) !important;
+  background: var(--op-accent-hover) !important;
+}
+
 body.panel-page #core-modal .xk-core-source-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -23231,6 +23427,34 @@ html[data-theme="light"] body.panel-page #core-modal .xk-core-status {
 }
 
 body.panel-page #core-modal .xk-core-status:empty { display: none; }
+
+/* Narrow screens. These follow the base rules above: placed earlier, they
+ * lost to them and the facts and buttons kept two columns on a phone. */
+@media (max-width: 680px) {
+  body.panel-page #core-modal .xk-core-source-facts { grid-template-columns: 1fr; row-gap: 2px; }
+  body.panel-page #core-modal .xk-core-source-facts dd { margin-bottom: 8px; }
+  body.panel-page #core-modal .xk-core-source-actions { grid-template-columns: 1fr; }
+  body.panel-page #core-modal .xk-core-release { margin-block: 2px 0; }
+  body.panel-page .xk-core-source-modal[data-core-source-modal] .modal-actions { grid-template-columns: 1fr; }
+  body.panel-page .xk-core-source-modal[data-core-source-modal] .modal-actions .btn-primary { order: -1; }
+  body.panel-page .xk-core-source-profile { grid-template-columns: 18px minmax(0, 1fr); }
+  body.panel-page .xk-core-source-profile-icon { display: none !important; }
+  body.panel-page .xk-core-source-profile-side { grid-column: 2; }
+  body.panel-page .xk-core-source-profile-side:empty { display: none; }
+  body.panel-page .xk-core-source-channels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; box-sizing: border-box; }
+  html body.panel-page .xk-core-source-profile .xk-core-source-channel { flex-direction: column; gap: 0; white-space: normal; text-align: center; }
+}
+
+/* A tab is too narrow for the engine name and its state side by side. */
+@media (max-width: 520px) {
+  body.panel-page #core-modal .xk-core-option,
+  html[data-theme="light"] body.panel-page #core-modal .xk-core-option {
+    grid-template-columns: 22px minmax(0, 1fr);
+    row-gap: 4px;
+  }
+  body.panel-page #core-modal .xk-core-option-mark { grid-row: span 2; }
+  body.panel-page #core-modal .xk-core-option-state { justify-self: start; }
+}
 
 body.panel-page #core-modal .xk-core-status[data-state="error"] {
   border-color: color-mix(in srgb, var(--op-danger) 34%, var(--op-border)) !important;
