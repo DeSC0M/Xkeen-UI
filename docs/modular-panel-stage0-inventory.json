@@ -38,8 +38,8 @@
         "gevent-websocket (optional)"
       ],
       "removable": false,
-      "unit_count": 576,
-      "size_bytes": 7753822,
+      "unit_count": 577,
+      "size_bytes": 7755165,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -51,7 +51,7 @@
         "frontend_feature": 34,
         "frontend_javascript": 37,
         "frontend_runtime": 2,
-        "frontend_test": 66,
+        "frontend_test": 67,
         "frontend_ui": 17,
         "stylesheet": 9,
         "template": 31
@@ -11575,6 +11575,28 @@
         "gevent-websocket (optional)"
       ],
       "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_test",
+      "path": "e2e/file_manager_terminal_controls.spec.mjs",
+      "size_bytes": 1343,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [
+        "XKEEN_E2E_MODULE_PROFILE"
+      ],
       "removable": false
     },
     {
