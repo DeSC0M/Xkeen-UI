@@ -207,6 +207,27 @@ test('notification window stays readable above DevTools in the light theme', asy
   expect(size).toBe('12px');
 });
 
+test('the router announcing the screen it booted on leaves an opened window open', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await mockLifecycle(page);
+  await mockCenter(page);
+  await page.goto('/devtools');
+  const popover = page.locator('.xk-notification-popover');
+  await page.locator('.xk-notification-trigger').click();
+  await expect(popover).toBeVisible();
+
+  // A slow router may announce the first screen after the owner has clicked.
+  const announce = (initial) => page.evaluate((value) => {
+    window.dispatchEvent(new CustomEvent('xkeen:top-level-route-change', { detail: { screen: 'devtools', initial: value } }));
+  }, initial);
+  await announce(true);
+  await expect(popover).toBeVisible();
+
+  // A real switch of screens still closes it.
+  await announce(false);
+  await expect(popover).toBeHidden();
+});
+
 test('bell follows the screens without a page reload', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 800 });
   await mockLifecycle(page);

@@ -387,8 +387,10 @@ export function initNotificationCenter() {
   // controls between the header and the menus per view; the narrow layout
   // moves the bell between the button row and the title line.
   document.addEventListener('xkeen:header-shell-changed', () => placeCenter(root));
-  window.addEventListener('xkeen:top-level-route-change', () => {
-    if (open) setOpen(false, { returnFocus: false });
+  window.addEventListener('xkeen:top-level-route-change', (event) => {
+    // The router announces the screen it booted on as well: that is no
+    // switch, and a window opened before the announcement stays open.
+    if (open && event.detail?.initial !== true) setOpen(false, { returnFocus: false });
     placeCenter(root);
   });
   try { window.matchMedia(NARROW).addEventListener('change', () => placeCenter(root)); } catch (error) {}
