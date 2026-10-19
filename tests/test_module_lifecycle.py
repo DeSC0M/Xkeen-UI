@@ -81,6 +81,44 @@ def test_installed_tells_the_editor_variant_on_the_storage_from_the_chosen_one(t
     assert service.installed()["editor"]["installed_variant"] is None
 
 
+def test_installed_tells_what_the_editor_transition_waits_for(tmp_path):
+    panel = make_panel(tmp_path)
+    registry = ModuleRegistry(str(panel.state), which=lambda _name: "/bin/tool")
+    service, _ = make_service(panel, make_release(), registry=registry)
+    record = json.loads(panel.path("install-profile.json").read_text(encoding="utf-8"))
+    record["editor_variant"] = "light"
+    panel.path("install-profile.json").write_text(json.dumps(record), encoding="utf-8")
+
+    registry.set_editor_variant("advanced")
+    snapshot = service.installed()
+
+    # The same modules are wanted: only the editor files are missing.
+    assert snapshot["transition_required"] is True
+    assert snapshot["transition_target"]["editor_variant"] == "advanced"
+    assert sorted(snapshot["transition_target"]["module_ids"]) == sorted(snapshot["installed_module_ids"])
+
+
+def test_editor_active_variant_is_the_one_the_running_panel_loaded(tmp_path):
+    panel = make_panel(tmp_path)
+    registry = ModuleRegistry(str(panel.state), which=lambda _name: "/bin/tool")
+    service, _ = make_service(panel, make_release(), registry=registry)
+    registry.set_editor_variant("full")
+    registry.initialize_for_startup()
+    assert service.installed()["editor"]["active_variant"] == "full"
+
+    registry.set_editor_variant("advanced")
+    editor = service.installed()["editor"]
+    assert (editor["variant"], editor["active_variant"]) == ("advanced", "full")
+
+    # Taken back before the restart, there is nothing to wait for.
+    registry.set_editor_variant("full")
+    assert service.installed()["editor"]["active_variant"] == "full"
+
+    registry.set_editor_variant("advanced")
+    registry.initialize_for_startup()
+    assert service.installed()["editor"]["active_variant"] == "advanced"
+
+
 def test_installed_names_the_sets_by_their_modules_not_by_the_stored_label(tmp_path):
     panel = make_panel(tmp_path)
     registry = ModuleRegistry(str(panel.state), which=lambda _name: "/bin/tool")

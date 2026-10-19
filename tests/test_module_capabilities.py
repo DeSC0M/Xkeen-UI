@@ -39,6 +39,7 @@ def test_module_capabilities_preserve_legacy_payload_and_add_registry_projection
     modules = payload["modules"]
     assert payload["editor"] == {
         "variant": "full",
+        "active_variant": "full",
         "available_variants": ["light", "full", "advanced"],
         "capabilities": ["codemirror", "monaco", "diff"],
         "requires_restart": False,

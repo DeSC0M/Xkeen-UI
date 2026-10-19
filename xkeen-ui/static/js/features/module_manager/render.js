@@ -1,7 +1,7 @@
 import { iconHtml } from '../../ui/operator_icons.js';
 import {
   formatCheckedAt, lifecycleAvailable, moduleProblem, modulesChangeable, summaryChannel, summaryHeading,
-  summaryIssues, summaryLifecycleNote, summaryStats,
+  pendingTransition, summaryIssues, summaryLifecycleNote, summaryStats,
 } from '../panel_summary.js';
 
 function node(tag, className, text) {
@@ -35,6 +35,9 @@ const ACTION_LABELS = {
   'panel-update': 'Обновить панель', 'panel-rollback': 'Откатить панель',
   'profile-transition': 'Применить профиль',
 };
+
+// A transition that only fetches the files of another editor variant.
+const TRANSITION_EDITOR_LABEL = 'Докачать и перезапустить';
 
 const MODULE_ICONS = {
   core: 'settings',
@@ -335,12 +338,13 @@ function editorVariantsLocked(snapshot) {
 
 const EDITOR_VARIANTS_DISCLOSURE_KEY = 'xkeen.modules.editorVariantsOpen.v1';
 
+// Without storage the block opens as it does for everyone else.
 function editorVariantsOpen() {
   try {
     const saved = window.localStorage.getItem(EDITOR_VARIANTS_DISCLOSURE_KEY);
     return saved === null || saved === '1';
   } catch (error) {
-    return false;
+    return true;
   }
 }
 
@@ -350,15 +354,61 @@ function rememberEditorVariantsOpen(open) {
   } catch (error) {}
 }
 
-function editorVariantControl(snapshot, current, onEditorVariant, onPlan, busy) {
+function editorVariantLabel(id) {
+  return EDITOR_VARIANTS.find((variant) => variant.id === id)?.label || String(id || '');
+}
+
+// The plan of a transition that only fetches the files of another editor
+// variant: { from, to }, or null for any other plan.
+export function editorChangeOf(plan, snapshot) {
+  if (plan?.operation !== 'profile-transition') return null;
+  const transition = pendingTransition(snapshot);
+  if (transition?.kind !== 'editor' || plan.target_profile?.editor_variant !== transition.to) return null;
+  return { from: transition.from, to: transition.to };
+}
+
+// What the chosen variant is waiting for. Only the light variant lacks files
+// of the others; any other change is a setting the next restart brings in.
+function editorVariantState(snapshot, current) {
+  const installed = snapshot.editor?.installed_variant;
+  const active = snapshot.editor?.active_variant;
+  if (installed === 'light' && current.id !== 'light') {
+    if (editorVariantsLocked(snapshot)) {
+      return {
+        badge: 'не применён',
+        tone: 'muted',
+        text: `Сейчас работает «Лёгкий». «${current.label}» докачивает файлы, а на локальной сборке докачки нет — выбор вступит в силу на выпуске.`,
+      };
+    }
+    const kind = pendingTransition(snapshot)?.kind;
+    return {
+      badge: 'ждёт докачки',
+      text: kind === 'editor'
+        ? `Сейчас работает «Лёгкий». «${current.label}» включится после кнопки «${TRANSITION_EDITOR_LABEL}» вверху.`
+        : `Сейчас работает «Лёгкий». «${current.label}» включится, когда набор модулей будет применён.`,
+    };
+  }
+  if (active && active !== current.id) {
+    return {
+      badge: 'после перезапуска',
+      text: `«${current.label}» включится после перезапуска панели. Докачивать ничего не нужно.`,
+    };
+  }
+  return null;
+}
+
+function editorVariantControl(snapshot, current, onEditorVariant, busy) {
+  const state = editorVariantState(snapshot, current);
   const block = node('details', 'modules-variant-block');
   block.open = editorVariantsOpen();
   block.addEventListener('toggle', () => rememberEditorVariantsOpen(block.open));
   const summary = node('summary', 'modules-variant-summary');
   summary.append(
-    node('span', 'modules-variant-summary-label', 'Вариант редакторов'),
+    node('span', 'modules-variant-summary-label', 'Вариант'),
     node('strong', '', current.label),
   );
+  // A folded block still tells that the choice is not in force yet.
+  if (state) summary.append(node('span', 'modules-variant-badge', state.badge));
   block.append(summary);
   const content = node('div', 'modules-variant-content');
   const group = node('div', 'modules-variant');
@@ -376,27 +426,12 @@ function editorVariantControl(snapshot, current, onEditorVariant, onPlan, busy) 
     group.append(button);
   }
   content.append(group, node('p', 'modules-variant-hint', `${current.label}: ${current.hint}`));
-  const installedVariant = snapshot.editor?.installed_variant;
-  if (installedVariant && installedVariant !== current.id) {
-    const installed = EDITOR_VARIANTS.find((variant) => variant.id === installedVariant);
-    content.append(node(
-      'p',
-      'modules-variant-pending',
-      `Выбран вариант «${current.label}», но сейчас применён «${installed?.label || installedVariant}».`,
-    ));
-    if (snapshot.transition_required && typeof onPlan === 'function') {
-      const apply = actionButton(
-        'profile-transition',
-        null,
-        'Применить выбранный вариант редакторов',
-        onPlan,
-        busy,
-      );
-      apply.classList.replace('btn-secondary', 'btn-primary');
-      content.append(apply);
-    }
-  }
-  if (locked) {
+  // The tile only tells; the one action is in the summary above.
+  if (state) {
+    const line = node('p', 'modules-variant-pending', state.text);
+    if (state.tone) line.classList.add(`is-${state.tone}`);
+    content.append(line);
+  } else if (locked) {
     content.append(node('p', 'modules-variant-hint', 'Стандартный и расширенный варианты докачивают файлы. На локальной сборке докачка недоступна.'));
   }
   block.append(content);
@@ -525,7 +560,7 @@ function moduleTile(item, snapshot, names, { onToggle, onPlan, onEditorVariant, 
   const editorVariant = item.id === 'tool.editor' && item.enabled === true && typeof onEditorVariant === 'function'
     ? EDITOR_VARIANTS.find((variant) => variant.id === snapshot.editor?.variant)
     : null;
-  if (editorVariant) tile.append(editorVariantControl(snapshot, editorVariant, onEditorVariant, onPlan, busy));
+  if (editorVariant) tile.append(editorVariantControl(snapshot, editorVariant, onEditorVariant, busy));
   const refusal = refusals?.get(item.id);
   if (refusal) {
     tile.append(tileRefusal(item, refusal, onDismissRefusal));
@@ -611,9 +646,18 @@ function renderSummary(snapshot, {
 
   const ready = lifecycleAvailable(snapshot);
   const restartPending = snapshot.restart_required === true || canRestart;
+  // Until the set is on the storage the panel refuses a bare restart:
+  // the warning names what the one button does instead.
+  const transition = modulesChangeable(snapshot) ? pendingTransition(snapshot) : null;
   const controls = node('div', 'xk-summary-col is-controls');
   controls.append(summaryStats(snapshot, update, summaryIssues(snapshot, { restartRequired: restartPending })));
-  if (restartPending) controls.append(node('p', 'modules-warning', 'Требуется перезапуск'));
+  if (transition) {
+    controls.append(node('p', 'modules-warning', transition.kind === 'editor'
+      ? 'Нужно докачать файлы редакторов и перезапустить панель'
+      : 'Нужно применить набор модулей и перезапустить панель'));
+  } else if (restartPending) {
+    controls.append(node('p', 'modules-warning', 'Требуется перезапуск'));
+  }
   const note = summaryLifecycleNote(snapshot, describeLifecycleFailure);
   if (note) controls.append(note);
 
@@ -630,7 +674,12 @@ function renderSummary(snapshot, {
       buttons.push(actionButton('panel-update', null, ACTION_LABELS['panel-update'], onPlan, busy || !!update?.loading));
     }
     if (snapshot.previous_version?.available) buttons.push(actionButton('panel-rollback', null, ACTION_LABELS['panel-rollback'], onPlan, busy));
-    if (snapshot.transition_required) buttons.push(actionButton('profile-transition', null, ACTION_LABELS['profile-transition'], onPlan, busy));
+    if (transition) {
+      const label = transition.kind === 'editor' ? TRANSITION_EDITOR_LABEL : ACTION_LABELS['profile-transition'];
+      const button = actionButton('profile-transition', null, label, onPlan, busy);
+      button.classList.replace('btn-secondary', 'btn-primary');
+      buttons.push(button);
+    }
   }
   if (canRestart && typeof onRestart === 'function') {
     const restart = node('button', 'btn-primary modules-restart-panel', 'Перезапустить панель');
@@ -711,22 +760,26 @@ function operationVersion(source) {
   return source.target_version || source.version || '';
 }
 
-function dialogTitle(source, names) {
+// A transition that only fetches another editor variant is named after it:
+// editorChange is { from, to } then, null for any other operation.
+function dialogTitle(source, names, editorChange = null) {
   const version = operationVersion(source);
   const module = source.module_id ? `«${moduleLabel(source.module_id, names)}»` : '';
   switch (source.operation) {
     case 'panel-update': return version ? `Обновить панель до ${version}` : 'Обновить панель';
     case 'panel-rollback': return version ? `Откатить панель до ${version}` : 'Откатить панель';
-    case 'profile-transition': return 'Применить набор модулей';
+    case 'profile-transition': return editorChange ? 'Докачать файлы редакторов и перезапустить' : 'Применить набор модулей';
     default: return [APPLY_LABELS[source.operation] || 'Операция', module].filter(Boolean).join(' ');
   }
 }
 
-function doneTitle(status, names) {
+function doneTitle(status, names, editorChange = null) {
   const version = operationVersion(status);
   if (status.operation === 'panel-update') return version ? `Панель обновлена до ${version}` : 'Панель обновлена';
   if (status.operation === 'panel-rollback') return version ? `Панель откачена до ${version}` : 'Панель откачена';
-  if (status.operation === 'profile-transition') return 'Набор модулей применён';
+  if (status.operation === 'profile-transition') {
+    return editorChange ? `Редакторы переведены на «${editorVariantLabel(editorChange.to)}»` : 'Набор модулей применён';
+  }
   const verb = DONE_VERBS[status.operation];
   return verb && status.module_id ? `«${moduleLabel(status.module_id, names)}» ${verb}` : 'Операция завершена';
 }
@@ -747,7 +800,7 @@ function setDialogButtons(dialog, buttons) {
   }
 }
 
-function planFacts(plan, names, blockers) {
+function planFacts(plan, names, blockers, editorChange = null) {
   const facts = node('dl', 'modules-plan-facts');
   const fact = (label, value, className = '') => { facts.append(node('dt', '', label), node('dd', className, value)); };
   const version = operationVersion(plan);
@@ -756,6 +809,8 @@ function planFacts(plan, names, blockers) {
     if (version) fact('Версия', version, 'is-mono');
   } else if (plan.operation === 'panel-update' || plan.operation === 'panel-rollback') {
     if (version) fact('Версия', plan.source_version ? `${plan.source_version} → ${version}` : version, 'is-mono');
+  } else if (editorChange) {
+    fact('Что', `Редакторы: «${editorVariantLabel(editorChange.from)}» → «${editorVariantLabel(editorChange.to)}»`);
   } else {
     fact('Набор', planAction(plan, names));
   }
@@ -772,14 +827,14 @@ function planFacts(plan, names, blockers) {
   return facts;
 }
 
-export function renderPlan(dialog, plan, names = null) {
+export function renderPlan(dialog, plan, names = null, { editorChange = null } = {}) {
   const summary = dialog.querySelector('#modules-plan-summary');
   const progress = dialog.querySelector('#modules-plan-progress');
   const blockers = Array.isArray(plan.blockers) ? plan.blockers : [];
   const applicable = plan.applicable === true && Boolean(plan.plan_id);
   dialog.dataset.mode = 'plan';
-  setDialogHead(dialog, dialogTitle(plan, names), applicable ? KEEP_HINT : 'План проверен на роутере, но применить его сейчас нельзя.');
-  summary.replaceChildren(planFacts(plan, names, blockers));
+  setDialogHead(dialog, dialogTitle(plan, names, editorChange), applicable ? KEEP_HINT : 'План проверен на роутере, но применить его сейчас нельзя.');
+  summary.replaceChildren(planFacts(plan, names, blockers, editorChange));
   // A plan that cannot be applied restarts nothing: only its refusal is said.
   if (applicable && plan.restart_required) {
     summary.append(alertLine('modules-warning', 'Панель перезапустится.', 'Страница переподключится сама, это займёт около минуты.'));
@@ -791,7 +846,7 @@ export function renderPlan(dialog, plan, names = null) {
     abort: null,
     cancel: { label: applicable ? 'Отмена' : 'Закрыть' },
     recheck: applicable ? null : {},
-    apply: applicable ? { label: APPLY_LABELS[plan.operation] || 'Применить' } : null,
+    apply: applicable ? { label: editorChange ? TRANSITION_EDITOR_LABEL : APPLY_LABELS[plan.operation] || 'Применить' } : null,
   });
 }
 
@@ -857,7 +912,7 @@ function progressBox(status, notice) {
 
 // The operation goes on in the window it was planned in, and the window
 // tells how it ended when the panel comes back.
-export function renderOperationDialog(dialog, status, { notice = '', busy = false, names = null, cancelPending = false } = {}) {
+export function renderOperationDialog(dialog, status, { notice = '', busy = false, names = null, cancelPending = false, editorChange = null } = {}) {
   const summary = dialog.querySelector('#modules-plan-summary');
   const progress = dialog.querySelector('#modules-plan-progress');
   const running = status.result === 'running';
@@ -872,7 +927,7 @@ export function renderOperationDialog(dialog, status, { notice = '', busy = fals
       ? 'Прежние файлы вернуть не удалось. Повторите восстановление на странице модулей.'
       : 'Операция не выполнена.';
   }
-  setDialogHead(dialog, status.result === 'committed' ? doneTitle(status, names) : dialogTitle(status, names), description);
+  setDialogHead(dialog, status.result === 'committed' ? doneTitle(status, names, editorChange) : dialogTitle(status, names, editorChange), description);
   // What was planned stays on the screen: the facts are not drawn again.
   summary.querySelector('.modules-plan-error')?.remove();
   summary.querySelectorAll('.modules-alert, .modules-warning').forEach((line) => line.remove());
@@ -884,7 +939,7 @@ export function renderOperationDialog(dialog, status, { notice = '', busy = fals
     cancel: running ? { label: 'Свернуть' } : null,
     recheck: null,
     apply: running
-      ? { label: RUNNING_LABELS[status.operation] || 'Выполняется…', disabled: true }
+      ? { label: editorChange ? 'Докачка…' : RUNNING_LABELS[status.operation] || 'Выполняется…', disabled: true }
       : { label: status.result === 'committed' ? 'Готово' : 'Закрыть' },
   });
 }

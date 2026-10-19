@@ -1,4 +1,4 @@
-import { renderInstalled, renderAvailable, renderCatalogError, renderPlan, renderPlanError, renderOperationDialog, renderOperationStatus, hasOperationStatus, describeLifecycleFailure, renderPageAlert, TILE_REFUSAL_CODES } from './render.js';
+import { editorChangeOf, renderInstalled, renderAvailable, renderCatalogError, renderPlan, renderPlanError, renderOperationDialog, renderOperationStatus, hasOperationStatus, describeLifecycleFailure, renderPageAlert, TILE_REFUSAL_CODES } from './render.js';
 import { lifecycleAvailable } from '../panel_summary.js';
 import { clearModulesUpdateBadge, reconcileModulesUpdateBadge, reconcileModulesUpdateCheck, reconcileModulesUpdatePlan, reconcileModulesUpdateStatus } from './badge.js';
 
@@ -12,17 +12,30 @@ const RESTART_STEPS = ['applying', 'state', 'restarting', 'health', 'rolling_bac
 // The operation the window was showing when the panel restarted: after the
 // reload the window opens again and tells how it ended.
 const DIALOG_OPERATION_KEY = 'xkeen.modules.operationDialog.v1';
+// What the window was named after: a transition of the editor variant only.
+const DIALOG_EDITOR_CHANGE_KEY = 'xkeen.modules.operationDialogEditor.v1';
 
-function keepDialogOperation(operationId) {
-  try { window.sessionStorage.setItem(DIALOG_OPERATION_KEY, operationId); } catch (error) { /* no storage: the card on the page tells it */ }
+function keepDialogOperation(operationId, editorChange = null) {
+  try {
+    window.sessionStorage.setItem(DIALOG_OPERATION_KEY, operationId);
+    if (editorChange) window.sessionStorage.setItem(DIALOG_EDITOR_CHANGE_KEY, JSON.stringify(editorChange));
+    else window.sessionStorage.removeItem(DIALOG_EDITOR_CHANGE_KEY);
+  } catch (error) { /* no storage: the card on the page tells it */ }
 }
 
 function takeDialogOperation() {
   try {
     const operationId = window.sessionStorage.getItem(DIALOG_OPERATION_KEY);
+    const rawChange = window.sessionStorage.getItem(DIALOG_EDITOR_CHANGE_KEY);
     window.sessionStorage.removeItem(DIALOG_OPERATION_KEY);
-    return operationId;
-  } catch (error) { return null; }
+    window.sessionStorage.removeItem(DIALOG_EDITOR_CHANGE_KEY);
+    let editorChange = null;
+    try {
+      const parsed = rawChange ? JSON.parse(rawChange) : null;
+      if (parsed && typeof parsed.from === 'string' && typeof parsed.to === 'string') editorChange = { from: parsed.from, to: parsed.to };
+    } catch (error) { /* a broken record names the window in general words */ }
+    return { operationId, editorChange };
+  } catch (error) { return { operationId: null, editorChange: null }; }
 }
 
 function retryDelay(attempt) { return RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)]; }
@@ -66,6 +79,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
   // The window shows a plan, or the operation started from it.
   let dialogMode = null;
   let dialogOperationId = null;
+  let dialogEditorChange = null;
   let terminalRefreshed = null;
   let restartWait = null;
   let restartTimedOut = false;
@@ -260,7 +274,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     if (drawing === drawnStatus) return;
     drawnStatus = drawing;
     if (dialogMode === 'operation' && shown && shown.operation_id === dialogOperationId) {
-      renderOperationDialog(dialog, shown, { notice, busy: locked, names, cancelPending });
+      renderOperationDialog(dialog, shown, { notice, busy: locked, names, cancelPending, editorChange: dialogEditorChange });
     }
     const focused = statusHost.contains(document.activeElement) ? document.activeElement.textContent : null;
     if (shown) renderOperationStatus(statusHost, shown, {
@@ -286,6 +300,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     state.plan = null;
     dialogMode = null;
     dialogOperationId = null;
+    dialogEditorChange = null;
     drawnStatus = null;
     if (dialog?.open) dialog.close();
     if (restoreFocus && returnFocus?.isConnected) returnFocus.focus();
@@ -331,7 +346,8 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
       dialogMode = 'plan';
       clearError();
       reconcileModulesUpdatePlan(plan, state.installed?.update_channel);
-      renderPlan(dialog, plan, moduleNames());
+      dialogEditorChange = editorChangeOf(plan, state.installed);
+      renderPlan(dialog, plan, moduleNames(), { editorChange: dialogEditorChange });
       if (!dialog.open) dialog.showModal();
       dialog.querySelector('#modules-plan-title').focus();
     } catch (error) {
@@ -418,7 +434,7 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
       if (active && watched && watched === state.status.operation_id && panelRestartedBy(state.status)) {
         // The operation this page was watching restarted the panel: other
         // modules are active now and, after an update, other scripts.
-        if (dialogMode === 'operation' && dialogOperationId === watched) keepDialogOperation(watched);
+        if (dialogMode === 'operation' && dialogOperationId === watched) keepDialogOperation(watched, dialogEditorChange);
         reload();
         return;
       }
@@ -740,8 +756,9 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
         installedFresh = true;
         reconcileModulesUpdateBadge(state.installed);
       } else showError(installedResult.reason);
-      const reopened = takeDialogOperation();
+      const { operationId: reopened, editorChange: reopenedChange } = takeDialogOperation();
       if (active && statusFresh && reopened && reopened === state.status?.operation_id && hasOperationStatus(state.status)) {
+        dialogEditorChange = reopenedChange;
         openOperationDialog(reopened);
       }
       if (active) {

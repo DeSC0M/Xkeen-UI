@@ -55,6 +55,7 @@ def test_missing_state_migrates_to_legacy_full_and_exposes_full_registry(tmp_pat
     assert all(item["status"] == "enabled" for item in payload["modules"])
     assert payload["editor"] == {
         "variant": "full",
+        "active_variant": "full",
         "available_variants": ["light", "full", "advanced"],
         "capabilities": ["codemirror", "monaco", "diff"],
         "requires_restart": False,

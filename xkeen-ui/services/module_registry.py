@@ -1302,8 +1302,13 @@ class ModuleRegistry:
     @staticmethod
     def _editor_descriptor(state: Mapping[str, Any]) -> dict[str, Any]:
         variant = _normalize_editor_variant(state.get("editor"), state.get("profile"))
+        # The running panel loaded the variant it had before the switches
+        # that wait for a restart; the baseline keeps exactly that.
+        baseline = state.get(MODULE_SWITCH_BASELINE_KEY)
+        active = baseline.get("editor_variant") if isinstance(baseline, Mapping) else None
         return {
             "variant": variant,
+            "active_variant": active if active in EDITOR_VARIANTS else variant,
             "available_variants": list(EDITOR_VARIANTS),
             "capabilities": list(EDITOR_CAPABILITIES[variant]),
             "requires_restart": bool(state.get("restart_required")),

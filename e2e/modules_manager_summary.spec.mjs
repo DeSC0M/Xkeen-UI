@@ -246,10 +246,11 @@ test.describe('Enabled modules counter', () => {
 
 test.describe('Editor variant choice', () => {
   // Mihomo is on, so the editors cannot be switched off.
+  // Unless told otherwise, the running panel has loaded the chosen variant.
   const withEditor = (editor, extra = {}) => ({
     ...withMihomo(true),
     restart_required: false,
-    editor: { ...withMihomo(true).editor, installed_variant: 'full', ...editor },
+    editor: { ...withMihomo(true).editor, installed_variant: 'full', active_variant: editor.variant, ...editor },
     ...extra,
   });
 
@@ -339,16 +340,158 @@ test.describe('Editor variant choice', () => {
     await expect(disclosure.locator('.modules-variant-summary strong')).toHaveText('Расширенный');
   });
 
-  test('shows a physical editor transition when advanced is selected but light files are installed', async ({ page }) => {
-    await installLifecycleRoutes(page, {
-      status: { ok: true, result: null },
-      installed: withEditor({ variant: 'advanced', installed_variant: 'light' }, { transition_required: true }),
+  // What the server answers once «Расширенный» is chosen over a light install:
+  // the same modules are wanted, only the editor files are missing.
+  const lightToAdvanced = (extra = {}) => withEditor(
+    { variant: 'advanced', installed_variant: 'light', active_variant: 'light' },
+    {
+      restart_required: true,
+      transition_required: true,
+      transition_target: { profile: 'custom', module_ids: [...withMihomo(true).installed_module_ids], editor_variant: 'advanced' },
+      ...extra,
+    },
+  );
+
+  test('a variant that needs files is applied from the summary, the tile only tells', async ({ page }) => {
+    await installLifecycleRoutes(page, { status: { ok: true, result: null }, installed: lightToAdvanced() });
+    await page.goto('/modules');
+    const row = page.locator('.modules-tile[data-module-id="tool.editor"]');
+    const summary = page.locator('.modules-summary');
+
+    await expect(row.locator('.modules-variant-pending')).toHaveText(
+      'Сейчас работает «Лёгкий». «Расширенный» включится после кнопки «Докачать и перезапустить» вверху.',
+    );
+    await expect(row.locator('.modules-variant-badge')).toHaveText('ждёт докачки');
+    await expect(row.getByRole('button', { name: /Применить|Докачать/ })).toHaveCount(0);
+    await expect(summary).toContainText('Нужно докачать файлы редакторов и перезапустить панель');
+    await expect(summary).not.toContainText('Требуется перезапуск');
+    const apply = summary.getByRole('button', { name: 'Докачать и перезапустить' });
+    await expect(apply).toBeVisible();
+    await expect(apply).toHaveClass(/btn-primary/);
+    await expect(summary.getByRole('button', { name: 'Применить профиль' })).toHaveCount(0);
+
+    // Folded, the block still says that the choice is not in force.
+    await row.locator('.modules-variant-summary').click();
+    await expect(row.locator('.modules-variant-block')).not.toHaveAttribute('open', '');
+    await expect(row.locator('.modules-variant-summary')).toContainText('Расширенный');
+    await expect(row.locator('.modules-variant-badge')).toBeVisible();
+  });
+
+  test('a pending set of modules keeps its general words', async ({ page }) => {
+    const installed = lightToAdvanced({
+      transition_target: { profile: 'full', module_ids: [...withMihomo(true).installed_module_ids, 'tool.terminal'], editor_variant: 'advanced' },
     });
+    await installLifecycleRoutes(page, { status: { ok: true, result: null }, installed });
+    await page.goto('/modules');
+    const summary = page.locator('.modules-summary');
+
+    await expect(summary).toContainText('Нужно применить набор модулей и перезапустить панель');
+    await expect(summary.getByRole('button', { name: 'Применить профиль' })).toBeVisible();
+    await expect(page.locator('.modules-tile[data-module-id="tool.editor"] .modules-variant-pending'))
+      .toHaveText('Сейчас работает «Лёгкий». «Расширенный» включится, когда набор модулей будет применён.');
+  });
+
+  test('a local build says the choice waits for a release and offers no transition', async ({ page }) => {
+    const installed = lightToAdvanced({
+      panel_version: '2.10.0-beta.3+local.abc',
+      lifecycle: { available: true, code: null, local: true },
+    });
+    await installLifecycleRoutes(page, { status: { ok: true, result: null }, installed });
     await page.goto('/modules');
     const row = page.locator('.modules-tile[data-module-id="tool.editor"]');
 
-    await expect(row).toContainText('Выбран вариант «Расширенный», но сейчас применён «Лёгкий».');
-    await expect(row.getByRole('button', { name: 'Применить выбранный вариант редакторов' })).toBeVisible();
+    await expect(row.locator('.modules-variant-pending.is-muted')).toHaveText(
+      'Сейчас работает «Лёгкий». «Расширенный» докачивает файлы, а на локальной сборке докачки нет — выбор вступит в силу на выпуске.',
+    );
+    await expect(row.locator('.modules-variant-badge')).toHaveText('не применён');
+    await expect(row).not.toContainText('На локальной сборке докачка недоступна.');
+    await expect(page.locator('[data-operation="profile-transition"]')).toHaveCount(0);
+  });
+
+  test('standard to advanced waits only for a restart and is clean after it', async ({ page }) => {
+    let installed = withEditor({ variant: 'advanced', installed_variant: 'full', active_variant: 'full' }, { restart_required: true });
+    await page.route('**/api/modules/installed', (route) => route.fulfill({ json: installed }));
+    await page.route('**/api/modules/operations/status', (route) => route.fulfill({ json: { ok: true, result: null } }));
+    await page.route('**/api/modules/available', (route) => route.fulfill({ json: server.available }));
+    await page.goto('/modules');
+    const row = page.locator('.modules-tile[data-module-id="tool.editor"]');
+
+    await expect(row.locator('.modules-variant-pending'))
+      .toHaveText('«Расширенный» включится после перезапуска панели. Докачивать ничего не нужно.');
+    await expect(row.locator('.modules-variant-badge')).toHaveText('после перезапуска');
+    await expect(page.locator('.modules-summary')).toContainText('Требуется перезапуск');
+    await expect(page.locator('.modules-summary').getByRole('button', { name: 'Перезапустить панель' })).toBeVisible();
+
+    // After the restart the panel runs the chosen variant; the installer
+    // record still names the standard one, and that is no difference.
+    installed = withEditor({ variant: 'advanced', installed_variant: 'full', active_variant: 'advanced' });
+    await page.reload();
+    await expect(row.locator('.modules-variant-block')).toBeAttached();
+    await expect(row.locator('.modules-variant-pending')).toHaveCount(0);
+    await expect(row.locator('.modules-variant-badge')).toHaveCount(0);
+  });
+
+  test('without browser storage the variants start open', async ({ page }) => {
+    await page.addInitScript(() => {
+      const proto = Object.getPrototypeOf(window.localStorage);
+      const original = proto.getItem;
+      proto.getItem = function getItem(key) {
+        if (String(key).startsWith('xkeen.modules.editorVariantsOpen')) throw new Error('blocked');
+        return original.call(this, key);
+      };
+    });
+    await installLifecycleRoutes(page, { status: { ok: true, result: null }, installed: withEditor({ variant: 'full' }) });
+    await page.goto('/modules');
+    await expect(page.locator('.modules-tile[data-module-id="tool.editor"] .modules-variant-block')).toHaveAttribute('open', '');
+  });
+
+  test('the editor files are fetched in the operation window named after them', async ({ page }) => {
+    const plan = {
+      ...server.panel_update_plan,
+      scope: 'profile', operation: 'profile-transition', version: '2.10.0', source_version: '2.10.0', target_version: '2.10.0',
+      target_profile: lightToAdvanced().transition_target,
+      files_add: ['static/monaco-editor/vs/loader.js', 'static/js/vendor/prettier-standalone.js'],
+      files_remove: [], required_free_bytes: 9_400_000, restart_required: true, blockers: [], applicable: true, plan_id: 'f'.repeat(64),
+    };
+    const step = (name) => ({ ...server.install_steps[name], scope: 'profile', operation: 'profile-transition', module_id: null });
+    let status = { ok: true, result: null };
+    const after = withEditor({ variant: 'advanced', installed_variant: 'advanced', active_variant: 'advanced' });
+    await page.route('**/api/modules/installed', (route) => route.fulfill({ json: status.result === 'committed' ? after : lightToAdvanced() }));
+    await page.route('**/api/modules/operations/status', (route) => route.fulfill({ json: status }));
+    await page.route('**/api/modules/available', (route) => route.fulfill({ json: server.available }));
+    await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: plan }));
+    await page.route('**/api/modules/operations/apply', (route) => {
+      status = step('prepared');
+      return route.fulfill({ status: 202, json: { ok: true, operation_id: status.operation_id, status } });
+    });
+    await page.goto('/modules');
+    await page.evaluate(() => { window.xkBeforeTransition = true; });
+
+    await page.locator('.modules-summary').getByRole('button', { name: 'Докачать и перезапустить' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Докачать файлы редакторов и перезапустить' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.locator('.modules-plan-facts')).toContainText('Редакторы: «Лёгкий» → «Расширенный»');
+    await dialog.getByRole('button', { name: 'Докачать и перезапустить' }).click();
+    await expect(dialog.locator('.modules-plan-progress-head strong')).toHaveText('Подготовка');
+    await expect(dialog.getByRole('button', { name: 'Докачка…' })).toBeDisabled();
+
+    // The runner restarts the panel; after the reload the window tells the end in the same words.
+    status = { ...server.install_committed, scope: 'profile', operation: 'profile-transition', module_id: null };
+    await expect.poll(() => page.evaluate(() => window.xkBeforeTransition === true).catch(() => true), { timeout: 15000 }).toBe(false);
+    const done = page.getByRole('dialog', { name: 'Редакторы переведены на «Расширенный»' });
+    await expect(done).toBeVisible();
+    await expect(done.locator('.modules-plan-progress-head output')).toHaveText('7 из 7');
+    await done.getByRole('button', { name: 'Готово' }).click();
+    await expect(page.locator('.modules-tile[data-module-id="tool.editor"] .modules-variant-pending')).toHaveCount(0);
+  });
+
+  test('DevTools names the missing editor files instead of a restart', async ({ page }) => {
+    await installLifecycleRoutes(page, { status: { ok: true, result: null }, installed: lightToAdvanced() });
+    await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({ json: server.update_check_current }));
+    await page.goto('/devtools');
+    const card = page.locator('#dt-update-card');
+    await expect(card).toContainText('Нужно докачать файлы редакторов — откройте «Модули и обновления»');
+    await expect(card).not.toContainText('Нужен перезапуск');
   });
 });
 

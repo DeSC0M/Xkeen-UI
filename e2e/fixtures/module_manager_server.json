@@ -17,6 +17,7 @@
     "profile": "custom",
     "editor": {
       "variant": "light",
+      "active_variant": "light",
       "available_variants": [
         "light",
         "full",
@@ -31,6 +32,7 @@
     },
     "restart_required": false,
     "transition_required": false,
+    "transition_target": null,
     "installed_module_ids": [
       "core",
       "engine.mihomo",
@@ -904,6 +906,7 @@
     "profile": "custom",
     "editor": {
       "variant": "light",
+      "active_variant": "light",
       "available_variants": [
         "light",
         "full",
@@ -918,6 +921,7 @@
     },
     "restart_required": false,
     "transition_required": false,
+    "transition_target": null,
     "installed_module_ids": [
       "core",
       "engine.mihomo",
@@ -1657,6 +1661,7 @@
     "profile": "custom",
     "editor": {
       "variant": "light",
+      "active_variant": "light",
       "available_variants": [
         "light",
         "full",
@@ -1671,6 +1676,7 @@
     },
     "restart_required": true,
     "transition_required": false,
+    "transition_target": null,
     "installed_module_ids": [
       "core",
       "engine.mihomo",

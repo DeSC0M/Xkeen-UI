@@ -817,7 +817,7 @@ class ModuleLifecycleService:
             "profile": registry.get("profile"),
             "editor": self._editor_with_installed_variant(registry.get("editor")),
             "restart_required": bool(registry.get("restart_required")),
-            "transition_required": self.profile_transition_status()["transition_required"],
+            **self.profile_transition_status(),
             "installed_module_ids": ordered_ids,
             # The stored label turns "custom" at the first switch and never
             # comes back: the window names the sets by what is in them.

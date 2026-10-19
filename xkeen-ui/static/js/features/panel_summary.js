@@ -39,6 +39,20 @@ export function moduleProblem(item, names) {
   return null;
 }
 
+// Чего ждёт перенос набора на диск: только файлов редакторов или набора модулей.
+// Пока он не сделан, панель не перезапустится — сначала докачка.
+export function pendingTransition(snapshot) {
+  if (snapshot?.transition_required !== true) return null;
+  const target = snapshot.transition_target && typeof snapshot.transition_target === 'object' ? snapshot.transition_target : {};
+  const wanted = Array.isArray(target.module_ids) ? target.module_ids.map(String) : null;
+  const installed = new Set(Array.isArray(snapshot.installed_module_ids) ? snapshot.installed_module_ids.map(String) : []);
+  const from = snapshot.editor?.installed_variant;
+  const to = target.editor_variant;
+  const sameModules = wanted !== null && wanted.length === installed.size && wanted.every((id) => installed.has(id));
+  if (sameModules && from && to && from !== to) return { kind: 'editor', from, to };
+  return { kind: 'modules' };
+}
+
 // Всё, что требует внимания: модули с бедой и перезапуск, которого ждёт панель.
 export function summaryIssues(snapshot, { restartRequired = false } = {}) {
   const modules = Array.isArray(snapshot?.modules) ? snapshot.modules : [];
@@ -48,7 +62,17 @@ export function summaryIssues(snapshot, { restartRequired = false } = {}) {
     const problem = moduleProblem(item, names);
     if (problem) issues.push({ ...problem, moduleId: item.id, name: item.name || item.id });
   }
-  if (restartRequired || snapshot?.restart_required === true) {
+  const transition = modulesChangeable(snapshot) ? pendingTransition(snapshot) : null;
+  if (transition) {
+    issues.push({
+      tone: 'warn',
+      moduleId: '',
+      name: 'Панель',
+      text: transition.kind === 'editor'
+        ? 'Нужно докачать файлы редакторов — откройте «Модули и обновления»'
+        : 'Нужно применить набор модулей — откройте «Модули и обновления»',
+    });
+  } else if (restartRequired || snapshot?.restart_required === true) {
     issues.push({ tone: 'warn', moduleId: '', name: 'Панель', text: 'Нужен перезапуск, чтобы изменения вступили в силу' });
   }
   return issues;
