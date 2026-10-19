@@ -39,7 +39,7 @@
       ],
       "removable": false,
       "unit_count": 580,
-      "size_bytes": 7786291,
+      "size_bytes": 7791347,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -7854,7 +7854,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_stage8_8_router_smoke.py",
-      "size_bytes": 2618,
+      "size_bytes": 7674,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -7867,7 +7867,9 @@
         "gevent (optional)",
         "gevent-websocket (optional)"
       ],
-      "environment_variables": [],
+      "environment_variables": [
+        "XKEEN_STAGE88_PANEL_PASSWORD"
+      ],
       "removable": false
     },
     {

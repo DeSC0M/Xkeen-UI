@@ -31,7 +31,14 @@
 Отдельный безопасный collector для стендового preflight:
 `scripts/stage8_8_router_smoke.py`. Он выполняет только GET к panel API и
 фиксированную read-only SSH-команду; lifecycle apply/profile/restart/fault
-injection в нём отсутствуют намеренно.
+injection в нём отсутствуют намеренно. Два GET всё же могут записать на
+роутере: `/api/modules/available` скачивает и кэширует подписанный каталог,
+`/api/notifications` переписывает файл уведомлений при нормализации; отчёт
+перечисляет это в `safety.panel_side_effects`. Неверный пароль останавливает
+сбор после первой попытки (`login_error`, причина в `blockers`), чтобы не
+приближать блокировку входа. Пароли берутся только из
+`XKEEN_STAGE88_PANEL_PASSWORD` / `XKEEN_STAGE88_SSH_PASSWORD` или из запроса в
+терминале — не из командной строки.
 
 ## Актуализация после аудита 8.7
 

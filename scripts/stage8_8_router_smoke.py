@@ -6,13 +6,20 @@ restarts, or fault injection.  It captures the evidence needed to decide
 whether a router is a *separate safe stand* before someone runs the destructive
 part of the Stage 8.8 matrix by hand.
 
-Credentials are accepted only from command-line options or environment
-variables and are never written to the JSON report.
+After the login form it sends GET requests only.  Two of them may still touch
+the router's files: ``/api/modules/available`` may fetch and cache the signed
+catalog, and ``/api/notifications`` may rewrite its state file when it
+normalizes it.  The report lists both under ``panel_side_effects``.
+
+Passwords are read from environment variables or asked for at the terminal,
+never taken from the command line (where the process list would show them),
+and are never written to the JSON report.
 """
 
 from __future__ import annotations
 
 import argparse
+import getpass
 import http.cookiejar
 import json
 import os
@@ -37,6 +44,10 @@ HTTP_ENDPOINTS = (
     "/api/modules/update-channel",
     "/api/modules/available",
     "/api/notifications",
+)
+PANEL_SIDE_EFFECTS = (
+    "GET /api/modules/available может скачать и сохранить подписанный каталог",
+    "GET /api/notifications может переписать файл уведомлений при нормализации",
 )
 SSH_READ_ONLY_COMMAND = r"""
 printf '%s\n' '--- uname ---'
@@ -89,11 +100,41 @@ def _csrf_token(html: str) -> str:
     return match.group(1)
 
 
-def collect_http(base_url: str, username: str, password: str, *, timeout_s: float) -> dict[str, Any]:
+def _fetch(opener: Any, base_url: str, path: str, *, timeout_s: float) -> dict[str, Any]:
+    try:
+        with opener.open(base_url.rstrip("/") + path, timeout=timeout_s) as response:
+            return {"status": int(response.status), "body": _json_response(response)}
+    except urllib.error.HTTPError as error:
+        return {"status": int(error.code), "body": _json_response(error)}
+    except Exception as error:  # noqa: BLE001 - a smoke report records partial reachability
+        return {"status": None, "error": _safe_error(error)}
+
+
+def _session_accepted(landed_path: str, first: Mapping[str, Any]) -> bool:
+    # A refused login answers 200 with the login page again (or the lockout
+    # page): only a session that reads the API as JSON is a login.
+    body = first.get("body")
+    return (
+        not landed_path.rstrip("/").endswith("/login")
+        and first.get("status") == 200
+        and isinstance(body, Mapping)
+        and "raw" not in body
+    )
+
+
+def collect_http(
+    base_url: str,
+    username: str,
+    password: str,
+    *,
+    timeout_s: float,
+    opener: Any = None,
+) -> dict[str, Any]:
     """Authenticate to the panel and issue only GET requests after login."""
 
-    cookie_jar = http.cookiejar.CookieJar()
-    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie_jar))
+    if opener is None:
+        cookie_jar = http.cookiejar.CookieJar()
+        opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie_jar))
     login_url = base_url.rstrip("/") + "/login"
     report: dict[str, Any] = {"base_url": _redacted_url(base_url), "endpoints": {}}
     try:
@@ -111,20 +152,16 @@ def collect_http(base_url: str, username: str, password: str, *, timeout_s: floa
         )
         with opener.open(request, timeout=timeout_s) as response:
             report["login_status"] = int(response.status)
-        for path in HTTP_ENDPOINTS:
-            try:
-                with opener.open(base_url.rstrip("/") + path, timeout=timeout_s) as response:
-                    report["endpoints"][path] = {
-                        "status": int(response.status),
-                        "body": _json_response(response),
-                    }
-            except urllib.error.HTTPError as error:
-                report["endpoints"][path] = {
-                    "status": int(error.code),
-                    "body": _json_response(error),
-                }
-            except Exception as error:  # noqa: BLE001 - a smoke report records partial reachability
-                report["endpoints"][path] = {"status": None, "error": _safe_error(error)}
+            landed_path = urlsplit(response.geturl()).path
+        first, *rest = HTTP_ENDPOINTS
+        report["endpoints"][first] = _fetch(opener, base_url, first, timeout_s=timeout_s)
+        if not _session_accepted(landed_path, report["endpoints"][first]):
+            # One refused attempt per run: asking again would only bring the
+            # login lockout closer.
+            report["login_error"] = "login_failed: the panel did not accept the credentials"
+            return report
+        for path in rest:
+            report["endpoints"][path] = _fetch(opener, base_url, path, timeout_s=timeout_s)
     except Exception as error:  # noqa: BLE001 - a smoke report must remain writable offline
         report["login_error"] = _safe_error(error)
     return report
@@ -179,6 +216,8 @@ def evaluate_safety(http: Mapping[str, Any], ssh: Mapping[str, Any] | None) -> d
     profile = str(installed.get("profile") or "")
     active_modules = set(installed.get("installed_module_ids") or ())
     reasons: list[str] = []
+    if http.get("login_error"):
+        reasons.append("вход в панель не удался: данных панели в отчёте нет, проверьте логин и пароль")
     if lifecycle.get("local") is True:
         reasons.append("локальная сборка: signed lifecycle операции намеренно read-only")
     if profile == "mihomo-minimal":
@@ -196,6 +235,7 @@ def evaluate_safety(http: Mapping[str, Any], ssh: Mapping[str, Any] | None) -> d
         "restart_performed": False,
         "fault_injection_performed": False,
         "destructive_smoke_allowed": False,
+        "panel_side_effects": list(PANEL_SIDE_EFFECTS),
         "blockers": reasons,
     }
 
@@ -231,28 +271,44 @@ def build_report(http: Mapping[str, Any], ssh: Mapping[str, Any] | None) -> dict
     }
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
+def build_parser() -> argparse.ArgumentParser:
+    # No password options: a command line is visible in the process list.
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--http-url", required=True, help="Panel base URL, e.g. http://router:8088")
     parser.add_argument("--panel-user", default="", help="or XKEEN_STAGE88_PANEL_USER")
-    parser.add_argument("--panel-password", default="", help="or XKEEN_STAGE88_PANEL_PASSWORD")
-    parser.add_argument("--ssh-host", default="", help="optional router SSH host")
+    parser.add_argument("--ssh-host", default="", help="optional router SSH host, or XKEEN_STAGE88_SSH_HOST")
     parser.add_argument("--ssh-port", type=int, default=222)
-    parser.add_argument("--ssh-password", default="", help="or XKEEN_STAGE88_SSH_PASSWORD")
     parser.add_argument("--timeout", type=float, default=15.0)
     parser.add_argument("--output", type=Path, required=True)
-    return parser.parse_args()
+    parser.epilog = (
+        "Passwords: XKEEN_STAGE88_PANEL_PASSWORD and XKEEN_STAGE88_SSH_PASSWORD, "
+        "or typed at the prompt when the variable is empty."
+    )
+    return parser
+
+
+def parse_args() -> argparse.Namespace:
+    return build_parser().parse_args()
+
+
+def _secret(environment: str, prompt: str) -> str:
+    value = os.environ.get(environment) or ""
+    # On Windows NUL passes for a terminal: the prompt is shown on stderr,
+    # so only a person at a terminal on both ends is asked.
+    if not value and sys.stdin.isatty() and sys.stderr.isatty():
+        value = getpass.getpass(prompt)
+    return value
 
 
 def main() -> int:
     args = parse_args()
     panel_user = _option(args.panel_user, "XKEEN_STAGE88_PANEL_USER")
-    panel_password = _option(args.panel_password, "XKEEN_STAGE88_PANEL_PASSWORD")
+    panel_password = _secret("XKEEN_STAGE88_PANEL_PASSWORD", "Пароль панели: ") if panel_user else ""
     if not panel_user or not panel_password:
-        raise SystemExit("panel credentials are required via options or XKEEN_STAGE88_PANEL_*")
+        raise SystemExit("panel credentials are required: --panel-user and XKEEN_STAGE88_PANEL_PASSWORD (or the prompt)")
     http = collect_http(args.http_url, panel_user, panel_password, timeout_s=max(1.0, args.timeout))
     ssh_host = _option(args.ssh_host, "XKEEN_STAGE88_SSH_HOST")
-    ssh_password = _option(args.ssh_password, "XKEEN_STAGE88_SSH_PASSWORD")
+    ssh_password = _secret("XKEEN_STAGE88_SSH_PASSWORD", "Пароль SSH root: ") if ssh_host else ""
     ssh = collect_ssh(ssh_host, args.ssh_port, ssh_password, timeout_s=max(1.0, args.timeout)) if ssh_host and ssh_password else None
     report = build_report(http, ssh)
     args.output.parent.mkdir(parents=True, exist_ok=True)
