@@ -29,6 +29,9 @@ MAX_BACKOFF_S = 7 * BACKGROUND_INTERVAL_S
 MAX_STATE_RECORDS = 160
 STATE_RETENTION_S = 90 * 24 * 60 * 60
 SNOOZE_INTERVALS = frozenset({24 * 60 * 60, 7 * 24 * 60 * 60})
+# Records computed from the catalog describe a step away from one installed
+# version; once the panel runs another version they no longer apply.
+_RELEASE_KINDS = frozenset({"panel-update", "module-new", "module-update"})
 _IDENTITY_HEX = frozenset("0123456789abcdef")
 
 _ERROR_MESSAGES = {
@@ -96,8 +99,10 @@ class NotificationCenter:
         state_dir: Path,
         now: Callable[[], float] = time.time,
         background_interval_s: float = BACKGROUND_INTERVAL_S,
+        panel_version: Callable[[], str | None] | None = None,
     ) -> None:
         self.lifecycle_service = lifecycle_service
+        self._panel_version = panel_version or self._installed_panel_version
         self.state_dir = Path(state_dir)
         self._path = self.state_dir / STATE_FILENAME
         self._now = now
@@ -106,6 +111,31 @@ class NotificationCenter:
         self._poll_lock = threading.Lock()
         self._wake = threading.Event()
         self._thread: threading.Thread | None = None
+
+    def _installed_panel_version(self) -> str | None:
+        panel_root = getattr(self.lifecycle_service, "panel_root", None)
+        if panel_root is None:
+            return None
+        from services.module_transactions.plan import read_panel_version
+
+        return read_panel_version(Path(panel_root))
+
+    def _current_panel_version(self) -> str | None:
+        try:
+            version = self._panel_version()
+        except Exception:
+            return None
+        return version if isinstance(version, str) and version else None
+
+    @staticmethod
+    def _outdated(record: Mapping[str, Any], panel_version: str | None) -> bool:
+        source_version = record.get("source_version")
+        return (
+            panel_version is not None
+            and record.get("kind") in _RELEASE_KINDS
+            and isinstance(source_version, str)
+            and source_version != panel_version
+        )
 
     @staticmethod
     def _empty_state() -> dict[str, Any]:
@@ -272,6 +302,11 @@ class NotificationCenter:
         from services.module_package_contract import compare_semver
         from services.module_registry import MODULE_DEFINITIONS
 
+        # Without the installed release catalog nothing tells a new module
+        # from one the panel always had: keep only the panel note.
+        if payload.get("baseline_error"):
+            return records
+
         known = {definition.id: definition for definition in MODULE_DEFINITIONS}
         installed = set(_safe_module_list(payload.get("installed_module_ids")))
         previous = {
@@ -295,6 +330,8 @@ class NotificationCenter:
                     version_changed = compare_semver(version, str(baseline["version"])) > 0
                 except Exception:
                     version_changed = version != str(baseline.get("version"))
+            if is_new and module_id in installed:
+                continue
             if is_new:
                 kind = "module-new"
             elif module_id in installed and (version_changed or _has_dependency_changes(changes)):
@@ -357,11 +394,14 @@ class NotificationCenter:
         visible: list[dict[str, Any]] = []
         unread = 0
         active_ids: set[str] = set()
+        panel_version = self._current_panel_version()
         for raw in self._sort_records(list(channel_state["records"])):
             record_id = raw.get("id")
             if not self._valid_record_id(record_id):
                 continue
             active_ids.add(record_id)
+            if self._outdated(raw, panel_version):
+                continue
             persisted = state["records"].get(record_id, self._normalize_record_state(None))
             if persisted.get("dismissed_at") is not None:
                 continue
@@ -455,7 +495,14 @@ class NotificationCenter:
                 channel = read_channel(self.state_dir)
                 now = float(self._now())
                 due_at = state["channels"][channel].get("next_poll_at")
-                if background and isinstance(due_at, (int, float)) and due_at > now:
+                panel_version = self._current_panel_version()
+                # An updated panel must not wait for the daily gate: its
+                # records still describe the update that is now installed.
+                outdated = any(
+                    isinstance(record, Mapping) and self._outdated(record, panel_version)
+                    for record in state["channels"][channel]["records"]
+                )
+                if background and isinstance(due_at, (int, float)) and due_at > now and not outdated:
                     result = self._public_snapshot_locked(state, channel, now)
                     if migrated:
                         self._write_state_locked(state)
@@ -492,14 +539,19 @@ class NotificationCenter:
                 with self._lock:
                     state, _ = self._read_state_locked()
                     channel_state = state["channels"][channel]
+                    panel_version = self._current_panel_version()
+                    # Records of a previous panel version are dropped, so a
+                    # failed probe after an update backs off like any other.
                     retained = [
                         dict(record)
                         for record in channel_state.get("records", [])
-                        if isinstance(record, Mapping) and str(record.get("kind")) not in {
+                        if isinstance(record, Mapping)
+                        and str(record.get("kind")) not in {
                             "catalog-error",
                             "catalog-stale",
                             "catalog-baseline",
                         }
+                        and not self._outdated(record, panel_version)
                     ]
                     retained.append(self._error_record(channel, code))
                     return self._finish_poll_locked(
