@@ -89,6 +89,13 @@ if "engine.mihomo" in _ACTIVE_MODULES:
         handle_mihomo_clash_telemetry_request,
     )
     from services.mihomo_runtime import CONFIG_PATH as MIHOMO_CONFIG_FILE, MIHOMO_ROOT
+
+try:
+    _LOG_TIMEZONE_OFFSET_HOURS = int(
+        app.extensions.get("xkeen.log_timezone_offset_hours", 3)
+    )
+except (TypeError, ValueError):
+    _LOG_TIMEZONE_OFFSET_HOURS = 3
 from services.ws_wsgi import (
     redact_ws_query_string,
     handle_xray_logs_request,
@@ -219,6 +226,7 @@ def application(environ, start_response):
             ws_debug=ws_debug,
             mihomo_config_file=str(MIHOMO_CONFIG_FILE),
             mihomo_root=str(MIHOMO_ROOT),
+            log_tz_offset_hours=_LOG_TIMEZONE_OFFSET_HOURS,
         )
 
     return app(environ, start_response)

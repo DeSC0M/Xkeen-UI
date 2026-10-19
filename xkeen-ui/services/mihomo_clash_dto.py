@@ -7,6 +7,7 @@ optional fields across Mihomo versions.
 
 from __future__ import annotations
 
+import datetime
 import re
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -79,6 +80,31 @@ def _text(value: Any, limit: int = 512) -> str:
         return ""
     text = str(value).replace("\x00", "").strip()
     return text[: max(0, int(limit))]
+
+
+def _adjust_log_timestamp(value: str, offset_hours: int) -> str:
+    """Render a Mihomo RFC3339 timestamp in the panel's configured timezone.
+
+    Mihomo's structured log API emits timestamps in UTC (usually with a
+    trailing ``Z``).  The legacy Xray log pipeline already applies
+    ``XKEEN_XRAY_LOG_TZ_OFFSET``; the Clash/Mihomo pipeline must apply the
+    same setting before the DTO reaches the browser.
+    """
+
+    if not value or not offset_hours:
+        return value
+    try:
+        parsed = datetime.datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return value
+    if parsed.tzinfo is None:
+        return value
+
+    shifted = parsed + datetime.timedelta(hours=int(offset_hours))
+    rendered = shifted.isoformat()
+    if value.endswith("Z"):
+        rendered = rendered.replace("+00:00", "Z")
+    return rendered
 
 
 def _optional_bool(value: Any) -> bool | None:
@@ -780,6 +806,7 @@ def build_mihomo_clash_log_entry_dto(
     sequence: int = 0,
     secret: str = "",
     device_map: Mapping[str, Any] | None = None,
+    timezone_offset_hours: int = 0,
 ) -> dict[str, Any]:
     """Normalize one structured log frame and redact credential-shaped data."""
 
@@ -812,7 +839,10 @@ def build_mihomo_clash_log_entry_dto(
     devices = device_map if isinstance(device_map, Mapping) else {}
     return {
         "sequence": max(0, int(sequence)),
-        "time": _text(raw.get("time"), 96),
+        "time": _adjust_log_timestamp(
+            _text(raw.get("time"), 96),
+            int(timezone_offset_hours or 0),
+        ),
         "level": level,
         "message": message,
         "fields": fields,

@@ -427,6 +427,34 @@ def test_structured_log_dto_redacts_secret_headers_and_sensitive_fields():
     assert list_fields["fields"] == {"network": "tcp"}
 
 
+def test_structured_log_dto_applies_configured_timezone_offset():
+    from services.mihomo_clash_dto import build_mihomo_clash_log_entry_dto
+
+    entry = build_mihomo_clash_log_entry_dto(
+        {"time": "2026-10-19T21:00:00Z", "message": "connected"},
+        timezone_offset_hours=3,
+    )
+
+    assert entry["time"] == "2026-10-20T00:00:00Z"
+
+
+def test_structured_log_dto_keeps_invalid_or_unzoned_time_unchanged():
+    from services.mihomo_clash_dto import build_mihomo_clash_log_entry_dto
+
+    payload = {"message": "connected"}
+    invalid = build_mihomo_clash_log_entry_dto(
+        {**payload, "time": "fixture"},
+        timezone_offset_hours=8,
+    )
+    naive = build_mihomo_clash_log_entry_dto(
+        {**payload, "time": "2026-10-19T21:00:00"},
+        timezone_offset_hours=8,
+    )
+
+    assert invalid["time"] == "fixture"
+    assert naive["time"] == "2026-10-19T21:00:00"
+
+
 def test_structured_log_dto_enriches_only_router_known_ips():
     from services.mihomo_clash_dto import build_mihomo_clash_log_entry_dto
 

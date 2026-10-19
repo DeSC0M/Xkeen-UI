@@ -189,6 +189,28 @@ def test_logs_ws_normalizes_redacts_and_closes_after_bounded_stream():
     assert ws.closed is True
 
 
+def test_logs_ws_applies_panel_timezone_offset_to_mihomo_timestamp():
+    ws = StubWebSocket()
+    handle_mihomo_clash_logs_request(
+        environ(ws),
+        lambda *_args: None,
+        fallback_app=lambda *_args: [],
+        validate_ws_token=lambda token, scope: token == "one-time-secret" and scope == "mihomo-clash-logs",
+        ws_debug=lambda *_args, **_kwargs: None,
+        mihomo_config_file="/safe/config.yaml",
+        mihomo_root="/safe",
+        log_tz_offset_hours=8,
+        discovery_factory=lambda *_args: discovery(),
+        client_factory=lambda _target: StubLogClient(
+            [{"time": "2026-10-19T16:00:00Z", "message": "connected"}]
+        ),
+        device_map_factory=lambda: {},
+    )
+
+    assert ws.messages[0]["payload"]["time"] == "2026-10-20T00:00:00Z"
+    assert ws.closed is True
+
+
 def test_logs_ws_rejects_cross_origin_before_consuming_token():
     ws = StubWebSocket()
     validated = []
