@@ -882,7 +882,12 @@ def create_xray_configs_blueprint(
                 for scan_root in scan_roots:
                     if not os.path.isdir(scan_root):
                         continue
-                    for name in os.listdir(scan_root):
+                    # Keep semantic tag order stable across filesystems.  The
+                    # resulting API feeds selectors and tests, so relying on
+                    # the platform-specific ``os.listdir`` order makes the
+                    # same configuration produce different tag lists on the
+                    # router and in CI.
+                    for name in sorted(os.listdir(scan_root)):
                         lname = str(name or "").lower()
                         if not lname.endswith(".json"):
                             continue

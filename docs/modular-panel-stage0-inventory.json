@@ -88,7 +88,7 @@
       ],
       "removable": true,
       "unit_count": 138,
-      "size_bytes": 3813249,
+      "size_bytes": 3813603,
       "kind_counts": {
         "backend_route": 13,
         "backend_service": 20,
@@ -17808,7 +17808,7 @@
       "module_id": "engine.xray",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/xray_configs.py",
-      "size_bytes": 93321,
+      "size_bytes": 93675,
       "depends_on": [
         "core",
         "tool.editor",
