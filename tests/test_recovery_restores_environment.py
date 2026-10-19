@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import importlib.util
+import shutil
 import threading
 from pathlib import Path
 
@@ -103,6 +104,7 @@ def _cli():
     return cli
 
 
+@pytest.mark.skipif(shutil.which("sh") is None, reason="requires a POSIX sh to execute the recovery provision script")
 def test_the_boot_command_restores_the_environment(tmp_path):
     panel = _abandoned(tmp_path, "health")
     trace = tmp_path / "trace.txt"
@@ -114,6 +116,7 @@ def test_the_boot_command_restores_the_environment(tmp_path):
     assert trace.read_text(encoding="utf-8").split() == ["apply"]
 
 
+@pytest.mark.skipif(shutil.which("sh") is None, reason="requires a POSIX sh to execute the recovery provision script")
 def test_the_panel_restores_the_environment_when_it_finds_a_dead_runner(tmp_path):
     panel = _abandoned(tmp_path, "health")
     trace = tmp_path / "trace.txt"

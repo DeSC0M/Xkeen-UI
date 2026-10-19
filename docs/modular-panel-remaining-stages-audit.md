@@ -45,9 +45,16 @@ performance baseline.
   retry/dismiss controls.
 - Poll and badge read only signed catalogs. No archive is downloaded before a
   separate explicit plan request.
+- Follow-up audit fixes are now on `pre-release` through `6d79eb49`:
+  post-update invalidation and daily-gate reconciliation, baseline-failure
+  deduplication, global bell placement across screens, mobile geometry/focus,
+  outage episode reset, channel retention, profile error copy, update
+  navigation, manual/background coordination and expanded browser tests.
 
 **Вывод:** 8.7 закрыт. Per-tab legacy badge сохранён как лёгкий hint, но
 источник правды и local notification state находятся в Notification center.
+Оставшаяся проверка относится к 8.8: signed-release/device delivery, а не к
+повторной реализации Notification center.
 
 ## 8.8 Recovery matrix и rollout
 
@@ -77,6 +84,13 @@ previous-version rollback без сети.
   user action`;
 - stable rollout с legacy migration и stop/go criteria;
 - device smoke для каждого recovery case.
+
+Read-only preflight supplied router проведён 19 октября 2026 года и сохранён
+в `docs/stage8-8/recovery-rollout-matrix-2026-10-19.md`. Он подтвердил
+архитектуру `aarch64`, свободное место, живой panel process и чистый последний
+transaction status, но зафиксировал stop-condition: устройство работает на
+`custom` с активным Mihomo, а установленная панель является local build без
+Notification center API. Destructive acceptance намеренно не выполнялась.
 
 **Вывод:** recovery implementation зрелая, но 8.8 не закрыт до стендового
 отчёта. Автоматические tests и CI не заменяют rollout evidence.
@@ -114,9 +128,9 @@ previous-version rollback без сети.
 - Нет обязательной CI matrix, которая запускает dynamic-loading E2E для всех
   `XKEEN_E2E_MODULE_PROFILE`; fixture умеет профили, но текущий CI запускает
   только Mihomo Clash acceptance slice.
-- Нужна browser-приёмка Notification center для настоящего
-  `BroadcastChannel`/нескольких вкладок; unit/route tests уже покрывают
-  daily/manual poll, local state, channel isolation, offline и no-download.
+- Browser-покрытие Notification center расширено; остаётся проверить этот
+  контракт на установленном signed prerelease, а не только в локальном
+  Playwright server.
 - Нет единого cross-profile release/device report с сохранением конфигов и
   recovery evidence.
 - Unit/tmp-tree tests не заменяют acceptance signed lifecycle и ручного

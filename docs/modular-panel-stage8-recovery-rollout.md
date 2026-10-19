@@ -1,7 +1,9 @@
 # Подэтап 8.8: recovery matrix и rollout
 
 **Статус:** recovery engine и большая часть автоматических проверок готовы;
-сводная эксплуатационная приёмка и rollout не закрыты.
+сводная эксплуатационная приёмка и rollout не закрыты. Read-only preflight
+19 октября 2026 года зафиксирован в
+[`stage8-8/recovery-rollout-matrix-2026-10-19.md`](stage8-8/recovery-rollout-matrix-2026-10-19.md).
 
 ## Уже покрыто
 
@@ -26,6 +28,27 @@
 `tests/test_panel_rollback_to_previous_version.py` и
 `e2e/modules_manager_*.spec.mjs`.
 
+Отдельный безопасный collector для стендового preflight:
+`scripts/stage8_8_router_smoke.py`. Он выполняет только GET к panel API и
+фиксированную read-only SSH-команду; lifecycle apply/profile/restart/fault
+injection в нём отсутствуют намеренно.
+
+## Актуализация после аудита 8.7
+
+В `pre-release` уже вошли follow-up исправления аудита 8.7:
+`07faef56`, `be2ebcf2`, `a8d095d6`, `a17c2135`, `8e2a6819`, `6d79eb49`.
+Они закрывают ошибки post-update reconciliation, baseline failure,
+глобального размещения bell, мобильной ширины/фокуса, outage episodes,
+channel retention, перехода к обновлению, ручного/background check и
+тестовых guardrails.
+
+Поэтому 8.8 не должен повторно разбирать эти исправления как отдельную
+реализацию. В acceptance matrix добавляется signed-release delivery:
+проверить те же свойства после установки prerelease на отдельный стенд,
+включая panel/modules/DevTools/generator, 390/1440 px, update navigation,
+post-update cleanup, baseline failure без ложных module-new записей,
+stale/offline episode и отсутствие archive downloads до явного plan.
+
 ## Что ещё не закрыто
 
 Статическая acceptance matrix уже существует в
@@ -44,7 +67,8 @@ runbooks — в [`modular-panel-stage8-lifecycle-api.md`](modular-panel-stage8-l
    rollback/restart policy, user action и тестовым доказательством.
 2. На отдельном стенде пройти signed prerelease: install/repair/remove, panel
    update, profile transition, interrupted recovery, rollback и offline
-   с/без cache.
+   с/без cache; после установки повторить Notification center smoke на
+   panel/modules/DevTools/generator и мобильной ширине.
 3. Проверить legacy/full, оба minimal и custom профиля, editor variants,
    отключённые модули, отсутствующие optional tools и `min_updater`.
 4. После 8.7 оформить stable rollout, legacy-layout migration,

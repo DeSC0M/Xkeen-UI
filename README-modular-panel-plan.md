@@ -1818,6 +1818,21 @@ persisted dismissal, channel isolation и offline fallback; frontend build
 **Статус:** recovery engine и большая часть автоматических проверок готовы;
 сводная эксплуатационная приёмка и rollout не закрыты.
 
+19 октября 2026 года выполнен read-only preflight supplied router и составлен
+отчёт `docs/stage8-8/recovery-rollout-matrix-2026-10-19.md`. Он подтвердил
+базовую доступность стенда, но остановил destructive acceptance: устройство
+работает на `custom` с активным Mihomo, а панель установлена как local build.
+`mihomo-minimal` и живой Mihomo не изменялись.
+
+После внешнего аудита 8.7 и синхронизации `pre-release` до `6d79eb49`
+(19 октября 2026 года) пересмотр границ 8.8 завершён. Коммиты
+`07faef56`, `be2ebcf2`, `a8d095d6`, `a17c2135`, `8e2a6819` и `6d79eb49`
+закрыли найденные ошибки состояния/дедупликации, глобального размещения
+колокольчика, мобильной геометрии, фокуса, outage-состояний, перехода к
+обновлению, ожидания ручной проверки, профиля ошибок и тестовых guardrails.
+8.8 теперь проверяет не повторную разработку этих функций, а их доставку в
+подписанном prerelease на отдельном стенде.
+
 Не начинать эти проверки заново: acceptance matrix уже задана в
 `docs/modular-panel-stage8-contract.{json,md}`, а runbooks — в
 `docs/modular-panel-stage8-lifecycle-api.md` и
@@ -1853,8 +1868,12 @@ release на конкретном устройстве.
    конфигов; опасные fault injections не делать на рабочем роутере.
 3. Проверить legacy/full, оба minimal и custom, editor variants, отключённые
    модули, отсутствующие optional tools и несовместимый `min_updater`.
-4. Проверить на стенде доставку уведомлений без downloads; затем оформить
-   stable rollout, backup/restore инструкцию и stop/go критерии.
+4. На signed prerelease проверить Notification center end-to-end: глобальный
+   bell на panel/modules/DevTools/generator, ширины 390/1440, переход
+   «Открыть обновление», post-update reconciliation, baseline failure без
+   ложных новых модулей, stale/offline episode и manual/background
+   reconciliation без downloads; затем оформить stable rollout,
+   backup/restore инструкцию и stop/go критерии.
 
 **Критерий закрытия:** воспроизводимый отчёт с версией/архитектурой/профилем,
 signed asset identity, результатами всех обязательных строк и путём ручного

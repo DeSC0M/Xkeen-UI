@@ -1,0 +1,809 @@
+{
+  "schema_version": 1,
+  "collected_at": "2026-10-19T09:59:07Z",
+  "scope": "read-only preflight",
+  "collector": {
+    "python": "3.14.0",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "panel": {
+    "version": "2.10.0-beta.2+local.23ce4d6d",
+    "profile": "custom",
+    "editor": {
+      "available_variants": [
+        "light",
+        "full",
+        "advanced"
+      ],
+      "capabilities": [
+        "codemirror",
+        "schema-basic"
+      ],
+      "installed_variant": "light",
+      "requires_restart": false,
+      "variant": "light"
+    },
+    "installed_module_ids": [
+      "core",
+      "engine.xray",
+      "engine.mihomo",
+      "tool.editor",
+      "tool.files",
+      "integration.happ",
+      "tool.advanced-diagnostics"
+    ],
+    "update_channel": "prerelease",
+    "lifecycle": {
+      "available": true,
+      "code": null,
+      "local": true
+    },
+    "available": {
+      "release_version": "2.10.0-beta.2",
+      "read_only": true,
+      "freshness": "fresh",
+      "stale_reason": null
+    },
+    "last_operation": {
+      "operation_id": "20261017T130729Z-37f8af",
+      "scope": "module",
+      "operation": "install",
+      "module_id": "tool.advanced-diagnostics",
+      "result": "committed",
+      "error_code": null,
+      "version": "2.10.0-beta.2"
+    }
+  },
+  "http": {
+    "base_url": "http://<router>",
+    "endpoints": {
+      "/api/modules/installed": {
+        "status": 200,
+        "body": {
+          "build": {
+            "base_commit": "23ce4d6d",
+            "built_utc": "2026-10-19T07:43:17Z",
+            "channel": "prerelease",
+            "commit": "23ce4d6d8e7ed894d967ad0b3b7098053ff5e08b",
+            "dirty": false,
+            "exists": true,
+            "repo": "umarcheh001/Xkeen-UI",
+            "tree_sha256": "2da685a0dc836affd616f6b3905378062e8fb187a1afb721d94eb3bb3b806596",
+            "version": "2.10.0-beta.2+local.23ce4d6d"
+          },
+          "editor": {
+            "available_variants": [
+              "light",
+              "full",
+              "advanced"
+            ],
+            "capabilities": [
+              "codemirror",
+              "schema-basic"
+            ],
+            "installed_variant": "light",
+            "requires_restart": false,
+            "variant": "light"
+          },
+          "enabled_set": "custom",
+          "installed_module_ids": [
+            "core",
+            "engine.xray",
+            "engine.mihomo",
+            "tool.editor",
+            "tool.files",
+            "integration.happ",
+            "tool.advanced-diagnostics"
+          ],
+          "installed_set": "custom",
+          "lifecycle": {
+            "available": true,
+            "code": null,
+            "local": true
+          },
+          "module_names": {
+            "core": "Xkeen UI Core",
+            "engine.mihomo": "Mihomo",
+            "engine.xray": "Xray",
+            "integration.happ": "Расшифровка подписок",
+            "tool.advanced-diagnostics": "Расширенная диагностика",
+            "tool.backups": "Резервные копии",
+            "tool.editor": "Редакторы",
+            "tool.files": "Файловый менеджер",
+            "tool.terminal": "Терминал и команды"
+          },
+          "modules": [
+            {
+              "api_version": 1,
+              "available": true,
+              "can_disable": false,
+              "conflicts": [],
+              "dependencies": [],
+              "depends_on": [],
+              "description": "Основа панели: вход, настройки и работа самой панели.",
+              "effective_enabled": true,
+              "enabled": true,
+              "frontend": {
+                "bundles": [
+                  "panel-core"
+                ],
+                "navigation_views": [
+                  "xkeen"
+                ]
+              },
+              "id": "core",
+              "installed": true,
+              "lifecycle_actions": [],
+              "lock_reason": "core",
+              "missing_requirement_ids": [],
+              "module_id": "core",
+              "name": "Xkeen UI Core",
+              "reason": null,
+              "removable": false,
+              "requires_restart": false,
+              "size_bytes": 7611785,
+              "status": "enabled",
+              "system_requirements": [
+                {
+                  "available": true,
+                  "id": "python3",
+                  "optional": false
+                },
+                {
+                  "available": true,
+                  "id": "flask",
+                  "optional": false
+                },
+                {
+                  "available": true,
+                  "id": "gevent",
+                  "optional": true
+                },
+                {
+                  "available": true,
+                  "id": "gevent-websocket",
+                  "optional": true
+                }
+              ],
+              "unavailable_dependency_ids": [],
+              "version": "1.0.0"
+            },
+            {
+              "api_version": 1,
+              "available": true,
+              "can_disable": true,
+              "conflicts": [],
+              "dependencies": [
+                "core",
+                "tool.editor"
+              ],
+              "depends_on": [
+                "core",
+                "tool.editor"
+              ],
+              "description": "Всё для ядра Xray: маршруты, подключения, подписки, DNS-over-VLESS, базы доменов и адресов, логи Xray.",
+              "effective_enabled": true,
+              "enabled": true,
+              "frontend": {
+                "bundles": [
+                  "panel-routing"
+                ],
+                "navigation_views": [
+                  "routing",
+                  "xray-logs"
+                ]
+              },
+              "id": "engine.xray",
+              "installed": true,
+              "lifecycle_actions": [],
+              "lock_reason": null,
+              "missing_requirement_ids": [],
+              "module_id": "engine.xray",
+              "name": "Xray",
+              "reason": null,
+              "removable": true,
+              "requires_restart": true,
+              "size_bytes": 3813249,
+              "status": "enabled",
+              "system_requirements": [
+                {
+                  "available": true,
+                  "id": "xkeen",
+                  "optional": false
+                },
+                {
+                  "available": true,
+                  "id": "xray",
+                  "optional": false
+                }
+              ],
+              "unavailable_dependency_ids": [],
+              "version": "1.0.0"
+            },
+            {
+              "api_version": 1,
+              "available": true,
+              "can_disable": true,
+              "conflicts": [],
+              "dependencies": [
+                "core",
+                "tool.editor"
+              ],
+              "depends_on": [
+                "core",
+                "tool.editor"
+              ],
+              "description": "Всё для ядра Mihomo: настройки, генератор конфигурации, импорт ссылок, Защищённый DNS Mihomo, базы доменов и адресов, статистика соединений, логи Mihomo.",
+              "effective_enabled": true,
+              "enabled": true,
+              "frontend": {
+                "bundles": [
+                  "panel-mihomo",
+                  "mihomo-generator-page"
+                ],
+                "navigation_views": [
+                  "mihomo"
+                ]
+              },
+              "id": "engine.mihomo",
+              "installed": true,
+              "lifecycle_actions": [],
+              "lock_reason": null,
+              "missing_requirement_ids": [],
+              "module_id": "engine.mihomo",
+              "name": "Mihomo",
+              "reason": null,
+              "removable": true,
+              "requires_restart": true,
+              "size_bytes": 3068210,
+              "status": "enabled",
+              "system_requirements": [
+                {
+                  "available": true,
+                  "id": "xkeen",
+                  "optional": false
+                },
+                {
+                  "available": true,
+                  "id": "mihomo",
+                  "optional": false
+                }
+              ],
+              "unavailable_dependency_ids": [],
+              "version": "1.0.0"
+            },
+            {
+              "api_version": 1,
+              "available": true,
+              "can_disable": false,
+              "conflicts": [],
+              "dependencies": [
+                "core"
+              ],
+              "depends_on": [
+                "core"
+              ],
+              "description": "Редакторы конфигураций с подсветкой, подсказками, проверкой ошибок и сравнением версий.",
+              "effective_enabled": true,
+              "enabled": true,
+              "frontend": {
+                "bundles": [],
+                "navigation_views": []
+              },
+              "id": "tool.editor",
+              "installed": true,
+              "lifecycle_actions": [],
+              "lock_reason": "editor_required",
+              "missing_requirement_ids": [],
+              "module_id": "tool.editor",
+              "name": "Редакторы",
+              "reason": null,
+              "removable": true,
+              "requires_restart": true,
+              "size_bytes": 830990,
+              "status": "enabled",
+              "system_requirements": [
+                {
+                  "available": true,
+                  "id": "browser-esm",
+                  "optional": false
+                }
+              ],
+              "unavailable_dependency_ids": [],
+              "version": "1.0.0"
+            },
+            {
+              "api_version": 1,
+              "available": true,
+              "can_disable": true,
+              "conflicts": [],
+              "dependencies": [
+                "core"
+              ],
+              "depends_on": [
+                "core"
+              ],
+              "description": "Файлы на роутере и на удалённых серверах: правка, копирование, архивы, USB-накопители.",
+              "effective_enabled": true,
+              "enabled": true,
+              "frontend": {
+                "bundles": [
+                  "file-manager-lazy"
+                ],
+                "navigation_views": [
+                  "files"
+                ]
+              },
+              "id": "tool.files",
+              "installed": true,
+              "lifecycle_actions": [],
+              "lock_reason": null,
+              "missing_requirement_ids": [],
+              "module_id": "tool.files",
+              "name": "Файловый менеджер",
+              "reason": null,
+              "removable": true,
+              "requires_restart": true,
+              "size_bytes": 999877,
+              "status": "enabled",
+              "system_requirements": [
+                {
+                  "available": true,
+                  "id": "lftp",
+                  "optional": true
+                },
+                {
+                  "available": true,
+                  "id": "ndmc",
+                  "optional": true
+                }
+              ],
+              "unavailable_dependency_ids": [],
+              "version": "1.0.0"
+            },
+            {
+              "api_version": 1,
+              "available": true,
+              "can_disable": true,
+              "conflicts": [],
+              "dependencies": [
+                "core"
+              ],
+              "depends_on": [
+                "core"
+              ],
+              "description": "Подписки с зашифрованными ссылками и подписки, привязанные к устройству (HWID).",
+              "effective_enabled": true,
+              "enabled": true,
+              "frontend": {
+                "bundles": [],
+                "navigation_views": []
+              },
+              "id": "integration.happ",
+              "installed": true,
+              "lifecycle_actions": [],
+              "lock_reason": null,
+              "missing_requirement_ids": [],
+              "module_id": "integration.happ",
+              "name": "Расшифровка подписок",
+              "reason": null,
+              "removable": true,
+              "requires_restart": true,
+              "size_bytes": 318355,
+              "status": "enabled",
+              "system_requirements": [
+                {
+                  "available": true,
+                  "id": "subscription-link-utility",
+                  "optional": true
+                }
+              ],
+              "unavailable_dependency_ids": [],
+              "version": "1.0.0"
+            },
+            {
+              "api_version": 1,
+              "available": true,
+              "can_disable": true,
+              "conflicts": [],
+              "dependencies": [
+                "core"
+              ],
+              "depends_on": [
+                "core"
+              ],
+              "description": "Страница инструментов: состояние роутера, загрузка, служебные журналы.",
+              "effective_enabled": true,
+              "enabled": true,
+              "frontend": {
+                "bundles": [
+                  "devtools-page"
+                ],
+                "navigation_views": [
+                  "devtools"
+                ]
+              },
+              "id": "tool.advanced-diagnostics",
+              "installed": true,
+              "lifecycle_actions": [],
+              "lock_reason": null,
+              "missing_requirement_ids": [],
+              "module_id": "tool.advanced-diagnostics",
+              "name": "Расширенная диагностика",
+              "reason": null,
+              "removable": true,
+              "requires_restart": true,
+              "size_bytes": 497894,
+              "status": "enabled",
+              "system_requirements": [
+                {
+                  "available": true,
+                  "id": "ndmc",
+                  "optional": true
+                }
+              ],
+              "unavailable_dependency_ids": [],
+              "version": "1.0.0"
+            }
+          ],
+          "ok": true,
+          "panel_version": "2.10.0-beta.2+local.23ce4d6d",
+          "previous_version": {
+            "available": false,
+            "kept_at": null,
+            "reason": "no_previous_version",
+            "size": 0,
+            "version": null
+          },
+          "profile": "custom",
+          "restart_required": false,
+          "transition_required": false,
+          "update_channel": "prerelease"
+        }
+      },
+      "/api/modules/operations/status": {
+        "status": 200,
+        "body": {
+          "error": null,
+          "error_code": null,
+          "finished_at": 1792242470.3152075,
+          "log": [
+            {
+              "at": 1792242450.1411262,
+              "step": "prepared"
+            },
+            {
+              "at": 1792242451.2771962,
+              "step": "downloading"
+            },
+            {
+              "at": 1792242454.5989707,
+              "step": "verifying"
+            },
+            {
+              "at": 1792242454.7611804,
+              "step": "applying"
+            },
+            {
+              "at": 1792242458.2196665,
+              "step": "state"
+            },
+            {
+              "at": 1792242460.1127245,
+              "step": "restarting"
+            },
+            {
+              "at": 1792242464.2188685,
+              "step": "health"
+            },
+            {
+              "at": 1792242468.4294162,
+              "step": "committed"
+            }
+          ],
+          "module_id": "tool.advanced-diagnostics",
+          "ok": true,
+          "operation": "install",
+          "operation_id": "20261017T130729Z-37f8af",
+          "result": "committed",
+          "scope": "module",
+          "started_at": 1792242449.1743195,
+          "step": "committed",
+          "version": "2.10.0-beta.2"
+        }
+      },
+      "/api/modules/update-channel": {
+        "status": 200,
+        "body": {
+          "channel": "prerelease",
+          "ok": true
+        }
+      },
+      "/api/modules/available": {
+        "status": 200,
+        "body": {
+          "catalog_url": "https://github.com/umarcheh001/Xkeen-UI/releases/download/v2.10.0-beta.2/catalog.json",
+          "fetched_at": 1792215309.2647085,
+          "freshness": "fresh",
+          "modules": [
+            {
+              "architectures": [
+                "aarch64",
+                "mips",
+                "mipsel"
+              ],
+              "archive": "xkeen-module-core-2.10.0-beta.2.tar.gz",
+              "channel": "prerelease",
+              "conflicts": [],
+              "description": "Основа панели: вход, настройки и работа самой панели.",
+              "id": "core",
+              "installed": true,
+              "lifecycle_actions": [],
+              "min_core": "1.0.0",
+              "module_api": "1",
+              "name": "Xkeen UI Core",
+              "panel_api": "1",
+              "requires": [],
+              "requires_restart": false,
+              "sha256": "3f4564428724d117e30d641814c472d0ee3cdfa7dc6e19331ef26955069dd7e6",
+              "signing_key_id": "release-2026",
+              "size": 4501344,
+              "update_available": false,
+              "version": "2.10.0-beta.2"
+            },
+            {
+              "architectures": [
+                "aarch64",
+                "mips",
+                "mipsel"
+              ],
+              "archive": "xkeen-module-engine.mihomo-2.10.0-beta.2.tar.gz",
+              "channel": "prerelease",
+              "conflicts": [],
+              "description": "Всё для ядра Mihomo: настройки, генератор конфигурации, импорт ссылок, Защищённый DNS Mihomo, базы доменов и адресов, статистика соединений, логи Mihomo.",
+              "id": "engine.mihomo",
+              "installed": true,
+              "lifecycle_actions": [],
+              "min_core": "1.0.0",
+              "module_api": "1",
+              "name": "Mihomo",
+              "panel_api": "1",
+              "requires": [
+                "core",
+                "tool.editor"
+              ],
+              "requires_restart": true,
+              "sha256": "0fb0a87e59bfb01df9555cf98df3a9a250ca346deaa3b30a49e6f54582696a22",
+              "signing_key_id": "release-2026",
+              "size": 1063938,
+              "update_available": false,
+              "version": "2.10.0-beta.2"
+            },
+            {
+              "architectures": [
+                "aarch64",
+                "mips",
+                "mipsel"
+              ],
+              "archive": "xkeen-module-engine.xray-2.10.0-beta.2.tar.gz",
+              "channel": "prerelease",
+              "conflicts": [],
+              "description": "Всё для ядра Xray: маршруты, подключения, подписки, DNS-over-VLESS, базы доменов и адресов, логи Xray.",
+              "id": "engine.xray",
+              "installed": true,
+              "lifecycle_actions": [],
+              "min_core": "1.0.0",
+              "module_api": "1",
+              "name": "Xray",
+              "panel_api": "1",
+              "requires": [
+                "core",
+                "tool.editor"
+              ],
+              "requires_restart": true,
+              "sha256": "38ab9df1786480c4a42a43489cf9405772d58bb0897e42afee4c83f0e73c4648",
+              "signing_key_id": "release-2026",
+              "size": 1510327,
+              "update_available": false,
+              "version": "2.10.0-beta.2"
+            },
+            {
+              "architectures": [
+                "aarch64",
+                "mips",
+                "mipsel"
+              ],
+              "archive": "xkeen-module-integration.happ-2.10.0-beta.2.tar.gz",
+              "channel": "prerelease",
+              "conflicts": [],
+              "description": "Подписки с зашифрованными ссылками и подписки, привязанные к устройству (HWID).",
+              "id": "integration.happ",
+              "installed": true,
+              "lifecycle_actions": [],
+              "min_core": "1.0.0",
+              "module_api": "1",
+              "name": "Расшифровка подписок",
+              "panel_api": "1",
+              "requires": [
+                "core"
+              ],
+              "requires_restart": true,
+              "sha256": "d732ac3e465d4300eae0b880c9715aaa434f1b27028026ba5402be7a5ec31ea6",
+              "signing_key_id": "release-2026",
+              "size": 12398,
+              "update_available": false,
+              "version": "2.10.0-beta.2"
+            },
+            {
+              "architectures": [
+                "aarch64",
+                "mips",
+                "mipsel"
+              ],
+              "archive": "xkeen-module-tool.advanced-diagnostics-2.10.0-beta.2.tar.gz",
+              "channel": "prerelease",
+              "conflicts": [],
+              "description": "Страница инструментов: состояние роутера, загрузка, служебные журналы.",
+              "id": "tool.advanced-diagnostics",
+              "installed": true,
+              "lifecycle_actions": [],
+              "min_core": "1.0.0",
+              "module_api": "1",
+              "name": "Расширенная диагностика",
+              "panel_api": "1",
+              "requires": [
+                "core"
+              ],
+              "requires_restart": true,
+              "sha256": "ba425205f664578da4707f94b0cc001623f0e1455acdd166ce492ff55788e8e6",
+              "signing_key_id": "release-2026",
+              "size": 241660,
+              "update_available": false,
+              "version": "2.10.0-beta.2"
+            },
+            {
+              "architectures": [
+                "aarch64",
+                "mips",
+                "mipsel"
+              ],
+              "archive": "xkeen-module-tool.backups-2.10.0-beta.2.tar.gz",
+              "channel": "prerelease",
+              "conflicts": [],
+              "description": "Сохранение и восстановление настроек Xray и Mihomo.",
+              "id": "tool.backups",
+              "installed": false,
+              "lifecycle_actions": [],
+              "min_core": "1.0.0",
+              "module_api": "1",
+              "name": "Резервные копии",
+              "panel_api": "1",
+              "requires": [
+                "core"
+              ],
+              "requires_restart": true,
+              "sha256": "727796ae6781fd14915377b3790c58678d03a686a05fbe9aebaf75e011a842f6",
+              "signing_key_id": "release-2026",
+              "size": 50606,
+              "update_available": false,
+              "version": "2.10.0-beta.2"
+            },
+            {
+              "architectures": [
+                "aarch64",
+                "mips",
+                "mipsel"
+              ],
+              "archive": "xkeen-module-tool.editor-2.10.0-beta.2.tar.gz",
+              "channel": "prerelease",
+              "conflicts": [],
+              "description": "Редакторы конфигураций с подсветкой, подсказками, проверкой ошибок и сравнением версий.",
+              "id": "tool.editor",
+              "installed": true,
+              "lifecycle_actions": [],
+              "min_core": "1.0.0",
+              "module_api": "1",
+              "name": "Редакторы",
+              "panel_api": "1",
+              "requires": [
+                "core"
+              ],
+              "requires_restart": true,
+              "sha256": "b8154757b19716be69460d8ca5533323b48b31698a48b13549a52bc07f7a9651",
+              "signing_key_id": "release-2026",
+              "size": 4194421,
+              "update_available": false,
+              "version": "2.10.0-beta.2"
+            },
+            {
+              "architectures": [
+                "aarch64",
+                "mips",
+                "mipsel"
+              ],
+              "archive": "xkeen-module-tool.files-2.10.0-beta.2.tar.gz",
+              "channel": "prerelease",
+              "conflicts": [],
+              "description": "Файлы на роутере и на удалённых серверах: правка, копирование, архивы, USB-накопители.",
+              "id": "tool.files",
+              "installed": true,
+              "lifecycle_actions": [],
+              "min_core": "1.0.0",
+              "module_api": "1",
+              "name": "Файловый менеджер",
+              "panel_api": "1",
+              "requires": [
+                "core"
+              ],
+              "requires_restart": true,
+              "sha256": "074afd2cf02a1df97bbeff3dd935b3e5d439a1e272e6e4fca6c4fcff4e21a4dd",
+              "signing_key_id": "release-2026",
+              "size": 352391,
+              "update_available": false,
+              "version": "2.10.0-beta.2"
+            },
+            {
+              "architectures": [
+                "aarch64",
+                "mips",
+                "mipsel"
+              ],
+              "archive": "xkeen-module-tool.terminal-2.10.0-beta.2.tar.gz",
+              "channel": "prerelease",
+              "conflicts": [],
+              "description": "Командная строка роутера прямо в браузере и быстрый запуск команд XKeen.",
+              "id": "tool.terminal",
+              "installed": false,
+              "lifecycle_actions": [],
+              "min_core": "1.0.0",
+              "module_api": "1",
+              "name": "Терминал и команды",
+              "panel_api": "1",
+              "requires": [
+                "core"
+              ],
+              "requires_restart": true,
+              "sha256": "5d30cf5f9b37183c5a0204574a78fe7c804eb2e9147cf36f0a3ccef3feead215",
+              "signing_key_id": "release-2026",
+              "size": 481583,
+              "update_available": false,
+              "version": "2.10.0-beta.2"
+            }
+          ],
+          "ok": true,
+          "read_only": true,
+          "release_version": "2.10.0-beta.2",
+          "stale_reason": null
+        }
+      },
+      "/api/notifications": {
+        "status": 404,
+        "body": {
+          "raw": "<!doctype html>\n<html lang=en>\n<title>404 Not Found</title>\n<h1>Not Found</h1>\n<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>\n"
+        }
+      }
+    },
+    "login_status": 200
+  },
+  "ssh": {
+    "host": "<router>",
+    "port": 222,
+    "command": "fixed-read-only",
+    "stdout": "--- uname ---\nLinux Keenetic 4.9-ndm-5 #0 SMP Thu Apr 30 13:20:11 2026 aarch64 GNU/Linux\n--- disk ---\nFilesystem           1K-blocks      Used Available Use% Mounted on\n/dev/sda2              5446604    562376   4582812  11% /tmp/mnt/65be3c3e-f711-046d-916e-07e262fe07c8\n--- profile ---\n{\n  \"schema_version\": 1,\n  \"profile\": \"custom\",\n  \"module_ids\": [\n    \"core\",\n    \"engine.xray\",\n    \"engine.mihomo\",\n    \"tool.editor\",\n    \"tool.files\",\n    \"integration.happ\",\n    \"tool.advanced-diagnostics\"\n  ],\n  \"editor_variant\": \"light\"\n}\n--- modules ---\n{\n  \"schema_version\": 1,\n  \"profile\": \"custom\",\n  \"restart_required\": false,\n  \"editor\": {\n    \"variant\": \"light\"\n  },\n  \"modules\": {\n    \"core\": {\n      \"enabled\": true\n    },\n    \"engine.xray\": {\n      \"enabled\": true\n    },\n    \"engine.mihomo\": {\n      \"enabled\": true\n    },\n    \"tool.editor\": {\n      \"enabled\": true\n    },\n    \"tool.terminal\": {\n      \"enabled\": false\n    },\n    \"tool.files\": {\n      \"enabled\": true\n    },\n    \"tool.backups\": {\n      \"enabled\": false\n    },\n    \"integration.happ\": {\n      \"enabled\": true\n    },\n    \"tool.advanced-diagnostics\": {\n      \"enabled\": true\n    }\n  }\n}\n--- build ---\n{\n  \"repo\": \"umarcheh001/Xkeen-UI\",\n  \"channel\": \"prerelease\",\n  \"version\": \"2.10.0-beta.2+local.23ce4d6d\",\n  \"commit\": \"23ce4d6d8e7ed894d967ad0b3b7098053ff5e08b\",\n  \"base_commit\": \"23ce4d6d\",\n  \"dirty\": false,\n  \"tree_sha256\": \"2da685a0dc836affd616f6b3905378062e8fb187a1afb721d94eb3bb3b806596\",\n  \"built_utc\": \"2026-10-19T07:43:17Z\",\n  \"source\": \"install.sh\",\n  \"artifact\": null\n}\n--- lifecycle ---\n{\n  \"operation_id\": \"20261017T130729Z-37f8af\",\n  \"scope\": \"module\",\n  \"operation\": \"install\",\n  \"module_id\": \"tool.advanced-diagnostics\",\n  \"version\": \"2.10.0-beta.2\",\n  \"step\": \"committed\",\n  \"result\": \"committed\",\n  \"error_code\": null,\n  \"error\": null,\n  \"started_at\": 1792242449.1743195,\n  \"finished_at\": 1792242470.3152075,\n  \"log\": [\n    {\n      \"step\": \"prepared\",\n      \"at\": 1792242450.1411262\n    },\n    {\n      \"step\": \"downloading\",\n      \"at\": 1792242451.2771962\n    },\n    {\n      \"step\": \"verifying\",\n      \"at\": 1792242454.5989707\n    },\n    {\n      \"step\": \"applying\",\n      \"at\": 1792242454.7611804\n    },\n    {\n      \"step\": \"state\",\n      \"at\": 1792242458.2196665\n    },\n    {\n      \"step\": \"restarting\",\n      \"at\": 1792242460.1127245\n    },\n    {\n      \"step\": \"health\",\n      \"at\": 1792242464.2188685\n    },\n    {\n      \"step\": \"committed\",\n      \"at\": 1792242468.4294162\n    }\n  ]\n}\n--- process ---\n19427 root     1358m S    mihomo\n28118 root      309m S    /opt/bin/python3 /opt/etc/xkeen-ui/run_server.py\n",
+    "stderr": "",
+    "exit_status": 0
+  },
+  "safety": {
+    "writes_performed": false,
+    "profile_transition_performed": false,
+    "engine_toggle_performed": false,
+    "restart_performed": false,
+    "fault_injection_performed": false,
+    "destructive_smoke_allowed": false,
+    "blockers": [
+      "локальная сборка: signed lifecycle операции намеренно read-only",
+      "Mihomo установлен: не менять профиль или engine без отдельного безопасного стенда",
+      "available catalog read-only: module install/repair/remove недоступны"
+    ]
+  }
+}
