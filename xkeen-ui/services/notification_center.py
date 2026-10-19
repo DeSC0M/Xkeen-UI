@@ -32,6 +32,8 @@ SNOOZE_INTERVALS = frozenset({24 * 60 * 60, 7 * 24 * 60 * 60})
 # Records computed from the catalog describe a step away from one installed
 # version; once the panel runs another version they no longer apply.
 _RELEASE_KINDS = frozenset({"panel-update", "module-new", "module-update"})
+# Notes about the check itself rather than about a release.
+_CHECK_NOTE_KINDS = frozenset({"catalog-error", "catalog-stale", "catalog-baseline"})
 _IDENTITY_HEX = frozenset("0123456789abcdef")
 
 _ERROR_MESSAGES = {
@@ -42,6 +44,7 @@ _ERROR_MESSAGES = {
     "catalog_stable_unreleased": "Для стабильного канала пока нет модульного выпуска.",
     "module_state_unavailable": "Не удалось прочитать состояние установленных модулей.",
     "panel_version_unsupported": "Версия панели не поддерживает проверку обновлений.",
+    "profile_transition_required": "Сначала нужно применить выбранный набор модулей в окне «Модули и обновления».",
 }
 
 
@@ -378,6 +381,14 @@ class NotificationCenter:
 
     def _prune_locked(self, state: dict[str, Any], active_ids: set[str], now: float) -> None:
         records = state["records"]
+        # A record still offered on another channel keeps its dismissal for
+        # the day the user switches back.
+        for channel_state in state["channels"].values():
+            active_ids = active_ids | {
+                record.get("id")
+                for record in channel_state.get("records", [])
+                if isinstance(record, Mapping) and self._valid_record_id(record.get("id"))
+            }
         candidates = sorted(
             records,
             key=lambda record_id: float(records[record_id].get("updated_at") or 0),
@@ -457,6 +468,11 @@ class NotificationCenter:
         baseline_error: str | None,
     ) -> dict[str, Any]:
         channel_state = state["channels"][channel]
+        previous_notes = {
+            record.get("id")
+            for record in channel_state.get("records", [])
+            if isinstance(record, Mapping) and record.get("kind") in _CHECK_NOTE_KINDS
+        }
         channel_state["last_attempt_at"] = now
         channel_state["freshness"] = freshness
         channel_state["stale_reason"] = stale_reason
@@ -469,6 +485,11 @@ class NotificationCenter:
             channel_state["error_code"] = None
             channel_state["failure_count"] = 0
             channel_state["next_poll_at"] = now + self._background_interval_s
+            # A dismissed outage note is about that outage only: once the
+            # catalog answers, the next outage must be shown again.
+            current = {record.get("id") for record in channel_state["records"] if isinstance(record, Mapping)}
+            for record_id in previous_notes - current:
+                state["records"].pop(record_id, None)
         else:
             failures = min(16, int(channel_state.get("failure_count") or 0) + 1)
             channel_state["failure_count"] = failures
@@ -488,6 +509,10 @@ class NotificationCenter:
         """Refresh notification records through the single catalog source."""
 
         if not self._poll_lock.acquire(blocking=False):
+            # A manual check during a running poll waits for its answer
+            # rather than showing the state from before it.
+            if not background and self._poll_lock.acquire(timeout=60):
+                self._poll_lock.release()
             return self.snapshot()
         try:
             with self._lock:

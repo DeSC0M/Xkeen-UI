@@ -199,3 +199,118 @@ def test_offline_after_update_falls_back_to_the_daily_gate(tmp_path: Path):
     center.check(background=True)
     # One probe right after the update; the failure then waits a day, not an hour.
     assert lifecycle.calls == [False, False]
+
+
+def _offline(lifecycle, code="catalog_unavailable"):
+    def unavailable(*, force_refresh=False):
+        lifecycle.calls.append(bool(force_refresh))
+        error = ValueError("offline")
+        error.code = code
+        raise error
+
+    return unavailable
+
+
+def test_a_dismissed_outage_is_forgotten_once_the_catalog_answers(tmp_path: Path):
+    now = [2_000.0]
+    lifecycle = FakeLifecycle(_payload())
+    center = NotificationCenter(lifecycle, state_dir=tmp_path, now=lambda: now[0])
+    healthy = lifecycle.notification_catalog
+
+    lifecycle.notification_catalog = _offline(lifecycle)
+    error_id = next(r["id"] for r in center.check()["records"] if r["kind"] == "catalog-error")
+    center.set_record_state(error_id, "dismiss")
+    # Still the same outage: the dismissal holds.
+    assert not any(r["kind"] == "catalog-error" for r in center.check()["records"])
+
+    lifecycle.notification_catalog = healthy
+    center.check()
+    now[0] += 30 * 24 * 60 * 60
+    lifecycle.notification_catalog = _offline(lifecycle)
+    assert any(r["kind"] == "catalog-error" for r in center.check()["records"])
+
+
+def test_a_dismissed_baseline_note_stays_dismissed_while_it_lasts(tmp_path: Path):
+    payload = {**_payload(), "current_modules": [], "baseline_error": "catalog_unavailable"}
+    center = NotificationCenter(FakeLifecycle(payload), state_dir=tmp_path, now=lambda: 2_000.0)
+    note = next(r["id"] for r in center.check()["records"] if r["kind"] == "catalog-baseline")
+    center.set_record_state(note, "dismiss")
+    assert note not in {r["id"] for r in center.check()["records"]}
+
+
+def test_dismissals_of_another_channel_survive_retention(tmp_path: Path):
+    now = [2_000.0]
+    lifecycle = FakeLifecycle(_payload("prerelease"))
+    write_channel(tmp_path, "prerelease")
+    center = NotificationCenter(lifecycle, state_dir=tmp_path, now=lambda: now[0])
+    panel = next(r["id"] for r in center.check()["records"] if r["kind"] == "panel-update")
+    center.set_record_state(panel, "dismiss")
+
+    write_channel(tmp_path, "stable")
+    lifecycle.payload = _payload("stable")
+    now[0] += 91 * 24 * 60 * 60
+    center.check()
+
+    write_channel(tmp_path, "prerelease")
+    lifecycle.payload = _payload("prerelease")
+    assert panel not in {r["id"] for r in center.check()["records"]}
+
+
+def test_manual_check_during_a_background_poll_returns_its_result(tmp_path: Path):
+    import threading
+
+    started = threading.Event()
+    release = threading.Event()
+    lifecycle = FakeLifecycle(_payload())
+    healthy = lifecycle.notification_catalog
+
+    def slow(*, force_refresh=False):
+        started.set()
+        release.wait(5)
+        return healthy(force_refresh=force_refresh)
+
+    lifecycle.notification_catalog = slow
+    center = NotificationCenter(lifecycle, state_dir=tmp_path, now=lambda: 2_000.0)
+    worker = threading.Thread(target=lambda: center.check(background=True))
+    worker.start()
+    assert started.wait(5)
+    threading.Timer(0.2, release.set).start()
+
+    result = center.check(force_refresh=True)
+    worker.join(5)
+    # The manual check waited for the running poll instead of showing the
+    # state from before it, and did not ask the catalog a second time.
+    assert result["unread_count"] == 3
+    assert lifecycle.calls == [False]
+
+
+def test_unsettled_profile_is_not_called_a_network_failure(tmp_path: Path):
+    lifecycle = FakeLifecycle(_payload())
+    lifecycle.notification_catalog = _offline(lifecycle, "profile_transition_required")
+    center = NotificationCenter(lifecycle, state_dir=tmp_path, now=lambda: 2_000.0)
+    record = next(r for r in center.check()["records"] if r["kind"] == "catalog-error")
+    assert "набор модулей" in record["message"]
+    assert "связаться" not in record["message"]
+
+
+def test_failed_background_polls_back_off_from_a_day_to_a_week(tmp_path: Path):
+    now = [2_000.0]
+    lifecycle = FakeLifecycle(_payload())
+    lifecycle.notification_catalog = _offline(lifecycle)
+    center = NotificationCenter(lifecycle, state_dir=tmp_path, now=lambda: now[0])
+    day = 24 * 60 * 60
+    delays = []
+    for _ in range(5):
+        status = center.check(background=True)["status"]
+        delays.append(status["next_poll_at"] - now[0])
+        now[0] = status["next_poll_at"] - 1
+        center.check(background=True)  # not due yet: no request
+        now[0] += 1
+    assert delays == [day, 2 * day, 4 * day, 7 * day, 7 * day]
+    assert len(lifecycle.calls) == 5
+
+
+def test_notification_state_is_kept_by_the_installer():
+    from services.module_profile_plan import user_owned
+
+    assert user_owned("module-notifications.json")

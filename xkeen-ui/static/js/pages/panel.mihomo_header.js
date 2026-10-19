@@ -92,7 +92,6 @@ export function initPanelOperatorHeader() {
   branding.append(service.container);
   header.querySelector('.header-main').prepend(sections.container);
   header.querySelector('.header-right').append(panel.container);
-  document.dispatchEvent(new CustomEvent('xkeen:header-shell-ready'));
 
   // Compact shell is shared by the panel workspaces without cloning controls.
   // Anchors remain as a safe fallback for integrations that add a legacy view.
@@ -268,6 +267,9 @@ export function initPanelOperatorHeader() {
       try { focused.focus({ preventScroll: true }); } catch (_) {}
     }
     service.trigger.tabIndex = active ? 0 : -1;
+    // Controls moved between the header and its menus: the notification bell
+    // finds its place again.
+    document.dispatchEvent(new CustomEvent('xkeen:header-shell-changed'));
   }
   document.addEventListener('xkeen:panel-view-changed', (event) => syncView(event.detail?.view));
   syncView(document.querySelector('.top-tab-btn.active[data-view]')?.dataset.view);

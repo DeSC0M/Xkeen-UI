@@ -2,7 +2,7 @@ import { ensureXkeenRoot } from '../features/xkeen_runtime.js';
 import { wireTopLevelNavigation } from './top_level_nav.shared.js';
 
 const MOUNT_ID = 'xk-top-level-screen-mount';
-const GLOBAL_BODY_NODE_IDS = new Set(['xk-tooltip-portal']);
+const GLOBAL_BODY_NODE_IDS = new Set(['xk-tooltip-portal', 'xk-notification-popover']);
 
 function ensureTopLevelRoot() {
   try {

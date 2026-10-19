@@ -87,6 +87,8 @@ function createCenter() {
   // stacks its children can neither cut it nor draw over it.
   const popover = document.createElement('section');
   popover.className = 'xk-notification-popover';
+  // The id keeps the window global when screens move the body into their roots.
+  popover.id = 'xk-notification-popover';
   popover.setAttribute('role', 'dialog');
   popover.setAttribute('aria-label', 'Центр уведомлений');
   popover.hidden = true;
@@ -106,11 +108,28 @@ function createCenter() {
   return { root, popover };
 }
 
+// Screens switched without a reload stay in the document, hidden: the bell
+// belongs to the header on display. Before the first paint nothing is on
+// display yet, and the first header found is the one being built.
+function rendered(node) {
+  return node.getClientRects().length > 0;
+}
+
+function headerTargets() {
+  const gears = [...document.querySelectorAll('.xk-header-panel-trigger')];
+  const rows = [...document.querySelectorAll('.header-actions')];
+  const gear = gears.find(rendered);
+  const actions = rows.find(rendered);
+  if (gear || actions) return { gear: gear || null, actions: gear ? null : actions };
+  return { gear: gears[0] || null, actions: gears[0] ? null : rows[0] || null };
+}
+
 function placeCenter(root) {
   const trigger = root.querySelector('.xk-notification-trigger');
   // The main panel keeps its actions in the gear menu; the bell stands
   // beside the gear so the count is never hidden behind a click.
-  const gear = document.querySelector('.xk-header-panel-trigger')?.parentElement;
+  const targets = headerTargets();
+  const gear = targets.gear?.parentElement;
   trigger.classList.toggle('btn-secondary', Boolean(gear));
   trigger.classList.toggle('xk-header-disclosure-trigger', Boolean(gear));
   trigger.classList.toggle('xk-header-btn', !gear);
@@ -118,8 +137,9 @@ function placeCenter(root) {
     if (root.nextElementSibling !== gear) gear.before(root);
     return;
   }
-  const actions = document.querySelector('.header-actions');
-  const title = actions ? document.querySelector('h1') : null;
+  const actions = targets.actions;
+  const scope = actions?.closest('[data-xk-top-level-screen-root]') || document;
+  const title = actions ? scope.querySelector('h1') : null;
   if (title && window.matchMedia(NARROW).matches) {
     // A phone wraps the button row; the title line keeps the bell in sight.
     let row = title.parentElement;
@@ -193,7 +213,7 @@ export function initNotificationCenter() {
     }
   }
 
-  function setOpen(value) {
+  function setOpen(value, { returnFocus = true } = {}) {
     open = Boolean(value);
     if (open) positionPopover();
     popover.hidden = !open;
@@ -202,7 +222,7 @@ export function initNotificationCenter() {
     if (open) {
       void markSeen();
       closeButton.focus();
-    } else {
+    } else if (returnFocus) {
       trigger.focus();
     }
   }
@@ -319,7 +339,8 @@ export function initNotificationCenter() {
   closeButton.addEventListener('click', () => setOpen(false));
   checkButton.addEventListener('click', () => void check());
   document.addEventListener('click', (event) => {
-    if (open && !root.contains(event.target) && !popover.contains(event.target)) setOpen(false);
+    // A click elsewhere already moved focus where the user wanted it.
+    if (open && !root.contains(event.target) && !popover.contains(event.target)) setOpen(false, { returnFocus: false });
   });
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && open) setOpen(false);
@@ -338,11 +359,20 @@ export function initNotificationCenter() {
     });
   } catch (error) {}
   window.addEventListener('beforeunload', () => broadcast?.close());
+  // A tab left open for hours learns what the background poll found meanwhile.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') void load();
+  });
   window.addEventListener('resize', () => { if (open) positionPopover(); });
   window.addEventListener('scroll', () => { if (open) positionPopover(); }, { passive: true, capture: true });
-  // The main panel builds its gear after this module runs; the narrow layout
+  // The main panel builds its gear after this module runs and moves its
+  // controls between the header and the menus per view; the narrow layout
   // moves the bell between the button row and the title line.
-  document.addEventListener('xkeen:header-shell-ready', () => placeCenter(root));
+  document.addEventListener('xkeen:header-shell-changed', () => placeCenter(root));
+  window.addEventListener('xkeen:top-level-route-change', () => {
+    if (open) setOpen(false, { returnFocus: false });
+    placeCenter(root);
+  });
   try { window.matchMedia(NARROW).addEventListener('change', () => placeCenter(root)); } catch (error) {}
 
   const api = {

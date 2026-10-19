@@ -361,7 +361,7 @@ def test_top_level_navigation_controls_use_shared_helper_contract():
     assert "fetchTopLevelScreenSnapshot('xkeen', '/xkeen')" in xkeen_screen
     assert 'export function registerPanelMihomoTopLevelScreens()' in panel_mihomo_shared
     assert 'export function registerCanonicalTopLevelScreens()' in panel_mihomo_shared
-    assert "const GLOBAL_BODY_NODE_IDS = new Set(['xk-tooltip-portal']);" in host
+    assert "const GLOBAL_BODY_NODE_IDS = new Set(['xk-tooltip-portal', 'xk-notification-popover']);" in host
     assert 'function shouldKeepBodyNodeGlobal(node) {' in host
     assert 'if (shouldKeepBodyNodeGlobal(node)) return false;' in host
     assert "import { registerModulesTopLevelScreen } from './top_level_modules_screen.js';" in panel_mihomo_shared

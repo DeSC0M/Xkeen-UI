@@ -230,3 +230,46 @@ test('bell follows the screens without a page reload', async ({ page }) => {
   expect(await trigger.evaluate((node) => node.closest('.xk-notification-center').nextElementSibling
     ?.contains(document.querySelector('.xk-header-panel-trigger')))).toBe(true);
 });
+
+test('closing the window by a click elsewhere leaves focus where the user clicked', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await mockLifecycle(page);
+  await mockCenter(page);
+  await page.goto('/devtools');
+  const trigger = page.locator('.xk-notification-trigger');
+  await trigger.click();
+  await expect(page.locator('.xk-notification-popover')).toBeVisible();
+  const field = page.locator('input[type="text"]:visible, input[type="search"]:visible, input:not([type]):visible').first();
+  await field.click();
+  await expect(page.locator('.xk-notification-popover')).toBeHidden();
+  await expect(field).toBeFocused();
+
+  // Escape is a keyboard exit: focus returns to the bell.
+  await trigger.click();
+  await page.keyboard.press('Escape');
+  await expect(trigger).toBeFocused();
+});
+
+test('a tab brought back to the screen rereads the notifications', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await mockLifecycle(page);
+  let unread = 0;
+  await page.route('**/api/notifications**', (route) => route.fulfill({ json: {
+    ok: true, channel: 'stable', unread_count: unread, status: { last_success_at: 1_791_700_000, freshness: 'fresh' },
+    records: unread ? [record('e'.repeat(64), 'panel-update', 'Доступна новая версия панели', 'Сохранит профиль.')] : [],
+  } }));
+  await page.goto('/devtools');
+  const count = page.locator('.xk-notification-trigger__count');
+  await expect(count).toBeHidden();
+
+  unread = 1; // the background poll found a release while the tab was hidden
+  await page.evaluate(() => {
+    const flip = (state) => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
+      document.dispatchEvent(new Event('visibilitychange'));
+    };
+    flip('hidden');
+    flip('visible');
+  });
+  await expect(count).toHaveText('1');
+});
