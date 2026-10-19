@@ -379,11 +379,26 @@ function renderProfiles(root, data, selectedProfileId) {
   }
 }
 
+// The core window has one main action. While its footer offers to switch
+// or to start an engine, the update of the card is an ordinary button.
+const MAIN_ACTION_EVENT = 'xkeen:core-modal-main-action';
+
+function applyUpdateEmphasis(button) {
+  const footerAction = document.getElementById('core-modal')?.dataset.mainAction === '1';
+  const primary = button.dataset.releasePrimary === '1' && !footerAction;
+  button.classList.toggle('btn-primary', primary);
+  button.classList.toggle('btn-secondary', !primary);
+}
+
 export function initCoreSource(root) {
   if (!root || root.dataset.coreSourceWired === '1') return;
   root.dataset.coreSourceWired = '1';
   const engine = root.dataset.coreEngine;
   const endpoint = `/api/${engine}`;
+  document.addEventListener(MAIN_ACTION_EVENT, () => {
+    const button = root.querySelector('[data-core-source-action="prepare"]');
+    if (button?.dataset.releasePrimary) applyUpdateEmphasis(button);
+  });
   const sourceModal = document.querySelector(`[data-core-source-modal]#${engine}-core-source-modal`);
   const installModal = document.querySelector(`[data-core-install-modal]#${engine}-core-install-modal`);
   let data = null;
@@ -492,8 +507,8 @@ export function initCoreSource(root) {
     const updateButton = root.querySelector('[data-core-source-action="prepare"]');
     if (updateButton) {
       updateButton.disabled = Boolean(release.button.disabled) || data.state?.last_status === 'running';
-      updateButton.classList.toggle('btn-primary', release.button.primary);
-      updateButton.classList.toggle('btn-secondary', !release.button.primary);
+      updateButton.dataset.releasePrimary = release.button.primary ? '1' : '0';
+      applyUpdateEmphasis(updateButton);
       const use = updateButton.querySelector('use');
       if (use) use.setAttribute('href', `${iconSprite(root)}#xk-${release.button.icon}`);
     }

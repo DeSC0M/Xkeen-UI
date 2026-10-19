@@ -1500,7 +1500,7 @@
         {
           "location": "xkeen-ui/templates/panel.html:L140",
           "control_type": "text+icon",
-          "accessible_label": "Mihomo…"
+          "accessible_label": "Mihomo…было активным"
         },
         {
           "location": "xkeen-ui/templates/panel.html:L4002",
@@ -1521,7 +1521,7 @@
         {
           "location": "xkeen-ui/templates/panel.html:L135",
           "control_type": "text+icon",
-          "accessible_label": "Xray…"
+          "accessible_label": "Xray…было активным"
         },
         {
           "location": "xkeen-ui/templates/panel.html:L3995",

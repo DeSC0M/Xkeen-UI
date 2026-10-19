@@ -202,7 +202,8 @@
       "module-notifications.json",
       "module-update-channel.json",
       "secret.key",
-      "ui-settings.json"
+      "ui-settings.json",
+      "xkeen-last-core.json"
     ],
     "user_top_level": [
       "bin",

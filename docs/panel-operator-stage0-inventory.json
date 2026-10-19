@@ -1899,7 +1899,7 @@
               "accessible_name": false
             },
             {
-              "control": "control@1609",
+              "control": "control@1678",
               "icons": [
                 "engine-mihomo"
               ],
@@ -8407,7 +8407,7 @@
       "xray-snapshot-status",
       "xray-snapshot-title"
     ],
-    "data_attribute_count": 647,
+    "data_attribute_count": 651,
     "data_attributes": [
       {
         "locator": "header.panel-header.panel-header-shell@L96",
@@ -8495,6 +8495,11 @@
         "value": ""
       },
       {
+        "locator": "span.xk-svc-core-last@L137",
+        "name": "data-xk-svc-core-last",
+        "value": ""
+      },
+      {
         "locator": "button.xk-svc-core@L140",
         "name": "data-core",
         "value": "mihomo"
@@ -8517,6 +8522,11 @@
       {
         "locator": "small@L142",
         "name": "data-xk-svc-core-note",
+        "value": ""
+      },
+      {
+        "locator": "span.xk-svc-core-last@L142",
+        "name": "data-xk-svc-core-last",
         "value": ""
       },
       {
@@ -11005,6 +11015,11 @@
         "value": "xray"
       },
       {
+        "locator": "span.xk-core-option-version@L3997",
+        "name": "data-core-option-version",
+        "value": ""
+      },
+      {
         "locator": "div.xk-core-engine-row@L4001",
         "name": "data-core",
         "value": "mihomo"
@@ -11013,6 +11028,11 @@
         "locator": "button.core-option.xk-core-option@L4002",
         "name": "data-core",
         "value": "mihomo"
+      },
+      {
+        "locator": "span.xk-core-option-version@L4004",
+        "name": "data-core-option-version",
+        "value": ""
       },
       {
         "locator": "div.xk-core-source-control.xk-core-source-control-absent@L4024",
@@ -11889,6 +11909,7 @@
         "xkeen-ui/static/js/pages/panel.lazy_bindings.runtime.js"
       ],
       "core-modal": [
+        "xkeen-ui/static/js/features/core_source.js",
         "xkeen-ui/static/js/features/service_status.js"
       ],
       "core-modal-cancel-btn": [

@@ -37,7 +37,7 @@ def _core_log(level: str, msg: str, **extra) -> None:
     except Exception:
         pass
 
-from services.cores import CoreSwitchError, get_cores_status, switch_core
+from services.cores import CoreSwitchError, get_cores_status, read_last_core, remember_running_core, switch_core
 
 
 def create_service_blueprint(
@@ -390,6 +390,9 @@ def create_service_blueprint(
                     continue
 
             status = "running" if running else "stopped"
+            # The header polls this: the engine seen running is what the core
+            # window names once the service stops or the core crashes.
+            remember_running_core(running_core)
 
             return jsonify(
                 {
@@ -419,6 +422,7 @@ def create_service_blueprint(
                     "ok": True,
                     "cores": cores,
                     "currentCore": current_core,
+                    "lastCore": read_last_core(),
                 }
             ), 200
         except Exception as e:
@@ -443,6 +447,7 @@ def create_service_blueprint(
                     "cores": cores,
                     "current_core": current_core,
                     "currentCore": current_core,
+                    "lastCore": read_last_core(),
                 }
             ), 200
         except Exception as e:

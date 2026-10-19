@@ -225,6 +225,22 @@ let serviceStatusModuleApi = null;
     }
   }
 
+  // A stopped service (or a crashed core) has no running engine: the button
+  // of the window then picks the engine of the open tab and starts xkeen.
+  function coreModalServiceStopped() {
+    return !getCoreModalCurrentCore() && String(readShellSnapshot().serviceStatus || '') === 'stopped';
+  }
+
+  function coreModalStatusText(selectedCore, stopped) {
+    const label = coreLabel(selectedCore);
+    if (!stopped) return `Активным станет ${label}. Служба xkeen перезапустится.`;
+    const last = _lastCore ? `Последним работало ядро ${coreLabel(_lastCore)}. ` : '';
+    const action = selectedCore === _lastCore
+      ? `Кнопка запустит службу с ${label}.`
+      : `Кнопка выберет ${label} и запустит службу.`;
+    return `Служба xkeen остановлена. ${last}${action}`;
+  }
+
   function syncCoreModalSelectionUi() {
     const statusEl = $('core-modal-status');
     const confirmBtn = $('core-modal-confirm-btn');
@@ -232,6 +248,7 @@ let serviceStatusModuleApi = null;
     if (!statusEl || !confirmBtn || !coreButtons.length) return;
 
     const currentCore = getCoreModalCurrentCore();
+    const stopped = coreModalServiceStopped();
     let selectedCore = '';
     let selectedInstalled = null;
 
@@ -261,7 +278,10 @@ let serviceStatusModuleApi = null;
       } catch (e) {}
 
       const stateEl = getCoreModalButtonState(btn);
-      if (stateEl && known) stateEl.textContent = isCurrent ? 'Активно' : installed ? 'Установлено' : 'Не установлено';
+      const wasActive = stopped && installed && core === _lastCore;
+      if (stateEl && known) stateEl.textContent = isCurrent ? 'Активно' : wasActive ? 'Было активным' : installed ? 'Установлено' : 'Не установлено';
+      const versionEl = btn.querySelector('[data-core-option-version]');
+      if (versionEl) versionEl.textContent = installed ? shortVersion(_coreVersions[core]) : '';
     });
 
     showCoreModalEngine(selectedCore, selectedInstalled);
@@ -269,15 +289,30 @@ let serviceStatusModuleApi = null;
     const canSwitch = !!selectedCore && selectedInstalled === true && selectedCore !== currentCore && !_coreModalLoading;
     confirmBtn.hidden = !canSwitch;
     confirmBtn.disabled = !canSwitch;
-    if (canSwitch) confirmBtn.textContent = `Сделать ${coreLabel(selectedCore)} активным`;
+    if (canSwitch) {
+      confirmBtn.textContent = stopped ? `Запустить xkeen с ${coreLabel(selectedCore)}` : `Сделать ${coreLabel(selectedCore)} активным`;
+    }
+    announceCoreModalMainAction(canSwitch);
 
     const state = statusEl.dataset ? String(statusEl.dataset.state || '') : '';
     if (state === 'loading' || state === 'busy' || state === 'error') return;
     if (canSwitch) {
-      setCoreModalStatus(`Активным станет ${coreLabel(selectedCore)}. Служба xkeen перезапустится.`, 'hint');
+      setCoreModalStatus(coreModalStatusText(selectedCore, stopped), 'hint');
       return;
     }
     setCoreModalStatus('', '');
+  }
+
+  // The footer button is the main action of the window: while it is shown,
+  // the update in the card of the engine steps back (core_source.js).
+  function announceCoreModalMainAction(offered) {
+    const modal = getCoreModal();
+    if (!modal || !modal.dataset) return;
+    const next = offered ? '1' : '';
+    if ((modal.dataset.mainAction || '') === next) return;
+    if (offered) modal.dataset.mainAction = next;
+    else delete modal.dataset.mainAction;
+    try { document.dispatchEvent(new CustomEvent('xkeen:core-modal-main-action')); } catch (e) {}
   }
 
   function readShellSnapshot() {
@@ -1253,6 +1288,7 @@ let serviceStatusModuleApi = null;
 
         const cores = Array.isArray(data.cores) ? data.cores.map((core) => normalizeCore(core)).filter(Boolean) : [];
         const current = normalizeCore(data.currentCore || '');
+        _lastCore = normalizeCore(data.lastCore || '');
         setCoreModalCurrentCore(current);
         rememberInstalledCores(cores, current);
 
@@ -1308,11 +1344,13 @@ let serviceStatusModuleApi = null;
       return;
     }
 
-    setCoreModalStatus(`Смена ядра на ${selectedCore}...`, 'busy');
+    const starting = coreModalServiceStopped();
+    const busyText = starting ? `Запускаем xkeen с ${coreLabel(selectedCore)}…` : `Смена ядра на ${selectedCore}...`;
+    setCoreModalStatus(busyText, 'busy');
     try {
       toast({
         id: 'xkeen-core-change',
-        message: `Смена ядра на ${selectedCore}...`,
+        message: busyText,
         kind: 'info',
         sticky: true,
         dedupeWindowMs: 0,
@@ -1353,11 +1391,12 @@ let serviceStatusModuleApi = null;
 
       setCoreModalCurrentCore(selectedCore);
       closeXkeenCoreModal();
+      const doneText = starting ? `xkeen запущен с ${coreLabel(selectedCore)}` : `Ядро изменено на ${selectedCore}`;
       toast({
         id: 'xkeen-core-change',
         message: coreHasManagementModule(selectedCore)
-          ? `Ядро изменено на ${selectedCore}`
-          : `Ядро изменено на ${selectedCore}. ${coreModuleNotice(selectedCore)}`,
+          ? doneText
+          : `${doneText}. ${coreModuleNotice(selectedCore)}`,
         kind: coreHasManagementModule(selectedCore) ? 'success' : 'warning',
         dedupeWindowMs: 0,
       });
@@ -1455,6 +1494,8 @@ let serviceStatusModuleApi = null;
 
   let _installedCores = null;
   let _coreVersions = {};
+  // The engine the panel last saw running (server record): named while stopped.
+  let _lastCore = '';
   let _menuCoresRequest = null;
 
   function rememberInstalledCores(cores, current) {
@@ -1478,6 +1519,7 @@ let serviceStatusModuleApi = null;
       .then(([coreData, versionData]) => {
         if (coreData && coreData.ok !== false && Array.isArray(coreData.cores)) {
           _installedCores = coreData.cores.map((core) => normalizeCore(core)).filter(Boolean);
+          _lastCore = normalizeCore(coreData.lastCore || '');
         }
         const versions = {};
         const found = versionData && versionData.cores && typeof versionData.cores === 'object' ? versionData.cores : {};
@@ -1516,6 +1558,9 @@ let serviceStatusModuleApi = null;
       btn.hidden = unused;
       btn.setAttribute('aria-pressed', String(isCurrent));
       btn.classList.toggle('is-absent', !installed);
+      const wasActive = st === 'stopped' && !current && installed && value === _lastCore;
+      const last = btn.querySelector('[data-xk-svc-core-last]');
+      if (last) last.hidden = !wasActive;
       const note = btn.querySelector('[data-xk-svc-core-note]');
       if (!note) return;
       if (isCurrent) note.textContent = version ? `${version} · активно` : 'активно';
@@ -1524,7 +1569,8 @@ let serviceStatusModuleApi = null;
       const label = coreLabel(value);
       btn.setAttribute('aria-label', isCurrent
         ? `${label}: активное ядро. Открыть управление ядром`
-        : installed ? `${label}: установлено. Открыть управление ядром` : `${label}: не установлено. Открыть управление ядром`);
+        : wasActive ? `${label}: было активным до остановки. Открыть управление ядром`
+          : installed ? `${label}: установлено. Открыть управление ядром` : `${label}: не установлено. Открыть управление ядром`);
     });
     block.dataset.cores = String(block.querySelectorAll('[data-xk-svc-core]:not([hidden])').length);
   }

@@ -27,6 +27,7 @@ _USER_FILES = {
     "branding.json",
     "module-update-channel.json",
     "module-notifications.json",
+    "xkeen-last-core.json",
     *STATE_FILENAMES,
 }
 # Template folders hold the shipped templates next to the ones the user made;

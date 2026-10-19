@@ -166,3 +166,100 @@ test('a Mihomo-only router shows one Mihomo card', async ({ page }) => {
   await expect(tab(page, 'mihomo')).toHaveAttribute('aria-selected', 'true');
   await expect(tab(page, 'mihomo')).toContainText('Активно');
 });
+
+// A stopped service (or a crashed core) has no running engine. The window
+// names the one the panel last saw running and starts xkeen with the engine
+// of the open tab.
+async function serveStopped(page, { lastCore = null } = {}) {
+  const posts = [];
+  await page.route('**/api/xkeen/status', (route) => route.fulfill({ json: { ok: true, running: false, status: 'stopped', core: null } }));
+  await page.route('**/api/xkeen/core', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: { ok: true, cores: ['xray', 'mihomo'], currentCore: null, lastCore } });
+    }
+    posts.push(route.request().postDataJSON());
+    return route.fulfill({ json: { ok: true, core: posts.at(-1).core, restarted: true } });
+  });
+  await page.route('**/api/cores/versions', (route) => route.fulfill({ json: { ok: true, cores: {
+    xray: { installed: true, version: '26.9.9' }, mihomo: { installed: true, version: 'v1.19.14' },
+  } } }));
+  return posts;
+}
+
+test('a stopped service names the engine that ran last and starts the engine of the open tab', async ({ page }) => {
+  const posts = await serveStopped(page, { lastCore: 'xray' });
+  await page.goto('/');
+  const menu = await openServiceMenu(page);
+  const confirm = page.locator('#core-modal-confirm-btn');
+  const status = page.locator('#core-modal-status');
+
+  await expect(engineSwitch(menu, 'xray').locator('[data-xk-svc-core-last]')).toBeVisible();
+  await expect(engineSwitch(menu, 'xray').locator('[data-xk-svc-core-note]')).toHaveText('26.9.9');
+  await expect(engineSwitch(menu, 'mihomo').locator('[data-xk-svc-core-last]')).toBeHidden();
+
+  await engineSwitch(menu, 'xray').click();
+  await expect(tab(page, 'xray')).toContainText('Было активным');
+  await expect(tab(page, 'xray').locator('[data-core-option-version]')).toHaveText('26.9.9');
+  await expect(tab(page, 'mihomo').locator('[data-core-option-version]')).toHaveText('1.19.14');
+  await expect(confirm).toHaveText('Запустить xkeen с Xray');
+  await expect(status).toHaveText('Служба xkeen остановлена. Последним работало ядро Xray. Кнопка запустит службу с Xray.');
+
+  // The button follows the tab: what is picked is what starts.
+  await tab(page, 'mihomo').click();
+  await expect(confirm).toHaveText('Запустить xkeen с Mihomo');
+  await expect(status).toHaveText('Служба xkeen остановлена. Последним работало ядро Xray. Кнопка выберет Mihomo и запустит службу.');
+  await confirm.click();
+  await expect.poll(() => posts).toEqual([{ core: 'mihomo' }]);
+});
+
+test('a stopped service the panel never saw running offers both engines without a mark', async ({ page }) => {
+  await serveStopped(page);
+  await page.goto('/');
+  const menu = await openServiceMenu(page);
+  await expect(menu.locator('[data-xk-svc-core-last]:visible')).toHaveCount(0);
+
+  await engineSwitch(menu, 'xray').click();
+  await expect(tab(page, 'xray')).toContainText('Установлено');
+  await expect(page.locator('#core-modal-confirm-btn')).toHaveText('Запустить xkeen с Xray');
+  await expect(page.locator('#core-modal-status')).toHaveText('Служба xkeen остановлена. Кнопка выберет Xray и запустит службу.');
+  await tab(page, 'mihomo').click();
+  await expect(page.locator('#core-modal-confirm-btn')).toHaveText('Запустить xkeen с Mihomo');
+});
+
+// Both engines have an update. The window has one main action: while its
+// footer offers to switch, the update of the card is an ordinary button.
+const sourceProfiles = (engine, installed, latest) => ({
+  ok: true,
+  data: {
+    engine_id: engine,
+    platform: { machine: 'aarch64', opkg_arch: 'aarch64-3.10', endianness: 'le' },
+    state: { selected_profile_id: 'official', installed_profile_id: 'official', last_status: 'idle', detected_version: installed, installed_release_tag: `v${installed}` },
+    profiles: [{
+      profile_id: 'official', display_name: engine === 'xray' ? 'Официальный Xray' : 'Официальный Mihomo', repo: 'x/y', description: '',
+      release: { installable: true, stable: { tag: `v${latest}` }, asset: { name: `${engine}.zip` }, checksum: { sha256: 'a'.repeat(64) } },
+    }],
+  },
+});
+
+for (const [running, other] of [['xray', 'mihomo'], ['mihomo', 'xray']]) {
+  test(`with ${running} running, the update of ${other} steps back while switching is offered`, async ({ page }) => {
+    await serveCores(page, { cores: ['xray', 'mihomo'], current: running });
+    await page.route('**/api/xray/core-profiles', (route) => route.fulfill({ json: sourceProfiles('xray', '26.9.9', '26.10.1') }));
+    await page.route('**/api/mihomo/core-profiles', (route) => route.fulfill({ json: sourceProfiles('mihomo', '1.19.14', '1.19.32') }));
+    await page.goto('/');
+    const menu = await openServiceMenu(page);
+    const update = (engine) => page.locator(`#core-modal [data-core-source][data-core-engine="${engine}"] [data-core-source-action="prepare"]`);
+
+    await engineSwitch(menu, other).click();
+    await expect(page.locator('#core-modal-confirm-btn')).toBeVisible();
+    await expect(update(other)).toContainText('Обновить до');
+    await expect(update(other)).toHaveClass(/btn-secondary/);
+    await expect(update(other)).not.toHaveClass(/btn-primary/);
+
+    // The running engine's tab offers no switch: its update is the main action.
+    await tab(page, running).click();
+    await expect(page.locator('#core-modal-confirm-btn')).toBeHidden();
+    await expect(update(running)).toContainText('Обновить до');
+    await expect(update(running)).toHaveClass(/btn-primary/);
+  });
+}

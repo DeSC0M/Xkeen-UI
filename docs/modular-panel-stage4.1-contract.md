@@ -11,10 +11,10 @@
 - Stage 0 inventory: `docs/modular-panel-stage0-inventory.json`;
 - machine-readable contract: `docs/modular-panel-stage4.1-contract.json`;
 - пересборка: `python .\scripts\generate_modular_panel_stage4_1_contract.py --root .`;
-- UTF-8 размер: `431271` байт;
+- UTF-8 размер: `431593` байт;
 - строк: `5691`;
 - статических `id`: `1350`, дубликатов: `0`;
-- SHA-256 текущего baseline: `8412eed0627206f821d4c92625b64e5b8300cb122b06984b65dda558e92ddba2`.
+- SHA-256 текущего baseline: `62631fb33c5053ca92305d84c8f8373ae91a282c2dc94981ae130fd091126f19`.
 
 ## Правила composition
 

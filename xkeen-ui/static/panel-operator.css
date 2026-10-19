@@ -23287,6 +23287,17 @@ body.panel-page #core-modal .xk-core-option-title {
   line-height: 1.2;
 }
 
+/* The version on the tab: both engines compare at a glance, running or not. */
+body.panel-page #core-modal .xk-core-option-version {
+  margin-left: 8px;
+  color: var(--op-muted);
+  font-size: calc(12px * var(--xk-font-scale, 1));
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+body.panel-page #core-modal .xk-core-option-version:empty { display: none; }
+
 body.panel-page #core-modal .xk-core-option-state {
   display: inline-flex;
   align-items: center;
@@ -23616,6 +23627,21 @@ body.panel-page .xk-svc-core-copy small {
   color: var(--op-faint);
   font-size: calc(11px * var(--xk-font-scale, 1));
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* While the service is stopped: the engine that ran before the stop. */
+body.panel-page .xk-svc-core-last {
+  justify-self: start;
+  width: max-content;
+  margin-top: 3px;
+  padding: 0 6px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--op-accent) 16%, transparent);
+  color: var(--op-accent);
+  font-size: calc(9.5px * var(--xk-font-scale, 1));
+  font-weight: 600;
+  line-height: 16px;
   white-space: nowrap;
 }
 

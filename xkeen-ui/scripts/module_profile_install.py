@@ -51,7 +51,7 @@ INSTALL_MARKERS = {
 }
 STATE_FILES = {"modules.json", "module-installed.json", "install-profile.json", "install-managed.json"}
 USER_TOP_LEVEL = {"xray-jsonc", "var", "bin"}
-USER_FILES = {"secret.key", "devtools.env", "ui-settings.json", "branding.json", "module-update-channel.json", "module-notifications.json"}
+USER_FILES = {"secret.key", "devtools.env", "ui-settings.json", "branding.json", "module-update-channel.json", "module-notifications.json", "xkeen-last-core.json"}
 USER_PREFIXES = (
     "opt/etc/mihomo/profiles/",
     "opt/etc/mihomo/backup/",

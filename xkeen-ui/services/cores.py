@@ -13,12 +13,14 @@ This module now adds:
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import tempfile
 import time
 from typing import Callable, Dict, List, Optional, Tuple
 
+from services.io.atomic import _atomic_write_json
 from services.xray_assets import ensure_xray_dat_assets
 from services.xkeen_commands_catalog import build_xkeen_cmd
 
@@ -161,6 +163,39 @@ def detect_running_core() -> Optional[str]:
     return None
 
 
+# The engine the panel last saw running. A stopped or crashed service has no
+# process to ask, and xkeen keeps its choice inside its own scripts; the
+# window of the core tells what ran before the stop from this record.
+LAST_CORE_FILENAME = "xkeen-last-core.json"
+_KNOWN_CORES = ("xray", "mihomo")
+
+
+def _last_core_path() -> str:
+    from core.paths import UI_STATE_DIR
+
+    return os.path.join(UI_STATE_DIR, LAST_CORE_FILENAME)
+
+
+def read_last_core() -> Optional[str]:
+    """Return the engine last seen running, or None when the panel never saw one."""
+    try:
+        with open(_last_core_path(), "r", encoding="utf-8") as handle:
+            core = json.load(handle).get("core")
+    except Exception:
+        return None
+    return core if core in _KNOWN_CORES else None
+
+
+def remember_running_core(core: Optional[str]) -> None:
+    """Record a running engine; the file is written only when it changes."""
+    if core not in _KNOWN_CORES or read_last_core() == core:
+        return
+    try:
+        _atomic_write_json(_last_core_path(), {"schema_version": 1, "core": core})
+    except Exception as exc:  # noqa: BLE001 - a hint must never break the status
+        _core_log("warning", "xkeen.last_core_write_failed", error=str(exc))
+
+
 def get_cores_status() -> Tuple[List[str], Optional[str]]:
     """Return (available_cores, current_core) for xkeen.
 
@@ -172,6 +207,7 @@ def get_cores_status() -> Tuple[List[str], Optional[str]]:
     """
     cores = detect_available_cores()
     running_core = detect_running_core()
+    remember_running_core(running_core)
     return cores, running_core
 
 
@@ -503,6 +539,7 @@ def switch_core(core: str, error_log_path: str, runtime_log: Callable[[str], Non
                     ) from exc
 
             run_start_cmd(build_xkeen_cmd("-start"), timeout=timeout_start)
+            remember_running_core(core)
         except CoreSwitchError:
             raise
         except Exception as exc:
