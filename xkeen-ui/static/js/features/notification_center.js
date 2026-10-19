@@ -1,8 +1,15 @@
 import { iconHtml } from '../ui/operator_icons.js';
+import { wireTopLevelNavigation } from '../pages/top_level_nav.shared.js';
 
 const API_BASE = '/api/notifications';
 const CHANNEL_NAME = 'xkeen-notification-center.v1';
 const NARROW = '(max-width: 680px)';
+// Release notes lead to the screen where the update is planned and applied.
+const RECORD_LINKS = {
+  'panel-update': 'К обновлению',
+  'module-new': 'К модулям',
+  'module-update': 'К модулям',
+};
 
 function text(value) {
   return String(value == null ? '' : value);
@@ -269,6 +276,16 @@ export function initNotificationCenter() {
       meta.textContent = recordDetails(record);
       const actions = document.createElement('div');
       actions.className = 'xk-notification-record__actions';
+      const linkLabel = RECORD_LINKS[record.kind];
+      if (linkLabel) {
+        const link = document.createElement('a');
+        link.href = '/modules';
+        link.className = 'xk-notification-action is-primary';
+        link.dataset.xkTopNav = '1';
+        link.textContent = linkLabel;
+        link.addEventListener('click', () => setOpen(false, { returnFocus: false }));
+        actions.append(link);
+      }
       actions.append(
         button('Скрыть', 'xk-notification-action', () => void changeRecord(record.id, 'dismiss')),
         button('На день', 'xk-notification-action', () => void changeRecord(record.id, 'snooze', 24 * 60 * 60)),
@@ -278,6 +295,7 @@ export function initNotificationCenter() {
       card.append(actions);
       list.append(card);
     });
+    wireTopLevelNavigation(list);
   }
 
   async function load() {

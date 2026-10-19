@@ -2250,6 +2250,16 @@
           "lazy_features": []
         },
         {
+          "path": "static/js/pages/top_level_nav.shared.js",
+          "globals": [],
+          "lazy_features": []
+        },
+        {
+          "path": "static/js/features/module_manager/badge.js",
+          "globals": [],
+          "lazy_features": []
+        },
+        {
           "path": "static/js/ui/settings.js",
           "globals": [
             "XKeen.ui.settings.get",
@@ -2506,16 +2516,6 @@
         },
         {
           "path": "static/js/features/mihomo_runtime.js",
-          "globals": [],
-          "lazy_features": []
-        },
-        {
-          "path": "static/js/pages/top_level_nav.shared.js",
-          "globals": [],
-          "lazy_features": []
-        },
-        {
-          "path": "static/js/features/module_manager/badge.js",
           "globals": [],
           "lazy_features": []
         },

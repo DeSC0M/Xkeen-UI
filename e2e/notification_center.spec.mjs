@@ -273,3 +273,52 @@ test('a tab brought back to the screen rereads the notifications', async ({ page
   });
   await expect(count).toHaveText('1');
 });
+
+
+test('a release notification leads to the update screen without a reload', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await mockLifecycle(page);
+  await mockCenter(page);
+  await page.goto('/');
+  await page.evaluate(() => { window.__sameDocument = true; });
+  await page.locator('.xk-notification-trigger:visible').click();
+  const popover = page.locator('.xk-notification-popover');
+  const panelRecord = popover.locator('.xk-notification-record').filter({ hasText: 'Доступна новая версия панели' });
+  await expect(popover.locator('.xk-notification-record').filter({ hasText: 'Новый модуль' })
+    .getByRole('link', { name: 'К модулям' })).toHaveAttribute('href', '/modules');
+  await panelRecord.getByRole('link', { name: 'К обновлению' }).click();
+  await expect(page.locator('#xk-modules-manager .modules-summary')).toBeVisible();
+  await expect(popover).toBeHidden();
+  expect(await page.evaluate(() => window.__sameDocument)).toBe(true);
+});
+
+for (const width of [1440, 390]) {
+  test(`record buttons share the row in equal parts at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await mockLifecycle(page);
+    await page.route('**/api/notifications**', (route) => route.fulfill({ json: {
+      ok: true, channel: 'stable', unread_count: 2, status: { error_code: 'catalog_unavailable' },
+      records: [
+        record('f'.repeat(64), 'panel-update', 'Доступна новая версия панели', 'Сохранит профиль.'),
+        { id: '0'.repeat(64), kind: 'catalog-error', title: 'Проверка обновлений требует внимания', message: 'Нет связи.', seen: false },
+      ],
+    } }));
+    await page.goto('/devtools');
+    await page.locator('.xk-notification-trigger').click();
+    for (const row of await page.locator('.xk-notification-record__actions').all()) {
+      const geometry = await row.evaluate((node) => {
+        const box = node.getBoundingClientRect();
+        const items = [...node.children].map((child) => child.getBoundingClientRect());
+        return { left: box.left, right: box.right, items: items.map((r) => ({ left: r.left, right: r.right, width: r.width, height: r.height })) };
+      });
+      const widths = geometry.items.map((item) => item.width);
+      expect(Math.max(...widths) - Math.min(...widths), JSON.stringify(widths)).toBeLessThanOrEqual(1);
+      expect(Math.abs(geometry.items[0].left - geometry.left)).toBeLessThanOrEqual(1);
+      expect(Math.abs(geometry.items.at(-1).right - geometry.right)).toBeLessThanOrEqual(1);
+      const heights = geometry.items.map((item) => item.height);
+      expect(Math.max(...heights) - Math.min(...heights)).toBeLessThanOrEqual(1);
+      // Labels fit on one line: a wrapped label makes the row twice as tall.
+      expect(Math.max(...heights)).toBeLessThanOrEqual(width > 600 ? 32 : 44);
+    }
+  });
+}
