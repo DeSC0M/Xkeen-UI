@@ -118,3 +118,12 @@ def test_dns_actions_queue_editor_reload_until_mihomo_panel_is_ready():
     assert "_configReloadPending" in panel_script
     assert "skipped: 'not-mounted'" in panel_script
     assert "reloadFromDiskIfClean" in panel_script
+
+
+def test_mihomo_editor_does_not_treat_engine_sync_as_a_user_edit():
+    panel_script = (ROOT / "xkeen-ui/static/js/features/mihomo_panel.js").read_text(encoding="utf-8")
+    dns_script = (ROOT / "xkeen-ui/static/js/features/mihomo_dns.js").read_text(encoding="utf-8")
+
+    assert "normalizeEditorText(getEditorText()) !== normalizeEditorText(_diffBaselineText)" in panel_script
+    assert "_suppressDirty = true;" in panel_script
+    assert "Редактор не перезаписан: в нём есть несохранённые изменения." in dns_script

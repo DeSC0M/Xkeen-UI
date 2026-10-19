@@ -741,7 +741,7 @@ import { awaitDnsOperation, createDnsOperationNotice, newDnsOperationId } from '
     if (!sync) return null;
     const result = await sync();
     if (result?.skipped === 'dirty') {
-      toastXkeen('config.yaml обновлён на роутере, но несохранённые правки оставлены в редакторе.', 'warning');
+      toastXkeen('config.yaml обновлён на роутере. Редактор не перезаписан: в нём есть несохранённые изменения.', 'warning');
     }
     return result;
   }

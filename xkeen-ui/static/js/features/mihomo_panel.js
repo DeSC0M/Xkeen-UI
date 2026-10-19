@@ -881,7 +881,8 @@ let mihomoPanelModuleApi = null;
         try {
           const cm = getSharedEditor();
           const v = (cm && cm.getValue) ? String(cm.getValue() || '') : String(($(IDS.textarea) && $(IDS.textarea).value) || '');
-          if (ed && ed.setValue) ed.setValue(v);
+          _suppressDirty = true;
+          try { if (ed && ed.setValue) ed.setValue(v); } finally { _suppressDirty = false; }
         } catch (e3) {}
 
         showCodeMirror(false);
@@ -909,7 +910,12 @@ let mihomoPanelModuleApi = null;
       try { if (isMonacoFullscreen()) setMonacoFullscreen(false); } catch (e0) {}
       try {
         const cm = ensureEditor();
-        if (_monaco && cm && cm.setValue) cm.setValue(String(_monaco.getValue() || ''));
+        _suppressDirty = true;
+        try {
+          if (_monaco && cm && cm.setValue) cm.setValue(String(_monaco.getValue() || ''));
+        } finally {
+          _suppressDirty = false;
+        }
       } catch (e5) {}
 
       showMonaco(false);
@@ -1207,7 +1213,18 @@ let mihomoPanelModuleApi = null;
     _editorDirty = false;
   }
 
+  function normalizeEditorText(text) {
+    return String(text ?? '').replace(/\r\n?/g, '\n');
+  }
+
   function isEditorDirty() {
+    // CodeMirror/Monaco can emit a change event when the other editor engine
+    // is synchronised programmatically. The event alone is not proof of a
+    // user edit. Compare the visible text with the last loaded/saved snapshot
+    // and ignore only line-ending normalisation performed by the editor.
+    try {
+      return normalizeEditorText(getEditorText()) !== normalizeEditorText(_diffBaselineText);
+    } catch (e) {}
     return !!_editorDirty;
   }
 
