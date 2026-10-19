@@ -259,6 +259,7 @@ def handle_mihomo_clash_logs_request(
     ws_debug: Callable[..., Any],
     mihomo_config_file: str,
     mihomo_root: str,
+    log_tz_offset_hours: int = 3,
     discovery_factory=discover_mihomo_clash_target,
     client_factory=MihomoClashClient,
     device_map_factory=get_mihomo_clash_device_map,
@@ -348,6 +349,7 @@ def handle_mihomo_clash_logs_request(
                 sequence=sequence,
                 secret=discovery.target.secret,
                 device_map=device_map_factory(),
+                timezone_offset_hours=log_tz_offset_hours,
             )
             message = _log_envelope(sequence=sequence, state="live", payload=entry)
             if not _send(ws, message):

@@ -611,6 +611,10 @@ def create_app(*, ws_runtime: bool = False):
     app = _create_flask_app()
     app.extensions["xkeen.module_registry"] = module_registry
     app.extensions["xkeen.module_activation"] = module_activation
+    # Both Xray file logs and Mihomo's structured Clash log stream use the
+    # same operator-facing timezone offset.  Keep the parsed startup value on
+    # the app so the WebSocket facade does not independently reinterpret ENV.
+    app.extensions["xkeen.log_timezone_offset_hours"] = XRAY_LOG_TZ_OFFSET_HOURS
     _register_favicon(app)
 
     _init_auth_and_pages(
