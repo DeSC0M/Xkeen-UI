@@ -150,6 +150,13 @@
           "lazy_features": []
         },
         {
+          "path": "static/js/features/notification_center.js",
+          "globals": [
+            "XKeen.notificationCenter"
+          ],
+          "lazy_features": []
+        },
+        {
           "path": "static/js/ui/settings.js",
           "globals": [
             "XKeen.ui.settings.get",
@@ -525,6 +532,7 @@
         "XKeen.ui.dismissToast",
         "XKeen.ui.clearToasts",
         "XKeen.ui.isToastActive",
+        "XKeen.notificationCenter",
         "XKeen.ui.settings.get",
         "XKeen.ui.settings.fetch",
         "XKeen.ui.settings.patch",
@@ -774,6 +782,13 @@
           "lazy_features": []
         },
         {
+          "path": "static/js/features/notification_center.js",
+          "globals": [
+            "XKeen.notificationCenter"
+          ],
+          "lazy_features": []
+        },
+        {
           "path": "static/js/ui/settings.js",
           "globals": [
             "XKeen.ui.settings.get",
@@ -962,6 +977,7 @@
         "XKeen.ui.dismissToast",
         "XKeen.ui.clearToasts",
         "XKeen.ui.isToastActive",
+        "XKeen.notificationCenter",
         "XKeen.ui.settings.get",
         "XKeen.ui.settings.fetch",
         "XKeen.ui.settings.patch",
@@ -1138,6 +1154,13 @@
             "XKeen.ui.dismissToast",
             "XKeen.ui.clearToasts",
             "XKeen.ui.isToastActive"
+          ],
+          "lazy_features": []
+        },
+        {
+          "path": "static/js/features/notification_center.js",
+          "globals": [
+            "XKeen.notificationCenter"
           ],
           "lazy_features": []
         },
@@ -1563,6 +1586,7 @@
         "XKeen.ui.dismissToast",
         "XKeen.ui.clearToasts",
         "XKeen.ui.isToastActive",
+        "XKeen.notificationCenter",
         "XKeen.ui.settings.get",
         "XKeen.ui.settings.fetch",
         "XKeen.ui.settings.patch",
@@ -1788,6 +1812,13 @@
             "XKeen.ui.dismissToast",
             "XKeen.ui.clearToasts",
             "XKeen.ui.isToastActive"
+          ],
+          "lazy_features": []
+        },
+        {
+          "path": "static/js/features/notification_center.js",
+          "globals": [
+            "XKeen.notificationCenter"
           ],
           "lazy_features": []
         },
@@ -2035,6 +2066,7 @@
         "XKeen.ui.dismissToast",
         "XKeen.ui.clearToasts",
         "XKeen.ui.isToastActive",
+        "XKeen.notificationCenter",
         "XKeen.ui.settings.get",
         "XKeen.ui.settings.fetch",
         "XKeen.ui.settings.patch",
@@ -2194,6 +2226,13 @@
             "XKeen.ui.dismissToast",
             "XKeen.ui.clearToasts",
             "XKeen.ui.isToastActive"
+          ],
+          "lazy_features": []
+        },
+        {
+          "path": "static/js/features/notification_center.js",
+          "globals": [
+            "XKeen.notificationCenter"
           ],
           "lazy_features": []
         },
@@ -2545,6 +2584,7 @@
         "XKeen.ui.dismissToast",
         "XKeen.ui.clearToasts",
         "XKeen.ui.isToastActive",
+        "XKeen.notificationCenter",
         "XKeen.ui.settings.get",
         "XKeen.ui.settings.fetch",
         "XKeen.ui.settings.patch",
