@@ -3,7 +3,7 @@
   "generated_from": "scripts/generate_operator_icon_inventory.py",
   "sprite": "xkeen-ui/static/icons/operator.svg",
   "license": "xkeen-ui/static/icons/tabler-icons.LICENSE",
-  "item_count": 82,
+  "item_count": 83,
   "unknown_direct_semantic_names": [],
   "unused_semantic_names": [],
   "items": [
@@ -270,6 +270,17 @@
       ]
     },
     {
+      "semantic_name": "bell",
+      "tabler_asset": "bell",
+      "usage": [
+        {
+          "location": "xkeen-ui/static/js/features/notification_center.js:L83",
+          "control_type": "runtime-action",
+          "accessible_label": "bell"
+        }
+      ]
+    },
+    {
       "semantic_name": "bolt",
       "tabler_asset": "bolt",
       "usage": [
@@ -454,12 +465,12 @@
           "accessible_label": "Раскрыть"
         },
         {
-          "location": "xkeen-ui/static/js/pages/panel.mihomo_header.js:L136",
+          "location": "xkeen-ui/static/js/pages/panel.mihomo_header.js:L133",
           "control_type": "runtime-action",
           "accessible_label": "Раскрыть"
         },
         {
-          "location": "xkeen-ui/static/js/pages/panel.mihomo_header.js:L164",
+          "location": "xkeen-ui/static/js/pages/panel.mihomo_header.js:L161",
           "control_type": "runtime-action",
           "accessible_label": "Раскрыть"
         },
@@ -3255,7 +3266,7 @@
           "accessible_label": "Настройки"
         },
         {
-          "location": "xkeen-ui/static/js/pages/panel.mihomo_header.js:L135",
+          "location": "xkeen-ui/static/js/pages/panel.mihomo_header.js:L132",
           "control_type": "runtime-action",
           "accessible_label": "Настройки"
         },
@@ -3286,7 +3297,7 @@
           "accessible_label": "statistics"
         },
         {
-          "location": "xkeen-ui/static/js/pages/panel.mihomo_header.js:L143",
+          "location": "xkeen-ui/static/js/pages/panel.mihomo_header.js:L140",
           "control_type": "runtime-action",
           "accessible_label": "statistics"
         }
@@ -3339,6 +3350,11 @@
       "usage": [
         {
           "location": "xkeen-ui/static/js/features/devtools/env.js:L559",
+          "control_type": "runtime-action",
+          "accessible_label": "Хранилище"
+        },
+        {
+          "location": "xkeen-ui/static/js/features/notification_center.js:L327",
           "control_type": "runtime-action",
           "accessible_label": "Хранилище"
         },

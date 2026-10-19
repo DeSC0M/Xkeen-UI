@@ -82,3 +82,151 @@ test('notification center is core-owned, text-safe, and does not fetch archives'
   await center.locator('.xk-notification-record').first().getByRole('button', { name: 'Скрыть' }).click();
   await expect(trigger.locator('.xk-notification-trigger__count')).toHaveText('0');
 });
+
+// Where the bell lives: always in sight, never inside a menu or past the
+// screen edge, and its window is drawn above the page rather than in the header.
+function mockCenter(page) {
+  const records = [
+    record('c'.repeat(64), 'panel-update', 'Доступна новая версия панели', 'Сохранит выбранный профиль.'),
+    record('d'.repeat(64), 'module-new', 'Новый модуль: Терминал', 'Появится после обновления панели.'),
+  ];
+  return page.route('**/api/notifications**', (route) => route.fulfill({ json: {
+    ok: true, channel: 'prerelease', records, unread_count: 2,
+    status: { last_success_at: 1_791_700_000, freshness: 'fresh' },
+  } }));
+}
+
+async function expectInsideViewport(page, locator) {
+  const box = await locator.boundingBox();
+  const width = await page.evaluate(() => document.documentElement.clientWidth);
+  expect(box, 'element is rendered').not.toBeNull();
+  expect(box.x).toBeGreaterThanOrEqual(0);
+  expect(box.x + box.width).toBeLessThanOrEqual(width);
+}
+
+async function expectOnTop(locator) {
+  // The middle of the element is the element itself, not something drawn over it.
+  const onTop = await locator.evaluate((node) => {
+    const r = node.getBoundingClientRect();
+    const hit = document.elementFromPoint(r.left + r.width / 2, r.top + Math.min(r.height / 2, 60));
+    return Boolean(hit && node.contains(hit));
+  });
+  expect(onTop).toBe(true);
+}
+
+for (const width of [1440, 390]) {
+  test(`main panel shows the bell next to the gear at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await mockLifecycle(page);
+    await mockCenter(page);
+    await page.goto('/');
+
+    const trigger = page.locator('.xk-notification-trigger');
+    await expect(trigger).toBeVisible();
+    await expect(trigger.locator('.xk-notification-trigger__count')).toHaveText('2');
+    await expect(trigger.locator('use')).toHaveAttribute('href', /#xk-bell$/);
+    // It sits in the header row itself, right before the gear.
+    const gearWrap = page.locator('.xk-header-panel-trigger').locator('xpath=..');
+    expect(await trigger.evaluate((node, gear) => {
+      const root = node.closest('.xk-notification-center');
+      return root.nextElementSibling === gear;
+    }, await gearWrap.elementHandle())).toBe(true);
+    await expectInsideViewport(page, trigger);
+    await expect(page.locator('.xk-header-panel-trigger [data-xk-modules-update-dot]')).toHaveCount(0);
+
+    await trigger.click();
+    const popover = page.locator('.xk-notification-popover');
+    await expect(popover).toBeVisible();
+    await expectInsideViewport(page, popover);
+    await expectOnTop(popover);
+    expect(await popover.evaluate((node) => Boolean(node.closest('header')))).toBe(false);
+    // Opens below the bell, never on top of it.
+    const bellBox = await trigger.boundingBox();
+    const popBox = await popover.boundingBox();
+    expect(popBox.y).toBeGreaterThanOrEqual(bellBox.y + bellBox.height);
+  });
+}
+
+test('gear menu of the main panel is visible on a phone', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await mockLifecycle(page);
+  await mockCenter(page);
+  await page.goto('/');
+  await page.locator('.xk-header-panel-trigger').click();
+  const menu = page.locator('#xk-mihomo-panel-menu');
+  await expect(menu).toBeVisible();
+  await expectInsideViewport(page, menu);
+  await expectOnTop(menu.getByRole('link', { name: 'Модули и обновления' }));
+});
+
+for (const path of ['/modules', '/devtools', '/mihomo_generator']) {
+  test(`bell stays on screen at 390px on ${path}`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await mockLifecycle(page);
+    await mockCenter(page);
+    await page.goto(path);
+    const trigger = page.locator('.xk-notification-trigger');
+    await expect(trigger).toBeVisible();
+    await expectInsideViewport(page, trigger);
+    // On a phone the bell shares the line with the page title.
+    const sameLine = await trigger.evaluate((node) => {
+      const h1 = document.querySelector('h1');
+      const a = node.getBoundingClientRect();
+      const b = h1.getBoundingClientRect();
+      return a.top < b.bottom && b.top < a.bottom;
+    });
+    expect(sameLine).toBe(true);
+    await trigger.click();
+    await expectInsideViewport(page, page.locator('.xk-notification-popover'));
+  });
+
+  test(`bell leads the header buttons at 1440px on ${path}`, async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 800 });
+    await mockLifecycle(page);
+    await mockCenter(page);
+    await page.goto(path);
+    const first = await page.locator('.header-actions').first().evaluate((node) => {
+      const visible = [...node.children].filter((child) => child.getBoundingClientRect().width > 0);
+      return visible[0]?.classList.contains('xk-notification-center') || false;
+    });
+    expect(first).toBe(true);
+  });
+}
+
+test('notification window stays readable above DevTools in the light theme', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await mockLifecycle(page);
+  await mockCenter(page);
+  await page.goto('/devtools');
+  await page.locator('.xk-notification-trigger').click();
+  const popover = page.locator('.xk-notification-popover');
+  await expect(popover).toBeVisible();
+  for (const record of await popover.locator('.xk-notification-record').all()) await expectOnTop(record);
+  const size = await popover.locator('.xk-notification-record p').first().evaluate((node) => getComputedStyle(node).fontSize);
+  expect(size).toBe('12px');
+});
+
+test('bell follows the screens without a page reload', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await mockLifecycle(page);
+  await mockCenter(page);
+  await page.goto('/');
+  const trigger = page.locator('.xk-notification-trigger:visible');
+  await expect(trigger).toHaveCount(1);
+
+  await page.locator('.xk-header-panel-trigger').click();
+  await page.locator('#xk-mihomo-panel-menu').getByRole('link', { name: 'Модули и обновления' }).click();
+  await expect(page.locator('#xk-modules-manager .modules-summary')).toBeVisible();
+  await expect(trigger).toHaveCount(1);
+  await expectInsideViewport(page, trigger);
+  await trigger.click();
+  await expect(page.locator('.xk-notification-popover:visible')).toHaveCount(1);
+  await page.keyboard.press('Escape');
+
+  await page.getByRole('link', { name: 'Назад' }).click();
+  await expect(page.locator('.xk-header-panel-trigger')).toBeVisible();
+  await expect(trigger).toHaveCount(1);
+  expect(await trigger.evaluate((node) => node.closest('.xk-notification-center').nextElementSibling
+    ?.contains(document.querySelector('.xk-header-panel-trigger')))).toBe(true);
+});

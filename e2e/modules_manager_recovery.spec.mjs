@@ -24,7 +24,6 @@ test.describe('Module manager recovery and guards', () => {
     await page.goto('/');
 
     const gear = page.locator('.xk-header-panel-trigger');
-    await expect(gear.locator('[data-xk-modules-update-dot]')).toBeHidden();
     // The item lives in the gear menu only: the sections menu is for workspaces.
     await expect(page.locator('[data-xk-section="modules"]')).toHaveCount(0);
     await gear.click();
@@ -45,19 +44,16 @@ test.describe('Module manager recovery and guards', () => {
     await expect(page.locator('#xk-modules-manager .modules-summary')).toBeVisible();
   });
 
-  test('marks the gear and its menu item while an update is known', async ({ page }) => {
+  test('marks the menu item, not the gear, while an update is known', async ({ page }) => {
     await installIdleLifecycleRoutes(page);
-    await page.addInitScript(() => sessionStorage.setItem('xkeen.modules.update.v1', JSON.stringify({
-      schema: 1, sourceVersion: '2.10.0', targetVersion: '2.11.0',
+    await page.addInitScript(() => sessionStorage.setItem('xkeen.modules.update.v2', JSON.stringify({
+      schema: 2, sourceVersion: '2.10.0', targetVersion: '2.11.0', channel: 'stable',
     })));
     await page.goto('/');
 
+    // The notification bell next to the gear already counts the update.
     const gear = page.locator('.xk-header-panel-trigger');
-    const dot = gear.locator('[data-xk-modules-update-dot]');
-    await expect(dot).toBeVisible();
-    const dotBox = await dot.boundingBox();
-    expect(dotBox.width).toBeGreaterThanOrEqual(6);
-    expect(dotBox.width).toBeLessThanOrEqual(10);
+    await expect(gear.locator('[data-xk-modules-update-dot]')).toHaveCount(0);
     await gear.click();
     const badge = page.locator('#xk-mihomo-panel-menu').getByRole('link', { name: /Модули и обновления/ })
       .locator('[data-xk-modules-update-badge]');

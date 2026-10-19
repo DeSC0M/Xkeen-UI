@@ -1,5 +1,8 @@
+import { iconHtml } from '../ui/operator_icons.js';
+
 const API_BASE = '/api/notifications';
 const CHANNEL_NAME = 'xkeen-notification-center.v1';
+const NARROW = '(max-width: 680px)';
 
 function text(value) {
   return String(value == null ? '' : value);
@@ -73,30 +76,67 @@ function button(label, className, handler) {
 }
 
 function createCenter() {
-  const host = document.querySelector('.header-actions') || document.body;
   const root = document.createElement('div');
   root.className = 'xk-notification-center';
   root.innerHTML = `
     <button type="button" class="xk-notification-trigger xk-header-btn" aria-haspopup="dialog" aria-expanded="false" aria-label="Уведомления">
-      <span class="xk-notification-trigger__icon" aria-hidden="true">♢</span>
-      <span class="xk-notification-trigger__label">Уведомления</span>
+      ${iconHtml('bell', 'xk-notification-trigger__icon')}
       <span class="xk-notification-trigger__count" hidden></span>
-    </button>
-    <section class="xk-notification-popover" role="dialog" aria-label="Центр уведомлений" hidden>
-      <div class="xk-notification-popover__head">
-        <div>
-          <strong>Центр уведомлений</strong>
-          <span class="xk-notification-status" aria-live="polite"></span>
-        </div>
-        <button type="button" class="xk-notification-close" aria-label="Закрыть">×</button>
+    </button>`;
+  // The window lives in the page layer: a header or a menu that clips or
+  // stacks its children can neither cut it nor draw over it.
+  const popover = document.createElement('section');
+  popover.className = 'xk-notification-popover';
+  popover.setAttribute('role', 'dialog');
+  popover.setAttribute('aria-label', 'Центр уведомлений');
+  popover.hidden = true;
+  popover.innerHTML = `
+    <div class="xk-notification-popover__head">
+      <div>
+        <strong>Центр уведомлений</strong>
+        <span class="xk-notification-status" aria-live="polite"></span>
       </div>
-      <div class="xk-notification-list" aria-live="polite"></div>
-      <div class="xk-notification-popover__foot">
-        <button type="button" class="xk-notification-check">Проверить обновления</button>
-      </div>
-    </section>`;
-  host.append(root);
-  return root;
+      <button type="button" class="xk-notification-close" aria-label="Закрыть">×</button>
+    </div>
+    <div class="xk-notification-list" aria-live="polite"></div>
+    <div class="xk-notification-popover__foot">
+      <button type="button" class="xk-notification-check">Проверить обновления</button>
+    </div>`;
+  document.body.append(popover);
+  return { root, popover };
+}
+
+function placeCenter(root) {
+  const trigger = root.querySelector('.xk-notification-trigger');
+  // The main panel keeps its actions in the gear menu; the bell stands
+  // beside the gear so the count is never hidden behind a click.
+  const gear = document.querySelector('.xk-header-panel-trigger')?.parentElement;
+  trigger.classList.toggle('btn-secondary', Boolean(gear));
+  trigger.classList.toggle('xk-header-disclosure-trigger', Boolean(gear));
+  trigger.classList.toggle('xk-header-btn', !gear);
+  if (gear) {
+    if (root.nextElementSibling !== gear) gear.before(root);
+    return;
+  }
+  const actions = document.querySelector('.header-actions');
+  const title = actions ? document.querySelector('h1') : null;
+  if (title && window.matchMedia(NARROW).matches) {
+    // A phone wraps the button row; the title line keeps the bell in sight.
+    let row = title.parentElement;
+    if (!row.classList.contains('xk-notification-title-row')) {
+      row = document.createElement('div');
+      row.className = 'xk-notification-title-row';
+      title.before(row);
+      row.append(title);
+    }
+    if (root.parentElement !== row) row.append(root);
+    return;
+  }
+  if (actions) {
+    if (actions.firstElementChild !== root) actions.prepend(root);
+    return;
+  }
+  if (!root.isConnected) document.body.append(root);
 }
 
 function recordDetails(record) {
@@ -117,14 +157,14 @@ function recordDetails(record) {
 
 export function initNotificationCenter() {
   if (window.XKeen?.notificationCenter) return window.XKeen.notificationCenter;
-  const root = createCenter();
+  const { root, popover } = createCenter();
+  placeCenter(root);
   const trigger = root.querySelector('.xk-notification-trigger');
   const count = root.querySelector('.xk-notification-trigger__count');
-  const popover = root.querySelector('.xk-notification-popover');
-  const list = root.querySelector('.xk-notification-list');
-  const status = root.querySelector('.xk-notification-status');
-  const checkButton = root.querySelector('.xk-notification-check');
-  const closeButton = root.querySelector('.xk-notification-close');
+  const list = popover.querySelector('.xk-notification-list');
+  const status = popover.querySelector('.xk-notification-status');
+  const checkButton = popover.querySelector('.xk-notification-check');
+  const closeButton = popover.querySelector('.xk-notification-close');
   let snapshot = { records: [], unread_count: 0, status: {} };
   let loading = false;
   let open = false;
@@ -136,8 +176,26 @@ export function initNotificationCenter() {
     try { broadcast?.postMessage({ type: 'changed', at }); } catch (error) {}
   }
 
+  function positionPopover() {
+    const rect = trigger.getBoundingClientRect();
+    const top = Math.round(rect.bottom + 8);
+    popover.style.top = `${top}px`;
+    popover.style.maxHeight = `${Math.max(160, window.innerHeight - top - 12)}px`;
+    if (window.matchMedia(NARROW).matches) {
+      popover.style.left = '12px';
+      popover.style.right = '12px';
+      popover.style.width = 'auto';
+    } else {
+      const right = document.documentElement.clientWidth - rect.right;
+      popover.style.left = 'auto';
+      popover.style.right = `${Math.max(12, Math.round(right))}px`;
+      popover.style.width = '';
+    }
+  }
+
   function setOpen(value) {
     open = Boolean(value);
+    if (open) positionPopover();
     popover.hidden = !open;
     trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
     root.classList.toggle('is-open', open);
@@ -261,7 +319,7 @@ export function initNotificationCenter() {
   closeButton.addEventListener('click', () => setOpen(false));
   checkButton.addEventListener('click', () => void check());
   document.addEventListener('click', (event) => {
-    if (open && !root.contains(event.target)) setOpen(false);
+    if (open && !root.contains(event.target) && !popover.contains(event.target)) setOpen(false);
   });
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && open) setOpen(false);
@@ -280,6 +338,12 @@ export function initNotificationCenter() {
     });
   } catch (error) {}
   window.addEventListener('beforeunload', () => broadcast?.close());
+  window.addEventListener('resize', () => { if (open) positionPopover(); });
+  window.addEventListener('scroll', () => { if (open) positionPopover(); }, { passive: true, capture: true });
+  // The main panel builds its gear after this module runs; the narrow layout
+  // moves the bell between the button row and the title line.
+  document.addEventListener('xkeen:header-shell-ready', () => placeCenter(root));
+  try { window.matchMedia(NARROW).addEventListener('change', () => placeCenter(root)); } catch (error) {}
 
   const api = {
     refresh: load,

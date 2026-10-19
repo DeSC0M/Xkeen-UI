@@ -157,6 +157,19 @@
           "lazy_features": []
         },
         {
+          "path": "static/js/ui/operator_icons.js",
+          "globals": [
+            "XKeen.ui",
+            "XKeen.ui.operatorIcons"
+          ],
+          "lazy_features": []
+        },
+        {
+          "path": "static/js/ui/operator_icons_manifest.js",
+          "globals": [],
+          "lazy_features": []
+        },
+        {
           "path": "static/js/ui/settings.js",
           "globals": [
             "XKeen.ui.settings.get",
@@ -191,19 +204,6 @@
         },
         {
           "path": "static/js/features/xray_log_line_class.js",
-          "globals": [],
-          "lazy_features": []
-        },
-        {
-          "path": "static/js/ui/operator_icons.js",
-          "globals": [
-            "XKeen.ui",
-            "XKeen.ui.operatorIcons"
-          ],
-          "lazy_features": []
-        },
-        {
-          "path": "static/js/ui/operator_icons_manifest.js",
           "globals": [],
           "lazy_features": []
         },
@@ -789,6 +789,19 @@
           "lazy_features": []
         },
         {
+          "path": "static/js/ui/operator_icons.js",
+          "globals": [
+            "XKeen.ui",
+            "XKeen.ui.operatorIcons"
+          ],
+          "lazy_features": []
+        },
+        {
+          "path": "static/js/ui/operator_icons_manifest.js",
+          "globals": [],
+          "lazy_features": []
+        },
+        {
           "path": "static/js/ui/settings.js",
           "globals": [
             "XKeen.ui.settings.get",
@@ -823,19 +836,6 @@
         },
         {
           "path": "static/js/features/xray_log_line_class.js",
-          "globals": [],
-          "lazy_features": []
-        },
-        {
-          "path": "static/js/ui/operator_icons.js",
-          "globals": [
-            "XKeen.ui",
-            "XKeen.ui.operatorIcons"
-          ],
-          "lazy_features": []
-        },
-        {
-          "path": "static/js/ui/operator_icons_manifest.js",
           "globals": [],
           "lazy_features": []
         },
@@ -1165,6 +1165,19 @@
           "lazy_features": []
         },
         {
+          "path": "static/js/ui/operator_icons.js",
+          "globals": [
+            "XKeen.ui",
+            "XKeen.ui.operatorIcons"
+          ],
+          "lazy_features": []
+        },
+        {
+          "path": "static/js/ui/operator_icons_manifest.js",
+          "globals": [],
+          "lazy_features": []
+        },
+        {
           "path": "static/js/ui/settings.js",
           "globals": [
             "XKeen.ui.settings.get",
@@ -1199,19 +1212,6 @@
         },
         {
           "path": "static/js/features/xray_log_line_class.js",
-          "globals": [],
-          "lazy_features": []
-        },
-        {
-          "path": "static/js/ui/operator_icons.js",
-          "globals": [
-            "XKeen.ui",
-            "XKeen.ui.operatorIcons"
-          ],
-          "lazy_features": []
-        },
-        {
-          "path": "static/js/ui/operator_icons_manifest.js",
           "globals": [],
           "lazy_features": []
         },
@@ -1823,6 +1823,19 @@
           "lazy_features": []
         },
         {
+          "path": "static/js/ui/operator_icons.js",
+          "globals": [
+            "XKeen.ui",
+            "XKeen.ui.operatorIcons"
+          ],
+          "lazy_features": []
+        },
+        {
+          "path": "static/js/ui/operator_icons_manifest.js",
+          "globals": [],
+          "lazy_features": []
+        },
+        {
           "path": "static/js/ui/settings.js",
           "globals": [
             "XKeen.ui.settings.get",
@@ -1857,19 +1870,6 @@
         },
         {
           "path": "static/js/features/xray_log_line_class.js",
-          "globals": [],
-          "lazy_features": []
-        },
-        {
-          "path": "static/js/ui/operator_icons.js",
-          "globals": [
-            "XKeen.ui",
-            "XKeen.ui.operatorIcons"
-          ],
-          "lazy_features": []
-        },
-        {
-          "path": "static/js/ui/operator_icons_manifest.js",
           "globals": [],
           "lazy_features": []
         },
@@ -2237,6 +2237,19 @@
           "lazy_features": []
         },
         {
+          "path": "static/js/ui/operator_icons.js",
+          "globals": [
+            "XKeen.ui",
+            "XKeen.ui.operatorIcons"
+          ],
+          "lazy_features": []
+        },
+        {
+          "path": "static/js/ui/operator_icons_manifest.js",
+          "globals": [],
+          "lazy_features": []
+        },
+        {
           "path": "static/js/ui/settings.js",
           "globals": [
             "XKeen.ui.settings.get",
@@ -2271,19 +2284,6 @@
         },
         {
           "path": "static/js/features/xray_log_line_class.js",
-          "globals": [],
-          "lazy_features": []
-        },
-        {
-          "path": "static/js/ui/operator_icons.js",
-          "globals": [
-            "XKeen.ui",
-            "XKeen.ui.operatorIcons"
-          ],
-          "lazy_features": []
-        },
-        {
-          "path": "static/js/ui/operator_icons_manifest.js",
           "globals": [],
           "lazy_features": []
         },

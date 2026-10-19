@@ -1360,7 +1360,8 @@ body.panel-page.xk-operator-header-active .xk-resource-monitor .xk-resource-moni
 body.panel-page.xk-operator-header-active .xk-resource-monitor :is(.xk-resource-monitor-label, strong) { display: inline; font-family: inherit; font-size: 12px; font-weight: 400; line-height: 1.4; }
 body.panel-page.xk-operator-header-active .xk-resource-monitor .xk-resource-meter { width: 32px; height: 3px; margin-left: 4px; }
 body.panel-page.xk-operator-header-active .panel-header .xk-header-sections-trigger,
-body.panel-page.xk-operator-header-active .panel-header .xk-header-panel-trigger {
+body.panel-page.xk-operator-header-active .panel-header .xk-header-panel-trigger,
+body.panel-page.xk-operator-header-active .panel-header .xk-notification-trigger {
   display: inline-flex;
   align-items: center;
   gap: 9px;
@@ -1372,21 +1373,10 @@ body.panel-page.xk-operator-header-active .panel-header .xk-header-panel-trigger
   font-weight: 400;
 }
 body.panel-page.xk-operator-header-active .panel-header .xk-header-sections-trigger { border-right: 1px solid var(--op-border) !important; padding-right: 30px; border-radius: 0 !important; }
-body.panel-page.xk-operator-header-active .panel-header .xk-header-panel-trigger { padding: 0 8px; }
+body.panel-page.xk-operator-header-active .panel-header :is(.xk-header-panel-trigger, .xk-notification-trigger) { padding: 0 8px; }
 body.panel-page .xk-header-sections-trigger::after,
 body.panel-page .xk-header-panel-trigger::after { display: none; }
 body.panel-page .xk-header-panel-trigger { position: relative; }
-body.panel-page .xk-header-update-dot {
-  position: absolute;
-  top: 3px;
-  right: 3px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent-color, #5b5bd6);
-  pointer-events: none;
-}
-body.panel-page .xk-header-update-dot[hidden] { display: none; }
 body.panel-page .xk-header-btn-modules { display: flex; align-items: center; }
 body.panel-page .xk-header-btn-modules [data-xk-modules-update-badge]:not([hidden]) {
   display: inline-block;
@@ -17285,6 +17275,12 @@ body.panel-page :is(#json-editor-modal, #fm-editor-modal) :is(#json-editor-save-
 
   body.panel-page .header-right::-webkit-scrollbar {
     display: none;
+  }
+
+  /* The compact header keeps only the bell and the gear here; scrolling the
+     row would clip the gear menu that opens below it. */
+  body.panel-page.xk-operator-header-active .header-right {
+    overflow: visible;
   }
 
   body.panel-page .panel-shell-summary {

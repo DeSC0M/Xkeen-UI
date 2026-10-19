@@ -21,6 +21,7 @@ ICONS = {
     "broom": "custom:broom",
     "engine-mihomo": "custom:mihomo",
     "engine-xray": "custom:xray",
+    "bell": "bell",
     "bookmark": "bookmark",
     "catalog": "folder-open",
     "chevron-down": "chevron-down",

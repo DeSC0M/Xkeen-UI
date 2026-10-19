@@ -105,7 +105,7 @@ test.describe('Modules panel update surface', () => {
     await expect(summary.locator('.xk-summary-stat[data-stat="update"] span')).toHaveText('доступно обновление');
     await page.getByRole('button', { name: 'Проверить ещё раз' }).click();
     await expect(summary).toContainText('Обновит панель и все модули одним выпуском.');
-    await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem('xkeen.modules.update.v1'))?.targetVersion)).toBe('2.11.0');
+    await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem('xkeen.modules.update.v2'))?.targetVersion)).toBe('2.11.0');
     await page.getByRole('button', { name: 'Обновить до 2.11.0' }).click();
     await expect(page.getByRole('dialog', { name: 'Обновить панель до 2.11.0' })).toContainText('2.10.0 → 2.11.0');
   });
@@ -179,10 +179,11 @@ test.describe('Modules panel update surface', () => {
       error: 'offline',
     } }));
     await page.goto('/modules');
-    await page.evaluate(() => sessionStorage.setItem('xkeen.modules.update.v1', JSON.stringify({
-      schema: 1,
+    await page.evaluate(() => sessionStorage.setItem('xkeen.modules.update.v2', JSON.stringify({
+      schema: 2,
       sourceVersion: '2.10.0',
       targetVersion: '2.11.0',
+      channel: 'stable',
     })));
 
     await page.getByRole('button', { name: 'Проверить обновления' }).click();
@@ -191,7 +192,7 @@ test.describe('Modules panel update surface', () => {
     await expect(check.getByRole('status')).toContainText('Каталог модулей временно недоступен.');
     await expect(check.locator('.xk-summary-stat[data-stat="update"] span')).toHaveText('не удалось проверить');
     await expect(check.getByRole('button', { name: 'Проверить обновления' })).toBeFocused();
-    await expect.poll(() => page.evaluate(() => sessionStorage.getItem('xkeen.modules.update.v1'))).toBeNull();
+    await expect.poll(() => page.evaluate(() => sessionStorage.getItem('xkeen.modules.update.v2'))).toBeNull();
   });
 });
 
@@ -539,7 +540,7 @@ test.describe('What the window says about operations and refusals', () => {
 
   test('DevTools says about an update in its card, not in the header', async ({ page }) => {
     await page.addInitScript(() => {
-      sessionStorage.setItem('xkeen.modules.update.v1', JSON.stringify({ schema: 1, sourceVersion: '2.10.0', targetVersion: '2.11.0' }));
+      sessionStorage.setItem('xkeen.modules.update.v2', JSON.stringify({ schema: 2, sourceVersion: '2.10.0', targetVersion: '2.11.0', channel: 'stable' }));
     });
     await installIdleLifecycleRoutes(page);
     await page.route('**/api/modules/panel/update-check', (route) => route.fulfill({ json: server.update_check }));

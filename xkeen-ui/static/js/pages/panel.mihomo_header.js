@@ -82,12 +82,8 @@ export function initPanelOperatorHeader() {
   setIcon(panel.trigger, 'settings');
   panel.trigger.classList.add('xk-header-panel-trigger');
   panel.trigger.setAttribute('aria-label', 'Настройки панели');
-  // "Modules and updates" is an item of this menu; a known update shows here.
-  const updateDot = create('span', 'xk-header-update-dot');
-  updateDot.setAttribute('data-xk-modules-update-dot', '');
-  updateDot.setAttribute('aria-hidden', 'true');
-  updateDot.hidden = true;
-  panel.trigger.append(updateDot);
+  // A known update is marked on the menu item; the gear itself stays plain
+  // because the notification bell beside it already counts that update.
   syncModulesUpdateBadges(panel.container);
   const service = disclosure('', 'xk-mihomo-service-menu', 'xk-operator-service-menu xk-mihomo-service-menu');
   service.trigger.className = 'xk-brand-service-trigger';
@@ -96,6 +92,7 @@ export function initPanelOperatorHeader() {
   branding.append(service.container);
   header.querySelector('.header-main').prepend(sections.container);
   header.querySelector('.header-right').append(panel.container);
+  document.dispatchEvent(new CustomEvent('xkeen:header-shell-ready'));
 
   // Compact shell is shared by the panel workspaces without cloning controls.
   // Anchors remain as a safe fallback for integrations that add a legacy view.

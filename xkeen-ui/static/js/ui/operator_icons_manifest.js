@@ -7,6 +7,7 @@ const OPERATOR_ICON_NAMES = Object.freeze([
   "apply",
   "archive",
   "back",
+  "bell",
   "bolt",
   "bookmark",
   "broom",

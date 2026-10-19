@@ -379,8 +379,8 @@ test.describe('Module lifecycle review', () => {
 
   test('clears update badge when server says panel version is current', async ({ page }) => {
     await installIdleLifecycleRoutes(page);
-    await page.addInitScript(() => sessionStorage.setItem('xkeen.modules.update.v1', JSON.stringify({
-      schema: 1, sourceVersion: '2.10.0', targetVersion: '2.11.0',
+    await page.addInitScript(() => sessionStorage.setItem('xkeen.modules.update.v2', JSON.stringify({
+      schema: 2, sourceVersion: '2.10.0', targetVersion: '2.11.0', channel: 'stable',
     })));
     await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: server.panel_update_current }));
     await page.goto('/modules');
@@ -392,18 +392,18 @@ test.describe('Module lifecycle review', () => {
     await expect(page.locator('#modules-error')).toBeEmpty();
     await expect(page.getByRole('button', { name: 'Обновить панель' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Проверить ещё раз' })).toBeEnabled();
-    expect(await page.evaluate(() => sessionStorage.getItem('xkeen.modules.update.v1'))).toBeNull();
+    expect(await page.evaluate(() => sessionStorage.getItem('xkeen.modules.update.v2'))).toBeNull();
   });
 
   test('sets update badge only after an applicable newer panel plan', async ({ page }) => {
     await installIdleLifecycleRoutes(page);
     await page.route('**/api/modules/operations/plan', (route) => route.fulfill({ json: panelUpdatePlan }));
     await page.goto('/modules');
-    expect(await page.evaluate(() => sessionStorage.getItem('xkeen.modules.update.v1'))).toBeNull();
+    expect(await page.evaluate(() => sessionStorage.getItem('xkeen.modules.update.v2'))).toBeNull();
     await page.getByRole('button', { name: 'Обновить панель' }).click();
     await expect(page.getByRole('dialog', { name: 'Обновить панель до 2.11.0' })).toContainText('2.11.0');
-    expect(JSON.parse(await page.evaluate(() => sessionStorage.getItem('xkeen.modules.update.v1')))).toEqual({
-      schema: 1, sourceVersion: '2.10.0', targetVersion: '2.11.0',
+    expect(JSON.parse(await page.evaluate(() => sessionStorage.getItem('xkeen.modules.update.v2')))).toEqual({
+      schema: 2, sourceVersion: '2.10.0', targetVersion: '2.11.0', channel: 'stable',
     });
   });
 

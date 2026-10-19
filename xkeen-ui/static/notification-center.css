@@ -1,24 +1,34 @@
 .xk-notification-center {
   position: relative;
+  display: inline-flex;
   flex: 0 0 auto;
-  z-index: 1200;
 }
 
-.xk-notification-trigger {
+body .xk-notification-trigger {
   position: relative;
-}
-
-.xk-notification-trigger__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 15px;
-  height: 15px;
-  font-size: 17px;
-  line-height: 1;
+  min-width: 34px;
 }
 
-.xk-notification-trigger__count {
+body .xk-notification-trigger .xk-notification-trigger__icon {
+  display: block;
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+body .xk-notification-trigger__count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -27,22 +37,48 @@
   padding: 0 4px;
   border-radius: 999px;
   background: var(--op-danger, #ef4444);
+  box-shadow: 0 0 0 2px var(--op-surface, #0f172a);
   color: #fff;
   font-size: 10px;
+  font-weight: 600;
   line-height: 1;
+  pointer-events: none;
 }
 
-.xk-notification-trigger.has-unread {
-  border-color: var(--op-accent-border, rgba(96, 165, 250, .65)) !important;
-  color: var(--op-text, #e5e7eb) !important;
+body .xk-notification-trigger__count[hidden] { display: none; }
+
+/* On a phone the bell shares the line with the page title. */
+.xk-notification-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  /* Room for the counter that sits on the button's corner. */
+  padding-top: 6px;
 }
 
-.xk-notification-popover {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
+/* The row and the group that holds it take the whole line, so the bell
+   stands at the right edge whatever layout the page header uses. */
+header .xk-notification-title-row,
+header :has(> .xk-notification-title-row) {
+  flex: 1 1 100%;
+  width: 100%;
+  max-width: 100%;
+}
+
+.xk-notification-title-row > h1 {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.xk-notification-title-row > .xk-notification-center { margin-left: auto; }
+
+/* The window is a child of <body>; every rule is scoped to it so the page's
+   own paragraph and button styles cannot resize or recolour it. */
+body .xk-notification-popover {
+  position: fixed;
+  z-index: 1200;
   width: min(390px, calc(100vw - 24px));
-  max-height: min(560px, calc(100vh - 88px));
   overflow: auto;
   box-sizing: border-box;
   padding: 12px;
@@ -51,36 +87,41 @@
   background: var(--op-surface, #0f172a);
   color: var(--op-text, #e5e7eb);
   box-shadow: 0 18px 42px rgba(0, 0, 0, .32);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: left;
 }
 
-.xk-notification-popover__head,
-.xk-notification-popover__foot,
-.xk-notification-record__actions {
+body .xk-notification-popover[hidden] { display: none; }
+
+body .xk-notification-popover .xk-notification-popover__head,
+body .xk-notification-popover .xk-notification-popover__foot,
+body .xk-notification-popover .xk-notification-record__actions {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.xk-notification-popover__head {
+body .xk-notification-popover .xk-notification-popover__head {
   justify-content: space-between;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--op-border, rgba(148, 163, 184, .2));
 }
 
-.xk-notification-popover__head > div {
+body .xk-notification-popover .xk-notification-popover__head > div {
   display: grid;
   gap: 3px;
 }
 
-.xk-notification-status {
+body .xk-notification-popover .xk-notification-status {
   color: var(--op-muted, #94a3b8);
   font-size: 11px;
 }
 
-.xk-notification-status.is-error { color: var(--op-danger, #f87171); }
-.xk-notification-status.is-stale { color: var(--op-warning, #fbbf24); }
+body .xk-notification-popover .xk-notification-status.is-error { color: var(--op-danger, #f87171); }
+body .xk-notification-popover .xk-notification-status.is-stale { color: var(--op-warning, #fbbf24); }
 
-.xk-notification-close {
+body .xk-notification-popover .xk-notification-close {
   border: 0;
   background: transparent;
   color: inherit;
@@ -89,13 +130,13 @@
   cursor: pointer;
 }
 
-.xk-notification-list {
+body .xk-notification-popover .xk-notification-list {
   display: grid;
   gap: 8px;
   padding: 10px 0;
 }
 
-.xk-notification-record {
+body .xk-notification-popover .xk-notification-record {
   display: grid;
   gap: 5px;
   padding: 10px;
@@ -104,48 +145,44 @@
   background: var(--op-surface-2, rgba(148, 163, 184, .06));
 }
 
-.xk-notification-record.is-seen { opacity: .78; }
-.xk-notification-record p,
-.xk-notification-record small { margin: 0; color: var(--op-muted, #94a3b8); }
-.xk-notification-record p { font-size: 12px; line-height: 1.4; }
-.xk-notification-record small { font-size: 11px; line-height: 1.35; }
+body .xk-notification-popover .xk-notification-record.is-seen { opacity: .78; }
+body .xk-notification-popover .xk-notification-record strong { font-size: 13px; }
+body .xk-notification-popover .xk-notification-record p,
+body .xk-notification-popover .xk-notification-record small { margin: 0; color: var(--op-muted, #94a3b8); }
+body .xk-notification-popover .xk-notification-record p { font-size: 12px; line-height: 1.4; }
+body .xk-notification-popover .xk-notification-record small { font-size: 11px; line-height: 1.35; }
 
-.xk-notification-record__actions { margin-top: 3px; }
+body .xk-notification-popover .xk-notification-record__actions { margin-top: 3px; }
 
-.xk-notification-action,
-.xk-notification-check {
+body .xk-notification-popover .xk-notification-action,
+body .xk-notification-popover .xk-notification-check {
+  width: auto;
+  min-height: 0;
+  margin: 0;
   border: 1px solid var(--op-border, rgba(148, 163, 184, .25));
   border-radius: 6px;
   padding: 5px 8px;
   background: var(--op-surface-3, rgba(148, 163, 184, .1));
   color: var(--op-muted, #cbd5e1);
   font-size: 11px;
+  line-height: 1.3;
   cursor: pointer;
 }
 
-.xk-notification-action:hover,
-.xk-notification-check:hover {
+body .xk-notification-popover .xk-notification-action:hover,
+body .xk-notification-popover .xk-notification-check:hover {
   border-color: var(--op-border-strong, rgba(148, 163, 184, .45));
   color: var(--op-text, #fff);
 }
 
-.xk-notification-popover__foot {
+body .xk-notification-popover .xk-notification-popover__foot {
   justify-content: flex-end;
   padding-top: 9px;
   border-top: 1px solid var(--op-border, rgba(148, 163, 184, .2));
 }
 
-.xk-notification-empty {
+body .xk-notification-popover .xk-notification-empty {
   margin: 8px 2px;
   color: var(--op-muted, #94a3b8);
   font-size: 12px;
-}
-
-@media (max-width: 680px) {
-  .xk-notification-trigger__label { display: none; }
-  .xk-notification-popover {
-    position: fixed;
-    top: 58px;
-    right: 12px;
-  }
 }

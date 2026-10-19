@@ -32,7 +32,7 @@ html body .container.xk-page-container {
   flex-wrap: nowrap;
 }
 
-:root[data-theme] body header.xk-page-header .header-actions :is(.xk-header-btn, .theme-toggle-btn.xk-header-btn-theme) {
+:root[data-theme] body header.xk-page-header :is(.header-actions, .xk-notification-title-row) :is(.xk-header-btn, .theme-toggle-btn.xk-header-btn-theme) {
   position: relative;
   isolation: auto;
   box-sizing: border-box;
@@ -67,19 +67,19 @@ html body .container.xk-page-container {
   cursor: pointer;
 }
 
-:root[data-theme] body header.xk-page-header .header-actions :is(.xk-header-btn, .theme-toggle-btn.xk-header-btn-theme)::before,
-:root[data-theme] body header.xk-page-header .header-actions :is(.xk-header-btn, .theme-toggle-btn.xk-header-btn-theme)::after {
+:root[data-theme] body header.xk-page-header :is(.header-actions, .xk-notification-title-row) :is(.xk-header-btn, .theme-toggle-btn.xk-header-btn-theme)::before,
+:root[data-theme] body header.xk-page-header :is(.header-actions, .xk-notification-title-row) :is(.xk-header-btn, .theme-toggle-btn.xk-header-btn-theme)::after {
   content: none !important;
   display: none !important;
 }
 
-:root[data-theme] body header.xk-page-header .header-actions :is(.xk-header-btn, .theme-toggle-btn.xk-header-btn-theme):hover {
+:root[data-theme] body header.xk-page-header :is(.header-actions, .xk-notification-title-row) :is(.xk-header-btn, .theme-toggle-btn.xk-header-btn-theme):hover {
   border-color: var(--op-border-strong) !important;
   background: var(--op-surface-3) !important;
   color: var(--op-text) !important;
 }
 
-:root[data-theme] body header.xk-page-header .header-actions :is(.xk-header-btn, .theme-toggle-btn.xk-header-btn-theme):focus-visible {
+:root[data-theme] body header.xk-page-header :is(.header-actions, .xk-notification-title-row) :is(.xk-header-btn, .theme-toggle-btn.xk-header-btn-theme):focus-visible {
   outline: 2px solid var(--op-accent-border);
   outline-offset: 1px;
 }
@@ -111,7 +111,7 @@ html body .container.xk-page-container {
   display: inline !important;
 }
 
-:root body header.xk-page-header .header-actions .xk-header-btn > .xk-action-icon:not(.theme-toggle-icon) {
+:root body header.xk-page-header :is(.header-actions, .xk-notification-title-row) .xk-header-btn > .xk-action-icon:not(.theme-toggle-icon) {
   display: block;
   flex: 0 0 14px;
   width: 14px;
