@@ -1932,7 +1932,7 @@
           "accessible_label": "Информация"
         },
         {
-          "location": "xkeen-ui/static/js/features/module_manager/render.js:L393",
+          "location": "xkeen-ui/static/js/features/module_manager/render.js:L440",
           "control_type": "runtime-action",
           "accessible_label": "Информация"
         },
@@ -2160,7 +2160,7 @@
           "accessible_label": "Ограничить"
         },
         {
-          "location": "xkeen-ui/static/js/features/module_manager/render.js:L361",
+          "location": "xkeen-ui/static/js/features/module_manager/render.js:L408",
           "control_type": "runtime-action",
           "accessible_label": "Ограничить"
         },
@@ -2203,7 +2203,7 @@
           "accessible_label": "Дополнительные действия"
         },
         {
-          "location": "xkeen-ui/static/js/features/module_manager/render.js:L419",
+          "location": "xkeen-ui/static/js/features/module_manager/render.js:L466",
           "control_type": "runtime-action",
           "accessible_label": "Дополнительные действия"
         },

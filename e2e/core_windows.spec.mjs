@@ -135,6 +135,22 @@ test('the only installed engine is shown active, and another installed one can b
   await expect(page.locator('#core-modal-status')).toContainText('Служба xkeen перезапустится');
 });
 
+test('an active Mihomo router keeps Xray as a pending switch with confirmation', async ({ page }) => {
+  await serveCores(page, { cores: ['xray', 'mihomo'], current: 'mihomo' });
+  await page.goto('/');
+  const menu = await openServiceMenu(page);
+
+  await expect(engineSwitch(menu, 'mihomo')).toHaveAttribute('aria-pressed', 'true');
+  await engineSwitch(menu, 'xray').click();
+
+  await expect(tab(page, 'xray')).toHaveAttribute('aria-selected', 'true');
+  await expect(tab(page, 'xray')).toContainText('Установлено');
+  await expect(tab(page, 'xray')).not.toContainText('Активно');
+  await expect(tab(page, 'mihomo')).toContainText('Активно');
+  await expect(page.locator('#core-modal-confirm-btn')).toBeVisible();
+  await expect(page.locator('#core-modal-confirm-btn')).toHaveText('Сделать Xray активным');
+});
+
 test('a Mihomo-only router shows one Mihomo card', async ({ page }) => {
   await serveCores(page, { cores: ['mihomo'], current: 'mihomo' });
   await page.goto('/');

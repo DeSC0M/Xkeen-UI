@@ -878,6 +878,52 @@ body.modules-page .modules-variant-block {
   gap: 6px;
 }
 
+body.modules-page .modules-variant-block > .modules-variant-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--modules-border-strong);
+  border-radius: 6px;
+  background: var(--modules-surface-raised);
+  color: var(--modules-muted);
+  cursor: pointer;
+  list-style: none;
+  font-size: calc(11px * var(--xk-font-scale, 1));
+}
+
+body.modules-page .modules-variant-block > .modules-variant-summary::-webkit-details-marker {
+  display: none;
+}
+
+body.modules-page .modules-variant-block > .modules-variant-summary::after {
+  content: '▾';
+  color: var(--modules-faint);
+  font-size: 11px;
+  transition: transform .15s ease;
+}
+
+body.modules-page .modules-variant-block[open] > .modules-variant-summary::after {
+  transform: rotate(180deg);
+}
+
+body.modules-page .modules-variant-summary-label {
+  color: var(--modules-faint);
+}
+
+body.modules-page .modules-variant-summary strong {
+  margin-left: auto;
+  color: var(--modules-text);
+  font-weight: 650;
+}
+
+body.modules-page .modules-variant-content {
+  display: grid;
+  gap: 6px;
+}
+
 body.modules-page .modules-variant {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -926,6 +972,20 @@ body.modules-page .modules-variant-hint {
   color: var(--modules-faint);
   font-size: calc(11px * var(--xk-font-scale, 1));
   line-height: 1.4;
+}
+
+body.modules-page .modules-variant-pending {
+  margin: 0;
+  padding: 7px 8px;
+  border-left: 2px solid var(--modules-accent);
+  background: color-mix(in srgb, var(--modules-accent) 9%, transparent);
+  color: var(--modules-muted);
+  font-size: calc(11px * var(--xk-font-scale, 1));
+  line-height: 1.4;
+}
+
+body.modules-page .modules-variant-content > .modules-action-profile-transition {
+  justify-self: start;
 }
 
 @media (max-width: 1300px) {

@@ -164,19 +164,15 @@ def detect_running_core() -> Optional[str]:
 def get_cores_status() -> Tuple[List[str], Optional[str]]:
     """Return (available_cores, current_core) for xkeen.
 
-    current_core is based on running process if possible, falling back to first available.
+    ``current_core`` is based on a running process.  If process detection is
+    temporarily inconclusive (for example while xkeen is restarting), return
+    ``None`` instead of claiming the first installed engine is active.  The
+    old fallback made an active Mihomo router briefly look like Xray and hid
+    the confirmation action in the core switch modal.
     """
     cores = detect_available_cores()
     running_core = detect_running_core()
-
-    current_core: Optional[str] = running_core
-    if current_core is None:
-        if "xray" in cores:
-            current_core = "xray"
-        elif "mihomo" in cores:
-            current_core = "mihomo"
-
-    return cores, current_core
+    return cores, running_core
 
 
 def switch_core(core: str, error_log_path: str, runtime_log: Callable[[str], None] | None = None) -> None:

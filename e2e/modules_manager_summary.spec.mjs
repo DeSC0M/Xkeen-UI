@@ -324,6 +324,32 @@ test.describe('Editor variant choice', () => {
       expect(look[1].color, theme).toBe('rgb(255, 255, 255)');
     }
   });
+
+  test('the editor variants can be collapsed without losing the selected mode', async ({ page }) => {
+    await installLifecycleRoutes(page, { status: { ok: true, result: null }, installed: withEditor({ variant: 'advanced' }) });
+    await page.goto('/modules');
+    const row = page.locator('.modules-tile[data-module-id="tool.editor"]');
+    const disclosure = row.locator('.modules-variant-block');
+    await expect(disclosure).toHaveAttribute('open', '');
+    await expect(disclosure.locator('.modules-variant-summary strong')).toHaveText('Расширенный');
+
+    await disclosure.locator('.modules-variant-summary').click();
+
+    await expect(disclosure).not.toHaveAttribute('open', '');
+    await expect(disclosure.locator('.modules-variant-summary strong')).toHaveText('Расширенный');
+  });
+
+  test('shows a physical editor transition when advanced is selected but light files are installed', async ({ page }) => {
+    await installLifecycleRoutes(page, {
+      status: { ok: true, result: null },
+      installed: withEditor({ variant: 'advanced', installed_variant: 'light' }, { transition_required: true }),
+    });
+    await page.goto('/modules');
+    const row = page.locator('.modules-tile[data-module-id="tool.editor"]');
+
+    await expect(row).toContainText('Выбран вариант «Расширенный», но сейчас применён «Лёгкий».');
+    await expect(row.getByRole('button', { name: 'Применить выбранный вариант редакторов' })).toBeVisible();
+  });
 });
 
 // The stubs here keep the shape the server really sends: seconds with a

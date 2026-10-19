@@ -333,8 +333,34 @@ function editorVariantsLocked(snapshot) {
   return !modulesChangeable(snapshot) && snapshot.editor?.installed_variant === 'light';
 }
 
-function editorVariantControl(snapshot, current, onEditorVariant, busy) {
-  const block = node('div', 'modules-variant-block');
+const EDITOR_VARIANTS_DISCLOSURE_KEY = 'xkeen.modules.editorVariantsOpen.v1';
+
+function editorVariantsOpen() {
+  try {
+    const saved = window.localStorage.getItem(EDITOR_VARIANTS_DISCLOSURE_KEY);
+    return saved === null || saved === '1';
+  } catch (error) {
+    return false;
+  }
+}
+
+function rememberEditorVariantsOpen(open) {
+  try {
+    window.localStorage.setItem(EDITOR_VARIANTS_DISCLOSURE_KEY, open ? '1' : '0');
+  } catch (error) {}
+}
+
+function editorVariantControl(snapshot, current, onEditorVariant, onPlan, busy) {
+  const block = node('details', 'modules-variant-block');
+  block.open = editorVariantsOpen();
+  block.addEventListener('toggle', () => rememberEditorVariantsOpen(block.open));
+  const summary = node('summary', 'modules-variant-summary');
+  summary.append(
+    node('span', 'modules-variant-summary-label', 'Вариант редакторов'),
+    node('strong', '', current.label),
+  );
+  block.append(summary);
+  const content = node('div', 'modules-variant-content');
   const group = node('div', 'modules-variant');
   group.setAttribute('role', 'group');
   group.setAttribute('aria-label', 'Вариант редакторов');
@@ -349,10 +375,31 @@ function editorVariantControl(snapshot, current, onEditorVariant, busy) {
     button.addEventListener('click', () => { if (!selected) onEditorVariant(variant.id, button); });
     group.append(button);
   }
-  block.append(group, node('p', 'modules-variant-hint', `${current.label}: ${current.hint}`));
-  if (locked) {
-    block.append(node('p', 'modules-variant-hint', 'Стандартный и расширенный варианты докачивают файлы. На локальной сборке докачка недоступна.'));
+  content.append(group, node('p', 'modules-variant-hint', `${current.label}: ${current.hint}`));
+  const installedVariant = snapshot.editor?.installed_variant;
+  if (installedVariant && installedVariant !== current.id) {
+    const installed = EDITOR_VARIANTS.find((variant) => variant.id === installedVariant);
+    content.append(node(
+      'p',
+      'modules-variant-pending',
+      `Выбран вариант «${current.label}», но сейчас применён «${installed?.label || installedVariant}».`,
+    ));
+    if (snapshot.transition_required && typeof onPlan === 'function') {
+      const apply = actionButton(
+        'profile-transition',
+        null,
+        'Применить выбранный вариант редакторов',
+        onPlan,
+        busy,
+      );
+      apply.classList.replace('btn-secondary', 'btn-primary');
+      content.append(apply);
+    }
   }
+  if (locked) {
+    content.append(node('p', 'modules-variant-hint', 'Стандартный и расширенный варианты докачивают файлы. На локальной сборке докачка недоступна.'));
+  }
+  block.append(content);
   return block;
 }
 
@@ -478,7 +525,7 @@ function moduleTile(item, snapshot, names, { onToggle, onPlan, onEditorVariant, 
   const editorVariant = item.id === 'tool.editor' && item.enabled === true && typeof onEditorVariant === 'function'
     ? EDITOR_VARIANTS.find((variant) => variant.id === snapshot.editor?.variant)
     : null;
-  if (editorVariant) tile.append(editorVariantControl(snapshot, editorVariant, onEditorVariant, busy));
+  if (editorVariant) tile.append(editorVariantControl(snapshot, editorVariant, onEditorVariant, onPlan, busy));
   const refusal = refusals?.get(item.id);
   if (refusal) {
     tile.append(tileRefusal(item, refusal, onDismissRefusal));
