@@ -288,10 +288,16 @@ export function getXkeenPageFlagsConfig() {
   return {
     hasXray: coerceXkeenBooleanValue(getXkeenPageConfigValue('flags.hasXray', true), true),
     hasMihomo: coerceXkeenBooleanValue(getXkeenPageConfigValue('flags.hasMihomo', false), false),
+    hasTerminal: coerceXkeenBooleanValue(getXkeenPageConfigValue('flags.hasTerminal', false), false),
     isMips: coerceXkeenBooleanValue(getXkeenPageConfigValue('flags.isMips', false), false),
     multiCore: coerceXkeenBooleanValue(getXkeenPageConfigValue('flags.multiCore', false), false),
     mihomoConfigExists: coerceXkeenBooleanValue(getXkeenPageConfigValue('flags.mihomoConfigExists', false), false),
   };
+}
+
+// The terminal is a module of its own: "terminal here" elsewhere needs it.
+export function hasXkeenTerminalModule() {
+  return getXkeenPageFlagsConfig().hasTerminal;
 }
 
 export function getXkeenPageCoresConfig() {

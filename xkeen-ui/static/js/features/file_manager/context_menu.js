@@ -1,5 +1,6 @@
 import { getFileManagerNamespace } from '../file_manager_namespace.js';
 import { iconHtml } from '../../ui/operator_icons.js';
+import { hasXkeenTerminalModule } from '../xkeen_runtime.js';
 
 (() => {
   'use strict';
@@ -270,7 +271,7 @@ import { iconHtml } from '../../ui/operator_icons.js';
 
     if (hasRow) {
       menu.appendChild(_ctxBtn(isDir ? 'Открыть папку' : 'Открыть', 'open', 'Enter'));
-      if (!lite && !isRemotePanel) {
+      if (!lite && !isRemotePanel && hasXkeenTerminalModule()) {
         menu.appendChild(_ctxBtn(isDir ? 'Терминал здесь' : 'Терминал в папке', 'terminal_here', ''));
       }
       menu.appendChild(_ctxBtn('Скачать', 'download', ''));
@@ -308,7 +309,7 @@ import { iconHtml } from '../../ui/operator_icons.js';
     }
     menu.appendChild(_ctxSep());
     menu.appendChild(_ctxBtn('Загрузить (Upload)…', 'upload', ''));
-    if (!lite && !hasRow && !isRemotePanel) {
+    if (!lite && !hasRow && !isRemotePanel && hasXkeenTerminalModule()) {
       menu.appendChild(_ctxBtn('Терминал здесь', 'terminal_here', ''));
     }
     menu.appendChild(_ctxBtn('Вверх', 'up', 'Backspace'));

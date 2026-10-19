@@ -39,7 +39,7 @@
       ],
       "removable": false,
       "unit_count": 576,
-      "size_bytes": 7752718,
+      "size_bytes": 7753822,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -252,7 +252,7 @@
       ],
       "removable": true,
       "unit_count": 85,
-      "size_bytes": 999877,
+      "size_bytes": 1000231,
       "kind_counts": {
         "backend_route": 22,
         "backend_service": 32,
@@ -1208,7 +1208,7 @@
       "module_id": "core",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/ui_assets.py",
-      "size_bytes": 39924,
+      "size_bytes": 39950,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -4213,7 +4213,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_frontend_build_fallback.py",
-      "size_bytes": 17403,
+      "size_bytes": 17437,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -5468,7 +5468,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_modular_panel_stage4_3_tool_screens.py",
-      "size_bytes": 5153,
+      "size_bytes": 5890,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -10198,7 +10198,7 @@
       "module_id": "core",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/xkeen_runtime.js",
-      "size_bytes": 36692,
+      "size_bytes": 36964,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -13696,7 +13696,7 @@
       "module_id": "core",
       "kind": "template",
       "path": "xkeen-ui/templates/panel/page_config.html",
-      "size_bytes": 1404,
+      "size_bytes": 1439,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -24622,7 +24622,7 @@
       "module_id": "tool.files",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/file_manager.js",
-      "size_bytes": 16706,
+      "size_bytes": 16796,
       "depends_on": [
         "core"
       ],
@@ -24820,7 +24820,7 @@
       "module_id": "tool.files",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/file_manager/context_menu.js",
-      "size_bytes": 17182,
+      "size_bytes": 17300,
       "depends_on": [
         "core"
       ],
@@ -25410,7 +25410,7 @@
       "module_id": "tool.files",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/file_manager/wire.js",
-      "size_bytes": 40771,
+      "size_bytes": 40917,
       "depends_on": [
         "core"
       ],
@@ -32437,7 +32437,7 @@
         },
         "tool.files": {
           "unit_count": 85,
-          "size_bytes": 999877
+          "size_bytes": 1000231
         },
         "tool.advanced-diagnostics": {
           "unit_count": 24,

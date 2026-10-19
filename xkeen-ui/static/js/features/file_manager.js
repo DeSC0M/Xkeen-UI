@@ -1,4 +1,5 @@
 import { isXkeenMipsRuntime } from './xkeen_runtime.js';
+import { hasXkeenTerminalModule } from './xkeen_runtime.js';
 import { getFileManagerApiRoot, getFileManagerNamespace } from './file_manager_namespace.js';
 
 (() => {
@@ -105,7 +106,7 @@ import { getFileManagerApiRoot, getFileManagerNamespace } from './file_manager_n
     qsa('[data-fm-lite-hide="1"]').forEach((node) => {
       toggleHidden(node, on);
     });
-    toggleHidden(el('fm-terminal-here-btn'), on);
+    toggleHidden(el('fm-terminal-here-btn'), on || !hasXkeenTerminalModule());
   }
 
   function setLiteNote(note) {

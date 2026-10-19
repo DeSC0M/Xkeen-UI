@@ -52,6 +52,8 @@ E2E_MODULE_PROFILES: dict[str, tuple[str, ...]] = {
     "xray-minimal": ("core", "tool.editor", "engine.xray"),
     "mihomo-minimal": ("core", "tool.editor", "engine.mihomo"),
     "core-only": ("core",),
+    # The file manager without the terminal: its "terminal here" controls must stay hidden.
+    "files-no-terminal": ("core", "tool.editor", "engine.xray", "tool.files"),
 }
 
 

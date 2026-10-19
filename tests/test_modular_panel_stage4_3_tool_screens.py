@@ -124,3 +124,25 @@ def test_stage4_3_tool_screens_closure_is_documented():
     assert "modular-panel-stage4.3-tool-screens.md" in plan
     assert "modular-panel-stage4.3-tool-screens.md" in index
     assert "Критерий завершения **выполнен**" in contract
+
+
+def _page_config(html: str) -> dict:
+    import json
+
+    match = re.search(r"var pageConfig = (\{.*?\});\s*\n", html, re.S)
+    assert match, "pageConfig is not published"
+    return json.loads(match.group(1))
+
+
+@pytest.mark.parametrize(
+    ("module_ids", "expected"),
+    [
+        (FULL_MODULE_IDS, True),
+        (["core", "tool.editor", "engine.xray", "tool.files"], False),
+    ],
+)
+def test_page_config_tells_whether_the_terminal_is_installed(tmp_path, module_ids, expected):
+    # The file manager offers "terminal here" only when the terminal module
+    # is active; without it the controls would open nothing.
+    flags = _page_config(render_panel(module_ids, tmp_path))["flags"]
+    assert flags["hasTerminal"] is expected

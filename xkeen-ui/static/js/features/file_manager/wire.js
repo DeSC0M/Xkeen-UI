@@ -1,5 +1,6 @@
 import { getFileManagerNamespace } from '../file_manager_namespace.js';
 import { iconHtml } from '../../ui/operator_icons.js';
+import { hasXkeenTerminalModule } from '../xkeen_runtime.js';
 
 (() => {
   'use strict';
@@ -474,8 +475,8 @@ import { iconHtml } from '../../ui/operator_icons.js';
       } catch (e) {}
     }
 
-    // Terminal here
-    if (lite) {
+    // Terminal here: not in lite mode and not without the terminal module.
+    if (lite || !hasXkeenTerminalModule()) {
       toggleHidden(el('fm-terminal-here-btn'), true);
     } else if (!el('fm-terminal-here-btn')) {
       const b = document.createElement('button');

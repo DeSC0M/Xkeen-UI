@@ -47,6 +47,7 @@ _PAGE_CONFIG_SECTION_DEFAULTS = {
 _PAGE_CONFIG_FLAG_DEFAULTS = {
     "hasXray": False,
     "hasMihomo": False,
+    "hasTerminal": False,
     "isMips": False,
     "multiCore": False,
     "mihomoConfigExists": False,
