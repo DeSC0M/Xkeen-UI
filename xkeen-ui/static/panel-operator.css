@@ -20671,7 +20671,13 @@ body.panel-page .xk-mihomo-log-route,
 body.panel-page .xk-mihomo-log-country,
 body.panel-page .xk-mihomo-log-node { display: inline-flex; align-items: center; gap: 4px; min-width: 0; padding: 1px 5px; border-radius: 5px; background: var(--op-surface-3, rgba(255,255,255,.06)); color: var(--op-text); font-size: .9em; }
 body.panel-page .xk-mihomo-log-group-icon { display: inline-grid; width: 14px; height: 14px; place-items: center; border-radius: 50%; background: var(--op-accent-soft); color: var(--op-accent); font-weight: 700; }
+body.panel-page .xk-mihomo-log-route-icon,
+body.panel-page .xk-mihomo-log-route-icon img,
+body.panel-page .xk-mihomo-log-node img { display: inline-grid; width: 16px; height: 16px; place-items: center; }
+body.panel-page .xk-mihomo-log-route-icon img,
+body.panel-page .xk-mihomo-log-node img { border-radius: 4px; object-fit: contain; }
 body.panel-page .xk-mihomo-log-country { color: var(--op-text); }
+body.panel-page .xk-mihomo-log-country svg { display: block; width: 18px; height: 13px; }
 body.panel-page .xk-mihomo-log-country small { color: var(--op-muted); font-size: .8em; }
 body.panel-page .xk-mihomo-log-node { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--op-muted); }
 body.panel-page .xk-mihomo-log-message { margin-top: 3px; overflow-wrap: anywhere; color: var(--op-text); }

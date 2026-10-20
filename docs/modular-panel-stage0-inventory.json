@@ -39,7 +39,7 @@
       ],
       "removable": false,
       "unit_count": 582,
-      "size_bytes": 7849686,
+      "size_bytes": 7850112,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -132,7 +132,7 @@
       ],
       "removable": true,
       "unit_count": 133,
-      "size_bytes": 3109416,
+      "size_bytes": 3111339,
       "kind_counts": {
         "app_runtime": 4,
         "backend_route": 2,
@@ -13366,7 +13366,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/panel-operator.css",
-      "size_bytes": 763839,
+      "size_bytes": 764265,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -16688,7 +16688,7 @@
       "module_id": "engine.mihomo",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/mihomo_clash/logs.js",
-      "size_bytes": 16655,
+      "size_bytes": 18557,
       "depends_on": [
         "core",
         "tool.editor"
@@ -17261,7 +17261,7 @@
       "module_id": "engine.mihomo",
       "kind": "frontend_test",
       "path": "e2e/mihomo_clash_rules.spec.mjs",
-      "size_bytes": 20825,
+      "size_bytes": 20846,
       "depends_on": [
         "core",
         "tool.editor"

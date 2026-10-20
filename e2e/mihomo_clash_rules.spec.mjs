@@ -293,7 +293,7 @@ test('structured logs use a full workspace tab, one on-demand socket, ring buffe
   await page.locator('#mihomo-clash-logs-order').selectOption('newest');
   await expect(page.locator('#mihomo-clash-logs-list li').first()).toContainText('fixture-504');
   await expect(page.locator('#mihomo-clash-logs-list li').last().locator('.xk-mihomo-device-name')).toHaveText('Ноутбук');
-  await expect(page.locator('#mihomo-clash-logs-list li').last().locator('.xk-mihomo-log-country')).toHaveText(/PL/);
+  await expect(page.locator('#mihomo-clash-logs-list li').last().locator('.xk-mihomo-log-country')).toHaveAttribute('data-country', 'PL');
   await expect(page.locator('#mihomo-clash-logs-list li').last().locator('.xk-mihomo-log-route')).toContainText('Telegram');
   const logLayout = await page.locator('#mihomo-clash-logs').evaluate((workspace) => {
     const list = workspace.querySelector('#mihomo-clash-logs-list');

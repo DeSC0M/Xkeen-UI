@@ -1,7 +1,9 @@
 import {
   mihomoClashLogsWsUrl,
   requestMihomoClashWsToken,
+  fetchMihomoClashGroups,
 } from './client.js';
+import { mihomoCountryFlag, mihomoNodeCountryCode, mihomoNodeDisplayName } from './visuals.js';
 
 const MAX_LOG_ROWS = 500;
 const LOG_SETTINGS_KEY = 'xkeen:mihomo-clash-log-settings:v1';
@@ -32,6 +34,8 @@ let reconnectTimer = 0;
 let reconnectAttempt = 0;
 let order = 'newest';
 let autoFollow = true;
+let routeVisuals = new Map();
+let routeVisualsRequest = null;
 
 function upstreamLogLevel() {
   // Mihomo's level is a minimum threshold. The economical default is info;
@@ -77,6 +81,60 @@ function parseRouteMeta(message) {
 function groupIcon(group) {
   const match = GROUP_ICON_RULES.find(([pattern]) => pattern.test(String(group || '')));
   return match ? match[1] : '•';
+}
+
+function rebuildRouteVisuals(payload) {
+  routeVisuals = new Map();
+  const groups = [
+    ...(Array.isArray(payload?.groups) ? payload.groups : []),
+    ...(payload?.global_group && typeof payload.global_group === 'object' ? [payload.global_group] : []),
+  ];
+  for (const group of groups) {
+    const groupName = String(group?.name || '');
+    if (groupName) routeVisuals.set(groupName, { icon: String(group?.icon || ''), kind: 'group' });
+    for (const node of Array.isArray(group?.nodes) ? group.nodes : []) {
+      const nodeName = String(node?.name || '');
+      if (nodeName && !routeVisuals.has(nodeName)) {
+        routeVisuals.set(nodeName, { icon: String(node?.icon || ''), kind: 'node' });
+      }
+    }
+  }
+}
+
+function ensureRouteVisuals() {
+  if (routeVisualsRequest) return;
+  routeVisualsRequest = fetchMihomoClashGroups()
+    .then((payload) => {
+      rebuildRouteVisuals(payload);
+      render();
+    })
+    .catch(() => {})
+    .finally(() => { routeVisualsRequest = null; });
+}
+
+function routeBadgeMarkup(route) {
+  const groupVisual = routeVisuals.get(route.group) || {};
+  const nodeVisual = routeVisuals.get(route.node) || {};
+  const countryCode = route.country || mihomoNodeCountryCode(route.node);
+  const flag = mihomoCountryFlag(countryCode);
+  const nodeName = route.node ? mihomoNodeDisplayName(route.node, countryCode) : '';
+  const groupMarker = groupVisual.icon
+    ? `<img src="${escapeHtml(groupVisual.icon)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
+    : `<span class="xk-mihomo-log-group-icon" aria-hidden="true">${escapeHtml(groupIcon(route.group))}</span>`;
+  const nodeMarker = nodeVisual.icon
+    ? `<img src="${escapeHtml(nodeVisual.icon)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
+    : '';
+  return [
+    route.group
+      ? `<span class="xk-mihomo-log-route"><span class="xk-mihomo-log-route-icon">${groupMarker}</span><span>${escapeHtml(route.group)}</span></span>`
+      : '',
+    flag?.svg
+      ? `<span class="xk-mihomo-log-country" data-country="${escapeHtml(flag.code)}" role="img" aria-label="${escapeHtml(flag.label)}" title="${escapeHtml(flag.label)}">${flag.svg}</span>`
+      : '',
+    route.node
+      ? `<span class="xk-mihomo-log-node">${nodeMarker}${escapeHtml(nodeName || route.node)}</span>`
+      : '',
+  ].join('');
 }
 
 function loadSettings() {
@@ -175,23 +233,13 @@ function render() {
     const sequence = Number.isFinite(Number(row.sequence)) ? `#${Number(row.sequence)}` : '';
     const levelText = String(row.level || 'info').toUpperCase();
     const route = parseRouteMeta(row.message);
-    const flag = countryFlag(route.country);
-    const routeMeta = route.group
-      ? `<span class="xk-mihomo-log-route"><span class="xk-mihomo-log-group-icon">${escapeHtml(groupIcon(route.group))}</span><span>${escapeHtml(route.group)}</span></span>`
-      : '';
-    const nodeMeta = route.node
-      ? `<span class="xk-mihomo-log-node">${escapeHtml(route.node)}</span>`
-      : '';
-    const countryMeta = flag
-      ? `<span class="xk-mihomo-log-country" title="Страна выхода ${escapeHtml(route.country)}">${escapeHtml(flag)} <small>${escapeHtml(route.country)}</small></span>`
-      : '';
     return `<li data-log-level="${escapeHtml(row.level)}">
       <article class="xk-mihomo-log-card">
         <header class="xk-mihomo-log-card-head">
           <time class="xk-mihomo-log-time">${escapeHtml(row.time || '—')}</time>
           <span class="xk-mihomo-log-sequence">${escapeHtml(sequence)}</span>
           <strong>${escapeHtml(levelText)}</strong>
-          ${routeMeta}${countryMeta}${nodeMeta}
+          ${routeBadgeMarkup(route)}
         </header>
         <div class="xk-mihomo-log-message">${annotatedLogText(row.message || '—', row.devices)}</div>
         ${fields ? `<small>${annotatedLogText(fields, row.devices)}</small>` : ''}
@@ -394,6 +442,7 @@ export function activateMihomoClashLogs(nextCapabilities = {}, nextRuntime = {})
   runtime = nextRuntime || {};
   reconnectAttempt = 0;
   generation += 1;
+  ensureRouteVisuals();
   void openStream(generation);
   return true;
 }
