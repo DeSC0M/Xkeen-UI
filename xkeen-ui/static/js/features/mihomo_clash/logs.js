@@ -63,7 +63,10 @@ function countryFlag(code) {
 
 function parseRouteMeta(message) {
   const text = String(message || '');
-  const match = text.match(/\busing\s+(.+?)(?:\[([A-Z]{2})\s+(.+))?$/u);
+  const using = text.match(/\busing\s+(.+)$/u);
+  const rest = String(using?.[1] || '').trim();
+  const match = rest.match(/^(.+?)\[[A-Z]{2}\s+\[([A-Z]{2})\]\s*(.+)$/u)
+    || rest.match(/^(.+?)(?:\[[\u{1F1E6}-\u{1F1FF}]{2}\s*)?\[([A-Z]{2})\]\s*(.+)$/u);
   if (!match) return { group: '', country: '', node: '' };
   const group = String(match[1] || '').trim();
   const country = String(match[2] || '').toUpperCase();
