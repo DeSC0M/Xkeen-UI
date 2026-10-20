@@ -69,6 +69,47 @@ same_ignoring_cr() {
   [ "$(tr -d '\r' < "$1" | md5sum | cut -d' ' -f1)" = "$(tr -d '\r' < "$2" | md5sum | cut -d' ' -f1)" ]
 }
 
+template_body_md5() {
+  tr -d '\r' < "$1" | md5sum | cut -d' ' -f1
+}
+
+template_shipped_md5() {
+  # Что установщик положил под этим именем в прошлый раз ($1 — каталог, $2 — имя).
+  [ -f "$1/.xkeen_shipped" ] || return 0
+  awk -v name="$2" '$2 == name { print $1; exit }' "$1/.xkeen_shipped" 2>/dev/null || true
+}
+
+prune_template_copies() {
+  # Копии .dist-* нужны только ради правок владельца. Одинаковые копии (в том
+  # числе CRLF и LF одной сборки) и копии, равные нынешнему шаблону, правок не
+  # хранят; из остальных остаются три последние.
+  _pt_dir="$1"
+  _pt_base="$2"
+  _pt_current="$(template_body_md5 "$_pt_dir/$_pt_base" 2>/dev/null || true)"
+  ls -1 "$_pt_dir" 2>/dev/null | sort -r | {
+    _pt_seen=" "
+    _pt_kept=0
+    while IFS= read -r _pt_name; do
+      case "$_pt_name" in
+        "$_pt_base".dist-*) ;;
+        *) continue ;;
+      esac
+      _pt_path="$_pt_dir/$_pt_name"
+      [ -f "$_pt_path" ] || continue
+      _pt_sum="$(template_body_md5 "$_pt_path")"
+      case "$_pt_seen" in
+        *" $_pt_sum "*) rm -f "$_pt_path"; continue ;;
+      esac
+      _pt_seen="$_pt_seen$_pt_sum "
+      if [ "$_pt_sum" = "$_pt_current" ] || [ "$_pt_kept" -ge 3 ]; then
+        rm -f "$_pt_path"
+        continue
+      fi
+      _pt_kept=$((_pt_kept + 1))
+    done
+  }
+}
+
 sync_bundled_template_dir() {
   src_dir="$1"
   dest_dir="$2"
@@ -88,26 +129,39 @@ sync_bundled_template_dir() {
     TS="no-date"
   fi
 
+  # Хэши положенных шаблонов: шаблон, который владелец не открывал, при смене
+  # версии заменяется без копии.
+  shipped_new="$dest_dir/.xkeen_shipped.new"
+  : > "$shipped_new" 2>/dev/null || shipped_new=""
+
   for f in "$src_dir"/*.json "$src_dir"/*.jsonc; do
     [ -f "$f" ] || continue
     base="$(basename "$f")"
     dest="$dest_dir/$base"
 
     if [ -f "$dest" ] && cmp -s "$f" "$dest" 2>/dev/null; then
-      continue
-    fi
-
-    if same_ignoring_cr "$f" "$dest"; then
       :
+    elif same_ignoring_cr "$f" "$dest"; then
+      cp -f "$f" "$dest"
     elif [ -f "$dest" ]; then
-      cp -f "$dest" "$dest.dist-$TS" 2>/dev/null || true
-      echo "[*] ~ обновляю built-in шаблон $base (backup: $base.dist-$TS)"
+      shipped_sum="$(template_shipped_md5 "$dest_dir" "$base")"
+      if [ -n "$shipped_sum" ] && [ "$shipped_sum" = "$(template_body_md5 "$dest")" ]; then
+        echo "[*] ~ обновляю built-in шаблон $base"
+      else
+        cp -f "$dest" "$dest.dist-$TS" 2>/dev/null || true
+        echo "[*] ~ обновляю built-in шаблон $base (backup: $base.dist-$TS)"
+      fi
+      cp -f "$f" "$dest"
     else
       echo "[*] + $base"
+      cp -f "$f" "$dest"
     fi
 
-    cp -f "$f" "$dest"
+    prune_template_copies "$dest_dir" "$base" || true
+    [ -n "$shipped_new" ] && echo "$(template_body_md5 "$f") $base" >> "$shipped_new"
   done
+
+  [ -n "$shipped_new" ] && mv -f "$shipped_new" "$dest_dir/.xkeen_shipped" 2>/dev/null || true
 }
 
 cleanup_legacy_xray_templates() {

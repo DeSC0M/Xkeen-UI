@@ -179,6 +179,110 @@ def test_a_changed_xray_template_keeps_a_copy_of_the_previous_one(tmp_path):
     assert [path.read_text(encoding="utf-8") for path in copies] == ["{ edited by user }\n"]
 
 
+def _sync_templates(tmp_path: Path, source: Path, target: Path) -> None:
+    proc = _run(tmp_path, f'sync_bundled_template_dir "{source.as_posix()}" "{target.as_posix()}" test')
+    assert proc.returncode == 0, proc.stderr
+
+
+def _copies(target: Path) -> list[str]:
+    return sorted(path.name for path in target.iterdir() if ".dist-" in path.name)
+
+
+def test_an_untouched_template_is_replaced_without_a_copy(tmp_path):
+    source, target = tmp_path / "src", tmp_path / "routing"
+    source.mkdir()
+    target.mkdir()
+    (source / "05_routing_base.jsonc").write_text("{ v1 }\n", encoding="utf-8")
+    _sync_templates(tmp_path, source, target)
+
+    # The next release changes the template; the owner never opened it.
+    (source / "05_routing_base.jsonc").write_text("{ v2 }\n", encoding="utf-8")
+    _sync_templates(tmp_path, source, target)
+
+    assert (target / "05_routing_base.jsonc").read_text(encoding="utf-8") == "{ v2 }\n"
+    assert _copies(target) == []
+
+
+def test_a_template_edited_after_install_still_keeps_a_copy(tmp_path):
+    source, target = tmp_path / "src", tmp_path / "routing"
+    source.mkdir()
+    target.mkdir()
+    (source / "05_routing_base.jsonc").write_text("{ v1 }\n", encoding="utf-8")
+    _sync_templates(tmp_path, source, target)
+    (target / "05_routing_base.jsonc").write_text("{ v1 edited }\n", encoding="utf-8")
+
+    (source / "05_routing_base.jsonc").write_text("{ v2 }\n", encoding="utf-8")
+    _sync_templates(tmp_path, source, target)
+
+    copies = _copies(target)
+    assert len(copies) == 1
+    assert (target / copies[0]).read_text(encoding="utf-8") == "{ v1 edited }\n"
+
+
+def test_a_crlf_copy_of_the_installed_template_counts_as_untouched(tmp_path):
+    source, target = tmp_path / "src", tmp_path / "routing"
+    source.mkdir()
+    target.mkdir()
+    (source / "05_routing_base.jsonc").write_bytes(b"{ v1 }\r\n")
+    _sync_templates(tmp_path, source, target)
+
+    (source / "05_routing_base.jsonc").write_text("{ v2 }\n", encoding="utf-8")
+    (target / "05_routing_base.jsonc").write_bytes(b"{ v1 }\n")
+    _sync_templates(tmp_path, source, target)
+
+    assert _copies(target) == []
+
+
+def test_piled_up_copies_are_thinned_without_losing_a_distinct_edit(tmp_path):
+    source, target = tmp_path / "src", tmp_path / "routing"
+    source.mkdir()
+    target.mkdir()
+    (source / "05_routing_base.jsonc").write_text("{ shipped }\n", encoding="utf-8")
+    (source / "07_other.jsonc").write_text("{ other }\n", encoding="utf-8")
+    (target / "05_routing_base.jsonc").write_text("{ shipped }\n", encoding="utf-8")
+    (target / "07_other.jsonc").write_text("{ other }\n", encoding="utf-8")
+    # What years of updates left behind: the same two bodies over and over
+    # (CRLF and LF builds), one copy equal to today's template, and edits.
+    piled = {
+        "20260610-133506": "{ a }\n",
+        "20260611-131423": "{ a }\r\n",
+        "20260616-124130": "{ a }\n",
+        "20260618-164617": "{ shipped }\n",
+        "20260707-144913": "{ edit 1 }\n",
+        "20260708-153326": "{ edit 2 }\n",
+        "20260724-141505": "{ edit 3 }\n",
+        "20260811-142731": "{ edit 4 }\n",
+    }
+    for stamp, body in piled.items():
+        (target / f"05_routing_base.jsonc.dist-{stamp}").write_bytes(body.encode("utf-8"))
+    (target / "07_other.jsonc.dist-20260610-133506").write_text("{ old other }\n", encoding="utf-8")
+    (target / "mine.jsonc").write_text("{ mine }\n", encoding="utf-8")
+
+    _sync_templates(tmp_path, source, target)
+
+    assert _copies(target) == [
+        "05_routing_base.jsonc.dist-20260708-153326",
+        "05_routing_base.jsonc.dist-20260724-141505",
+        "05_routing_base.jsonc.dist-20260811-142731",
+        "07_other.jsonc.dist-20260610-133506",
+    ]
+    assert (target / "mine.jsonc").read_text(encoding="utf-8") == "{ mine }\n"
+
+
+def test_identical_copies_keep_the_newest_one(tmp_path):
+    source, target = tmp_path / "src", tmp_path / "routing"
+    source.mkdir()
+    target.mkdir()
+    (source / "05_routing_base.jsonc").write_text("{ shipped }\n", encoding="utf-8")
+    (target / "05_routing_base.jsonc").write_text("{ shipped }\n", encoding="utf-8")
+    for stamp, body in (("20260610-133506", b"{ a }\n"), ("20260611-131423", b"{ a }\r\n")):
+        (target / f"05_routing_base.jsonc.dist-{stamp}").write_bytes(body)
+
+    _sync_templates(tmp_path, source, target)
+
+    assert _copies(target) == ["05_routing_base.jsonc.dist-20260611-131423"]
+
+
 # --- совместимость --------------------------------------------------------------------
 
 
