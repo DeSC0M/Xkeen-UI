@@ -132,7 +132,7 @@
       ],
       "removable": true,
       "unit_count": 133,
-      "size_bytes": 3109234,
+      "size_bytes": 3109416,
       "kind_counts": {
         "app_runtime": 4,
         "backend_route": 2,
@@ -16688,7 +16688,7 @@
       "module_id": "engine.mihomo",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/mihomo_clash/logs.js",
-      "size_bytes": 16473,
+      "size_bytes": 16655,
       "depends_on": [
         "core",
         "tool.editor"
