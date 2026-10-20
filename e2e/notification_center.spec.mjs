@@ -131,6 +131,12 @@ for (const width of [1440, 390]) {
       const root = node.closest('.xk-notification-center');
       return root.nextElementSibling === gear;
     }, await gearWrap.elementHandle())).toBe(true);
+    // The two icons read as one pair: the row's wide gap between the
+    // resource monitor and the buttons does not part them.
+    const gearBox = await page.locator('.xk-header-panel-trigger').boundingBox();
+    const pairBox = await trigger.boundingBox();
+    expect(Math.abs(gearBox.y - pairBox.y)).toBeLessThan(2);
+    expect(gearBox.x - (pairBox.x + pairBox.width)).toBeLessThanOrEqual(8);
     await expectInsideViewport(page, trigger);
     await expect(page.locator('.xk-header-panel-trigger [data-xk-modules-update-dot]')).toHaveCount(0);
 

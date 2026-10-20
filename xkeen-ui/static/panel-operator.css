@@ -1373,6 +1373,8 @@ body.panel-page.xk-operator-header-active .container.container-wide { width: 100
 body.panel-page.xk-operator-header-active :is(#view-routing, #view-mihomo, #view-xkeen, #view-xray-logs, #view-commands, #view-files) { margin-top: 0; scrollbar-gutter: auto; }
 body.panel-page.xk-operator-header-active .panel-header #xk-brand-title { font-size: 21px; }
 body.panel-page.xk-operator-header-active .header-right { gap: 28px; }
+/* The bell and the gear are one pair of icons, not two blocks of the row. */
+body.panel-page.xk-operator-header-active .header-right > .xk-notification-center { margin-right: -24px; }
 body.panel-page.xk-operator-header-active .xk-resource-monitor {
   padding: 0;
   border: 0 !important;
