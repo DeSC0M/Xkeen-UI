@@ -67,6 +67,10 @@ _SENSITIVE_LOG_VALUE = re.compile(
 _LOG_IPV4_CANDIDATE = re.compile(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?::\d{1,5})?")
 _LOG_BRACKETED_IPV6_CANDIDATE = re.compile(r"\[[0-9a-fA-F:%]+\](?::\d{1,5})?")
 _LOG_BARE_IPV6_CANDIDATE = re.compile(r"(?<![\w:])[0-9a-fA-F]*:[0-9a-fA-F:]+(?:%[\w.-]+)?(?![\w:])")
+_LOG_TIME_ONLY = re.compile(
+    r"^(?P<hour>\d{2}):(?P<minute>\d{2})"
+    r"(?::(?P<second>\d{2})(?P<fraction>\.\d+)?)?$"
+)
 
 
 def _mapping(value: Any) -> Mapping[str, Any]:
@@ -96,7 +100,33 @@ def _adjust_log_timestamp(value: str, offset_hours: int) -> str:
     try:
         parsed = datetime.datetime.fromisoformat(value.replace("Z", "+00:00"))
     except (TypeError, ValueError):
-        return value
+        # Some Mihomo releases emit the structured log timestamp as
+        # ``HH:MM:SS`` without a timezone marker. It is still UTC, so the
+        # RFC3339-only path would leave the panel behind the configured offset.
+        match = _LOG_TIME_ONLY.fullmatch(value)
+        if not match:
+            return value
+        try:
+            fraction_text = match.group("fraction") or ""
+            microsecond = int((fraction_text[1:] + "000000")[:6]) if fraction_text else 0
+            base = datetime.datetime(
+                2000,
+                1,
+                1,
+                int(match.group("hour")),
+                int(match.group("minute")),
+                int(match.group("second") or 0),
+                microsecond,
+            )
+        except (TypeError, ValueError):
+            return value
+        shifted = base + datetime.timedelta(hours=int(offset_hours))
+        if match.group("second") is None:
+            return shifted.strftime("%H:%M")
+        fraction = match.group("fraction") or ""
+        if fraction:
+            fraction = f".{shifted.microsecond:06d}"[: len(fraction)]
+        return shifted.strftime("%H:%M:%S") + fraction
     if parsed.tzinfo is None:
         return value
 

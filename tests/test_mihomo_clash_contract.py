@@ -438,6 +438,22 @@ def test_structured_log_dto_applies_configured_timezone_offset():
     assert entry["time"] == "2026-10-20T00:00:00Z"
 
 
+def test_structured_log_dto_applies_configured_timezone_offset_to_time_only():
+    from services.mihomo_clash_dto import build_mihomo_clash_log_entry_dto
+
+    entry = build_mihomo_clash_log_entry_dto(
+        {"time": "01:14:48", "message": "connected"},
+        timezone_offset_hours=3,
+    )
+    wrapped = build_mihomo_clash_log_entry_dto(
+        {"time": "23:59:58.25", "message": "connected"},
+        timezone_offset_hours=3,
+    )
+
+    assert entry["time"] == "04:14:48"
+    assert wrapped["time"] == "02:59:58.25"
+
+
 def test_structured_log_dto_keeps_invalid_or_unzoned_time_unchanged():
     from services.mihomo_clash_dto import build_mihomo_clash_log_entry_dto
 

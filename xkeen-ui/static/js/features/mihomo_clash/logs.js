@@ -96,11 +96,18 @@ function render() {
   list.innerHTML = visible.map((row) => {
     const fields = Object.entries(row.fields || {})
       .map(([key, value]) => `${key}=${value}`).join(' · ');
+    const sequence = Number.isFinite(Number(row.sequence)) ? `#${Number(row.sequence)}` : '';
+    const levelText = String(row.level || 'info').toUpperCase();
     return `<li data-log-level="${escapeHtml(row.level)}">
-      <time>${escapeHtml(row.time || '—')}</time>
-      <strong>${escapeHtml(row.level || 'info')}</strong>
-      <span>${annotatedLogText(row.message || '—', row.devices)}</span>
-      ${fields ? `<small>${annotatedLogText(fields, row.devices)}</small>` : ''}
+      <time class="xk-mihomo-log-time">${escapeHtml(row.time || '—')}</time>
+      <article class="xk-mihomo-log-card">
+        <header class="xk-mihomo-log-card-head">
+          <span class="xk-mihomo-log-sequence">${escapeHtml(sequence)}</span>
+          <strong>${escapeHtml(levelText)}</strong>
+        </header>
+        <div class="xk-mihomo-log-message">${annotatedLogText(row.message || '—', row.devices)}</div>
+        ${fields ? `<small>${annotatedLogText(fields, row.devices)}</small>` : ''}
+      </article>
     </li>`;
   }).join('');
   list.hidden = visible.length === 0;
