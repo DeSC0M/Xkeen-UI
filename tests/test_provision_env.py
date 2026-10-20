@@ -283,6 +283,68 @@ def test_identical_copies_keep_the_newest_one(tmp_path):
     assert _copies(target) == ["05_routing_base.jsonc.dist-20260611-131423"]
 
 
+# --- байткод в каталоге панели ----------------------------------------------------------
+
+
+def _tree_with_bytecode(tmp_path: Path) -> Path:
+    ui = tmp_path / "xkeen-ui"
+    for package in ("", "services", "services/routing"):
+        folder = ui / package
+        (folder / "__pycache__").mkdir(parents=True)
+        (folder / "__pycache__" / "mod.cpython-313.pyc").write_bytes(b"old")
+        (folder / "mod.py").write_text("x = 1\n", encoding="utf-8")
+    (ui / "secret.key").write_text("key\n", encoding="utf-8")
+    return ui
+
+
+def test_bytecode_left_in_the_panel_tree_by_old_versions_is_removed(tmp_path):
+    ui = _tree_with_bytecode(tmp_path)
+    cache = tmp_path / "tmp" / "xkeen-ui-pycache"
+    (cache / "opt").mkdir(parents=True)
+    (cache / "opt" / "kept.pyc").write_bytes(b"live")
+
+    proc = _run(tmp_path, f'provision_drop_tree_bytecode "{ui.as_posix()}" "{cache.as_posix()}"')
+
+    assert proc.returncode == 0, proc.stderr
+    assert sorted(p.relative_to(ui).as_posix() for p in ui.rglob("*")) == [
+        "mod.py",
+        "secret.key",
+        "services",
+        "services/mod.py",
+        "services/routing",
+        "services/routing/mod.py",
+    ]
+    assert (cache / "opt" / "kept.pyc").read_bytes() == b"live"
+
+
+def test_bytecode_is_kept_when_the_cache_itself_lives_in_the_panel_tree(tmp_path):
+    ui = _tree_with_bytecode(tmp_path)
+
+    proc = _run(tmp_path, f'provision_drop_tree_bytecode "{ui.as_posix()}" "{(ui / "cache").as_posix()}"')
+
+    assert proc.returncode == 0, proc.stderr
+    assert len(list(ui.rglob("__pycache__"))) == 3
+
+
+def test_bytecode_is_kept_when_no_cache_prefix_is_in_use(tmp_path):
+    ui = _tree_with_bytecode(tmp_path)
+
+    proc = _run(tmp_path, f'provision_drop_tree_bytecode "{ui.as_posix()}" ""')
+
+    assert proc.returncode == 0, proc.stderr
+    assert len(list(ui.rglob("__pycache__"))) == 3
+
+
+def test_install_and_panel_update_both_drop_tree_bytecode():
+    installer = INSTALLER.read_text(encoding="utf-8")
+    library = LIB.read_text(encoding="utf-8")
+    apply_body = library.split("provision_cmd_apply() {", 1)[1].split("\n}\n", 1)[0]
+
+    assert "provision_drop_tree_bytecode() {" in library
+    assert "provision_drop_tree_bytecode" in apply_body
+    assert re.search(r"^provision_drop_tree_bytecode\b", installer, re.MULTILINE)
+
+
 # --- совместимость --------------------------------------------------------------------
 
 

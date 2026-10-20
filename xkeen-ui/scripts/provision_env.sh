@@ -190,6 +190,22 @@ cleanup_legacy_xray_templates() {
   rmdir "$LEGACY_ROOT" 2>/dev/null || true
 }
 
+provision_drop_tree_bytecode() {
+  # Версии до 2.9 писали байткод в __pycache__ прямо в каталоге панели. Теперь
+  # панель держит его в PYTHONPYCACHEPREFIX и эти каталоги не читает: они только
+  # занимают место на накопителе и раздувают копию перед обновлением.
+  # $1 — каталог панели, $2 — каталог кэша байткода, которым панель пользуется.
+  _pb_ui="${1%/}"
+  _pb_cache="${2%/}"
+  [ -n "$_pb_ui" ] && [ -d "$_pb_ui" ] || return 0
+  # Без отдельного кэша или с кэшем внутри панели байткод в дереве живой.
+  [ -n "$_pb_cache" ] || return 0
+  case "$_pb_cache/" in
+    "$_pb_ui"/*) return 0 ;;
+  esac
+  find "$_pb_ui" -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true
+}
+
 provision_mihomo_templates() {
   # $1 — откуда брать шаблоны (архив или каталог панели), $2 — куда класть.
   _pm_src="$1"
@@ -1742,6 +1758,7 @@ provision_cmd_apply() {
 
   provision_command_wrappers
   cleanup_legacy_xray_templates "${XKEEN_UI_LEGACY_XRAY_TEMPLATES_DIR:-/opt/etc/xray/templates}" || true
+  provision_drop_tree_bytecode "$UI_DIR" "${XKEEN_UI_PYTHONPYCACHEPREFIX:-/tmp/xkeen-ui-pycache}" || true
 
   # Шаблоны берутся из каталога панели: новые файлы уже разложены.
   if provision_has_module engine.mihomo && [ -d "$UI_DIR/opt/etc/mihomo/templates" ]; then
