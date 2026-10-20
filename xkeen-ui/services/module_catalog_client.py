@@ -34,7 +34,7 @@ from services.module_package_contract import (
 OFFICIAL_REPOSITORY = "umarcheh001/Xkeen-UI"
 OFFICIAL_RELEASE_PATH_PREFIX = f"/{OFFICIAL_REPOSITORY}/releases/download/"
 LATEST_RELEASE_URL = f"https://api.github.com/repos/{OFFICIAL_REPOSITORY}/releases/latest"
-PRERELEASES_URL = f"https://api.github.com/repos/{OFFICIAL_REPOSITORY}/releases?per_page=30"
+PRERELEASES_URL = f"https://api.github.com/repos/{OFFICIAL_REPOSITORY}/releases?per_page=10"
 CATALOG_REDIRECT_HOSTS = frozenset(
     {
         "github.com",
@@ -42,7 +42,10 @@ CATALOG_REDIRECT_HOSTS = frozenset(
         "release-assets.githubusercontent.com",
     }
 )
-_MAX_DISCOVERY_BYTES = 1024 * 1024
+# Every release in the list carries all its assets (about 45 module
+# archives with checksums, ~160 KB of metadata per beta): thirty releases
+# outgrew one megabyte with v2.10.0-beta.4 and the check fell to "stale".
+_MAX_DISCOVERY_BYTES = 8 * 1024 * 1024
 _MAX_CATALOG_BYTES = 1024 * 1024
 _MAX_SIGNATURE_BYTES = 16 * 1024
 

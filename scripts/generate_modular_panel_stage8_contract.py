@@ -315,7 +315,7 @@ def build_contract(root: Path) -> dict[str, Any]:
             "algorithm": "Ed25519",
             "signature_asset": "catalog.json.sig",
             "discovery": "https://api.github.com/repos/umarcheh001/Xkeen-UI/releases/latest",
-            "prerelease_discovery": "https://api.github.com/repos/umarcheh001/Xkeen-UI/releases?per_page=30",
+            "prerelease_discovery": "https://api.github.com/repos/umarcheh001/Xkeen-UI/releases?per_page=10",
             "cache_ttl_seconds": 24 * 60 * 60,
             "allowed_redirect_hosts": [
                 "github.com",

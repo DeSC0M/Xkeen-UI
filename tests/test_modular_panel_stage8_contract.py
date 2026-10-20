@@ -184,7 +184,7 @@ def test_stage8_contract_generator_covers_boundaries_and_acceptance_matrix(tmp_p
         "algorithm": "Ed25519",
         "signature_asset": "catalog.json.sig",
         "discovery": "https://api.github.com/repos/umarcheh001/Xkeen-UI/releases/latest",
-        "prerelease_discovery": "https://api.github.com/repos/umarcheh001/Xkeen-UI/releases?per_page=30",
+        "prerelease_discovery": "https://api.github.com/repos/umarcheh001/Xkeen-UI/releases?per_page=10",
         "cache_ttl_seconds": 86400,
         "allowed_redirect_hosts": [
             "github.com",

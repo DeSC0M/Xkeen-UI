@@ -211,6 +211,31 @@ def test_parse_latest_prerelease_uses_highest_published_semver() -> None:
         parse_latest_prerelease([{"tag_name": "v1.4.0", "draft": False, "prerelease": False}])
 
 
+def test_prerelease_discovery_accepts_release_list_over_one_megabyte(tmp_path) -> None:
+    # v2.10.0-beta.4: thirty releases with their module assets weighed 1.08 MB,
+    # the old one-megabyte bound cut the read and the check showed a stale catalog.
+    private_key = Ed25519PrivateKey.generate()
+    asset = {"name": "xkeen-module-tool.files-1.4.0-beta.2.tar.gz", "url": "x" * 3000}
+    releases = [
+        {"tag_name": f"v1.4.0-beta.{n}", "draft": False, "prerelease": True, "assets": [asset] * 45}
+        for n in (2, 1)
+    ] * 5
+    discovery = json.dumps(releases).encode("utf-8")
+    assert len(discovery) > 1024 * 1024
+    transport = _CatalogTransport({
+        PRERELEASES_URL: discovery,
+        **{url: body for url, body in _release_responses(private_key, "1.4.0-beta.2").items()
+           if url != LATEST_RELEASE_URL},
+    })
+    snapshot = ModuleCatalogClient(
+        tmp_path, transport=transport, channel="prerelease",
+        now=lambda: 100.0, keyring={"release-2026": _public_pem(private_key)},
+    ).get_catalog()
+
+    assert snapshot.release_version == "1.4.0-beta.2"
+    assert snapshot.freshness == "fresh"
+
+
 def test_prerelease_channel_uses_signed_assets_and_separate_cache(tmp_path) -> None:
     private_key = Ed25519PrivateKey.generate()
     transport = _CatalogTransport({
