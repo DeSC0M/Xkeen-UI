@@ -260,6 +260,11 @@ function renderStatus(state, payload = null) {
   if (openConfig) {
     openConfig.hidden = !['controller_missing', 'not_configured', 'blocked', 'unauthorized'].includes(state);
   }
+  const setupUnix = document.querySelector('[data-mihomo-clash-action="setup-unix"]');
+  if (setupUnix) {
+    setupUnix.hidden = !['controller_missing', 'not_configured', 'blocked'].includes(state);
+    setupUnix.disabled = state === 'loading' || migrationBusy;
+  }
   const warning = byId('mihomo-clash-security-warning');
   // A security migration used to trigger a one-click "protect" assistant.
   // Keep the status payload for diagnostics, but do not offer or run that
@@ -331,17 +336,23 @@ function setMigrationBusy(busy) {
 
 function renderMigrationAssistantCopy() {
   const setup = assistantKind === 'setup';
-  setText('mihomo-clash-migration-title', 'Включить Mihomo API');
-  setText('mihomo-clash-migration-description', setup
-    ? 'Одна кнопка — backup, проверка, сохранение, перезапуск и контроль подключения.'
-    : 'Автоматическая защита отключена. Настройте controller вручную в конфигурации.');
-  setText('mihomo-clash-migration-apply', 'Настроить и включить API');
+  const unixRepair = assistantKind === 'repair-unix';
+  setText('mihomo-clash-migration-title', unixRepair ? 'Добавить Unix socket Mihomo API' : 'Включить Mihomo API');
+  setText('mihomo-clash-migration-description', unixRepair
+    ? 'Панель добавит external-controller-unix: ./mihomo-api.sock, создаст backup, проверит конфиг и перезапустит Mihomo.'
+    : (setup
+      ? 'Одна кнопка — backup, проверка, сохранение, перезапуск и контроль подключения.'
+      : 'Автоматическая защита отключена. Настройте controller вручную в конфигурации.'));
+  setText('mihomo-clash-migration-apply', unixRepair ? 'Добавить Unix socket' : 'Настроить и включить API');
 }
 
-async function openMigrationPreview() {
+async function openMigrationPreview(kind = 'setup') {
   // The migration endpoint can still be used for initial API setup, but the
   // former security-migration path is intentionally unavailable in the UI.
-  if (assistantKind !== 'setup') return false;
+  if (kind !== 'setup' && kind !== 'repair-unix') return false;
+  assistantKind = kind;
+  const transport = byId('mihomo-clash-migration-transport');
+  if (transport && kind === 'repair-unix') transport.value = 'unix';
   renderMigrationAssistantCopy();
   setHidden(byId('mihomo-clash-migration'), false);
   const ready = await refreshMigrationPreview();
@@ -352,10 +363,11 @@ async function openMigrationPreview() {
 async function applyMigration() {
   if (migrationBusy || !migrationPreviewId) return false;
   const setup = assistantKind === 'setup';
-  if (!setup) return false;
-  const confirmed = window.confirm(setup
-    ? 'Панель создаст backup, настроит локальный Mihomo API и перезапустит Mihomo. Продолжить?'
-    : 'Настроить Mihomo API?');
+  const unixRepair = assistantKind === 'repair-unix';
+  if (!setup && !unixRepair) return false;
+  const confirmed = window.confirm(unixRepair
+    ? 'Добавить Unix socket в config.yaml, создать backup и перезапустить Mihomo?'
+    : 'Панель создаст backup, настроит локальный Mihomo API и перезапустит Mihomo. Продолжить?');
   if (!confirmed) return false;
   migrationBusy = true;
   setMigrationBusy(true);
@@ -491,6 +503,7 @@ function bindWorkspace() {
     const action = target.dataset.mihomoClashAction;
     if (subview) applySubview(subview, { reason: 'click' });
     if (action === 'retry') void refreshMihomoClashStatus({ reason: 'retry' });
+    if (action === 'setup-unix') void openMigrationPreview('repair-unix');
     if (action === 'open-config') applySubview('config', { reason: 'diagnostic' });
     if (action === 'migration-preview') void openMigrationPreview();
     if (action === 'migration-refresh') void refreshMigrationPreview();

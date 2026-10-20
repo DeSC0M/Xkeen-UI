@@ -780,3 +780,14 @@ def test_rule_provider_inspector_is_read_only_bounded_and_searchable():
     assert "params.set('limit'" in client
     assert "params.set('offset'" in client
     assert "method: 'GET'" in client
+
+
+def test_blocked_controller_offers_one_click_unix_socket_repair():
+    markup = _mihomo_markup()
+    feature = _text(FEATURE)
+
+    assert 'data-mihomo-clash-action="setup-unix"' in markup
+    assert "'blocked'" in feature
+    assert "external-controller-unix: ./mihomo-api.sock" in feature
+    assert "openMigrationPreview('repair-unix')" in feature
+    assert "assistantKind === 'repair-unix'" in feature
