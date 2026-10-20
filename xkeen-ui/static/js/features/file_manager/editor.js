@@ -55,7 +55,7 @@ import {
     activeKind: 'codemirror',
     activeFacade: null,
     switching: false,
-    ctx: null,          // { target, sid, path, name, side, truncated, readOnly }
+    ctx: null,          // { target, sid, path, name, side, truncated, protected, readOnly }
     dirty: false,
     lastSaved: '',
     viewStateTimer: null,
@@ -1455,11 +1455,18 @@ function syncToolbarForEngine(engine) {
       if (ctx && ctx.target === 'remote' && ctx.sid) subtitle.push('remote');
       if (ctx && ctx.target === 'local') subtitle.push('local');
       if (ctx && ctx.truncated) subtitle.push('частично');
+      if (ctx && ctx.protected) subtitle.push('только чтение');
     } catch (e) {}
 
+    let warn = '';
+    if (ctx && ctx.protected) {
+      warn = 'Служебные данные панели: по ним она возвращает ваши настройки, если операция прервалась или конфиги сломаны. Править их нельзя — только посмотреть.';
+    } else if (ctx && ctx.truncated) {
+      warn = 'Файл открыт частично (ограничение размера). Сохранение отключено.';
+    }
     setInfo({
       subtitle: subtitle.join(' • '),
-      warn: (ctx && ctx.truncated) ? 'Файл открыт частично (ограничение размера). Сохранение отключено.' : '',
+      warn,
       err: '',
     });
 

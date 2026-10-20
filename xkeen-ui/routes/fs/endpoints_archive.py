@@ -26,6 +26,7 @@ from typing import Any, Dict, List, Tuple
 from flask import Blueprint, Response, jsonify, request
 
 from routes.common.errors import log_route_exception
+from services.fs_common.local import local_is_panel_data_entry, local_write_protection_error
 from services.filemanager.archive import (
     is_safe_extract_path,
     join_local_cwd,
@@ -470,6 +471,8 @@ def register_archive_endpoints(bp: Blueprint, deps: Dict[str, Any]) -> None:
             return error_response("Доступ к пути запрещён.", 403, ok=False, code="forbidden")
         except Exception:
             return error_response("bad_path", 400, ok=False)
+        if reason := local_write_protection_error(rp_out):
+            return error_response(reason, 403, ok=False, code="protected_path")
 
         if os.path.exists(rp_out) and not overwrite:
             return error_response("exists", 409, ok=False)
@@ -574,6 +577,8 @@ def register_archive_endpoints(bp: Blueprint, deps: Dict[str, Any]) -> None:
             return error_response("Доступ к пути запрещён.", 403, ok=False, code="forbidden")
         except Exception:
             return error_response("bad_path", 400, ok=False)
+        if reason := local_write_protection_error(rp_dest):
+            return error_response(reason, 403, ok=False, code="protected_path")
 
         if not os.path.exists(rp_dest):
             if not create_dest:
@@ -757,6 +762,10 @@ def register_archive_endpoints(bp: Blueprint, deps: Dict[str, Any]) -> None:
                             skipped += 1
                             continue
                         out = os.path.abspath(os.path.join(dest_root_abs, rel))
+                        # Распаковка в корень панели не перепишет её служебное.
+                        if local_is_panel_data_entry(out):
+                            skipped += 1
+                            continue
 
                         if is_dir:
                             os.makedirs(out, exist_ok=True)
@@ -852,6 +861,10 @@ def register_archive_endpoints(bp: Blueprint, deps: Dict[str, Any]) -> None:
                             skipped += 1
                             continue
                         out = os.path.abspath(os.path.join(dest_root_abs, rel))
+                        # Распаковка в корень панели не перепишет её служебное.
+                        if local_is_panel_data_entry(out):
+                            skipped += 1
+                            continue
 
                         if is_dir:
                             os.makedirs(out, exist_ok=True)

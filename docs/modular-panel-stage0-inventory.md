@@ -36,12 +36,12 @@ python .\scripts\generate_modular_panel_inventory.py --root .
 
 | Module ID | Единиц | Размер | Routes | Background | UI surfaces | Removable |
 |---|---:|---:|---:|---:|---:|---|
-| `core` | 580 | 7.46 МБ | 104 | 4 | 36 | нет |
+| `core` | 582 | 7.48 МБ | 104 | 4 | 36 | нет |
 | `engine.xray` | 138 | 3.64 МБ | 61 | 3 | 14 | да |
 | `engine.mihomo` | 133 | 2.96 МБ | 89 | 4 | 6 | да |
 | `tool.editor` | 25 | 811.5 КБ | 0 | 0 | 2 | да |
 | `tool.terminal` | 47 | 472.0 КБ | 2 | 2 | 2 | да |
-| `tool.files` | 85 | 976.8 КБ | 43 | 1 | 1 | да |
+| `tool.files` | 85 | 980.7 КБ | 43 | 1 | 1 | да |
 | `tool.backups` | 8 | 99.7 КБ | 14 | 0 | 0 | да |
 | `integration.happ` | 22 | 310.9 КБ | 5 | 0 | 1 | да |
 | `tool.advanced-diagnostics` | 24 | 486.2 КБ | 8 | 0 | 2 | да |
@@ -102,7 +102,7 @@ python .\scripts\generate_modular_panel_inventory.py --root .
 | `core` | `tool.advanced-diagnostics` | 10 | `xkeen-ui/routes/__init__.py`<br>`xkeen-ui/routes/devtools.py`<br>`xkeen-ui/services/router_modem_control.py` |
 | `core` | `tool.backups` | 8 | `xkeen-ui/app_factory.py`<br>`xkeen-ui/routes/__init__.py`<br>`tests/test_backup_path_hardening.py` |
 | `core` | `tool.editor` | 11 | `xkeen-ui/static/js/pages/panel.editor.bundle.js`<br>`xkeen-ui/static/js/pages/panel.editor.codemirror.bundle.js`<br>`xkeen-ui/static/js/pages/panel.editor.diff.bundle.js` |
-| `core` | `tool.files` | 9 | `xkeen-ui/app_factory.py`<br>`xkeen-ui/routes/__init__.py`<br>`tests/test_filemanager_trash_policy.py` |
+| `core` | `tool.files` | 10 | `xkeen-ui/routes/__init__.py`<br>`xkeen-ui/services/panel_service_data.py`<br>`tests/test_filemanager_trash_policy.py` |
 | `core` | `tool.terminal` | 8 | `xkeen-ui/run_server.py`<br>`xkeen-ui/routes/__init__.py`<br>`tests/test_module_backend_gates.py` |
 | `engine.mihomo` | `core` | 133 | `xkeen-ui/bootstrap_mihomo_env.py`<br>`xkeen-ui/mihomo_config_generator.py`<br>`xkeen-ui/mihomo_server_core.py` |
 | `engine.mihomo` | `engine.xray` | 6 | `xkeen-ui/routes/mihomo.py`<br>`xkeen-ui/services/mihomo_clash_devices.py`<br>`xkeen-ui/services/mihomo_clash_dto.py` |

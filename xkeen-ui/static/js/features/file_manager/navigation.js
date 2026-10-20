@@ -162,6 +162,7 @@ import { getFileManagerNamespace } from '../file_manager_namespace.js';
 
       const text = String(out.data.text || '');
       const truncated = !!out.data.truncated;
+      const isProtected = !!out.data.protected;
       const ctx = {
         target,
         sid: target === 'remote' ? sid : '',
@@ -169,7 +170,9 @@ import { getFileManagerNamespace } from '../file_manager_namespace.js';
         name,
         side,
         truncated,
-        readOnly: truncated, // avoid accidental overwrite of partial content
+        protected: isProtected,
+        // Partial content must not overwrite the file; panel data is view-only.
+        readOnly: truncated || isProtected,
       };
 
       try { if (FM.editor && typeof FM.editor.wire === 'function') FM.editor.wire(); } catch (e) {}

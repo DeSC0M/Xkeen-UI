@@ -38,13 +38,13 @@
         "gevent-websocket (optional)"
       ],
       "removable": false,
-      "unit_count": 580,
-      "size_bytes": 7826371,
+      "unit_count": 582,
+      "size_bytes": 7838958,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
-        "backend_service": 79,
-        "backend_test": 260,
+        "backend_service": 80,
+        "backend_test": 261,
         "configuration": 10,
         "frontend_bundle": 9,
         "frontend_entrypoint": 3,
@@ -252,7 +252,7 @@
       ],
       "removable": true,
       "unit_count": 85,
-      "size_bytes": 1000231,
+      "size_bytes": 1004253,
       "kind_counts": {
         "backend_route": 22,
         "backend_service": 32,
@@ -417,12 +417,11 @@
       "module_id": "core",
       "kind": "app_runtime",
       "path": "xkeen-ui/app_factory.py",
-      "size_bytes": 36269,
+      "size_bytes": 36354,
       "depends_on": [
         "engine.mihomo",
         "engine.xray",
-        "tool.backups",
-        "tool.files"
+        "tool.backups"
       ],
       "starts_background_task": true,
       "background_markers": [
@@ -2739,6 +2738,28 @@
         "XKEEN_UI_INIT_OWNER",
         "XKEEN_UI_INIT_SCRIPT"
       ],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "backend_service",
+      "path": "xkeen-ui/services/panel_service_data.py",
+      "size_bytes": 2556,
+      "depends_on": [
+        "tool.files"
+      ],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [],
       "removable": false
     },
     {
@@ -6838,6 +6859,30 @@
       ],
       "environment_variables": [
         "XKEEN_UI_INIT_SCRIPT"
+      ],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "backend_test",
+      "path": "tests/test_panel_service_data_protection.py",
+      "size_bytes": 9946,
+      "depends_on": [
+        "tool.files"
+      ],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [
+        "XKEEN_LOCALFM_ROOTS"
       ],
       "removable": false
     },
@@ -23545,7 +23590,7 @@
       "module_id": "tool.files",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/fs/endpoints_archive.py",
-      "size_bytes": 39749,
+      "size_bytes": 40645,
       "depends_on": [
         "core"
       ],
@@ -23645,7 +23690,7 @@
       "module_id": "tool.files",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/fs/endpoints_manage.py",
-      "size_bytes": 7250,
+      "size_bytes": 7566,
       "depends_on": [
         "core"
       ],
@@ -23681,7 +23726,7 @@
       "module_id": "tool.files",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/fs/endpoints_perms.py",
-      "size_bytes": 4788,
+      "size_bytes": 5140,
       "depends_on": [
         "core"
       ],
@@ -23712,7 +23757,7 @@
       "module_id": "tool.files",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/fs/endpoints_readwrite.py",
-      "size_bytes": 10956,
+      "size_bytes": 11480,
       "depends_on": [
         "core"
       ],
@@ -24651,7 +24696,7 @@
       "module_id": "tool.files",
       "kind": "backend_service",
       "path": "xkeen-ui/services/fs_common/local.py",
-      "size_bytes": 36026,
+      "size_bytes": 37379,
       "depends_on": [
         "core"
       ],
@@ -25004,7 +25049,7 @@
       "module_id": "tool.files",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/file_manager/editor.js",
-      "size_bytes": 57427,
+      "size_bytes": 57881,
       "depends_on": [
         "core"
       ],
@@ -25174,7 +25219,7 @@
       "module_id": "tool.files",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/file_manager/navigation.js",
-      "size_bytes": 11599,
+      "size_bytes": 11726,
       "depends_on": [
         "core"
       ],
@@ -31333,16 +31378,16 @@
       {
         "from": "core",
         "to": "tool.files",
-        "unit_count": 9,
+        "unit_count": 10,
         "examples": [
-          "xkeen-ui/app_factory.py",
           "xkeen-ui/routes/__init__.py",
+          "xkeen-ui/services/panel_service_data.py",
           "tests/test_filemanager_trash_policy.py",
           "tests/test_module_backend_gates.py",
+          "tests/test_panel_service_data_protection.py",
           "tests/test_panel_state_protection.py",
           "tests/test_remotefs_remove_regressions.py",
-          "xkeen-ui/static/js/features/index.js",
-          "xkeen-ui/static/js/pages/panel.module_loader.js"
+          "xkeen-ui/static/js/features/index.js"
         ]
       },
       {
@@ -31778,8 +31823,8 @@
         "to": "tool.files",
         "unit_count": 5,
         "examples": [
-          "xkeen-ui/app_factory.py",
           "xkeen-ui/routes/__init__.py",
+          "xkeen-ui/services/panel_service_data.py",
           "xkeen-ui/static/js/features/index.js",
           "xkeen-ui/static/js/pages/panel.module_loader.js",
           "xkeen-ui/static/js/runtime/lazy_runtime.js"
@@ -32215,8 +32260,8 @@
         "to": "tool.files",
         "unit_count": 5,
         "examples": [
-          "xkeen-ui/app_factory.py",
           "xkeen-ui/routes/__init__.py",
+          "xkeen-ui/services/panel_service_data.py",
           "xkeen-ui/static/js/features/index.js",
           "xkeen-ui/static/js/pages/panel.module_loader.js",
           "xkeen-ui/static/js/runtime/lazy_runtime.js"
@@ -32330,16 +32375,16 @@
       {
         "from": "core",
         "to": "tool.files",
-        "unit_count": 9,
+        "unit_count": 10,
         "examples": [
-          "xkeen-ui/app_factory.py",
           "xkeen-ui/routes/__init__.py",
+          "xkeen-ui/services/panel_service_data.py",
           "tests/test_filemanager_trash_policy.py",
           "tests/test_module_backend_gates.py",
+          "tests/test_panel_service_data_protection.py",
           "tests/test_panel_state_protection.py",
           "tests/test_remotefs_remove_regressions.py",
-          "xkeen-ui/static/js/features/index.js",
-          "xkeen-ui/static/js/pages/panel.module_loader.js"
+          "xkeen-ui/static/js/features/index.js"
         ]
       },
       {
@@ -32509,8 +32554,8 @@
           "to": "tool.files",
           "unit_count": 5,
           "examples": [
-            "xkeen-ui/app_factory.py",
             "xkeen-ui/routes/__init__.py",
+            "xkeen-ui/services/panel_service_data.py",
             "xkeen-ui/static/js/features/index.js",
             "xkeen-ui/static/js/pages/panel.module_loader.js",
             "xkeen-ui/static/js/runtime/lazy_runtime.js"
@@ -32565,7 +32610,7 @@
         },
         "tool.files": {
           "unit_count": 85,
-          "size_bytes": 1000231
+          "size_bytes": 1004253
         },
         "tool.advanced-diagnostics": {
           "unit_count": 24,

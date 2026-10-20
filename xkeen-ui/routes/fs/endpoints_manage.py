@@ -6,7 +6,7 @@ from typing import Any, Dict
 from flask import Blueprint, jsonify, request
 
 from services.filemanager.local_ops import mkdir_local, rename_local, touch_local
-from services.fs_common.local import local_protection_error
+from services.fs_common.local import local_protection_error, local_write_protection_error
 
 def register_manage_endpoints(bp: Blueprint, deps: Dict[str, Any]) -> None:
     """Register mkdir/rename/touch endpoints."""
@@ -42,6 +42,8 @@ def register_manage_endpoints(bp: Blueprint, deps: Dict[str, Any]) -> None:
                 rp = _local_resolve(path_s, LOCALFS_ROOTS)
             except PermissionError:
                 return error_response("Доступ к пути запрещён.", 403, ok=False, code="forbidden")
+            if reason := local_write_protection_error(rp):
+                return error_response(reason, 403, ok=False, code="protected_path")
             try:
                 mkdir_local(rp, parents=bool(parents))
             except FileExistsError:
@@ -126,6 +128,8 @@ def register_manage_endpoints(bp: Blueprint, deps: Dict[str, Any]) -> None:
                 rp = _local_resolve(path_s, LOCALFS_ROOTS)
             except PermissionError:
                 return error_response("Доступ к пути запрещён.", 403, ok=False, code="forbidden")
+            if reason := local_write_protection_error(rp):
+                return error_response(reason, 403, ok=False, code="protected_path")
             try:
                 skipped = touch_local(
                     rp,

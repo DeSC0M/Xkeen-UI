@@ -5,6 +5,7 @@ from typing import Any, Dict
 from flask import Blueprint, jsonify, request
 
 from services.filemanager.perms import chmod_local, chown_local, parse_mode_value
+from services.fs_common.local import local_write_protection_error
 
 
 def register_perms_endpoints(bp: Blueprint, deps: Dict[str, Any]) -> None:
@@ -43,6 +44,8 @@ def register_perms_endpoints(bp: Blueprint, deps: Dict[str, Any]) -> None:
                 rp = _local_resolve(path_s, LOCALFS_ROOTS)
             except PermissionError:
                 return error_response("Доступ к пути запрещён.", 403, ok=False, code="forbidden")
+            if reason := local_write_protection_error(rp):
+                return error_response(reason, 403, ok=False, code="protected_path")
             try:
                 chmod_local(rp, mode_i)
             except Exception:
@@ -87,6 +90,8 @@ def register_perms_endpoints(bp: Blueprint, deps: Dict[str, Any]) -> None:
                 rp = _local_resolve(path_s, LOCALFS_ROOTS)
             except PermissionError:
                 return error_response("Доступ к пути запрещён.", 403, ok=False, code="forbidden")
+            if reason := local_write_protection_error(rp):
+                return error_response(reason, 403, ok=False, code="protected_path")
             try:
                 chown_local(rp, uid_i, gid_i)
             except Exception:

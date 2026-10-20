@@ -817,13 +817,19 @@ def create_app(*, ws_runtime: bool = False):
 
     _register_api_blueprints(app, ctx)
 
+    try:
+        from services.panel_service_data import register_panel_data_protection
+
+        register_panel_data_protection(UI_STATE_DIR)
+    except Exception as e:  # noqa: BLE001
+        try:
+            _core_log("warning", "panel data protection not registered", error=str(e))
+        except Exception:
+            pass
+
     if "engine.xray" in active_modules:
         try:
-            from services.fs_common.local import protect_local_path
-            from services.xray_subscriptions import protected_state_paths, start_subscription_scheduler
-
-            for _protected_path, _subtree in protected_state_paths(UI_STATE_DIR):
-                protect_local_path(_protected_path, subtree=_subtree)
+            from services.xray_subscriptions import start_subscription_scheduler
 
             start_subscription_scheduler(
                 UI_STATE_DIR,

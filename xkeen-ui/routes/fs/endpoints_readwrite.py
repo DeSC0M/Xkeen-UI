@@ -12,6 +12,8 @@ from typing import Any, Dict, Optional
 
 from flask import jsonify, request
 
+from services.fs_common.local import local_is_panel_data_entry, local_write_protection_error
+
 
 def register_readwrite_endpoints(bp, deps: Dict[str, Any]) -> None:
     error_response = deps["error_response"]
@@ -91,7 +93,16 @@ def register_readwrite_endpoints(bp, deps: Dict[str, Any]) -> None:
             if text is None:
                 return error_response("not_text", 415, ok=False, binary=True, size=size_bytes)
 
-            return jsonify({"ok": True, "target": "local", "path": rp, "text": text, "truncated": truncated, "size": size_bytes})
+            return jsonify({
+                "ok": True,
+                "target": "local",
+                "path": rp,
+                "text": text,
+                "truncated": truncated,
+                "size": size_bytes,
+                # Служебное показываем, но правка в редакторе закрыта.
+                "protected": local_is_panel_data_entry(rp),
+            })
 
         # remote
         sid = str(request.args.get("sid") or "").strip()
@@ -219,6 +230,9 @@ def register_readwrite_endpoints(bp, deps: Dict[str, Any]) -> None:
 
             if os.path.isdir(rp):
                 return error_response("not_a_file", 400, ok=False)
+
+            if reason := local_write_protection_error(rp):
+                return error_response(reason, 403, ok=False, code="protected_path")
 
             parent = os.path.dirname(rp)
             if parent and not os.path.isdir(parent):

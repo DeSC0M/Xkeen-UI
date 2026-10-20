@@ -150,8 +150,9 @@ _PROTECTED_MNT_ROOT = str(os.getenv('XKEEN_PROTECTED_MNT_ROOT', '/tmp/mnt') or '
 # пути при запуске; файловый менеджер их не удаляет, не переименовывает и не
 # заменяет.
 PROTECTED_PANEL_DATA_MESSAGE = (
-    "Это служебные данные панели: по ним она возвращает ваши настройки после паузы "
-    "и удаления подписок. Удалить, переименовать или заменить их из файлового менеджера нельзя."
+    "Это служебные данные панели: по ним она возвращает ваши настройки, если операция "
+    "прервалась или конфиги сломаны. Изменить, удалить, переименовать или заменить их "
+    "из файлового менеджера нельзя — только посмотреть."
 )
 _PANEL_PROTECTED: Dict[str, bool] = {}
 
@@ -184,6 +185,32 @@ def _local_is_panel_data_abs(ap: str) -> bool:
         if subtree and key.startswith(protected + os.sep):
             return True
     return False
+
+
+def local_is_panel_data_entry(ap: str) -> bool:
+    """Сам служебный путь или что-то внутри защищённого каталога.
+
+    Каталоги выше сюда не входят: рядом со служебным, например в корне панели,
+    создавать и править свои файлы можно. Каталог без «вместе с содержимым»
+    (корень панели) защищён только от удаления: класть в него своё можно.
+    """
+    if not _PANEL_PROTECTED:
+        return False
+    try:
+        key = _protection_key(ap)
+    except Exception:
+        return False
+    for protected, subtree in list(_PANEL_PROTECTED.items()):
+        if subtree and (key == protected or key.startswith(protected + os.sep)):
+            return True
+        if key == protected and not os.path.isdir(protected):
+            return True
+    return False
+
+
+def local_write_protection_error(ap: str) -> str:
+    """Чем отказать в записи в ``ap`` (правка, создание, права); пустая строка -- можно."""
+    return PROTECTED_PANEL_DATA_MESSAGE if local_is_panel_data_entry(ap) else ""
 
 
 def local_protection_error(ap: str) -> str:
