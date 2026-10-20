@@ -20659,16 +20659,16 @@ body.panel-page #mihomo-clash-logs-state[data-tone="positive"] { color: var(--op
 body.panel-page #mihomo-clash-logs-state[data-tone="warning"] { color: var(--op-warning); }
 body.panel-page #mihomo-clash-logs-state[data-tone="danger"] { color: var(--op-danger); }
 body.panel-page .xk-mihomo-logs-filters { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--op-border); }
-body.panel-page .xk-mihomo-logs-list { min-height: 0; margin: 0; padding: 0; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; background: var(--op-editor); list-style: none; }
+body.panel-page .xk-mihomo-logs-list { display: grid; align-content: start; gap: 7px; min-height: 0; margin: 0; padding: 8px; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; background: var(--op-editor); list-style: none; }
 body.panel-page .xk-mihomo-logs-list[hidden] { display: none; }
-body.panel-page .xk-mihomo-logs-list li { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 8px; align-items: start; padding: 4px 8px; color: var(--op-text); font: calc(10.5px * var(--xk-font-scale, 1))/1.4 "SFMono-Regular", Consolas, monospace; }
-body.panel-page .xk-mihomo-log-time { padding-top: 9px; color: var(--op-muted); white-space: nowrap; }
-body.panel-page .xk-mihomo-log-card { min-width: 0; padding: 7px 10px 8px; border: 1px solid var(--op-border); border-radius: 9px; background: var(--op-surface-2); box-shadow: 0 1px 0 rgba(255,255,255,.025) inset; }
-body.panel-page .xk-mihomo-log-card-head { display: flex; align-items: baseline; gap: 9px; min-height: 15px; }
+body.panel-page .xk-mihomo-logs-list li { min-width: 0; color: var(--op-text); font: calc(10.5px * var(--xk-font-scale, 1))/1.3 "SFMono-Regular", Consolas, monospace; }
+body.panel-page .xk-mihomo-log-card { min-width: 0; padding: 6px 10px 7px; border: 0; border-radius: 9px; background: var(--op-surface-2); }
+body.panel-page .xk-mihomo-log-card-head { display: flex; align-items: baseline; gap: 9px; min-height: 14px; }
+body.panel-page .xk-mihomo-log-time { color: var(--op-muted); white-space: nowrap; }
 body.panel-page .xk-mihomo-log-sequence { color: var(--op-muted); font-size: .9em; }
 body.panel-page .xk-mihomo-log-card-head strong { color: var(--op-accent); font-size: .9em; letter-spacing: .04em; }
-body.panel-page .xk-mihomo-log-message { margin-top: 2px; overflow-wrap: anywhere; color: var(--op-text); }
-body.panel-page .xk-mihomo-log-card small { display: block; margin-top: 4px; color: var(--op-muted); overflow-wrap: anywhere; }
+body.panel-page .xk-mihomo-log-message { margin-top: 3px; overflow-wrap: anywhere; color: var(--op-text); }
+body.panel-page .xk-mihomo-log-card small { display: block; margin-top: 3px; color: var(--op-muted); overflow-wrap: anywhere; }
 body.panel-page .xk-mihomo-logs-list li[data-log-level="debug"] .xk-mihomo-log-card-head strong { color: var(--op-muted); }
 body.panel-page .xk-mihomo-logs-list li[data-log-level="warning"] .xk-mihomo-log-card-head strong { color: var(--op-warning); }
 body.panel-page .xk-mihomo-logs-list li[data-log-level="error"] .xk-mihomo-log-card-head strong { color: var(--op-danger); }
@@ -22053,9 +22053,9 @@ body.panel-page .xk-mihomo-groups-empty {
   body.panel-page .xk-mihomo-rules-table td { padding: 3px; border: 0; }
   body.panel-page .xk-mihomo-rules-table td:nth-child(n+3) { grid-column: 1 / -1; }
   body.panel-page .xk-mihomo-rules-table td::before { display: block; color: var(--op-muted); content: attr(data-label); font-size: calc(8px * var(--xk-font-scale, 1)); text-transform: uppercase; }
-  body.panel-page .xk-mihomo-logs-list li { grid-template-columns: 64px minmax(0, 1fr); gap: 6px; padding-inline: 5px; }
-  body.panel-page .xk-mihomo-log-time { font-size: .9em; }
-  body.panel-page .xk-mihomo-log-card { padding-inline: 8px; }
+  body.panel-page .xk-mihomo-logs-list { gap: 5px; padding: 5px; }
+  body.panel-page .xk-mihomo-log-card { padding: 6px 8px; }
+  body.panel-page .xk-mihomo-log-card-head { gap: 7px; }
 
 }
 

@@ -99,9 +99,9 @@ function render() {
     const sequence = Number.isFinite(Number(row.sequence)) ? `#${Number(row.sequence)}` : '';
     const levelText = String(row.level || 'info').toUpperCase();
     return `<li data-log-level="${escapeHtml(row.level)}">
-      <time class="xk-mihomo-log-time">${escapeHtml(row.time || '—')}</time>
       <article class="xk-mihomo-log-card">
         <header class="xk-mihomo-log-card-head">
+          <time class="xk-mihomo-log-time">${escapeHtml(row.time || '—')}</time>
           <span class="xk-mihomo-log-sequence">${escapeHtml(sequence)}</span>
           <strong>${escapeHtml(levelText)}</strong>
         </header>

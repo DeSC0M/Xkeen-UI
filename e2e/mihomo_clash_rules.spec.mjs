@@ -290,18 +290,26 @@ test('structured logs use a full workspace tab, one on-demand socket, ring buffe
   await expect(page.locator('#mihomo-clash-logs-list li').last().locator('.xk-mihomo-device-name')).toHaveText('Ноутбук');
   const logLayout = await page.locator('#mihomo-clash-logs').evaluate((workspace) => {
     const list = workspace.querySelector('#mihomo-clash-logs-list');
+    const row = list.querySelector('li');
+    const card = row?.querySelector('.xk-mihomo-log-card');
+    const time = row?.querySelector('.xk-mihomo-log-time');
     return {
       workspaceHeight: workspace.getBoundingClientRect().height,
       viewportHeight: window.innerHeight,
       overflowY: getComputedStyle(list).overflowY,
       scrollable: list.scrollHeight > list.clientHeight,
       followsTail: Math.abs(list.scrollHeight - list.clientHeight - list.scrollTop) <= 1,
+      rowWidth: row?.getBoundingClientRect().width || 0,
+      cardWidth: card?.getBoundingClientRect().width || 0,
+      timeInsideCard: !!(card && time && card.contains(time)),
     };
   });
   expect(logLayout.workspaceHeight).toBeCloseTo(Math.max(420, logLayout.viewportHeight - 230), 0);
   expect(logLayout.overflowY).toBe('auto');
   expect(logLayout.scrollable).toBe(true);
   expect(logLayout.followsTail).toBe(true);
+  expect(logLayout.cardWidth).toBeCloseTo(logLayout.rowWidth, 0);
+  expect(logLayout.timeInsideCard).toBe(true);
 
   await page.locator('#mihomo-clash-logs-list').evaluate((list) => { list.scrollTop = 0; });
   await page.evaluate(() => window.__pr9LogSockets[0].emit({
