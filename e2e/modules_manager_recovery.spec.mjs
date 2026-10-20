@@ -336,7 +336,9 @@ test.describe('Module manager recovery and guards', () => {
 
     await expect(page.locator('#modules-operation-status')).toContainText('Операция отменена');
     await expect(page.locator('#modules-operation-status')).toContainText('Файлы панели не изменены');
-    await expect(page.locator('#modules-operation-status').getByRole('button')).toHaveCount(0);
+    // Nothing to recover: the only button is the one that closes the report.
+    await expect(page.locator('#modules-operation-status').getByRole('button')).toHaveCount(1);
+    await expect(page.locator('#modules-operation-status').getByRole('button', { name: 'Скрыть отчёт об операции' })).toBeVisible();
     await expect(page.getByRole('switch', { name: 'Включить Mihomo' })).toBeEnabled();
     await expect(page.getByRole('button', { name: 'Обновить панель' })).toBeEnabled();
     await page.getByRole('tab', { name: 'Доступные' }).click();
@@ -375,6 +377,34 @@ test.describe('Module manager recovery and guards', () => {
     await expect(page.getByRole('switch', { name: 'Включить Mihomo' })).toBeEnabled();
     expect(recoveryCalls).toBe(1);
     expect(restartCalls).toBe(0);
+  });
+
+  test('a report of an undone operation is closed for good, a failed undo cannot be closed', async ({ page }) => {
+    let status = restartStatus;
+    await installLifecycleRoutes(page, { status });
+    await page.route('**/api/modules/operations/status', (route) => route.fulfill({ json: status }));
+    await page.goto('/modules');
+    const block = page.locator('#modules-operation-status .modules-operation');
+    await expect(block).toContainText('Отменено, файлы возвращены');
+
+    await block.getByRole('button', { name: 'Скрыть отчёт об операции' }).click();
+    await expect(block).toHaveCount(0);
+    // Closing the report does not take the restart it asked for.
+    await expect(page.getByRole('button', { name: 'Перезапустить панель' })).toBeVisible();
+    await page.reload();
+    await expect(page.locator('.modules-summary')).toBeVisible();
+    await expect(block).toHaveCount(0);
+
+    // Another operation brings its own report back.
+    status = { ...interruptedStatus, operation_id: 'another-operation' };
+    await page.reload();
+    await expect(block).toContainText('Прервана');
+    await expect(block.getByRole('button', { name: 'Скрыть отчёт об операции' })).toBeVisible();
+
+    status = rollbackFailedStatus;
+    await page.reload();
+    await expect(block).toContainText('Файлы не возвращены');
+    await expect(block.getByRole('button', { name: 'Скрыть отчёт об операции' })).toHaveCount(0);
   });
 
   test('locks mutations after rollback_failed and offers to repeat the undo', async ({ page }) => {

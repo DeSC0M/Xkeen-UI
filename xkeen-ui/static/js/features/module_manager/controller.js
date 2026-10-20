@@ -23,6 +23,19 @@ function keepDialogOperation(operationId, editorChange = null) {
   } catch (error) { /* no storage: the card on the page tells it */ }
 }
 
+// A failure the owner has read and closed. Files are back in place after
+// either of these, so the report is only words; a failed undo stays.
+const DISMISSED_OPERATION_KEY = 'xkeen.modules.dismissedOperation.v1';
+const DISMISSIBLE_RESULTS = new Set(['rolled_back', 'interrupted']);
+
+function dismissedOperation() {
+  try { return window.localStorage.getItem(DISMISSED_OPERATION_KEY); } catch (error) { return null; }
+}
+
+function rememberDismissedOperation(operationId) {
+  try { window.localStorage.setItem(DISMISSED_OPERATION_KEY, operationId); } catch (error) { /* closed until the page reloads */ }
+}
+
 function takeDialogOperation() {
   try {
     const operationId = window.sessionStorage.getItem(DIALOG_OPERATION_KEY);
@@ -79,6 +92,8 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
   // The window shows a plan, or the operation started from it.
   let dialogMode = null;
   let dialogOperationId = null;
+  // Closed in this page even when the browser keeps no storage.
+  let dismissedId = null;
   let dialogEditorChange = null;
   let terminalRefreshed = null;
   let restartWait = null;
@@ -264,6 +279,13 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     drawnCards = cardsState();
   }
 
+  function dismissOperation(operationId) {
+    dismissedId = operationId;
+    rememberDismissedOperation(operationId);
+    drawnStatus = null;
+    renderStatus();
+  }
+
   function renderStatus() {
     const shown = hasOperationStatus(state.status) ? state.status : null;
     const locked = !statusFresh || !installedFresh || busy || cancelPending;
@@ -278,9 +300,12 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
     }
     const focused = statusHost.contains(document.activeElement) ? document.activeElement.textContent : null;
     // The window tells how an operation ended; the page keeps only what the
-    // window does not: one still running or one that went wrong.
-    if (shown && shown.result !== 'committed') renderOperationStatus(statusHost, shown, {
+    // window does not: one still running or one that went wrong and is not closed.
+    const dismissible = Boolean(shown?.operation_id) && DISMISSIBLE_RESULTS.has(shown.result);
+    const closed = dismissible && (shown.operation_id === dismissedId || shown.operation_id === dismissedOperation());
+    if (shown && shown.result !== 'committed' && !closed) renderOperationStatus(statusHost, shown, {
       onCancel: requestCancel, onRecovery: requestRecovery, busy: locked, names,
+      onDismiss: dismissible ? () => dismissOperation(shown.operation_id) : null,
     });
     else statusHost.replaceChildren();
     if (notice) {

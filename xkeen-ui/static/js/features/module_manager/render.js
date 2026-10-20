@@ -971,7 +971,7 @@ function appendOperationProblems(area, status) {
   }
 }
 
-export function renderOperationStatus(host, status, { onCancel, onRecovery, busy = false, names = null } = {}) {
+export function renderOperationStatus(host, status, { onCancel, onRecovery, onDismiss = null, busy = false, names = null } = {}) {
   host.replaceChildren();
   if (!hasOperationStatus(status)) return;
   const tone = RESULT_TONES[status.result] || 'run';
@@ -979,6 +979,13 @@ export function renderOperationStatus(host, status, { onCancel, onRecovery, busy
   const heading = node('h2', '', operationTitle(status, names));
   heading.append(node('span', `modules-chip is-${tone}`, RESULT_LABELS[status.result] || String(status.result)));
   area.append(heading);
+  if (typeof onDismiss === 'function') {
+    const close = node('button', 'modules-operation-close', '×');
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Скрыть отчёт об операции');
+    close.addEventListener('click', onDismiss);
+    area.append(close);
+  }
   const started = formatMoment(status.started_at);
   if (started) {
     const duration = formatDuration(status.started_at, status.finished_at);

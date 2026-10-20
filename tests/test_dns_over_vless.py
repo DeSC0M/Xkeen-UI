@@ -1877,9 +1877,12 @@ def test_several_network_segments_each_get_their_own_resolver(tmp_path: Path):
     assert rule["ip"] == ["192.168.1.1/32", "192.168.2.1/32", "10.8.0.1/32"]
 
 
-def test_too_many_local_resolvers_are_refused():
+def test_too_many_local_resolvers_are_refused(monkeypatch):
     # The cap only guards against an accidental paste; a real home network
     # with a handful of segments stays well below it.
+    # A CI runner may own one of these addresses (10.1.1.1 on GitHub's), and
+    # the loop check would answer first: the count is what is tested here.
+    monkeypatch.setattr(dns, "_address_is_ours", lambda parsed: False)
     fine = ", ".join(f"10.0.{n}.1" for n in range(dns.MAX_LOCAL_RESOLVERS))
     assert len(dns._parse_local_resolvers(fine)) == dns.MAX_LOCAL_RESOLVERS
 

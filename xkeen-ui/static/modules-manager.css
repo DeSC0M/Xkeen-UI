@@ -189,6 +189,7 @@ body.modules-page .modules-inline-action {
 body.modules-page .modules-inline-action { margin-left: 8px; }
 
 body.modules-page .modules-operation {
+  position: relative;
   border-left: 3px solid var(--accent-color, #247b76);
   border-radius: 6px;
   padding: 10px 12px;
@@ -196,6 +197,8 @@ body.modules-page .modules-operation {
 }
 
 body.modules-page .modules-operation h2 { font-size: calc(13px * var(--xk-font-scale, 1)); margin: 0 0 6px; }
+body.modules-page .modules-operation-close { position: absolute; top: 8px; right: 8px; }
+body.modules-page .modules-operation:has(> .modules-operation-close) h2 { padding-right: 28px; }
 body.modules-page .modules-operation p { margin: 3px 0; overflow-wrap: anywhere; font-size: calc(12px * var(--xk-font-scale, 1)); }
 body.modules-page .modules-operation.is-ok { border-left-color: #3eae78; }
 body.modules-page .modules-operation.is-bad { border-left-color: #c2413a; }
@@ -1014,7 +1017,7 @@ body.modules-page .modules-tile-refusal-text p {
   line-height: 1.45;
 }
 
-body.modules-page :is(.modules-tile-refusal-close, .modules-page-alert-close) {
+body.modules-page :is(.modules-tile-refusal-close, .modules-page-alert-close, .modules-operation-close) {
   display: inline-grid;
   place-items: center;
   width: 24px;
@@ -1031,7 +1034,7 @@ body.modules-page :is(.modules-tile-refusal-close, .modules-page-alert-close) {
   cursor: pointer;
 }
 
-body.modules-page :is(.modules-tile-refusal-close, .modules-page-alert-close):hover {
+body.modules-page :is(.modules-tile-refusal-close, .modules-page-alert-close, .modules-operation-close):hover {
   background: var(--op-surface-3) !important;
   color: var(--op-text) !important;
 }
