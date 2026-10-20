@@ -4,6 +4,17 @@ import {
 } from './client.js';
 
 const MAX_LOG_ROWS = 500;
+const LOG_SETTINGS_KEY = 'xkeen:mihomo-clash-log-settings:v1';
+const GROUP_ICON_RULES = [
+  [/заблок|blocked/i, '×'],
+  [/direct|напрям/i, '↗'],
+  [/telegram/i, '➤'],
+  [/discord/i, '♢'],
+  [/steam/i, 'S'],
+  [/cdn/i, '◉'],
+  [/ai/i, '✦'],
+  [/fallback/i, '⇄'],
+];
 
 let root = null;
 let active = false;
@@ -19,6 +30,8 @@ let controller = null;
 let renderFrame = 0;
 let reconnectTimer = 0;
 let reconnectAttempt = 0;
+let order = 'newest';
+let autoFollow = true;
 
 function upstreamLogLevel() {
   // Mihomo's level is a minimum threshold. The economical default is info;
@@ -35,9 +48,69 @@ function escapeHtml(value) {
 }
 
 function searchText(row) {
-  return [row?.level, row?.message, ...Object.entries(row?.fields || {}).flat(),
+  const route = parseRouteMeta(row?.message);
+  return [row?.level, row?.message, route.group, route.node, route.country,
+    ...Object.entries(row?.fields || {}).flat(),
     ...(row?.devices || []).flatMap((device) => [device?.ip, device?.name])]
     .join(' ').toLocaleLowerCase('ru');
+}
+
+function countryFlag(code) {
+  const normalized = String(code || '').trim().toUpperCase();
+  if (!/^[A-Z]{2}$/u.test(normalized)) return '';
+  return [...normalized].map((letter) => String.fromCodePoint(127397 + letter.charCodeAt(0))).join('');
+}
+
+function parseRouteMeta(message) {
+  const text = String(message || '');
+  const match = text.match(/\busing\s+(.+?)(?:\[([A-Z]{2})\s+(.+))?$/u);
+  if (!match) return { group: '', country: '', node: '' };
+  const group = String(match[1] || '').trim();
+  const country = String(match[2] || '').toUpperCase();
+  const node = String(match[3] || '').replace(/\]$/u, '').trim();
+  return { group, country, node };
+}
+
+function groupIcon(group) {
+  const match = GROUP_ICON_RULES.find(([pattern]) => pattern.test(String(group || '')));
+  return match ? match[1] : '•';
+}
+
+function loadSettings() {
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(LOG_SETTINGS_KEY) || '{}');
+    if (saved.order === 'newest' || saved.order === 'oldest') order = saved.order;
+    if (typeof saved.autoFollow === 'boolean') autoFollow = saved.autoFollow;
+  } catch (error) {}
+}
+
+function saveSettings() {
+  try { window.localStorage.setItem(LOG_SETTINGS_KEY, JSON.stringify({ order, autoFollow })); } catch (error) {}
+}
+
+function scrollToEdge(edge) {
+  const list = byId('mihomo-clash-logs-list');
+  if (!list) return;
+  list.scrollTop = edge === 'start' ? 0 : list.scrollHeight;
+}
+
+function rowPlainText(row) {
+  const route = parseRouteMeta(row?.message);
+  const meta = [route.group, route.country && countryFlag(route.country), route.node]
+    .filter(Boolean).join(' ');
+  return [
+    row?.time || '—',
+    row?.sequence ? `#${row.sequence}` : '',
+    String(row?.level || 'info').toUpperCase(),
+    meta,
+    row?.message || '—',
+    ...Object.entries(row?.fields || {}).map(([key, value]) => `${key}=${value}`),
+  ].filter(Boolean).join(' ');
+}
+
+function visibleRows() {
+  const filtered = filteredRows();
+  return order === 'newest' ? [...filtered].reverse() : filtered;
 }
 
 function annotatedLogText(value, devices) {
@@ -92,18 +165,30 @@ function render() {
   const followTail = list.hidden
     || list.scrollHeight <= list.clientHeight
     || list.scrollHeight - list.clientHeight - list.scrollTop <= 24;
-  const visible = filteredRows();
+  const visible = visibleRows();
   list.innerHTML = visible.map((row) => {
     const fields = Object.entries(row.fields || {})
       .map(([key, value]) => `${key}=${value}`).join(' · ');
     const sequence = Number.isFinite(Number(row.sequence)) ? `#${Number(row.sequence)}` : '';
     const levelText = String(row.level || 'info').toUpperCase();
+    const route = parseRouteMeta(row.message);
+    const flag = countryFlag(route.country);
+    const routeMeta = route.group
+      ? `<span class="xk-mihomo-log-route"><span class="xk-mihomo-log-group-icon">${escapeHtml(groupIcon(route.group))}</span><span>${escapeHtml(route.group)}</span></span>`
+      : '';
+    const nodeMeta = route.node
+      ? `<span class="xk-mihomo-log-node">${escapeHtml(route.node)}</span>`
+      : '';
+    const countryMeta = flag
+      ? `<span class="xk-mihomo-log-country" title="Страна выхода ${escapeHtml(route.country)}">${escapeHtml(flag)} <small>${escapeHtml(route.country)}</small></span>`
+      : '';
     return `<li data-log-level="${escapeHtml(row.level)}">
       <article class="xk-mihomo-log-card">
         <header class="xk-mihomo-log-card-head">
           <time class="xk-mihomo-log-time">${escapeHtml(row.time || '—')}</time>
           <span class="xk-mihomo-log-sequence">${escapeHtml(sequence)}</span>
           <strong>${escapeHtml(levelText)}</strong>
+          ${routeMeta}${countryMeta}${nodeMeta}
         </header>
         <div class="xk-mihomo-log-message">${annotatedLogText(row.message || '—', row.devices)}</div>
         ${fields ? `<small>${annotatedLogText(fields, row.devices)}</small>` : ''}
@@ -113,7 +198,9 @@ function render() {
   list.hidden = visible.length === 0;
   empty.hidden = visible.length > 0;
   if (visible.length) {
-    list.scrollTop = followTail ? list.scrollHeight : previousScrollTop;
+    const followEdge = order === 'newest' ? list.scrollTop <= 24 : list.scrollHeight - list.clientHeight - list.scrollTop <= 24;
+    if (autoFollow && (followEdge || followTail)) scrollToEdge(order === 'newest' ? 'start' : 'end');
+    else list.scrollTop = previousScrollTop;
   }
   const silent = String(runtime?.log_level || '').toLowerCase() === 'silent';
   empty.textContent = rows.length && !visible.length
@@ -127,6 +214,13 @@ function render() {
   if (pause) {
     pause.setAttribute('aria-pressed', paused ? 'true' : 'false');
     pause.setAttribute('aria-label', paused ? 'Продолжить вывод логов' : 'Пауза логов');
+  }
+  const orderSelect = byId('mihomo-clash-logs-order');
+  if (orderSelect) orderSelect.value = order;
+  const follow = byId('mihomo-clash-logs-follow');
+  if (follow) {
+    follow.setAttribute('aria-pressed', autoFollow ? 'true' : 'false');
+    follow.textContent = autoFollow ? 'Автопрокрутка' : 'Автопрокрутка выкл.';
   }
 }
 
@@ -253,11 +347,36 @@ function bind() {
   byId('mihomo-clash-logs-filter')?.addEventListener('input', (event) => {
     query = event.target.value || ''; render();
   });
+  byId('mihomo-clash-logs-order')?.addEventListener('change', (event) => {
+    order = event.target.value === 'oldest' ? 'oldest' : 'newest';
+    autoFollow = true;
+    saveSettings();
+    render();
+    scrollToEdge(order === 'newest' ? 'start' : 'end');
+  });
+  byId('mihomo-clash-logs-start')?.addEventListener('click', () => { autoFollow = false; saveSettings(); scrollToEdge('start'); render(); });
+  byId('mihomo-clash-logs-end')?.addEventListener('click', () => { autoFollow = false; saveSettings(); scrollToEdge('end'); render(); });
+  byId('mihomo-clash-logs-follow')?.addEventListener('click', () => {
+    autoFollow = !autoFollow;
+    saveSettings();
+    render();
+    if (autoFollow) scrollToEdge(order === 'newest' ? 'start' : 'end');
+  });
+  byId('mihomo-clash-logs-copy')?.addEventListener('click', async () => {
+    const text = visibleRows().map(rowPlainText).join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      setState(`Скопировано · ${visibleRows().length} записей`, 'positive');
+    } catch (error) {
+      setState('Не удалось скопировать записи.', 'warning');
+    }
+  });
 }
 
 export function initMihomoClashLogs() {
   root = byId('mihomo-clash-logs');
   if (!root) return false;
+  loadSettings();
   bind();
   render();
   return true;

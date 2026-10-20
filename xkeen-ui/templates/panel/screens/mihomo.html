@@ -340,6 +340,14 @@
           <div class="xk-mihomo-logs-filters">
             <select id="mihomo-clash-logs-level" aria-label="Уровень логов"><option value="all">Все уровни (upstream info)</option><option value="debug">Debug (до 5 минут)</option><option value="info">Info</option><option value="warning">Warning</option><option value="error">Error</option></select>
             <input id="mihomo-clash-logs-filter" type="search" aria-label="Фильтр логов" placeholder="Фильтр сообщения или поля">
+            <select id="mihomo-clash-logs-order" aria-label="Порядок логов">
+              <option value="newest">Новые события сверху</option>
+              <option value="oldest">Старые события сверху</option>
+            </select>
+            <button type="button" class="btn-secondary" id="mihomo-clash-logs-start">В начало</button>
+            <button type="button" class="btn-secondary" id="mihomo-clash-logs-end">В конец</button>
+            <button type="button" class="btn-secondary" id="mihomo-clash-logs-follow" aria-pressed="true">Автопрокрутка</button>
+            <button type="button" class="btn-secondary" id="mihomo-clash-logs-copy">Копировать</button>
           </div>
           <ol id="mihomo-clash-logs-list" class="xk-mihomo-logs-list" aria-live="off"></ol>
           <div id="mihomo-clash-logs-empty" class="xk-mihomo-logs-empty">Новые записи появятся здесь в реальном времени.</div>

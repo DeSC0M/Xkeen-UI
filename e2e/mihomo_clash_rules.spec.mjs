@@ -280,14 +280,21 @@ test('structured logs use a full workspace tab, one on-demand socket, ring buffe
     for (let index = 0; index < 505; index += 1) {
       socket.emit({
         type: 'mihomo-clash-logs', schema_version: 1, state: 'live', sequence: index + 1,
-        payload: { sequence: index + 1, time: `t-${index}`, level: index % 2 ? 'info' : 'warning', message: `fixture-${index} 192.0.2.10:5000`, fields: { network: 'tcp' }, devices: [{ ip: '192.0.2.10', name: 'Ноутбук' }] },
+        payload: { sequence: index + 1, time: `t-${index}`, level: index % 2 ? 'info' : 'warning', message: `fixture-${index} 192.0.2.10:5000 using Telegram[PL [PL] reality-Umar-Xkeen-UI]`, fields: { network: 'tcp' }, devices: [{ ip: '192.0.2.10', name: 'Ноутбук' }] },
       });
     }
   });
   await expect(page.locator('#mihomo-clash-logs-list li')).toHaveCount(500);
   await expect(page.locator('#mihomo-clash-logs-list')).not.toContainText('fixture-0');
   await expect(page.locator('#mihomo-clash-logs-list')).toContainText('fixture-504');
+  await expect(page.locator('#mihomo-clash-logs-list li').first()).toContainText('fixture-504');
+  await page.locator('#mihomo-clash-logs-order').selectOption('oldest');
+  await expect(page.locator('#mihomo-clash-logs-list li').first()).toContainText('fixture-5');
+  await page.locator('#mihomo-clash-logs-order').selectOption('newest');
+  await expect(page.locator('#mihomo-clash-logs-list li').first()).toContainText('fixture-504');
   await expect(page.locator('#mihomo-clash-logs-list li').last().locator('.xk-mihomo-device-name')).toHaveText('Ноутбук');
+  await expect(page.locator('#mihomo-clash-logs-list li').last().locator('.xk-mihomo-log-country')).toHaveText(/PL/);
+  await expect(page.locator('#mihomo-clash-logs-list li').last().locator('.xk-mihomo-log-route')).toContainText('Telegram');
   const logLayout = await page.locator('#mihomo-clash-logs').evaluate((workspace) => {
     const list = workspace.querySelector('#mihomo-clash-logs-list');
     const row = list.querySelector('li');
@@ -298,7 +305,7 @@ test('structured logs use a full workspace tab, one on-demand socket, ring buffe
       viewportHeight: window.innerHeight,
       overflowY: getComputedStyle(list).overflowY,
       scrollable: list.scrollHeight > list.clientHeight,
-      followsTail: Math.abs(list.scrollHeight - list.clientHeight - list.scrollTop) <= 1,
+      followsEdge: list.scrollTop <= 1,
       rowWidth: row?.getBoundingClientRect().width || 0,
       cardWidth: card?.getBoundingClientRect().width || 0,
       timeInsideCard: !!(card && time && card.contains(time)),
@@ -307,9 +314,13 @@ test('structured logs use a full workspace tab, one on-demand socket, ring buffe
   expect(logLayout.workspaceHeight).toBeCloseTo(Math.max(420, logLayout.viewportHeight - 230), 0);
   expect(logLayout.overflowY).toBe('auto');
   expect(logLayout.scrollable).toBe(true);
-  expect(logLayout.followsTail).toBe(true);
+  expect(logLayout.followsEdge).toBe(true);
   expect(logLayout.cardWidth).toBeCloseTo(logLayout.rowWidth, 0);
   expect(logLayout.timeInsideCard).toBe(true);
+  await page.locator('#mihomo-clash-logs-start').click();
+  await expect.poll(() => page.locator('#mihomo-clash-logs-list').evaluate((list) => list.scrollTop)).toBe(0);
+  await page.locator('#mihomo-clash-logs-follow').click();
+  await expect(page.locator('#mihomo-clash-logs-follow')).toHaveAttribute('aria-pressed', 'true');
 
   await page.locator('#mihomo-clash-logs-list').evaluate((list) => { list.scrollTop = 0; });
   await page.evaluate(() => window.__pr9LogSockets[0].emit({
