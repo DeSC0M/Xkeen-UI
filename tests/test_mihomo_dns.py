@@ -1506,6 +1506,71 @@ def test_soft_release_preserves_an_edited_dns_block_and_returns_firmware_dns(tmp
     assert trace and trace["source"] == "user"
 
 
+def test_user_released_dns_can_be_reenabled_without_losing_edits(tmp_path: Path, monkeypatch):
+    config, state = _status_ready(tmp_path, monkeypatch)
+    prepared, group = dns.build_enabled_config(BASE)
+    edited = prepared + "# TEST\n"
+    config.write_text(edited, encoding="utf-8")
+    snapshot = tmp_path / "before.yaml"
+    snapshot.write_text(BASE, encoding="utf-8")
+    dns._save_state(str(state), str(config), {
+        "enabled": True,
+        "original_config": str(snapshot),
+        "original_sha256": dns._sha256(BASE),
+        "applied_sha256": dns._sha256(prepared),
+        "original_dns_override": False,
+        "proxy_group": group,
+    })
+    override = {"value": True}
+    monkeypatch.setattr(dns, "_dns_override_status", lambda: (override["value"], "test"))
+    monkeypatch.setattr(dns, "_wait_for_port_53", lambda **_kwargs: True)
+    monkeypatch.setattr(dns, "_wait_for_mihomo", lambda *_args, **_kwargs: True)
+    monkeypatch.setattr(dns, "_dns_probe", lambda: {"ok": True, "latency_ms": 3})
+    monkeypatch.setattr(dns, "_capture_dns_policy", lambda: None)
+    monkeypatch.setattr(dns, "_configure_keenetic_dns_for_mihomo", lambda _policy: None)
+    monkeypatch.setattr(dns, "_ensure_mihomo_dns_capture", lambda: {"ok": True})
+    monkeypatch.setattr(dns, "_remove_mihomo_dns_capture", lambda: None)
+    monkeypatch.setattr(
+        dns,
+        "_set_dns_override",
+        lambda enabled: override.update(value=bool(enabled)),
+    )
+
+    def save_config(content):
+        config.write_text(content, encoding="utf-8")
+        return type("Backup", (), {"filename": "resume.yaml"})()
+
+    released = dns.apply_action(
+        "release",
+        config_file=str(config),
+        ui_state_dir=str(state),
+        validate_config=lambda **_kwargs: "[exit code: 0]",
+        save_config=save_config,
+        restart_xkeen=lambda **_kwargs: True,
+    )
+    assert released["released"] is True
+    assert "  enable: false" in config.read_text(encoding="utf-8")
+
+    status = dns.get_status(config_file=str(config), ui_state_dir=str(state))
+    assert status["can_reenable"] is True
+    assert status["can_enable"] is False
+
+    resumed = dns.apply_action(
+        "resume",
+        config_file=str(config),
+        ui_state_dir=str(state),
+        validate_config=lambda **_kwargs: "[exit code: 0]",
+        save_config=save_config,
+        restart_xkeen=lambda **_kwargs: True,
+    )
+    content = config.read_text(encoding="utf-8")
+    assert resumed["reenabled"] is True
+    assert "  enable: true" in content
+    assert "# TEST" in content
+    assert override["value"] is True
+    assert dns.get_status(config_file=str(config), ui_state_dir=str(state))["enabled"] is True
+
+
 def test_soft_release_rolls_the_file_back_when_mihomo_cannot_restart(tmp_path: Path, monkeypatch):
     config, state = _status_ready(tmp_path, monkeypatch)
     prepared, group = dns.build_enabled_config(BASE)

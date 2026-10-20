@@ -378,22 +378,25 @@ import { awaitDnsOperation, createDnsOperationNotice, newDnsOperationId } from '
     const canDisable = !!data?.can_disable;
     const canRecover = !!data?.can_recover;
     const canRelease = !!data?.can_release;
-    const blocked = !enabled && !canDisable && !canRecover && !canRelease && !data?.can_enable;
+    const canReenable = !!data?.can_reenable;
+    const blocked = !enabled && !canDisable && !canRecover && !canRelease && !canReenable && !data?.can_enable;
     const repair = ($(IDS.mode)?.value || data?.mode) === 'fake-ip' ? data?.fake_ip_repair : null;
     const repairNeeded = repair?.needed === true;
     const repairUnavailable = repairNeeded && repair?.can_repair !== true;
-    apply.disabled = busy || repairUnavailable || (!enabled && !canDisable && !canRecover && !canRelease && blocked);
+    apply.disabled = busy || repairUnavailable || (!enabled && !canDisable && !canRecover && !canRelease && !canReenable && blocked);
     apply.textContent = busy
       ? 'Выполняется…'
-      : (canRelease
-        ? 'Вернуть DNS Keenetic'
-        : (canRecover
-          ? 'Сохранить текущий конфиг'
-          : ((enabled || canDisable)
-            ? 'Отключить и восстановить'
-            : (repairNeeded
-              ? (repairUnavailable ? 'Автоисправление недоступно' : 'Исправить и включить Fake-IP')
-              : 'Включить защищённый DNS'))));
+      : (canReenable
+        ? 'Включить сохранённый DNS'
+        : (canRelease
+          ? 'Вернуть DNS Keenetic'
+          : (canRecover
+            ? 'Сохранить текущий конфиг'
+            : ((enabled || canDisable)
+              ? 'Отключить и восстановить'
+              : (repairNeeded
+                ? (repairUnavailable ? 'Автоисправление недоступно' : 'Исправить и включить Fake-IP')
+                : 'Включить защищённый DNS')))));
     apply.classList.toggle('btn-danger', enabled || canDisable || canRelease);
     apply.classList.toggle('btn-primary', !enabled && !canDisable && !canRelease);
     if (update) {
@@ -505,9 +508,10 @@ import { awaitDnsOperation, createDnsOperationNotice, newDnsOperationId } from '
     const canReconfigure = !!data?.can_reconfigure;
     const canRecover = !!data?.can_recover;
     const canRelease = !!data?.can_release;
-    const blocked = !enabled && !canDisable && !canRecover && !canRelease && !data?.can_enable;
+    const canReenable = !!data?.can_reenable;
+    const blocked = !enabled && !canDisable && !canRecover && !canRelease && !canReenable && !data?.can_enable;
     const altered = !!data?.tampered;
-    const settingsLocked = busy || ((enabled || canDisable || altered) && !canReconfigure);
+    const settingsLocked = busy || canReenable || ((enabled || canDisable || altered) && !canReconfigure);
     const releaseRecord = guardRelease(data);
     const released = !enabled && !!releaseRecord;
     const releasedByUser = released && releaseRecord?.source === 'user';
@@ -602,14 +606,16 @@ import { awaitDnsOperation, createDnsOperationNotice, newDnsOperationId } from '
       'Keenetic override · включён',
       'Keenetic override · выключен',
     );
-    const state = enabled && !fakeRouteUnready ? 'enabled' : ((canDisable || canRecover || canRelease || blocked || altered || released || fakeRouteUnready) ? 'blocked' : 'ready');
+    const state = enabled && !fakeRouteUnready ? 'enabled' : ((canDisable || canRecover || canRelease || canReenable || blocked || altered || released || fakeRouteUnready) ? 'blocked' : 'ready');
     if (badge) {
       badge.dataset.state = state;
       badge.textContent = enabled
         ? (fakeRouteBlocked
           ? 'Включено · Fake-IP заблокирован'
           : (fakeRouteUnready ? 'Включено · маршрут не подтверждён' : (altered ? 'Включено · изменено вручную' : 'Включено')))
-        : (released ? (releasedByUser ? 'DNS у Keenetic' : GUARD_RELEASED_BADGE) : (canRecover ? 'DNS-блок удалён' : (canRelease ? 'Можно вернуть Keenetic DNS' : (altered ? 'Изменено вручную' : (canDisable ? 'Готово к восстановлению' : ((blocked || fakeRouteUnready) ? 'Требует внимания' : 'Готово'))))));
+        : (canReenable
+          ? 'Готово к повторному включению'
+          : (released ? (releasedByUser ? 'DNS у Keenetic' : GUARD_RELEASED_BADGE) : (canRecover ? 'DNS-блок удалён' : (canRelease ? 'Можно вернуть Keenetic DNS' : (altered ? 'Изменено вручную' : (canDisable ? 'Готово к восстановлению' : ((blocked || fakeRouteUnready) ? 'Требует внимания' : 'Готово')))))));
     }
     if (dot) dot.dataset.state = enabled && !fakeRouteUnready ? 'enabled' : ((blocked || altered || canRecover || canRelease || released || fakeRouteUnready) ? 'blocked' : 'off');
     if (status) {
@@ -617,6 +623,7 @@ import { awaitDnsOperation, createDnsOperationNotice, newDnsOperationId } from '
       else if (enabled && canRelease) status.textContent = 'Работает пользовательский или изменённый DNS Mihomo. Можно сохранить весь блок, выключить в нём только enable и вернуть DNS прошивке Keenetic.';
       else if (enabled && altered) status.textContent = 'Защищённый DNS активен, но config.yaml был изменён вручную. Панель видит сохранённый DNS-блок и не станет автоматически откатывать ваши правки.';
       else if (enabled) status.textContent = 'Защищённый DNS активен: Mihomo отвечает на порту 53, а DNS override Keenetic включён.';
+      else if (canReenable) status.textContent = 'Сохранённый DNS-блок отключён. Можно включить его обратно одной кнопкой — комментарии и пользовательские правки останутся на месте.';
       else if (released) status.textContent = guardReleaseText(data);
       else if (canRecover) status.textContent = 'DNS-блок уже удалён вручную, а Keenetic DNS override выключен. Можно сохранить текущий config.yaml и завершить отключение без возврата старого снимка.';
       else if (canRelease) status.textContent = 'DNS override Keenetic включён для пользовательской или изменённой конфигурации. Панель может сохранить DNS-блок, выключить в нём только enable и вернуть DNS роутеру.';
@@ -658,6 +665,7 @@ import { awaitDnsOperation, createDnsOperationNotice, newDnsOperationId } from '
             : 'DNS-слушатель Mihomo: не активен (раздел dns отсутствует)'),
         listenerConfigured ? 'ok' : 'warn',
       );
+      if (canReenable) addDetail('Сохранённый DNS-блок готов к повторному включению; ручные комментарии и настройки не будут перезаписаны.', 'ok');
       addDetail(`Keenetic DNS override: ${data.dns_override === true ? 'включён' : (data.dns_override === false ? 'выключен' : 'не определён')}`, data.dns_override == null ? 'warn' : 'ok');
       const keeneticPolicy = data.keenetic_dns_policy || null;
       if (keeneticPolicy) {
@@ -794,7 +802,8 @@ import { awaitDnsOperation, createDnsOperationNotice, newDnsOperationId } from '
     if (busy || !current) return;
     const recovery = !!current.can_recover;
     const softRelease = !!current.can_release;
-    const action = softRelease ? 'release' : ((current.enabled || current.can_disable || recovery) ? 'disable' : 'enable');
+    const reenable = !!current.can_reenable;
+    const action = softRelease ? 'release' : ((current.enabled || current.can_disable || recovery) ? 'disable' : (reenable ? 'resume' : 'enable'));
     const repair = action === 'enable' && ($(IDS.mode)?.value || current?.mode) === 'fake-ip'
       ? current?.fake_ip_repair
       : null;
@@ -804,15 +813,17 @@ import { awaitDnsOperation, createDnsOperationNotice, newDnsOperationId } from '
       ? 'Панель сохранит текущий config.yaml и весь раздел dns, изменит только dns.enable на false, перезапустит Mihomo для освобождения порта 53 и вернёт DNS прошивке Keenetic. Старый снимок поверх ваших правок восстановлен не будет.'
       : recovery
       ? 'DNS-блок уже отсутствует в config.yaml, а DNS override Keenetic выключен. Панель проверит текущий YAML и очистит только устаревшее состояние мастера; ваши ручные правки не будут заменены старым снимком.'
+      : reenable
+      ? 'Панель включит сохранённый DNS-блок, изменив только dns.enable на true. Комментарии и пользовательские правки внутри блока останутся без изменений. Затем панель включит DNS override Keenetic, перезапустит Mihomo и проверит DNS.'
       : action === 'enable'
       ? `${repairsLegacyExclusion ? 'Панель сохранит резервную копию стартового скрипта XKeen, удалит из ipv4_exclude только 198.18.0.0/15, перезапустит XKeen и повторно проверит маршрут. Затем ' : 'Панель '}добавит отдельный DNS-блок, направит DoH через выбранную proxy-группу${createsDnsSelector ? ', создаст переключатель DNS Proxy с выходами через эту группу и DIRECT' : ''}, включит DNS override Keenetic, перезапустит Mihomo и проверит реальный DNS-ответ. При ошибке всё будет восстановлено.`
       : 'Панель вернёт точный снимок config.yaml и исходное состояние DNS Keenetic. Изменяются только объекты однокнопочной настройки.';
     const confirmed = await confirmMihomoAction({
-      title: action === 'enable' ? 'Включить защищённый DNS?' : (softRelease ? 'Вернуть DNS прошивке Keenetic?' : 'Отключить защищённый DNS?'),
+      title: action === 'enable' || reenable ? 'Включить защищённый DNS?' : (softRelease ? 'Вернуть DNS прошивке Keenetic?' : 'Отключить защищённый DNS?'),
       message,
-      okText: action === 'enable' ? (repairsLegacyExclusion ? 'Исправить и включить' : 'Включить') : (softRelease ? 'Вернуть DNS Keenetic' : (recovery ? 'Сохранить текущий конфиг' : 'Восстановить')),
+      okText: action === 'enable' ? (repairsLegacyExclusion ? 'Исправить и включить' : 'Включить') : (reenable ? 'Включить сохранённый DNS' : (softRelease ? 'Вернуть DNS Keenetic' : (recovery ? 'Сохранить текущий конфиг' : 'Восстановить'))),
       cancelText: 'Отмена',
-      danger: action !== 'enable',
+      danger: action !== 'enable' && !reenable,
     }, message);
     if (!confirmed) return;
 
@@ -820,7 +831,7 @@ import { awaitDnsOperation, createDnsOperationNotice, newDnsOperationId } from '
     render(current);
     try {
       const result = await postAction(action);
-      toastXkeen(action === 'enable'
+      toastXkeen(action === 'enable' || reenable
         ? `Защищённый DNS включён${result?.probe?.latency_ms != null ? ` · ${result.probe.latency_ms} мс` : ''}`
         : (result?.released
           ? 'DNS возвращён прошивке Keenetic; пользовательский блок Mihomo сохранён и отключён.'

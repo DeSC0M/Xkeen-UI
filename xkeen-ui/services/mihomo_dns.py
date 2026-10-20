@@ -382,6 +382,43 @@ def _with_dns_disabled(text: str) -> tuple[str, bool]:
     return source[:start] + patched_body + source[start + len(body):], True
 
 
+def _with_dns_enabled(text: str) -> tuple[str, bool]:
+    """Re-enable a preserved DNS mapping without rewriting its contents."""
+
+    source = str(text or "")
+    section = _top_level_section(source, "dns")
+    if section is None:
+        return source, False
+    start, _end, body = section
+    first_line, separator, tail = body.partition("\n")
+    if first_line.partition(":")[2].strip():
+        return source, False
+
+    matches = list(re.finditer(
+        r"(?m)^(?P<indent>[ \t]+)enable(?P<colon>[ \t]*:[ \t]*)"
+        r"(?P<value>[^#\r\n]*?)(?P<comment>[ \t]*(?:#.*)?)$",
+        body,
+    ))
+    if matches:
+        match = min(matches, key=lambda item: len(item.group("indent").expandtabs(8)))
+        value = _strip_yaml_scalar(match.group("value")).lower()
+        if value in {"true", "yes", "on", "1"}:
+            return source, False
+        replacement = (
+            f'{match.group("indent")}enable{match.group("colon")}true'
+            f'{match.group("comment")}'
+        )
+        patched_body = body[:match.start()] + replacement + body[match.end():]
+    else:
+        indent_match = re.search(r"(?m)^([ \t]+)[A-Za-z0-9_.-]+[ \t]*:", tail)
+        indent = indent_match.group(1) if indent_match else "  "
+        patched_body = first_line + "\n" + indent + "enable: true"
+        if separator:
+            patched_body += "\n" + tail
+
+    return source[:start] + patched_body + source[start + len(body):], True
+
+
 def _proxy_groups(text: str) -> list[str]:
     section = _top_level_section(text, "proxy-groups")
     if not section:
@@ -3113,6 +3150,7 @@ def get_status(*, config_file: str, ui_state_dir: str = "") -> dict[str, Any]:
     dns_selector_present = DNS_SELECTOR_NAME in _proxy_groups(text)
     dns_selector_enabled = bool(dns_selector_requested and dns_selector_present)
     dns_selector_conflict = bool(dns_selector_present and not dns_selector_requested)
+    release_record = read_release(config_file=config_file, ui_state_dir=ui_state_dir)
     fake_ip_range = str(
         state_fake_ip.get("range")
         or dns_runtime.get("fake_ip_range")
@@ -3144,8 +3182,19 @@ def get_status(*, config_file: str, ui_state_dir: str = "") -> dict[str, Any]:
             or (core in {"", "mihomo"} and bool(dns_runtime["listener_configured"]))
         )
     )
+    # A user-initiated soft release deliberately keeps the DNS mapping in the
+    # file with only ``enable: false``.  It is safe to bring that same mapping
+    # back without rebuilding a preset or deleting the user's comments/edits.
+    can_reenable = bool(
+        release_record
+        and release_record.get("source") == "user"
+        and has_dns
+        and not dns_runtime["listener_configured"]
+        and override is False
+        and core == "mihomo"
+    )
     blockers: list[str] = []
-    if not enabled and not state:
+    if not enabled and not state and not can_reenable:
         if core != "mihomo":
             blockers.append("Однокнопочная настройка доступна только при активном ядре Mihomo.")
         if has_dns:
@@ -3159,20 +3208,34 @@ def get_status(*, config_file: str, ui_state_dir: str = "") -> dict[str, Any]:
             "Конфигурация изменена после включения DNS; полный снимок не будет восстановлен. "
             "Можно сохранить текущий блок и вернуть DNS прошивке Keenetic."
         )
-    elif tampered and not can_recover:
+    elif tampered and not can_recover and not can_reenable:
         blockers.append("Конфигурация изменена после включения DNS; автоматическое восстановление остановлено.")
     elif can_recover:
         blockers.append("DNS-блок уже удалён вручную, а DNS override Keenetic выключен; текущий config.yaml можно сохранить без возврата старого снимка.")
+    if can_reenable:
+        blockers.append(
+            "Сохранённый пользовательский DNS-блок отключён. Его можно включить обратно без удаления "
+            "комментариев и ручных правок."
+        )
     if enabled and not state:
         blockers.append(
             "Обнаружен пользовательский DNS Mihomo на порту 53. Полного снимка нет; "
             "панель может сохранить блок и вернуть DNS прошивке Keenetic."
         )
-    if partial and not state:
+    if partial and not state and not can_reenable:
         blockers.append("Обнаружен неполный служебный DNS-блок.")
     can_disable = bool(exact and state)
-    can_reconfigure = bool(enabled and exact and state)
-    can_enable = bool(not state and not has_dns and not has_begin and not has_end and core == "mihomo" and group and override is not None)
+    can_reconfigure = bool(enabled and exact and state and not state.get("preserved_user_config"))
+    can_enable = bool(
+        not can_reenable
+        and not state
+        and not has_dns
+        and not has_begin
+        and not has_end
+        and core == "mihomo"
+        and group
+        and override is not None
+    )
     dns_diagnostics = diagnose_dns_runtime(
         text,
         config_file=config_file,
@@ -3189,6 +3252,7 @@ def get_status(*, config_file: str, ui_state_dir: str = "") -> dict[str, Any]:
         "tampered": tampered,
         "can_recover": can_recover,
         "can_release": can_release,
+        "can_reenable": can_reenable,
         "can_enable": can_enable,
         "can_disable": can_disable,
         "can_reconfigure": can_reconfigure,
@@ -3349,6 +3413,9 @@ def _release_current_dns(
         "released_at": int(time.time()),
         "source": "user",
         "reason": "DNS возвращён прошивке Keenetic без восстановления старого снимка.",
+        "dns_block_preserved": bool(runtime.get("present")),
+        "proxy_group": str(state.get("proxy_group") or _select_proxy_group(current) or "") or None,
+        "mode": str(runtime.get("mode") or state.get("mode") or "redir-host"),
         "steps": [
             "dns_disabled_in_place" if changed else "dns_listener_absent",
             "core_restarted" if restart_ok else "core_restart_failed",
@@ -3368,6 +3435,159 @@ def _release_current_dns(
         "core_restarted": restart_ok,
         "backup": str(getattr(backup, "filename", "") or "") or None,
     }
+
+
+def _resume_preserved_dns(
+    *,
+    current: str,
+    config_file: str,
+    ui_state_dir: str,
+    validate_config: Callable[..., str],
+    save_config: Callable[[str], Any],
+    restart_xkeen: Callable[..., Any],
+) -> dict[str, Any]:
+    """Bring back a DNS mapping parked by the user without rebuilding it."""
+
+    runtime = _dns_runtime_config(current)
+    prepared, changed = _with_dns_enabled(current)
+    if not runtime.get("present") or not changed:
+        raise MihomoDnsError(
+            "Сохранённый DNS-блок уже включён или отсутствует.",
+            code="dns_reenable_unavailable",
+        )
+    validation = validate_config(new_content=prepared) or ""
+    if not _validation_ok(validation):
+        raise MihomoDnsError(
+            "Mihomo не подтвердил сохранённый DNS-блок; файл не изменён.",
+            code="dns_reenable_preflight_failed",
+            details=validation[-4000:],
+        )
+    if not _mihomo_selected_for_restart():
+        raise MihomoDnsError(
+            "XKeen сейчас настроен на другое ядро; DNS Mihomo не включён.",
+            code="active_core_changed",
+        )
+
+    original_override, override_detail = _dns_override_status()
+    if original_override is not False:
+        raise MihomoDnsError(
+            "DNS override Keenetic уже изменился; сначала проверьте состояние DNS роутера.",
+            code="dns_reenable_override_changed",
+            details=override_detail,
+        )
+    original_dns_policy = _capture_dns_policy()
+    snapshot = _snapshot_original(ui_state_dir, config_file, current)
+    backup = None
+    saved = False
+    override_changed = False
+    dns_policy_changed = False
+    capture_attempted = False
+    try:
+        backup = save_config(prepared)
+        saved = True
+        dns_policy_changed = original_dns_policy is not None
+        _configure_keenetic_dns_for_mihomo(original_dns_policy)
+        override_changed = True
+        _set_dns_override(True)
+        if not _wait_for_port_53(should_be_free=True):
+            raise MihomoDnsError(
+                "Keenetic не освободил порт 53 для сохранённого DNS.",
+                code="dns_port_busy",
+            )
+        if not bool(restart_xkeen(source="mihomo-dns-reenable")):
+            raise MihomoDnsError(
+                "Mihomo не запустился с сохранённым DNS-блоком.",
+                code="mihomo_restart_failed",
+            )
+        if not _wait_for_mihomo() or not _wait_for_port_53(should_be_free=False):
+            raise MihomoDnsError(
+                "Сохранённый DNS-слушатель Mihomo не запустился на порту 53.",
+                code="dns_listener_failed",
+            )
+        capture_attempted = True
+        capture_result = _ensure_mihomo_dns_capture()
+        _MIHOMO_DNS_CAPTURE_STATE["active"] = bool(capture_result.get("ok"))
+        probe = _dns_probe()
+        if not probe.get("ok"):
+            raise MihomoDnsError(
+                "Mihomo запущен, но сохранённый защищённый DNS не ответил.",
+                code="dns_probe_failed",
+                details=probe,
+            )
+
+        group = str(_select_proxy_group(current) or "").strip() or None
+        normalized_mode = str(runtime.get("mode") or "redir-host").strip().lower()
+        next_state = {
+            "enabled": True,
+            "created_at": int(time.time()),
+            "config_file": os.path.abspath(config_file),
+            "original_config": snapshot,
+            "original_sha256": _sha256(current),
+            "applied_sha256": _sha256(prepared),
+            "original_dns_override": original_override,
+            "original_dns_policy": original_dns_policy,
+            "dns_capture": bool(capture_result.get("ok")),
+            "proxy_group": group,
+            "listen": str(runtime.get("listen") or DNS_LISTEN),
+            "mode": normalized_mode if normalized_mode in DNS_MODES else "redir-host",
+            "fake_ip": None,
+            "prefer_h3": bool(runtime.get("prefer_h3")),
+            "dns_options": _normalize_dns_options(mode=normalized_mode),
+            "preserved_user_config": True,
+        }
+        _save_state(ui_state_dir, config_file, next_state)
+        _clear_release(ui_state_dir, config_file)
+        return {
+            "ok": True,
+            "enabled": True,
+            "reenabled": True,
+            "preserved_current": True,
+            "proxy_group": group,
+            "listen": str(runtime.get("listen") or DNS_LISTEN),
+            "mode": normalized_mode if normalized_mode in DNS_MODES else "redir-host",
+            "dns_override": True,
+            "probe": probe,
+            "backup": str(getattr(backup, "filename", "") or "") or None,
+        }
+    except Exception as exc:
+        rollback_errors: list[str] = []
+        if capture_attempted:
+            try:
+                _remove_mihomo_dns_capture()
+            except Exception as rollback_exc:
+                rollback_errors.append(str(rollback_exc))
+        if saved:
+            try:
+                save_config(current)
+            except Exception as rollback_exc:
+                rollback_errors.append(str(rollback_exc))
+        if dns_policy_changed:
+            try:
+                _restore_keenetic_dns_policy(original_dns_policy)
+            except Exception as rollback_exc:
+                rollback_errors.append(str(rollback_exc))
+        if override_changed:
+            try:
+                _set_dns_override(False)
+            except Exception as rollback_exc:
+                rollback_errors.append(str(rollback_exc))
+        if saved:
+            try:
+                restart_xkeen(source="mihomo-dns-reenable-rollback")
+            except Exception as rollback_exc:
+                rollback_errors.append(str(rollback_exc))
+        _clear_state(ui_state_dir, config_file)
+        if isinstance(exc, MihomoDnsError):
+            if rollback_errors:
+                exc.details = {"cause": exc.details, "rollback": rollback_errors}
+            exc.rolled_back = bool(saved or override_changed)
+            raise
+        raise MihomoDnsError(
+            "Не удалось снова включить сохранённый DNS; прежний конфиг восстановлен.",
+            code="dns_reenable_failed",
+            details={"cause": str(exc), "rollback": rollback_errors},
+            rolled_back=bool(saved or override_changed),
+        ) from exc
 
 
 def _reconfigure_managed_dns(
@@ -3668,7 +3888,7 @@ def apply_action(
     repair_legacy_exclusion: bool = False,
 ) -> dict[str, Any]:
     normalized = str(action or "").strip().lower()
-    if normalized not in {"enable", "disable", "release", "reconfigure"}:
+    if normalized not in {"enable", "disable", "release", "resume", "reconfigure"}:
         raise MihomoDnsError("Неизвестное действие DNS Mihomo.", code="invalid_action")
 
     with _LOCK:
@@ -3708,6 +3928,22 @@ def apply_action(
                 mobile_bs=mobile_bs,
                 prefer_h3=prefer_h3,
                 repair_legacy_exclusion=repair_legacy_exclusion,
+            )
+
+        if normalized == "resume":
+            if not status.get("can_reenable"):
+                raise MihomoDnsError(
+                    "Сохранённый DNS-блок нельзя включить в текущей конфигурации.",
+                    code="dns_reenable_blocked",
+                    details=status.get("blockers"),
+                )
+            return _resume_preserved_dns(
+                current=current,
+                config_file=config_file,
+                ui_state_dir=ui_state_dir,
+                validate_config=validate_config,
+                save_config=save_config,
+                restart_xkeen=restart_xkeen,
             )
 
         if normalized == "enable":
