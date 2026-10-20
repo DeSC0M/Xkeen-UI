@@ -202,7 +202,8 @@ test.describe('Module manager recovery and guards', () => {
     panelDown = false;
     await advanceClock(page, 10000);
     await expect.poll(() => page.evaluate(() => window.xkBeforeRestart === true), { timeout: 15000 }).toBe(false);
-    await expect(page.locator('#modules-operation-status')).toContainText('Готово');
+    await expect(page.locator('#modules-operation-status .modules-operation')).toHaveCount(0);
+    await expect(page.locator('#modules-operation-status')).not.toContainText('Панель перезапускается');
   });
 
   test('names a lost connection plainly while an operation has not reached the restart', async ({ page }) => {

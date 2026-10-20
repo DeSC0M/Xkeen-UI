@@ -277,7 +277,9 @@ export function createModuleManagerController({ root, api, pollMs, reload = () =
       renderOperationDialog(dialog, shown, { notice, busy: locked, names, cancelPending, editorChange: dialogEditorChange });
     }
     const focused = statusHost.contains(document.activeElement) ? document.activeElement.textContent : null;
-    if (shown) renderOperationStatus(statusHost, shown, {
+    // The window tells how an operation ended; the page keeps only what the
+    // window does not: one still running or one that went wrong.
+    if (shown && shown.result !== 'committed') renderOperationStatus(statusHost, shown, {
       onCancel: requestCancel, onRecovery: requestRecovery, busy: locked, names,
     });
     else statusHost.replaceChildren();

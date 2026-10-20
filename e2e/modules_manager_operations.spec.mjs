@@ -116,7 +116,8 @@ test.describe('Module lifecycle review', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0);
     expect(await page.evaluate(() => sessionStorage.getItem('xkeen.modules.operationDialog.v1'))).toBeNull();
     await expect(page.locator('.modules-module').filter({ hasText: TERMINAL })).toBeVisible();
-    await expect(page.locator('#modules-operation-status')).toContainText('Готово');
+    // The window has told how it ended: the page keeps no report of a success.
+    await expect(page.locator('#modules-operation-status .modules-operation')).toHaveCount(0);
     expect(catalogCalls).toBe(1);
     await page.getByRole('tab', { name: 'Доступные' }).click();
     const card = page.locator('#modules-card-host .modules-card').filter({ hasText: TERMINAL });
