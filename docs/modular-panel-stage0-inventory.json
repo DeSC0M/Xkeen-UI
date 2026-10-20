@@ -39,7 +39,7 @@
       ],
       "removable": false,
       "unit_count": 582,
-      "size_bytes": 7838958,
+      "size_bytes": 7840565,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -252,7 +252,7 @@
       ],
       "removable": true,
       "unit_count": 85,
-      "size_bytes": 1004253,
+      "size_bytes": 1007574,
       "kind_counts": {
         "backend_route": 22,
         "backend_service": 32,
@@ -6866,7 +6866,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_panel_service_data_protection.py",
-      "size_bytes": 9946,
+      "size_bytes": 11553,
       "depends_on": [
         "tool.files"
       ],
@@ -24696,7 +24696,7 @@
       "module_id": "tool.files",
       "kind": "backend_service",
       "path": "xkeen-ui/services/fs_common/local.py",
-      "size_bytes": 37379,
+      "size_bytes": 40328,
       "depends_on": [
         "core"
       ],
@@ -25049,7 +25049,7 @@
       "module_id": "tool.files",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/file_manager/editor.js",
-      "size_bytes": 57881,
+      "size_bytes": 58253,
       "depends_on": [
         "core"
       ],
@@ -32610,7 +32610,7 @@
         },
         "tool.files": {
           "unit_count": 85,
-          "size_bytes": 1004253
+          "size_bytes": 1007574
         },
         "tool.advanced-diagnostics": {
           "unit_count": 24,

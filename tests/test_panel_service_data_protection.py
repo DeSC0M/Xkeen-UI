@@ -88,6 +88,40 @@ def test_the_panel_root_takes_own_files_but_never_loses_panel_data(panel, tmp_pa
     assert not local.local_is_panel_data_entry(str(tmp_path / "opt" / "etc"))
 
 
+def _second_path_to(folder: Path, alias: Path) -> None:
+    """Ещё один путь к тем же файлам, как /tmp/mnt/<uuid> рядом с /opt на Keenetic."""
+    if os.name == "nt":
+        import _winapi
+
+        _winapi.CreateJunction(str(folder), str(alias))
+    else:
+        alias.symlink_to(folder, target_is_directory=True)
+
+
+def test_panel_data_reached_by_another_mount_path_is_protected_the_same(panel, tmp_path: Path):
+    state, client = panel
+    alias = tmp_path / "mnt-label"
+    _second_path_to(tmp_path / "opt", alias)
+    other = alias / "etc" / "xkeen-ui"
+
+    assert local.local_is_panel_data_entry(str(other / "dns_over_vless.json"))
+    assert local.local_is_panel_data_entry(str(other / "dns-over-vless" / "transactions" / "20261020-1"))
+    assert local.local_is_panel_data_entry(str(other / "dns-over-vless" / "new.json"))
+    assert local._local_is_panel_data_abs(str(other))
+    assert local._local_is_panel_data_abs(str(alias / "etc"))
+    assert not local.local_is_panel_data_entry(str(other / "notes.txt"))
+    assert not local._local_is_panel_data_abs(str(other / "notes.txt"))
+
+    with pytest.raises(PermissionError):
+        local._local_soft_delete(str(other / "dns-over-vless"), [str(tmp_path)], hard=True)
+    assert (state / "dns-over-vless").is_dir()
+    response = client.post("/api/fs/write", json={
+        "target": "local", "path": str(other / "dns_over_vless.json"), "text": "broken", "dry_run": True,
+    })
+    assert response.status_code == 403
+    assert (state / "dns_over_vless.json").read_text(encoding="utf-8") == '{"enabled": true}'
+
+
 # --- правка, создание, права ----------------------------------------------------------
 
 

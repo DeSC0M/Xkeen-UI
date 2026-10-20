@@ -169,20 +169,98 @@ def protect_local_path(path: str, *, subtree: bool = False) -> None:
     _PANEL_PROTECTED[key] = bool(subtree or _PANEL_PROTECTED.get(key))
 
 
-def _local_is_panel_data_abs(ap: str) -> bool:
+def _lexical_relation(key: str, protected: str) -> str:
+    if key == protected:
+        return "same"
+    if key.startswith(protected.rstrip(os.sep) + os.sep):
+        return "inside"
+    if protected.startswith(key.rstrip(os.sep) + os.sep):
+        return "above"
+    return ""
+
+
+def _anchor_chain(key: str) -> Dict[Tuple[int, int], Tuple[str, ...]]:
+    """Существующие предки пути (и он сам): (устройство, inode) -> оставшийся хвост.
+
+    Одни и те же файлы бывают видны по разным путям: на Keenetic накопитель с
+    Entware смонтирован и как /opt, и как /tmp/mnt/<uuid>, плюс ярлык метки.
+    Строки путей тогда не совпадают, а каталоги -- те же.
+    """
+    chain: Dict[Tuple[int, int], Tuple[str, ...]] = {}
+    current = key
+    tail: Tuple[str, ...] = ()
+    while True:
+        try:
+            st = os.stat(current)
+        except OSError:
+            st = None
+        if st is not None:
+            chain.setdefault((st.st_dev, st.st_ino), tail)
+        parent, name = os.path.split(current)
+        if not name or parent == current:
+            return chain
+        tail = (os.path.normcase(name),) + tail
+        current = parent
+
+
+_PROTECTED_CHAINS: Dict[str, Tuple[float, Dict[Tuple[int, int], Tuple[str, ...]]]] = {}
+_PROTECTED_CHAIN_TTL = 5.0
+
+
+def _protected_chain(protected: str) -> Dict[Tuple[int, int], Tuple[str, ...]]:
+    now = time.monotonic()
+    cached = _PROTECTED_CHAINS.get(protected)
+    if cached is not None and now - cached[0] < _PROTECTED_CHAIN_TTL:
+        return cached[1]
+    chain = _anchor_chain(protected)
+    _PROTECTED_CHAINS[protected] = (now, chain)
+    return chain
+
+
+def _physical_relation(chain: Dict[Tuple[int, int], Tuple[str, ...]], ordered: List[Tuple[int, int]], protected: str) -> str:
+    target = _protected_chain(protected)
+    # Самый глубокий общий существующий каталог: хвосты от него сравнимы.
+    for anchor in ordered:
+        theirs = target.get(anchor)
+        if theirs is None:
+            continue
+        mine = chain[anchor]
+        if mine == theirs:
+            return "same"
+        if mine[: len(theirs)] == theirs:
+            return "inside"
+        if theirs[: len(mine)] == mine:
+            return "above"
+        return ""
+    return ""
+
+
+def _panel_data_relations(ap: str):
+    """Отношение ``ap`` к каждому служебному пути: same, inside, above или пусто."""
     if not _PANEL_PROTECTED:
-        return False
+        return
     try:
         key = _protection_key(ap)
     except Exception:
-        return False
+        return
+    chain: Dict[Tuple[int, int], Tuple[str, ...]] | None = None
+    ordered: List[Tuple[int, int]] = []
     for protected, subtree in list(_PANEL_PROTECTED.items()):
-        if key == protected:
-            return True
+        relation = _lexical_relation(key, protected)
+        if not relation:
+            if chain is None:
+                chain = _anchor_chain(key)
+                # Хвосты короче -- каталоги глубже.
+                ordered = sorted(chain, key=lambda anchor: len(chain[anchor]))
+            relation = _physical_relation(chain, ordered, protected)
+        if relation:
+            yield protected, subtree, relation
+
+
+def _local_is_panel_data_abs(ap: str) -> bool:
+    for _protected, subtree, relation in _panel_data_relations(ap):
         # Каталог выше унёс бы служебное с собой.
-        if protected.startswith(key.rstrip(os.sep) + os.sep):
-            return True
-        if subtree and key.startswith(protected + os.sep):
+        if relation in ("same", "above") or (subtree and relation == "inside"):
             return True
     return False
 
@@ -194,16 +272,10 @@ def local_is_panel_data_entry(ap: str) -> bool:
     создавать и править свои файлы можно. Каталог без «вместе с содержимым»
     (корень панели) защищён только от удаления: класть в него своё можно.
     """
-    if not _PANEL_PROTECTED:
-        return False
-    try:
-        key = _protection_key(ap)
-    except Exception:
-        return False
-    for protected, subtree in list(_PANEL_PROTECTED.items()):
-        if subtree and (key == protected or key.startswith(protected + os.sep)):
+    for protected, subtree, relation in _panel_data_relations(ap):
+        if subtree and relation in ("same", "inside"):
             return True
-        if key == protected and not os.path.isdir(protected):
+        if relation == "same" and not os.path.isdir(protected):
             return True
     return False
 

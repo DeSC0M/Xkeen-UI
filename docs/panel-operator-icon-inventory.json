@@ -1199,7 +1199,7 @@
           "accessible_label": "Скачать"
         },
         {
-          "location": "xkeen-ui/static/js/features/file_manager/editor.js:L1560",
+          "location": "xkeen-ui/static/js/features/file_manager/editor.js:L1568",
           "control_type": "runtime-action",
           "accessible_label": "Скачать"
         },

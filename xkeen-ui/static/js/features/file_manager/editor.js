@@ -1418,6 +1418,14 @@ function syncToolbarForEngine(engine) {
       } catch (e) {}
     } else if (ui.textarea) {
       ui.textarea.value = value;
+      // Plain textarea (no editor installed): honour read-only and track edits too.
+      try { ui.textarea.readOnly = ro; } catch (e) {}
+      try {
+        if (!ui.textarea._xkeenDirtyWired) {
+          ui.textarea._xkeenDirtyWired = true;
+          ui.textarea.addEventListener('input', () => { try { updateDirtyUI(); } catch (e) {} });
+        }
+      } catch (e) {}
       try { setInfo({ err: '' }); } catch (e) {}
       setTimeout(() => { try { ui.textarea.focus(); } catch (e) {} }, 0);
     }
