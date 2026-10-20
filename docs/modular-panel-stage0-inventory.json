@@ -39,7 +39,7 @@
       ],
       "removable": false,
       "unit_count": 582,
-      "size_bytes": 7847033,
+      "size_bytes": 7848683,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -1683,7 +1683,7 @@
       "module_id": "core",
       "kind": "backend_service",
       "path": "xkeen-ui/services/core_installer.py",
-      "size_bytes": 29154,
+      "size_bytes": 30344,
       "depends_on": [],
       "starts_background_task": true,
       "background_markers": [
@@ -3604,7 +3604,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_core_installer.py",
-      "size_bytes": 22438,
+      "size_bytes": 22898,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],

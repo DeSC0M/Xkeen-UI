@@ -8,6 +8,7 @@ import io
 import os
 import posixpath
 import secrets
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -525,7 +526,37 @@ class CoreInstaller:
     def _preflight_command(self, engine_id: str, target: str) -> list[str]:
         if engine_id == "xray":
             return [target, "-test", "-confdir", self.xray_configs_dir]
-        return [target, "-t", "-f", self.mihomo_config_file]
+        # Router init scripts may provide the canonical Mihomo validation
+        # command.  Prizrak-Core and other forks need the working directory
+        # (`-d`) in addition to `-f`; without it the panel's hard-coded
+        # command can reject an otherwise valid router config.
+        template = str(os.environ.get("MIHOMO_VALIDATE_CMD") or "").strip()
+        if template:
+            try:
+                command = shlex.split(template)
+            except ValueError:
+                command = []
+            if command:
+                substitutions = {
+                    "{binary}": target,
+                    "{root}": os.path.dirname(self.mihomo_config_file),
+                    "{config}": self.mihomo_config_file,
+                }
+                command = [
+                    substitutions.get(token, token)
+                    for token in command
+                ]
+                if command[0] in {"mihomo", "/opt/sbin/mihomo", "/opt/bin/mihomo"}:
+                    command[0] = target
+                return command
+        return [
+            target,
+            "-t",
+            "-d",
+            os.path.dirname(self.mihomo_config_file),
+            "-f",
+            self.mihomo_config_file,
+        ]
 
     @staticmethod
     def _other_engine(engine_id: str) -> str:

@@ -523,3 +523,20 @@ def test_the_version_of_a_mihomo_alpha_build_is_its_commit(tmp_path):
     assert install._read_binary_version("mihomo") == "alpha-94b13ae"
     install.run_command = lambda *_args, **_kwargs: (0, "Mihomo Meta v1.19.32 linux arm64 with go1.25.1")
     assert install._read_binary_version("mihomo") == "v1.19.32"
+
+
+def test_mihomo_preflight_uses_router_validation_template(monkeypatch, tmp_path):
+    install, _store, _target = _installer(tmp_path)
+    monkeypatch.setenv(
+        "MIHOMO_VALIDATE_CMD",
+        "/opt/sbin/mihomo -t -d {root} -f {config}",
+    )
+
+    assert install._preflight_command("mihomo", "/tmp/new-mihomo") == [
+        "/tmp/new-mihomo",
+        "-t",
+        "-d",
+        str(tmp_path),
+        "-f",
+        str(tmp_path / "mihomo.yaml"),
+    ]
