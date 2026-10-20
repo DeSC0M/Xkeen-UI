@@ -878,52 +878,6 @@ body.modules-page .modules-variant-block {
   gap: 6px;
 }
 
-body.modules-page .modules-variant-block > .modules-variant-summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  min-height: 28px;
-  padding: 0 8px;
-  border: 1px solid var(--modules-border-strong);
-  border-radius: 6px;
-  background: var(--modules-surface-raised);
-  color: var(--modules-muted);
-  cursor: pointer;
-  list-style: none;
-  font-size: calc(11px * var(--xk-font-scale, 1));
-}
-
-body.modules-page .modules-variant-block > .modules-variant-summary::-webkit-details-marker {
-  display: none;
-}
-
-body.modules-page .modules-variant-block > .modules-variant-summary::after {
-  content: '▾';
-  color: var(--modules-faint);
-  font-size: 11px;
-  transition: transform .15s ease;
-}
-
-body.modules-page .modules-variant-block[open] > .modules-variant-summary::after {
-  transform: rotate(180deg);
-}
-
-body.modules-page .modules-variant-summary-label {
-  color: var(--modules-faint);
-}
-
-body.modules-page .modules-variant-summary strong {
-  margin-left: auto;
-  color: var(--modules-text);
-  font-weight: 650;
-}
-
-body.modules-page .modules-variant-content {
-  display: grid;
-  gap: 6px;
-}
-
 body.modules-page .modules-variant {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -982,17 +936,6 @@ body.modules-page .modules-variant-pending {
   color: var(--modules-muted);
   font-size: calc(11px * var(--xk-font-scale, 1));
   line-height: 1.4;
-}
-
-/* The variant chosen but not in force yet: said on the folded summary too. */
-body.modules-page .modules-variant-badge {
-  padding: 1px 7px;
-  border-radius: 99px;
-  background: color-mix(in srgb, var(--modules-accent) 14%, transparent);
-  color: var(--modules-accent);
-  font-size: calc(10.5px * var(--xk-font-scale, 1));
-  font-weight: 600;
-  white-space: nowrap;
 }
 
 /* A local build cannot fetch the files: nothing to do here, only to know. */

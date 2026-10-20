@@ -336,24 +336,6 @@ function editorVariantsLocked(snapshot) {
   return !modulesChangeable(snapshot) && snapshot.editor?.installed_variant === 'light';
 }
 
-const EDITOR_VARIANTS_DISCLOSURE_KEY = 'xkeen.modules.editorVariantsOpen.v1';
-
-// Without storage the block opens as it does for everyone else.
-function editorVariantsOpen() {
-  try {
-    const saved = window.localStorage.getItem(EDITOR_VARIANTS_DISCLOSURE_KEY);
-    return saved === null || saved === '1';
-  } catch (error) {
-    return true;
-  }
-}
-
-function rememberEditorVariantsOpen(open) {
-  try {
-    window.localStorage.setItem(EDITOR_VARIANTS_DISCLOSURE_KEY, open ? '1' : '0');
-  } catch (error) {}
-}
-
 function editorVariantLabel(id) {
   return EDITOR_VARIANTS.find((variant) => variant.id === id)?.label || String(id || '');
 }
@@ -375,14 +357,12 @@ function editorVariantState(snapshot, current) {
   if (installed === 'light' && current.id !== 'light') {
     if (editorVariantsLocked(snapshot)) {
       return {
-        badge: 'не применён',
         tone: 'muted',
         text: `Сейчас работает «Лёгкий». «${current.label}» докачивает файлы, а на локальной сборке докачки нет — выбор вступит в силу на выпуске.`,
       };
     }
     const kind = pendingTransition(snapshot)?.kind;
     return {
-      badge: 'ждёт докачки',
       text: kind === 'editor'
         ? `Сейчас работает «Лёгкий». «${current.label}» включится после кнопки «${TRANSITION_EDITOR_LABEL}» вверху.`
         : `Сейчас работает «Лёгкий». «${current.label}» включится, когда набор модулей будет применён.`,
@@ -390,7 +370,6 @@ function editorVariantState(snapshot, current) {
   }
   if (active && active !== current.id) {
     return {
-      badge: 'после перезапуска',
       text: `«${current.label}» включится после перезапуска панели. Докачивать ничего не нужно.`,
     };
   }
@@ -399,18 +378,8 @@ function editorVariantState(snapshot, current) {
 
 function editorVariantControl(snapshot, current, onEditorVariant, busy) {
   const state = editorVariantState(snapshot, current);
-  const block = node('details', 'modules-variant-block');
-  block.open = editorVariantsOpen();
-  block.addEventListener('toggle', () => rememberEditorVariantsOpen(block.open));
-  const summary = node('summary', 'modules-variant-summary');
-  summary.append(
-    node('span', 'modules-variant-summary-label', 'Вариант'),
-    node('strong', '', current.label),
-  );
-  // A folded block still tells that the choice is not in force yet.
-  if (state) summary.append(node('span', 'modules-variant-badge', state.badge));
-  block.append(summary);
-  const content = node('div', 'modules-variant-content');
+  // Three buttons are not worth folding: the pressed one names the choice.
+  const block = node('div', 'modules-variant-block');
   const group = node('div', 'modules-variant');
   group.setAttribute('role', 'group');
   group.setAttribute('aria-label', 'Вариант редакторов');
@@ -425,16 +394,15 @@ function editorVariantControl(snapshot, current, onEditorVariant, busy) {
     button.addEventListener('click', () => { if (!selected) onEditorVariant(variant.id, button); });
     group.append(button);
   }
-  content.append(group, node('p', 'modules-variant-hint', `${current.label}: ${current.hint}`));
+  block.append(group, node('p', 'modules-variant-hint', `${current.label}: ${current.hint}`));
   // The tile only tells; the one action is in the summary above.
   if (state) {
     const line = node('p', 'modules-variant-pending', state.text);
     if (state.tone) line.classList.add(`is-${state.tone}`);
-    content.append(line);
+    block.append(line);
   } else if (locked) {
-    content.append(node('p', 'modules-variant-hint', 'Стандартный и расширенный варианты докачивают файлы. На локальной сборке докачка недоступна.'));
+    block.append(node('p', 'modules-variant-hint', 'Стандартный и расширенный варианты докачивают файлы. На локальной сборке докачка недоступна.'));
   }
-  block.append(content);
   return block;
 }
 

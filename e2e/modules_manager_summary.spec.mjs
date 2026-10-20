@@ -326,18 +326,14 @@ test.describe('Editor variant choice', () => {
     }
   });
 
-  test('the editor variants can be collapsed without losing the selected mode', async ({ page }) => {
+  test('the editor variants are not folded: the pressed button names the choice', async ({ page }) => {
     await installLifecycleRoutes(page, { status: { ok: true, result: null }, installed: withEditor({ variant: 'advanced' }) });
     await page.goto('/modules');
     const row = page.locator('.modules-tile[data-module-id="tool.editor"]');
-    const disclosure = row.locator('.modules-variant-block');
-    await expect(disclosure).toHaveAttribute('open', '');
-    await expect(disclosure.locator('.modules-variant-summary strong')).toHaveText('Расширенный');
-
-    await disclosure.locator('.modules-variant-summary').click();
-
-    await expect(disclosure).not.toHaveAttribute('open', '');
-    await expect(disclosure.locator('.modules-variant-summary strong')).toHaveText('Расширенный');
+    await expect(row.locator('.modules-variant-block details, details.modules-variant-block, .modules-variant-block summary')).toHaveCount(0);
+    await expect(row.locator('.modules-variant-option[aria-pressed="true"]')).toHaveText('Расширенный');
+    await expect(row.locator('.modules-variant-option')).toHaveCount(3);
+    await expect(row.locator('.modules-variant-option').first()).toBeVisible();
   });
 
   // What the server answers once «Расширенный» is chosen over a light install:
@@ -361,7 +357,6 @@ test.describe('Editor variant choice', () => {
     await expect(row.locator('.modules-variant-pending')).toHaveText(
       'Сейчас работает «Лёгкий». «Расширенный» включится после кнопки «Докачать и перезапустить» вверху.',
     );
-    await expect(row.locator('.modules-variant-badge')).toHaveText('ждёт докачки');
     await expect(row.getByRole('button', { name: /Применить|Докачать/ })).toHaveCount(0);
     await expect(summary).toContainText('Нужно докачать файлы редакторов и перезапустить панель');
     await expect(summary).not.toContainText('Требуется перезапуск');
@@ -370,11 +365,6 @@ test.describe('Editor variant choice', () => {
     await expect(apply).toHaveClass(/btn-primary/);
     await expect(summary.getByRole('button', { name: 'Применить профиль' })).toHaveCount(0);
 
-    // Folded, the block still says that the choice is not in force.
-    await row.locator('.modules-variant-summary').click();
-    await expect(row.locator('.modules-variant-block')).not.toHaveAttribute('open', '');
-    await expect(row.locator('.modules-variant-summary')).toContainText('Расширенный');
-    await expect(row.locator('.modules-variant-badge')).toBeVisible();
   });
 
   test('a pending set of modules keeps its general words', async ({ page }) => {
@@ -403,7 +393,6 @@ test.describe('Editor variant choice', () => {
     await expect(row.locator('.modules-variant-pending.is-muted')).toHaveText(
       'Сейчас работает «Лёгкий». «Расширенный» докачивает файлы, а на локальной сборке докачки нет — выбор вступит в силу на выпуске.',
     );
-    await expect(row.locator('.modules-variant-badge')).toHaveText('не применён');
     await expect(row).not.toContainText('На локальной сборке докачка недоступна.');
     await expect(page.locator('[data-operation="profile-transition"]')).toHaveCount(0);
   });
@@ -418,7 +407,6 @@ test.describe('Editor variant choice', () => {
 
     await expect(row.locator('.modules-variant-pending'))
       .toHaveText('«Расширенный» включится после перезапуска панели. Докачивать ничего не нужно.');
-    await expect(row.locator('.modules-variant-badge')).toHaveText('после перезапуска');
     await expect(page.locator('.modules-summary')).toContainText('Требуется перезапуск');
     await expect(page.locator('.modules-summary').getByRole('button', { name: 'Перезапустить панель' })).toBeVisible();
 
@@ -428,21 +416,6 @@ test.describe('Editor variant choice', () => {
     await page.reload();
     await expect(row.locator('.modules-variant-block')).toBeAttached();
     await expect(row.locator('.modules-variant-pending')).toHaveCount(0);
-    await expect(row.locator('.modules-variant-badge')).toHaveCount(0);
-  });
-
-  test('without browser storage the variants start open', async ({ page }) => {
-    await page.addInitScript(() => {
-      const proto = Object.getPrototypeOf(window.localStorage);
-      const original = proto.getItem;
-      proto.getItem = function getItem(key) {
-        if (String(key).startsWith('xkeen.modules.editorVariantsOpen')) throw new Error('blocked');
-        return original.call(this, key);
-      };
-    });
-    await installLifecycleRoutes(page, { status: { ok: true, result: null }, installed: withEditor({ variant: 'full' }) });
-    await page.goto('/modules');
-    await expect(page.locator('.modules-tile[data-module-id="tool.editor"] .modules-variant-block')).toHaveAttribute('open', '');
   });
 
   test('the editor files are fetched in the operation window named after them', async ({ page }) => {
