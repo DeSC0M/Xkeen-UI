@@ -163,7 +163,7 @@ def _reposition_tcp_directives(text: str, *, secret_line: str) -> str:
 
 
 def build_safe_mihomo_config(
-    text: str, *, prefer_unix: bool = True
+    text: str, *, prefer_unix: bool = True, preserve_existing_tcp: bool = False
 ) -> MigrationPreview:
     """Return a preview without exposing/generated secrets.
 
@@ -183,6 +183,10 @@ def build_safe_mihomo_config(
         )
         if not existed:
             changes.append("Добавить локальный Unix socket Mihomo API")
+        if preserve_existing_tcp:
+            # Repair an imported user config without taking away an existing
+            # controller used by Zashboard or another dashboard.
+            return MigrationPreview(updated, "unix-repair", tuple(changes))
         updated, existed_tcp = _replace_if_present(
             updated,
             _CONTROLLER_RE,

@@ -132,7 +132,7 @@
       ],
       "removable": true,
       "unit_count": 133,
-      "size_bytes": 3101297,
+      "size_bytes": 3102588,
       "kind_counts": {
         "app_runtime": 4,
         "backend_route": 2,
@@ -14114,7 +14114,7 @@
       "module_id": "engine.mihomo",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/mihomo.py",
-      "size_bytes": 161573,
+      "size_bytes": 161816,
       "depends_on": [
         "core",
         "tool.editor",
@@ -14796,7 +14796,7 @@
       "module_id": "engine.mihomo",
       "kind": "backend_service",
       "path": "xkeen-ui/services/mihomo_clash_migration.py",
-      "size_bytes": 8426,
+      "size_bytes": 8715,
       "depends_on": [
         "core",
         "tool.editor"
@@ -15444,7 +15444,7 @@
       "module_id": "engine.mihomo",
       "kind": "backend_test",
       "path": "tests/test_mihomo_clash_frontend_contract.py",
-      "size_bytes": 32683,
+      "size_bytes": 32728,
       "depends_on": [
         "core",
         "tool.editor"
@@ -15486,7 +15486,7 @@
       "module_id": "engine.mihomo",
       "kind": "backend_test",
       "path": "tests/test_mihomo_clash_migration.py",
-      "size_bytes": 13683,
+      "size_bytes": 14336,
       "depends_on": [
         "core",
         "tool.editor"
@@ -16661,7 +16661,7 @@
       "module_id": "engine.mihomo",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/mihomo_clash/index.js",
-      "size_bytes": 27980,
+      "size_bytes": 28041,
       "depends_on": [
         "core",
         "tool.editor"

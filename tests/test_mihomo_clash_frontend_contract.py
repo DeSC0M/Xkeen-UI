@@ -791,3 +791,4 @@ def test_blocked_controller_offers_one_click_unix_socket_repair():
     assert "external-controller-unix: ./mihomo-api.sock" in feature
     assert "openMigrationPreview('repair-unix')" in feature
     assert "assistantKind === 'repair-unix'" in feature
+    assert "return 'unix-repair'" in feature

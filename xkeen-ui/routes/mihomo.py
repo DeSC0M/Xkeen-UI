@@ -1212,7 +1212,7 @@ def create_mihomo_blueprint(
         # probes over AF_UNIX, so automatic protection defaults to loopback TCP;
         # Unix remains available as an explicit advanced choice.
         transport = str(data.get("transport") or "tcp-loopback").strip().lower()
-        if transport not in {"unix", "tcp-loopback"}:
+        if transport not in {"unix", "unix-repair", "tcp-loopback"}:
             return "", _api_error(
                 "Недопустимый transport настройки.",
                 400,
@@ -1256,7 +1256,11 @@ def create_mihomo_blueprint(
         transport, invalid = _mihomo_clash_setup_transport(data)
         if invalid:
             return invalid
-        preview = build_safe_mihomo_config(supplied, prefer_unix=transport == "unix")
+        preview = build_safe_mihomo_config(
+            supplied,
+            prefer_unix=transport in {"unix", "unix-repair"},
+            preserve_existing_tcp=transport == "unix-repair",
+        )
         return jsonify(
             {
                 "ok": True,
@@ -1284,7 +1288,11 @@ def create_mihomo_blueprint(
         transport, invalid = _mihomo_clash_setup_transport(data)
         if invalid:
             return invalid
-        preview = build_safe_mihomo_config(supplied, prefer_unix=transport == "unix")
+        preview = build_safe_mihomo_config(
+            supplied,
+            prefer_unix=transport in {"unix", "unix-repair"},
+            preserve_existing_tcp=transport == "unix-repair",
+        )
         preview_id = str(data.get("preview_id") or "")
         if not preview_id or not secrets.compare_digest(preview_id, preview.preview_id):
             return _api_error(

@@ -60,6 +60,26 @@ def test_unix_preview_adds_missing_controller_without_touching_source():
     assert source == "mode: rule\nallow-lan: false\n"
 
 
+def test_unix_repair_adds_socket_without_disabling_existing_tcp_controller():
+    source = (
+        "mode: rule\n"
+        "external-controller: 0.0.0.0:9091\n"
+        "secret: dashboard-secret\n"
+    )
+
+    preview = build_safe_mihomo_config(
+        source,
+        prefer_unix=True,
+        preserve_existing_tcp=True,
+    )
+
+    assert preview.transport == "unix-repair"
+    assert "external-controller-unix: ./mihomo-api.sock" in preview.content
+    assert "external-controller: 0.0.0.0:9091" in preview.content
+    assert "secret: dashboard-secret" in preview.content
+    assert "# external-controller отключён" not in preview.content
+
+
 def test_tcp_preview_materializes_secret_only_on_apply():
     preview = build_safe_mihomo_config(
         "mode: rule\nexternal-controller: 0.0.0.0:9090\n", prefer_unix=False

@@ -288,6 +288,7 @@ function renderStatus(state, payload = null) {
 }
 
 function migrationTransport() {
+  if (assistantKind === 'repair-unix') return 'unix-repair';
   return String(byId('mihomo-clash-migration-transport')?.value || 'tcp-loopback');
 }
 
