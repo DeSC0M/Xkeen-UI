@@ -8,6 +8,8 @@ __pycache__/
 
 # Project
 xkeen-ui/BUILD.json
+# Mihomo traffic statistics: each router keeps its own, never shipped.
+/xkeen-ui/mihomo-traffic.sqlite3*
 
 # Node / frontend
 node_modules/

@@ -102,6 +102,9 @@ def test_every_line_carries_uptime(tmp_path):
                 _assignment("UPTIME_FILE"),
                 _function("boot_uptime"),
                 _function("audit_boot"),
+                _function("trim_boot_log"),
+                _assignment("BOOT_LOG_MAX_BYTES"),
+                _assignment("BOOT_LOG_KEEP_LINES"),
                 'audit_boot "[start] first"',
                 'audit_boot "[start] second"',
                 "",
@@ -127,6 +130,9 @@ def test_line_survives_without_uptime(tmp_path):
                 f'UPTIME_FILE="{(tmp_path / "absent").as_posix()}"',
                 _function("boot_uptime"),
                 _function("audit_boot"),
+                _function("trim_boot_log"),
+                _assignment("BOOT_LOG_MAX_BYTES"),
+                _assignment("BOOT_LOG_KEEP_LINES"),
                 'audit_boot "[start] first"',
                 "",
             ]
@@ -137,3 +143,57 @@ def test_line_survives_without_uptime(tmp_path):
 
     line = log.read_text(encoding="utf-8").strip()
     assert re.fullmatch(r"\d{4}-\d\d-\d\d \d\d:\d\d:\d\d \[start\] first", line), line + proc.stderr
+
+
+def test_log_is_trimmed_to_its_last_lines(tmp_path):
+    # Журнал прежде рос без предела: на роутерах набралось по тысяче строк с июня.
+    log = tmp_path / "boot.log"
+    log.write_bytes(b"".join(b"2026-06-10 08:35:19 [start] old line %05d\n" % i for i in range(3000)))
+    script = tmp_path / "call.sh"
+    script.write_bytes(
+        "\n".join(
+            [
+                f'BOOT_LOG="{log.as_posix()}"',
+                f'UPTIME_FILE="{(tmp_path / "absent").as_posix()}"',
+                _assignment("BOOT_LOG_MAX_BYTES"),
+                _assignment("BOOT_LOG_KEEP_LINES"),
+                _function("boot_uptime"),
+                _function("trim_boot_log"),
+                _function("audit_boot"),
+                'audit_boot "[start] newest"',
+                "",
+            ]
+        ).encode("utf-8")
+    )
+
+    proc = _sh(script)
+
+    lines = log.read_text(encoding="utf-8").splitlines()
+    keep = int(_assignment("BOOT_LOG_KEEP_LINES").split("=", 1)[1])
+    assert len(lines) == keep, proc.stdout + proc.stderr
+    assert lines[-1].endswith("[start] newest")
+    assert lines[0].endswith("old line %05d" % (3000 - keep + 1))
+    assert log.stat().st_size <= int(_assignment("BOOT_LOG_MAX_BYTES").split("=", 1)[1])
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["boot.log", "call.sh"]
+
+
+def test_small_log_is_left_alone(tmp_path):
+    log = tmp_path / "boot.log"
+    log.write_bytes(b"2026-06-10 08:35:19 [start] only\n")
+    script = tmp_path / "call.sh"
+    script.write_bytes(
+        "\n".join(
+            [
+                f'BOOT_LOG="{log.as_posix()}"',
+                _assignment("BOOT_LOG_MAX_BYTES"),
+                _assignment("BOOT_LOG_KEEP_LINES"),
+                _function("trim_boot_log"),
+                "trim_boot_log",
+                "",
+            ]
+        ).encode("utf-8")
+    )
+
+    proc = _sh(script)
+
+    assert log.read_bytes() == b"2026-06-10 08:35:19 [start] only\n", proc.stderr

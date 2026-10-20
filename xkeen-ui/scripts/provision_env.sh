@@ -206,6 +206,17 @@ provision_drop_tree_bytecode() {
   find "$_pb_ui" -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true
 }
 
+provision_drop_idle_mihomo_traffic() {
+  # Сборки с 23.09 по 01.10.2026 запускали учёт трафика Mihomo при любом наборе
+  # модулей и копили базу в каталоге панели, даже если Mihomo не ставился. Без
+  # модуля engine.mihomo её никто не откроет. Зовут, только когда модуля нет.
+  # $1 — каталог состояния панели.
+  _pt_dir="${1%/}"
+  [ -n "$_pt_dir" ] && [ -d "$_pt_dir" ] || return 0
+  rm -f "$_pt_dir/mihomo-traffic.sqlite3" "$_pt_dir/mihomo-traffic.sqlite3-wal" \
+    "$_pt_dir/mihomo-traffic.sqlite3-shm" "$_pt_dir/mihomo-traffic.sqlite3-journal" 2>/dev/null || true
+}
+
 provision_mihomo_templates() {
   # $1 — откуда брать шаблоны (архив или каталог панели), $2 — куда класть.
   _pm_src="$1"
@@ -1763,6 +1774,9 @@ provision_cmd_apply() {
   # Шаблоны берутся из каталога панели: новые файлы уже разложены.
   if provision_has_module engine.mihomo && [ -d "$UI_DIR/opt/etc/mihomo/templates" ]; then
     provision_mihomo_templates "$UI_DIR/opt/etc/mihomo/templates" "${XKEEN_UI_MIHOMO_TEMPLATES_DIR:-/opt/etc/mihomo/templates}"
+  fi
+  if ! provision_has_module engine.mihomo; then
+    provision_drop_idle_mihomo_traffic "${XKEEN_UI_STATE_DIR:-$UI_DIR}"
   fi
   if provision_has_module engine.xray; then
     sync_bundled_template_dir "$UI_DIR/opt/etc/xray/templates/routing" "$UI_DIR/templates/routing" "роутинга Xray"

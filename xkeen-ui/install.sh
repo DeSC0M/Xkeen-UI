@@ -1670,6 +1670,10 @@ ui_step "Шаблоны Mihomo и Xray"
 if profile_has_module engine.mihomo && [ -d "$SRC_MIHOMO_TEMPLATES" ]; then
   provision_mihomo_templates "$SRC_MIHOMO_TEMPLATES" "$MIHOMO_TEMPLATES_DIR"
 fi
+# База учёта трафика Mihomo, оставленная сборками конца сентября без Mihomo.
+if ! profile_has_module engine.mihomo; then
+  provision_drop_idle_mihomo_traffic "${XKEEN_UI_STATE_DIR:-$UI_DIR}"
+fi
 
 # --- Шаблоны Xray (Routing / Observatory) ---
 

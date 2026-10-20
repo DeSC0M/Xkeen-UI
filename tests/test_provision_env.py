@@ -345,6 +345,36 @@ def test_install_and_panel_update_both_drop_tree_bytecode():
     assert re.search(r"^provision_drop_tree_bytecode\b", installer, re.MULTILINE)
 
 
+# --- база учёта трафика Mihomo ----------------------------------------------------------
+
+
+def test_idle_mihomo_traffic_database_is_removed(tmp_path):
+    # Сборки конца сентября копили её и там, где Mihomo никогда не ставился.
+    ui = tmp_path / "xkeen-ui"
+    ui.mkdir()
+    for name in ("mihomo-traffic.sqlite3", "mihomo-traffic.sqlite3-wal", "mihomo-traffic.sqlite3-shm"):
+        (ui / name).write_bytes(b"db")
+    (ui / "secret.key").write_text("key\n", encoding="utf-8")
+
+    proc = _run(tmp_path, f'provision_drop_idle_mihomo_traffic "{ui.as_posix()}"')
+
+    assert proc.returncode == 0, proc.stderr
+    assert sorted(p.name for p in ui.iterdir()) == ["secret.key"]
+
+
+def test_mihomo_traffic_database_is_dropped_only_without_the_module():
+    installer = INSTALLER.read_text(encoding="utf-8")
+    library = LIB.read_text(encoding="utf-8")
+    apply_body = library.split("provision_cmd_apply() {", 1)[1].split("\n}\n", 1)[0]
+
+    assert re.search(
+        r"if ! provision_has_module engine\.mihomo; then\n\s+provision_drop_idle_mihomo_traffic ", apply_body
+    )
+    assert re.search(
+        r"^if ! profile_has_module engine\.mihomo; then\n\s+provision_drop_idle_mihomo_traffic ", installer, re.MULTILINE
+    )
+
+
 # --- совместимость --------------------------------------------------------------------
 
 

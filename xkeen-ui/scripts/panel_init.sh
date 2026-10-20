@@ -17,6 +17,8 @@ STDERR_LOG="$LOG_DIR/stderr.log"
 PID_FILE="/opt/var/run/xkeen-ui.pid"
 
 BOOT_LOG="/opt/var/log/xkeen-ui-boot.log"
+BOOT_LOG_MAX_BYTES=65536
+BOOT_LOG_KEEP_LINES=300
 UPTIME_FILE="/proc/uptime"
 
 boot_uptime() {
@@ -34,8 +36,29 @@ boot_uptime() {
 
 audit_boot() {
   # Lightweight diagnostic log so users can debug boot-time autostart failures
-  # without re-running install.sh. Survives reboot, no rotation (small file).
+  # without re-running install.sh. Survives reboot.
   echo "$(date '+%Y-%m-%d %H:%M:%S')$(boot_uptime) $*" >> "$BOOT_LOG" 2>/dev/null || true
+  trim_boot_log
+}
+
+trim_boot_log() {
+  # Журнал пишется с установки и прежде рос без предела: за четыре месяца на
+  # роутерах набралось по тысяче строк. Сверх порога остаются последние строки.
+  [ -f "$BOOT_LOG" ] || return 0
+  _tb_size="$(wc -c < "$BOOT_LOG" 2>/dev/null)"
+  _tb_size="${_tb_size##* }"
+  case "$_tb_size" in
+    ''|*[!0-9]*) return 0 ;;
+  esac
+  [ "$_tb_size" -gt "$BOOT_LOG_MAX_BYTES" ] || return 0
+  # Имя копии своё у каждого процесса: службу при загрузке зовут дважды подряд.
+  _tb_tmp="$BOOT_LOG.trim.$$"
+  if tail -n "$BOOT_LOG_KEEP_LINES" "$BOOT_LOG" > "$_tb_tmp" 2>/dev/null; then
+    mv -f "$_tb_tmp" "$BOOT_LOG" 2>/dev/null || rm -f "$_tb_tmp" 2>/dev/null
+  else
+    rm -f "$_tb_tmp" 2>/dev/null
+  fi
+  return 0
 }
 
 caller_name() {

@@ -571,6 +571,35 @@ class ModuleCatalogClient:
             return -math.inf
         return checked_at if math.isfinite(checked_at) else -math.inf
 
+    def _prune_release_catalogs(self, *, keep: str) -> None:
+        """Drop cached catalogs of releases other than ``keep`` and the running one.
+
+        A release catalog never expires, so without this every release a
+        router ever ran stays on its storage. Another one is fetched again
+        when it is needed.
+        """
+
+        kept = {keep, str(self._core_version or "").partition("+")[0]}
+        try:
+            entries = list(self._cache_path.parent.iterdir())
+        except OSError:
+            return
+        for path in entries:
+            name = path.name
+            if not (name.startswith("catalog-") and name.endswith(".json")):
+                continue
+            version = name[len("catalog-"):-len(".json")]
+            try:
+                validate_semver(version, "catalog_release_version")
+            except ModulePackageContractError:
+                continue  # the channel caches and anything else not ours
+            if version in kept:
+                continue
+            try:
+                path.unlink()
+            except OSError:
+                pass
+
     def get_release_catalog(self, release_version: str) -> CatalogSnapshot:
         """Return the catalog of one exact release, the one a panel was built from.
 
@@ -591,6 +620,7 @@ class ModuleCatalogClient:
             # Unreadable or no longer verifiable: the release itself is still
             # there, fetch it again instead of failing on a local file.
             cached = None
+        self._prune_release_catalogs(keep=version)
         if cached is not None and cached.release_version == version:
             return cached
         catalog_url = official_release_asset_url(version, "catalog.json")

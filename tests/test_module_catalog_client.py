@@ -915,6 +915,48 @@ def test_release_catalog_is_fetched_by_exact_tag_and_cached(tmp_path) -> None:
     assert transport.calls == expected_calls
 
 
+def test_release_catalog_cache_keeps_only_the_requested_and_the_running_release(tmp_path) -> None:
+    # Routers collected one catalog per beta they ever ran: a cached release
+    # catalog never expires, so nothing removed the old ones.
+    private_key = Ed25519PrivateKey.generate()
+    transport = _CatalogTransport(_release_responses(private_key, "1.2.3"))
+    client = ModuleCatalogClient(
+        tmp_path,
+        transport=transport,
+        now=lambda: 100.0,
+        keyring={"release-2026": _public_pem(private_key)},
+        core_version="1.2.2+local.abc",
+    )
+    cache_dir = tmp_path / "module-catalog"
+    cache_dir.mkdir()
+    for name in (
+        "catalog-1.0.0-beta.2.json",
+        "catalog-1.1.0.json",
+        "catalog-1.2.2.json",
+        "catalog-cache.json",
+        "catalog-cache-prerelease.json",
+        "stable-unreleased.json",
+        "catalog-notes.txt",
+    ):
+        (cache_dir / name).write_text("{}", encoding="utf-8")
+
+    client.get_release_catalog("1.2.3")
+
+    assert sorted(path.name for path in cache_dir.iterdir()) == [
+        "catalog-1.2.2.json",
+        "catalog-1.2.3.json",
+        "catalog-cache-prerelease.json",
+        "catalog-cache.json",
+        "catalog-notes.txt",
+        "stable-unreleased.json",
+    ]
+
+    (cache_dir / "catalog-1.1.0.json").write_text("{}", encoding="utf-8")
+    client.get_release_catalog("1.2.3")  # answered from the cache
+
+    assert not (cache_dir / "catalog-1.1.0.json").exists()
+
+
 def test_release_catalog_older_than_the_latest_cache_is_accepted(tmp_path) -> None:
     private_key = Ed25519PrivateKey.generate()
     responses = _release_responses(private_key, "1.3.0")
