@@ -10,7 +10,8 @@ from services import cores
 def test_core_status_does_not_guess_xray_when_process_detection_is_inconclusive(monkeypatch, tmp_path):
     monkeypatch.setattr(cores, "_last_core_path", lambda: str(tmp_path / cores.LAST_CORE_FILENAME))
     monkeypatch.setattr(cores, "detect_available_cores", lambda: ["xray", "mihomo"])
-    monkeypatch.setattr(cores, "detect_running_core", lambda: None)
+    monkeypatch.setattr(cores, "detect_running_cores", lambda: ())
+    monkeypatch.setattr(cores, "_xkeen_status_running_core", lambda: None)
 
     available, current = cores.get_cores_status()
 
@@ -101,15 +102,6 @@ def test_core_routes_tell_the_last_engine_and_the_status_poll_records_it(monkeyp
     monkeypatch.setattr(cores, "detect_available_cores", lambda: ["xray", "mihomo"])
     monkeypatch.setattr(cores, "detect_running_core", lambda: None)
 
-    class Pidof:
-        def __init__(self, running: str | None):
-            self.running = running
-
-        def __call__(self, cmd, **_kwargs):
-            class Result:
-                returncode = 0 if cmd[-1] == self.running else 1
-            return Result()
-
     app = Flask("service-last-core")
     app.register_blueprint(service.create_service_blueprint(
         restart_xkeen=lambda **_kwargs: True,
@@ -121,10 +113,12 @@ def test_core_routes_tell_the_last_engine_and_the_status_poll_records_it(monkeyp
 
     assert client.get("/api/xkeen/core").get_json()["lastCore"] is None
 
-    monkeypatch.setattr(service.subprocess, "run", Pidof("xray"))
+    monkeypatch.setattr(service, "detect_running_cores", lambda: ("xray",))
+    monkeypatch.setattr(cores, "detect_running_cores", lambda: ("xray",))
     assert client.get("/api/xkeen/status").get_json()["core"] == "xray"
 
-    monkeypatch.setattr(service.subprocess, "run", Pidof(None))
+    monkeypatch.setattr(service, "detect_running_cores", lambda: ())
+    monkeypatch.setattr(cores, "detect_running_cores", lambda: ())
     assert client.get("/api/xkeen/status").get_json()["running"] is False
     body = client.get("/api/xkeen/core").get_json()
     assert (body["currentCore"], body["lastCore"]) == (None, "xray")
