@@ -173,7 +173,7 @@ from utils.fs import load_text, save_text
 
 # Background command jobs (used to avoid long-running HTTP requests)
 from services.command_jobs import create_command_job
-from services.cores import detect_running_core
+from services.cores import core_runtime, resolve_running_core_for_status
 
 
 MIHOMO_CLASH_BOOTSTRAP_CONFIG = """mode: rule
@@ -1327,7 +1327,7 @@ def create_mihomo_blueprint(
             # Mihomo process exists.  Verify the actual target process and
             # fall back to a detached standalone launch when XKeen is not
             # managing Mihomo (the setup described by the issue).
-            restarted = detect_running_core() == "mihomo"
+            restarted = core_runtime().has("mihomo")
             if not restarted:
                 restarted = bool(start_mihomo_standalone(config_path=MIHOMO_CONFIG_FILE))
             if not restarted:
@@ -2078,7 +2078,7 @@ def create_mihomo_blueprint(
             save_config(cfg_new)
             active_profile = get_active_profile_name()
 
-            running_core = detect_running_core()
+            running_core = resolve_running_core_for_status(core_runtime().running)
 
             resp = {
                 "ok": True,
@@ -2240,7 +2240,7 @@ def create_mihomo_blueprint(
                 save_config(cfg.rstrip("\n"))
                 _sync_mihomo_managed_subscriptions(state, cfg)
                 active_profile = get_active_profile_name()
-                running_core = detect_running_core()
+                running_core = resolve_running_core_for_status(core_runtime().running)
 
                 job = create_command_job(flag="-restart", stdin_data=None, cmd=None, use_pty=True)
                 return (
@@ -2316,7 +2316,7 @@ def create_mihomo_blueprint(
             active_profile = get_active_profile_name()
 
             # Snapshot current running core (best-effort) so UI can warn when it's not mihomo.
-            running_core = detect_running_core()
+            running_core = resolve_running_core_for_status(core_runtime().running)
 
             # Schedule xkeen restart in background.
             job = create_command_job(flag="-restart", stdin_data=None, cmd=None, use_pty=True)

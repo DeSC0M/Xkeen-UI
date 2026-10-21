@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from services.cores import CoreRuntime
 from services import dns_over_vless as dns
 from tests.test_dns_over_vless import _isolate_jsonc_sidecars, _scenario_config, _write  # noqa: F401
 
@@ -30,7 +31,7 @@ def _transactions(state: Path) -> list[str]:
 @pytest.fixture
 def stand(tmp_path: Path, monkeypatch):
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)

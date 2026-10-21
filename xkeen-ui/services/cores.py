@@ -19,6 +19,7 @@ import re
 import subprocess
 import tempfile
 import time
+from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Tuple
 
 from services.io.atomic import _atomic_write_json
@@ -170,10 +171,38 @@ def detect_running_cores() -> Tuple[str, ...]:
     return tuple(detected)
 
 
-def detect_running_core() -> Optional[str]:
-    """Return a core only when process detection is unambiguous."""
-    detected = detect_running_cores()
-    return detected[0] if len(detected) == 1 else None
+@dataclass(frozen=True)
+class CoreRuntime:
+    """The engines ``pidof`` saw, kept whole.
+
+    Two names at once is a hand-off in progress -- or a Mihomo launched
+    outside XKeen next to its Xray.  No single name answers every caller for
+    that, so each asks its own question: "is X up?" is ``has``, "is nothing
+    running?" is ``idle`` and "which engine owns the service?" is ``owner``,
+    unknown while both run.
+    """
+
+    running: Tuple[str, ...] = ()
+
+    def has(self, core: str) -> bool:
+        return core in self.running
+
+    @property
+    def idle(self) -> bool:
+        return not self.running
+
+    @property
+    def switching(self) -> bool:
+        return len(self.running) > 1
+
+    @property
+    def owner(self) -> Optional[str]:
+        return self.running[0] if len(self.running) == 1 else None
+
+
+def core_runtime() -> CoreRuntime:
+    """Snapshot of the running engines; the one entry point for callers."""
+    return CoreRuntime(detect_running_cores())
 
 
 _XKEEN_STATUS_CORE_RE = re.compile(
@@ -224,6 +253,27 @@ def resolve_running_core_for_status(running_cores: Tuple[str, ...] | None = None
     return None
 
 
+def settled_core_owner(
+    probe: Callable[[], CoreRuntime] | None = None,
+) -> Tuple[CoreRuntime, Optional[str]]:
+    """Return the engine owning the service for a one-off action.
+
+    A switch leaves the old engine alive for a few seconds: wait that out
+    (``XKEEN_CORE_SETTLE_TIMEOUT_MS``, 3 s) and, if both still run, ask XKeen
+    itself.  ``None`` together with ``runtime.switching`` means nobody can
+    tell -- the caller refuses instead of guessing.  ``probe`` is the
+    caller's own ``core_runtime``, so its tests stand in for ``pidof``.
+    """
+
+    probe = probe or core_runtime
+    runtime = probe()
+    deadline = time.monotonic() + max(0, _env_int("XKEEN_CORE_SETTLE_TIMEOUT_MS", 3000)) / 1000.0
+    while runtime.switching and time.monotonic() < deadline:
+        time.sleep(0.25)
+        runtime = probe()
+    return runtime, resolve_running_core_for_status(runtime.running)
+
+
 # The engine the panel last saw running. A stopped or crashed service has no
 # process to ask, and xkeen keeps its choice inside its own scripts; the
 # window of the core tells what ran before the stop from this record.
@@ -257,7 +307,7 @@ def remember_running_core(core: Optional[str]) -> None:
         _core_log("warning", "xkeen.last_core_write_failed", error=str(exc))
 
 
-def get_cores_status() -> Tuple[List[str], Optional[str]]:
+def get_cores_status(runtime: CoreRuntime | None = None) -> Tuple[List[str], Optional[str]]:
     """Return (available_cores, current_core) for xkeen.
 
     ``current_core`` is based on a running process.  If process detection is
@@ -267,7 +317,8 @@ def get_cores_status() -> Tuple[List[str], Optional[str]]:
     the confirmation action in the core switch modal.
     """
     cores = detect_available_cores()
-    running_core = resolve_running_core_for_status()
+    running = (runtime or core_runtime()).running
+    running_core = resolve_running_core_for_status(running)
     remember_running_core(running_core)
     return cores, running_core
 
@@ -291,7 +342,7 @@ def switch_core(core: str, error_log_path: str, runtime_log: Callable[[str], Non
         raise ValueError("Недопустимое ядро")
 
     # Determine current core (for xray -> mihomo log reset behaviour)
-    current_core = detect_running_core()
+    current_core = core_runtime().owner
 
     log_file = error_log_path
 
@@ -465,7 +516,9 @@ def switch_core(core: str, error_log_path: str, runtime_log: Callable[[str], Non
                 deadline = time.monotonic() + max(1, int(timeout))
                 while True:
                     rc = proc.poll()
-                    if detect_running_core() == core:
+                    # The engine being left may linger for a moment; the new
+                    # one showing up is what "started" means here.
+                    if core_runtime().has(core):
                         started = True
                         grace_s = max(0.0, _env_int("XKEEN_CORE_START_GRACE_AFTER_RUNNING_MS", 1500) / 1000.0)
                         grace_deadline = time.monotonic() + grace_s

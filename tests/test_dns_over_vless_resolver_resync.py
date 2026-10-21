@@ -17,6 +17,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "xkeen-ui"))
 
+from services.cores import CoreRuntime  # noqa: E402
 from services import dns_over_vless as dns  # noqa: E402
 
 
@@ -62,7 +63,7 @@ def _base_config(tmp_path: Path) -> tuple[Path, Path, Path]:
 
 def _patch_apply_action_plumbing(monkeypatch) -> None:
     """Everything ``apply_action`` needs beyond the filesystem to run for real."""
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)

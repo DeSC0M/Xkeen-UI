@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 from urllib.parse import urlsplit
 
-from services.cores import detect_running_core
+from services.cores import core_runtime, resolve_running_core_for_status, settled_core_owner
 from core.paths import UI_STATE_DIR
 from services.io.atomic import _atomic_write_json, _atomic_write_text
 from services.keenetic_rci import fetch_rci_json
@@ -2984,10 +2984,10 @@ def _wait_for_port_53(*, should_be_free: bool, timeout: float = 10.0) -> bool:
 def _wait_for_mihomo(timeout: float = 15.0) -> bool:
     deadline = time.monotonic() + max(0.2, float(timeout or 0))
     while time.monotonic() < deadline:
-        if detect_running_core() == "mihomo":
+        if core_runtime().has("mihomo"):
             return True
         time.sleep(0.3)
-    return detect_running_core() == "mihomo"
+    return core_runtime().has("mihomo")
 
 
 def _wait_for_core(core: str, timeout: float = 15.0) -> bool:
@@ -2996,10 +2996,10 @@ def _wait_for_core(core: str, timeout: float = 15.0) -> bool:
         return _wait_for_mihomo(timeout)
     deadline = time.monotonic() + max(0.2, float(timeout or 0))
     while time.monotonic() < deadline:
-        if detect_running_core() == expected:
+        if core_runtime().has(expected):
             return True
         time.sleep(0.3)
-    return detect_running_core() == expected
+    return core_runtime().has(expected)
 
 
 def _configured_xkeen_core() -> str:
@@ -3025,10 +3025,14 @@ def _configured_xkeen_core() -> str:
 def _mihomo_selected_for_restart() -> bool:
     """Fail closed when another core is active or explicitly selected."""
 
-    running = detect_running_core() or ""
+    runtime, running = settled_core_owner(core_runtime)
     if running:
         return running == "mihomo"
     configured = _configured_xkeen_core()
+    if runtime.switching:
+        # Both engines still up and XKeen did not name one: only its saved
+        # choice can tell, and without one the answer is no.
+        return configured == "mihomo"
     return not configured or configured == "mihomo"
 
 
@@ -3110,7 +3114,7 @@ def get_status(*, config_file: str, ui_state_dir: str = "") -> dict[str, Any]:
     state = _load_state(ui_state_dir, config_file)
     override, override_detail = _dns_override_status()
     firmware_dns_policy = _cached_dns_policy()
-    core = detect_running_core() or ""
+    core = resolve_running_core_for_status(core_runtime().running) or ""
     has_begin = MANAGED_BEGIN in text
     has_end = MANAGED_END in text
     dns_runtime = _dns_runtime_config(text)
@@ -4237,7 +4241,7 @@ def apply_action(
                     code="recover_override_changed",
                     details=override_detail,
                 )
-            previous_core = detect_running_core() or ""
+            previous_core = settled_core_owner(core_runtime)[1] or ""
             backup = save_config(current)
             if not bool(restart_xkeen(source="mihomo-dns-recover")):
                 raise MihomoDnsError(
@@ -4286,7 +4290,7 @@ def apply_action(
                 details=validation[-4000:],
             )
 
-        previous_core = detect_running_core() or ""
+        previous_core = settled_core_owner(core_runtime)[1] or ""
         try:
             backup = save_config(original)
             if not bool(restart_xkeen(source="mihomo-dns")):
@@ -4374,10 +4378,11 @@ def is_enabled(*, config_file: str, ui_state_dir: str, max_age: Optional[float] 
         _MIHOMO_DNS_CAPTURE_STATE["active"] = False
         return False
     # Without our transaction marker, a running Xray proves that this inactive
-    # profile does not own port 53.  An empty result can instead mean Mihomo has
-    # just crashed -- exactly when the guard must keep watching and give DNS
-    # back -- so it remains eligible together with a running Mihomo.
-    if detect_running_core() not in {"", "mihomo"}:
+    # profile does not own port 53.  No process at all can instead mean Mihomo
+    # has just crashed -- exactly when the guard must keep watching and give
+    # DNS back -- so it remains eligible together with a running Mihomo.
+    runtime = core_runtime()
+    if not runtime.idle and not runtime.has("mihomo"):
         _MIHOMO_DNS_CAPTURE_STATE["active"] = False
         return False
     # A user-authored Mihomo config is watched for port-53 safety, but the

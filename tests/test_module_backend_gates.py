@@ -4,6 +4,7 @@ from pathlib import Path
 
 from flask import Flask
 
+from services.cores import CoreRuntime
 import routes
 import routes.commands
 import routes.happ_decryptor
@@ -78,7 +79,7 @@ def test_lifecycle_api_is_core_owned_and_wired_lazily(tmp_path, monkeypatch):
         "services.panel_service.restart_panel",
         lambda source: panel_restarts.append(source) or True,
     )
-    monkeypatch.setattr("services.cores.detect_running_core", lambda: "xray")
+    monkeypatch.setattr("services.cores.core_runtime", lambda: CoreRuntime(("xray",)))
 
     app = _register(tmp_path, ["core"])
     rules = {rule.rule for rule in app.url_map.iter_rules()}
@@ -175,7 +176,7 @@ def test_mihomo_only_keeps_dns_stop_lifecycle_available(tmp_path):
 
 
 def test_api_uses_running_core_for_deferred_disable_guard(tmp_path, monkeypatch):
-    monkeypatch.setattr("services.cores.detect_running_core", lambda: "xray")
+    monkeypatch.setattr("services.cores.core_runtime", lambda: CoreRuntime(("xray",)))
     app = _register(
         tmp_path,
         ["core", "tool.editor", "engine.xray", "engine.mihomo"],
@@ -202,6 +203,20 @@ def test_api_uses_running_core_for_deferred_disable_guard(tmp_path, monkeypatch)
     )
     assert response.status_code == 409
     assert response.get_json()["code"] == "last_engine_module"
+
+
+def test_neither_engine_module_is_switched_off_while_both_processes_run(tmp_path, monkeypatch):
+    monkeypatch.setattr("services.cores.core_runtime", lambda: CoreRuntime(("xray", "mihomo")))
+    app = _register(
+        tmp_path,
+        ["core", "tool.editor", "engine.xray", "engine.mihomo"],
+    )
+    client = app.test_client()
+
+    for module_id in ("engine.xray", "engine.mihomo"):
+        response = client.patch(f"/api/modules/{module_id}", json={"enabled": False})
+        assert response.status_code == 409
+        assert response.get_json()["code"] == "active_core_module"
 
 
 def test_advanced_diagnostics_routes_are_not_exposed_when_optional_module_is_off(tmp_path):

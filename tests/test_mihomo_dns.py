@@ -9,6 +9,7 @@ from scripts.panel_template_source import compose_panel_template
 import pytest
 from flask import Flask
 
+from services.cores import CoreRuntime
 from services import mihomo_dns as dns
 
 
@@ -888,7 +889,7 @@ def _status_ready(tmp_path: Path, monkeypatch):
     config.write_text(BASE, encoding="utf-8")
     state = tmp_path / "state"
     state.mkdir()
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "mihomo")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("mihomo",)))
     monkeypatch.setattr(dns, "_mihomo_selected_for_restart", lambda: True)
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     return config, state
@@ -1951,17 +1952,44 @@ def test_the_firmware_is_not_asked_when_no_mihomo_dns_is_configured(tmp_path: Pa
 def test_a_configured_listener_is_still_checked_against_the_firmware(tmp_path: Path, monkeypatch):
     config = tmp_path / "config.yaml"
     config.write_text("dns:\n  enable: true\n  listen: 0.0.0.0:53\n", encoding="utf-8")
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "mihomo")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("mihomo",)))
     calls = _count_ndmc(monkeypatch)
 
     assert dns.is_enabled(config_file=str(config), ui_state_dir=str(tmp_path)) is True
     assert calls == ["show running-config"]
 
 
+@pytest.mark.parametrize(
+    ("running", "watched"),
+    [
+        # No process at all may be Mihomo that has just crashed: keep watching.
+        ((), True),
+        (("mihomo",), True),
+        # A hand-off with Mihomo among the live engines is still its port 53.
+        (("xray", "mihomo"), True),
+        (("xray",), False),
+    ],
+)
+def test_only_a_running_xray_without_mihomo_rules_the_listener_out(tmp_path: Path, monkeypatch, running, watched):
+    config = tmp_path / "config.yaml"
+    config.write_text("dns:\n  enable: true\n  listen: 0.0.0.0:53\n", encoding="utf-8")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(running))
+    _count_ndmc(monkeypatch)
+
+    assert dns.is_enabled(config_file=str(config), ui_state_dir=str(tmp_path)) is watched
+
+
+def test_the_wait_for_mihomo_ends_when_it_shows_up_beside_the_old_engine(monkeypatch):
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray", "mihomo")))
+
+    assert dns._wait_for_core("mihomo", timeout=0.2) is True
+    assert dns._wait_for_core("xray", timeout=0.2) is True
+
+
 def test_a_recent_override_answer_is_reused_within_the_cache_window(tmp_path: Path, monkeypatch):
     config = tmp_path / "config.yaml"
     config.write_text("dns:\n  enable: true\n  listen: 0.0.0.0:53\n", encoding="utf-8")
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "mihomo")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("mihomo",)))
     calls = _count_ndmc(monkeypatch)
 
     answers = [
@@ -1980,7 +2008,7 @@ def test_a_recent_override_answer_is_reused_within_the_cache_window(tmp_path: Pa
 def test_a_stale_override_answer_is_read_from_the_firmware_again(tmp_path: Path, monkeypatch):
     config = tmp_path / "config.yaml"
     config.write_text("dns:\n  enable: true\n  listen: 0.0.0.0:53\n", encoding="utf-8")
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "mihomo")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("mihomo",)))
     calls = _count_ndmc(monkeypatch)
 
     dns.is_enabled(
@@ -1998,7 +2026,7 @@ def test_the_panel_itself_always_reads_the_live_override(tmp_path: Path, monkeyp
     """Окно панели показывает состояние сейчас, а не то, что видел сторож."""
     config = tmp_path / "config.yaml"
     config.write_text("dns:\n  enable: true\n  listen: 0.0.0.0:53\n", encoding="utf-8")
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "mihomo")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("mihomo",)))
     calls = _count_ndmc(monkeypatch)
 
     dns.is_enabled(config_file=str(config), ui_state_dir=str(tmp_path))

@@ -486,19 +486,19 @@ class ModuleRegistry:
                     changed = True
             self._deferred_blocked = set()
             try:
-                from services.cores import detect_running_core
+                from services.cores import core_runtime
 
-                running_core = detect_running_core()
+                running_cores = core_runtime().running
             except Exception:
-                running_core = None
-            running_module = {
-                "xray": "engine.xray",
-                "mihomo": "engine.mihomo",
-            }.get(running_core or "")
-            if running_module and not bool(state["modules"][running_module]["enabled"]):
+                running_cores = ()
+            # During a hand-off both engines run, and each keeps its module.
+            for running_core in running_cores:
+                running_module = f"engine.{running_core}"
+                if bool(state["modules"][running_module]["enabled"]):
+                    continue
                 # The running core keeps its owner until it is stopped; the
                 # user's disable request applies on the next restart without it.
-                self._deferred_blocked = {
+                self._deferred_blocked |= {
                     running_module,
                     *self._transitive_dependencies(running_module),
                 }

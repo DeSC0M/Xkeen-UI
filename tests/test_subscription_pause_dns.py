@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from services.cores import CoreRuntime
 from tests.test_xray_subscriptions_pause import Bench, _meaning
 
 
@@ -53,7 +54,7 @@ class Rig:
         self.probes: list[bool] = []
 
         monkeypatch.setattr(dov, "jsonc_path_for", lambda path: str(self.bench.jsonc / (Path(path).name + "c")))
-        monkeypatch.setattr(dov, "detect_running_core", lambda: "xray")
+        monkeypatch.setattr(dov, "core_runtime", lambda: CoreRuntime(("xray",)))
         monkeypatch.setattr(dov, "_dns_override_status", lambda: (self.override, "test"))
         monkeypatch.setattr(dov, "_set_dns_override", self._set_override)
         monkeypatch.setattr(dov, "_stage_and_test", lambda *_a, **_k: {"ok": True})

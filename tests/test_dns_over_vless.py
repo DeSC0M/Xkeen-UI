@@ -11,6 +11,7 @@ from typing import Any, Dict
 import pytest
 from flask import Flask
 
+from services.cores import CoreRuntime
 from services import dns_over_vless as dns
 
 
@@ -125,7 +126,7 @@ def test_runtime_routing_json_wins_over_stale_jsonc_sidecar(tmp_path: Path):
 
 def test_status_requires_xray_and_exposes_safety_guards(tmp_path: Path, monkeypatch):
     configs, routing, state = _base_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "mihomo")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("mihomo",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
 
     result = dns.get_status(configs_dir=str(configs), routing_file=str(routing), ui_state_dir=str(state))
@@ -146,7 +147,7 @@ def test_status_distinguishes_installed_but_stopped_xray_from_another_core(
     tmp_path: Path, monkeypatch
 ):
     configs, routing, state = _base_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: None)
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime())
     monkeypatch.setattr(dns, "detect_available_cores", lambda: ["xray"])
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
 
@@ -170,7 +171,7 @@ def test_apply_rolls_back_files_and_router_setting_after_probe_failure(tmp_path:
     calls: list[object] = []
     override = {"value": False}
 
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (override["value"], "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_args, **_kwargs: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_args, **_kwargs: True)
@@ -224,7 +225,7 @@ def test_disable_restores_firmware_dns_only_after_xray_restart(tmp_path: Path, m
     _write(state / dns.STATE_FILENAME, {"enabled": True, "original_dns_override": False})
     calls: list[object] = []
 
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_args, **_kwargs: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_args, **_kwargs: True)
@@ -251,7 +252,7 @@ def test_disable_restores_firmware_dns_only_after_xray_restart(tmp_path: Path, m
 def test_partial_managed_config_can_be_disabled_from_status(tmp_path: Path, monkeypatch):
     configs, routing_path, state = _base_config(tmp_path)
     _write(configs / dns.MANAGED_FRAGMENT, dns._managed_fragment())
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
 
     result = dns.get_status(configs_dir=str(configs), routing_file=str(routing_path), ui_state_dir=str(state))
@@ -270,7 +271,7 @@ def test_tampered_managed_rule_is_not_automatically_removed(tmp_path: Path, monk
         {"type": "field", "ruleTag": dns.PROXY_RULE_TAG, "outboundTag": "direct"},
     )
     _write(routing_path, routing)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
 
     result = dns.get_status(configs_dir=str(configs), routing_file=str(routing_path), ui_state_dir=str(state))
@@ -312,7 +313,7 @@ def test_managed_rules_rewritten_without_rule_type_are_still_recognized(tmp_path
             "kind": "balancer", "tag": dns.BALANCER_TAG, "source": "proxy", "label": "балансировщик proxy",
         }},
     )
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
 
     result = dns.get_status(
@@ -329,7 +330,7 @@ def test_http_contract_returns_guarded_status(tmp_path: Path, monkeypatch):
     from routes.routing import dns_over_vless as dns_routes
 
     configs, routing, state = _base_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns_routes, "get_status", dns.get_status)
     app = Flask(__name__)
@@ -553,7 +554,7 @@ def test_dead_selector_is_unusable_and_never_swapped_for_an_outbound(tmp_path: P
 
 def test_status_lists_candidates_and_marks_choice_required(tmp_path: Path, monkeypatch):
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
 
     result = dns.get_status(configs_dir=str(configs), routing_file=str(routing_path), ui_state_dir=str(state))
@@ -574,7 +575,7 @@ def test_choice_saved_in_state_is_reused_when_request_omits_it(tmp_path: Path, m
     configs, routing_path, state = _scenario_config(tmp_path)
     _write(state / dns.STATE_FILENAME, {"target": {"source": "balancer_white_list"}})
 
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -608,7 +609,7 @@ def test_status_reports_a_clone_that_drifted_from_its_source(tmp_path: Path, mon
     _write(configs / dns.MANAGED_FRAGMENT, dns._managed_fragment())
     _write(routing_path, dns._build_enabled_routing(routing, target))
     _write(state / dns.STATE_FILENAME, {"enabled": True, "target": {"source": "balancer_main"}})
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
 
     unchanged = dns.get_status(
@@ -672,7 +673,7 @@ def test_follow_rebuilds_the_clone_after_its_source_changed(tmp_path: Path, monk
     assert "balancer_main" in result["message"]
     assert _clone(routing_path)["selector"] == ["my_proxy", "reserve_proxy"]
     # The clone stays where it was among the balancers and the rules are untouched.
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
     status = dns.get_status(
         configs_dir=str(configs), routing_file=str(routing_path), ui_state_dir=str(state)
@@ -998,7 +999,7 @@ def test_clone_keeping_a_safe_fallback_is_not_treated_as_tampered(tmp_path: Path
     _write(configs / dns.MANAGED_FRAGMENT, dns._managed_fragment())
     _write(routing_path, dns._build_enabled_routing(routing, target))
     _write(state / dns.STATE_FILENAME, {"enabled": True, "target": {"source": "balancer_main"}})
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
 
     result = dns.get_status(
@@ -1021,7 +1022,7 @@ def test_clone_pointed_at_direct_by_hand_is_treated_as_tampered(tmp_path: Path, 
     clone["fallbackTag"] = "direct"
     _write(configs / dns.MANAGED_FRAGMENT, dns._managed_fragment())
     _write(routing_path, enabled)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
 
     result = dns.get_status(
@@ -1036,7 +1037,7 @@ def test_status_reports_an_automatic_release(tmp_path: Path, monkeypatch):
         state / dns.STATE_FILENAME,
         {"enabled": False, "watchdog": {"released_at": 1, "reason": "Xray не поднялся", "steps": []}},
     )
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
 
     result = dns.get_status(
@@ -1047,7 +1048,7 @@ def test_status_reports_an_automatic_release(tmp_path: Path, monkeypatch):
     assert result["enabled"] is False
 def test_status_exposes_the_effective_watchdog_settings(tmp_path: Path, monkeypatch):
     configs, routing, state = _base_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setenv("XKEEN_DNS_OVER_VLESS_WATCHDOG_INTERVAL", "45")
 
@@ -1192,7 +1193,7 @@ def test_a_single_element_list_behaves_like_a_plain_choice(tmp_path: Path):
 
 def test_combined_choice_is_saved_and_reused(tmp_path: Path, monkeypatch):
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -1232,7 +1233,7 @@ def test_status_reports_drift_when_a_combined_proxy_disappears(tmp_path: Path, m
         state / dns.STATE_FILENAME,
         {"enabled": True, "target": {"sources": ["my_proxy_1", "my_proxy_2"]}},
     )
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
 
     steady = dns.get_status(
@@ -1357,7 +1358,7 @@ def test_install_enabled_before_the_picker_keeps_working(tmp_path: Path, monkeyp
             "kind": "balancer", "tag": dns.BALANCER_TAG, "source": "proxy", "label": "балансировщик proxy",
         }},
     )
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
 
     result = dns.get_status(
@@ -1486,7 +1487,7 @@ def test_local_resolver_input_is_checked(tmp_path: Path):
 
 def test_enable_stores_dns_settings_and_status_reports_them(tmp_path: Path, monkeypatch):
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -1536,7 +1537,7 @@ def test_bare_zone_entries_are_qualified_before_use():
 
 def test_custom_zones_reach_the_fragment(tmp_path: Path, monkeypatch):
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -1667,7 +1668,7 @@ def test_half_a_bypass_setting_is_refused(tmp_path: Path, monkeypatch):
     have nowhere to go.  Either half alone is a silent no-op."""
 
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
 
     with pytest.raises(dns.DnsOverVlessError) as excinfo:
@@ -1693,7 +1694,7 @@ def test_clearing_both_bypass_fields_switches_the_group_off(tmp_path: Path, monk
     """
 
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -1736,7 +1737,7 @@ def test_bypass_group_survives_read_back_without_looking_tampered(tmp_path: Path
     drift check gets wrong if it guesses instead of reading the bypass rule."""
 
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -1941,7 +1942,7 @@ def test_vendor_presets_carry_every_booking_zone():
 
 def test_status_offers_the_zone_presets(tmp_path: Path, monkeypatch):
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
 
     result = dns.get_status(
@@ -1985,7 +1986,7 @@ def test_own_address_probe_stays_permissive_when_it_cannot_run(monkeypatch):
 
 def test_one_address_in_both_resolver_groups_is_refused(tmp_path: Path, monkeypatch):
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
 
     with pytest.raises(dns.DnsOverVlessError) as excinfo:
@@ -2150,7 +2151,7 @@ def test_pass_node_is_remembered_rather_than_recomputed(tmp_path: Path):
 
 def test_enable_can_let_the_other_record_types_through(tmp_path: Path, monkeypatch):
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -2208,7 +2209,7 @@ def test_a_half_written_pass_through_reads_back_as_drift(tmp_path: Path, monkeyp
     del fragment["outbounds"][0]["streamSettings"]
     _write(configs / dns.MANAGED_FRAGMENT, fragment)
     _write(state / dns.STATE_FILENAME, {"enabled": True, "pass_non_ip": True})
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
 
     result = dns.get_status(
@@ -2245,7 +2246,7 @@ def test_the_pass_through_listener_reads_back_without_drift(tmp_path: Path, monk
         dns._managed_fragment(["9.9.9.9"], pass_node="my_proxy_1"),
     )
     _write(state / dns.STATE_FILENAME, {"enabled": True, "pass_non_ip": True})
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
 
     result = dns.get_status(
@@ -2293,7 +2294,7 @@ def test_disable_writes_the_routing_without_the_service_line(tmp_path: Path, mon
     _write(state / dns.STATE_FILENAME, {"enabled": True, "original_dns_override": False})
 
     seen: list[bool] = []
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -2368,7 +2369,7 @@ def test_reading_back_an_exit_node_resolver_is_not_drift(tmp_path: Path, monkeyp
         state / dns.STATE_FILENAME,
         {"enabled": True, "upstreams": [dns.DEFAULT_REMOTE_UPSTREAM], "upstreams_remote": True},
     )
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
 
     result = dns.get_status(
@@ -2386,7 +2387,7 @@ def test_enable_keeps_the_exit_node_resolver_and_aims_the_pass_through_at_it(
     tmp_path: Path, monkeypatch
 ):
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -2415,7 +2416,7 @@ def test_enable_keeps_the_exit_node_resolver_and_aims_the_pass_through_at_it(
 
 def test_the_switch_alone_does_not_smuggle_a_home_resolver_in(tmp_path: Path, monkeypatch):
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
 
     try:
@@ -2509,7 +2510,7 @@ def test_a_dns_server_with_a_port_reads_back_without_drift(tmp_path: Path, monke
             "pass_non_ip": True,
         },
     )
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
 
     result = dns.get_status(
@@ -2523,7 +2524,7 @@ def test_a_dns_server_with_a_port_reads_back_without_drift(tmp_path: Path, monke
 
 def test_changing_the_port_moves_the_rewrite_with_it(tmp_path: Path, monkeypatch):
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -2601,7 +2602,7 @@ def test_no_resolver_with_a_domain_list_may_answer_anything_else():
 
 def test_turning_the_feature_off_keeps_what_it_was_set_to(tmp_path: Path, monkeypatch):
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
     monkeypatch.setattr(dns, "_wait_for_port_53", lambda *_a, **_k: True)
@@ -2688,7 +2689,7 @@ def _moment(round_no: int = 1) -> float:
 def _pass_through_install(tmp_path: Path, monkeypatch) -> tuple[Path, Path, Path]:
     """A live install whose other record types ride ``my_proxy_1``."""
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -2874,7 +2875,7 @@ def test_enabling_the_pass_through_checks_it_at_once(tmp_path: Path, monkeypatch
     other record types is exactly what they are looking at the window for.
     """
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -3072,7 +3073,7 @@ def test_the_written_fragment_carries_the_mark_of_the_install(tmp_path: Path, mo
         if item.get("protocol") in {"vless", "freedom"}:
             item["streamSettings"] = {"sockopt": {"mark": 255}}
     _write(configs / "04_outbounds.json", outbounds)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -3116,7 +3117,7 @@ def test_an_unmarked_install_still_gets_a_plain_dns_outbound(tmp_path: Path):
 
 def _core_is_down(monkeypatch) -> None:
     """No core process at all -- what a config the core refuses looks like."""
-    monkeypatch.setattr(dns, "detect_running_core", lambda: None)
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime())
     monkeypatch.setattr(dns, "_xray_binary", lambda: "/opt/sbin/xray")
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
@@ -3185,7 +3186,7 @@ def test_another_core_at_the_wheel_still_blocks_both_actions(tmp_path: Path, mon
     configs, routing_path, state = _base_config(tmp_path)
     _write(state / dns.STATE_FILENAME, {"enabled": True, "original_dns_override": False})
     _core_is_down(monkeypatch)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "mihomo")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("mihomo",)))
 
     with pytest.raises(dns.DnsOverVlessError) as exc:
         dns.apply_action(
@@ -3196,6 +3197,40 @@ def test_another_core_at_the_wheel_still_blocks_both_actions(tmp_path: Path, mon
             restart_xkeen=lambda **_k: True,
         )
 
+    assert exc.value.code == "xray_not_active"
+
+
+def test_both_engines_up_is_neither_xray_nor_no_core(tmp_path: Path, monkeypatch):
+    """During a hand-off the panel neither guesses Xray nor unlocks "no core".
+
+    XKeen is asked once the wait is over; silent, the action is refused with
+    its own code instead of the "switch to Xray" or "Xray is down" texts.
+    """
+    from services import cores
+
+    configs, routing_path, state = _base_config(tmp_path)
+    _write(state / dns.STATE_FILENAME, {"enabled": True, "original_dns_override": False})
+    _core_is_down(monkeypatch)
+    monkeypatch.setenv("XKEEN_CORE_SETTLE_TIMEOUT_MS", "0")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray", "mihomo")))
+
+    def disable():
+        return dns.apply_action(
+            "disable",
+            configs_dir=str(configs),
+            routing_file=str(routing_path),
+            ui_state_dir=str(state),
+            restart_xkeen=lambda **_k: True,
+        )
+
+    monkeypatch.setattr(cores, "_xkeen_status_running_core", lambda: None)
+    with pytest.raises(dns.DnsOverVlessError) as exc:
+        disable()
+    assert exc.value.code == "core_switching"
+
+    monkeypatch.setattr(cores, "_xkeen_status_running_core", lambda: "mihomo")
+    with pytest.raises(dns.DnsOverVlessError) as exc:
+        disable()
     assert exc.value.code == "xray_not_active"
 
 
@@ -3327,7 +3362,7 @@ def test_an_install_that_still_says_proxy_settings_reads_back_as_ours(
     outbound["proxySettings"] = {"tag": sockopt.pop("dialerProxy")}
     _write(configs / dns.MANAGED_FRAGMENT, fragment)
     _write(state / dns.STATE_FILENAME, {"enabled": True, "pass_non_ip": True})
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
 
     result = dns.get_status(
@@ -3388,7 +3423,7 @@ def test_both_forms_of_the_pass_through_read_back_as_ours(tmp_path: Path, monkey
         dns._managed_fragment(pass_node="my_proxy_1", modern=modern),
     )
     _write(state / dns.STATE_FILENAME, {"enabled": True, "pass_non_ip": True})
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
 
     result = dns.get_status(
@@ -3406,7 +3441,7 @@ def test_a_core_that_does_not_know_the_rules_gets_the_form_it_understands(
 ):
     """Older XKeen builds ship older cores; the panel must not lock them out."""
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -3677,7 +3712,7 @@ def test_the_last_device_unticked_turns_the_switch_off(tmp_path: Path, monkeypat
 
 def test_status_names_the_firmware_resolvers(tmp_path: Path, monkeypatch):
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     # Прошивки под тестами нет: подменяем поиск, а не файловую систему.
     monkeypatch.setattr(
@@ -3693,7 +3728,7 @@ def test_status_names_the_firmware_resolvers(tmp_path: Path, monkeypatch):
 
 def test_status_survives_a_router_without_the_firmware_configs(tmp_path: Path, monkeypatch):
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
 
     result = dns.get_status(
@@ -3706,7 +3741,7 @@ def test_status_survives_a_router_without_the_firmware_configs(tmp_path: Path, m
 
 def test_enable_without_a_resolver_takes_the_firmware_one(tmp_path: Path, monkeypatch):
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -3739,7 +3774,7 @@ def test_enable_without_a_resolver_also_gets_a_non_empty_zone_list(tmp_path: Pat
     автоподстановке зоны с карточки не приезжают вовсе — они обязаны
     взяться сами, из сохранённого состояния или из значения по умолчанию."""
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -3779,7 +3814,7 @@ def test_enable_without_a_resolver_also_gets_a_non_empty_zone_list(tmp_path: Pat
 
 def test_enable_with_an_empty_field_keeps_no_resolver(tmp_path: Path, monkeypatch):
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -3815,7 +3850,7 @@ def test_old_state_with_an_empty_list_still_gets_the_firmware_resolver(tmp_path:
     """
     configs, routing_path, state = _scenario_config(tmp_path)
     _write(state / dns.STATE_FILENAME, {"version": 1, "enabled": False, "local_resolvers": []})
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -3854,7 +3889,7 @@ def test_reapply_does_not_wait_for_a_port_the_core_itself_holds(tmp_path: Path, 
     ``apply_action("enable")`` поверх включённой функции.
     """
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     # Переключатель прошивки уже выключен: DNS у нас, а не у роутера.
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
@@ -3888,7 +3923,7 @@ def test_first_enable_still_fails_when_the_router_keeps_port_53(tmp_path: Path, 
     не поднимется, и человек обязан увидеть отказ, а не тихую поломку.
     """
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     # Переключатель прошивки включён: порт 53 сейчас у роутера.
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
@@ -3924,7 +3959,7 @@ def test_turning_the_feature_off_and_on_again_still_migrates(tmp_path: Path, mon
         state / dns.STATE_FILENAME,
         {"version": 1, "enabled": True, "local_resolvers": [], "upstreams": ["8.8.8.8"]},
     )
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -3968,7 +4003,7 @@ def test_an_empty_own_field_does_not_cancel_the_firmware_resolver(tmp_path: Path
     """
     configs, routing_path, state = _scenario_config(tmp_path)
     _write(state / dns.STATE_FILENAME, {"version": 1, "enabled": False, "local_resolvers": []})
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -4008,7 +4043,7 @@ def test_enable_keeps_a_previously_cleared_resolver_empty(tmp_path: Path, monkey
             "local_resolvers": [],
         },
     )
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -4036,7 +4071,7 @@ def test_enable_keeps_a_previously_cleared_resolver_empty(tmp_path: Path, monkey
 
 def _hosts_env(tmp_path: Path, monkeypatch):
     configs, routing_path, state = _scenario_config(tmp_path)
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (False, "test"))
     monkeypatch.setattr(dns, "_stage_and_test", lambda *_a, **_k: {"ok": True})
     monkeypatch.setattr(dns, "_wait_for_xray", lambda *_a, **_k: True)
@@ -4377,7 +4412,7 @@ def test_clone_with_the_guard_fallback_is_neither_drift_nor_tampering(tmp_path: 
     _write(configs / dns.MANAGED_FRAGMENT, dns._managed_fragment())
     _write(routing_path, dns._build_enabled_routing(routing, target))
     _write(state / dns.STATE_FILENAME, {"enabled": True, "target": {"source": "proxy"}})
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
 
     result = dns.get_status(
@@ -4400,7 +4435,7 @@ def test_a_guard_fallback_that_left_the_selector_is_reported_as_drift(tmp_path: 
     _write(configs / dns.MANAGED_FRAGMENT, dns._managed_fragment())
     _write(routing_path, enabled)
     _write(state / dns.STATE_FILENAME, {"enabled": True, "target": {"source": "proxy"}})
-    monkeypatch.setattr(dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns, "core_runtime", lambda: CoreRuntime(("xray",)))
     monkeypatch.setattr(dns, "_dns_override_status", lambda: (True, "test"))
 
     result = dns.get_status(

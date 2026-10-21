@@ -15,6 +15,7 @@ from typing import Any, Dict, List
 
 import pytest
 
+from services.cores import CoreRuntime
 from services import dns_guard, dns_over_vless, mihomo_dns
 
 
@@ -46,7 +47,7 @@ class _Stub:
 def _no_real_dns(monkeypatch):
     """Never let a test touch the network; each test states its own health."""
     monkeypatch.setattr(dns_guard, "_probe_ok", lambda: False)
-    monkeypatch.setattr(dns_guard, "detect_running_core", lambda: "")
+    monkeypatch.setattr(dns_guard, "core_runtime", lambda: CoreRuntime())
 
 
 def _tick(protections, counters=None, restarts=None, **kwargs):
@@ -131,7 +132,7 @@ def test_guard_recovers_without_releasing_when_dns_comes_back(monkeypatch):
 
 def test_switching_to_mihomo_is_not_treated_as_a_crashed_xray(monkeypatch):
     """The tester's case: restarting cannot bring back a core nobody selected."""
-    monkeypatch.setattr(dns_guard, "detect_running_core", lambda: "mihomo")
+    monkeypatch.setattr(dns_guard, "core_runtime", lambda: CoreRuntime(("mihomo",)))
     stub = _Stub("dns-over-vless", "xray")
     restarts: List[str] = []
 
@@ -144,9 +145,30 @@ def test_switching_to_mihomo_is_not_treated_as_a_crashed_xray(monkeypatch):
     assert "mihomo" in stub.released[0] and "xray" in stub.released[0]
 
 
+def test_both_engines_up_is_a_failed_check_not_a_core_switch(monkeypatch):
+    """A hand-off -- or a Mihomo started outside XKeen -- names no owner.
+
+    Releasing on that would be a guess, and skipping the tick would never fire
+    when the second engine stays: the failure counts like any other.
+    """
+    monkeypatch.setattr(dns_guard, "core_runtime", lambda: CoreRuntime(("xray", "mihomo")))
+    stub = _Stub("dns-over-vless", "xray")
+    restarts: List[str] = []
+
+    counters: Dict[str, Any] = {}
+    actions = []
+    for _ in range(2):
+        counters = _tick([stub], counters, restarts)
+        actions.append(counters["action"])
+
+    assert actions == ["watching", "restarted"]
+    assert restarts == ["dns-guard"]
+    assert stub.released == []
+
+
 def test_switching_to_xray_stands_the_mihomo_protection_down(monkeypatch):
     """The mirror image, now that the Mihomo assistant is guarded too."""
-    monkeypatch.setattr(dns_guard, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(dns_guard, "core_runtime", lambda: CoreRuntime(("xray",)))
     stub = _Stub("mihomo-dns", "mihomo")
     restarts: List[str] = []
 
@@ -159,7 +181,7 @@ def test_switching_to_xray_stands_the_mihomo_protection_down(monkeypatch):
 
 def test_a_mihomo_outage_is_guarded_like_an_xray_one(monkeypatch):
     """Before the shared guard this protection had no watchdog at all."""
-    monkeypatch.setattr(dns_guard, "detect_running_core", lambda: "mihomo")
+    monkeypatch.setattr(dns_guard, "core_runtime", lambda: CoreRuntime(("mihomo",)))
     stub = _Stub("mihomo-dns", "mihomo")
     restarts: List[str] = []
 
@@ -376,7 +398,7 @@ def test_user_authored_mihomo_dns_is_watched_without_assistant_state(tmp_path: P
         encoding="utf-8",
     )
     monkeypatch.setattr(mihomo_dns, "_dns_override_status", lambda **_kwargs: (True, "test"))
-    monkeypatch.setattr(mihomo_dns, "detect_running_core", lambda: "mihomo")
+    monkeypatch.setattr(mihomo_dns, "core_runtime", lambda: CoreRuntime(("mihomo",)))
 
     assert mihomo_dns.is_enabled(
         config_file=str(config_file), ui_state_dir=str(tmp_path)
@@ -390,7 +412,7 @@ def test_inactive_user_mihomo_profile_is_not_mistaken_for_xray_dns(tmp_path: Pat
         encoding="utf-8",
     )
     monkeypatch.setattr(mihomo_dns, "_dns_override_status", lambda **_kwargs: (True, "test"))
-    monkeypatch.setattr(mihomo_dns, "detect_running_core", lambda: "xray")
+    monkeypatch.setattr(mihomo_dns, "core_runtime", lambda: CoreRuntime(("xray",)))
 
     assert mihomo_dns.is_enabled(
         config_file=str(config_file), ui_state_dir=str(tmp_path)
@@ -444,7 +466,7 @@ def test_the_mihomo_window_still_sees_that_the_guard_stood_the_protection_down(
     assert trace and "DNS возвращён прошивке" in trace["reason"]
 
     monkeypatch.setattr(mihomo_dns, "_dns_override_status", lambda **_kwargs: (False, "test"))
-    monkeypatch.setattr(mihomo_dns, "detect_running_core", lambda: "mihomo")
+    monkeypatch.setattr(mihomo_dns, "core_runtime", lambda: CoreRuntime(("mihomo",)))
     status = mihomo_dns.get_status(config_file=str(config_file), ui_state_dir=str(tmp_path))
     assert status["enabled"] is False
     assert status["watchdog"]["reason"] == trace["reason"]
@@ -577,7 +599,7 @@ def test_the_guard_asks_the_firmware_once_per_cache_window(tmp_path: Path, monke
         "_ndmc",
         lambda command, **_kwargs: calls.append(command) or "opkg dns-override\n",
     )
-    monkeypatch.setattr(mihomo_dns, "detect_running_core", lambda: "mihomo")
+    monkeypatch.setattr(mihomo_dns, "core_runtime", lambda: CoreRuntime(("mihomo",)))
     mihomo_dns._OVERRIDE_STATUS_CACHE.clear()
 
     protections = dns_guard.build_protections(

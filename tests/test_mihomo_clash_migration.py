@@ -10,6 +10,7 @@ APP_DIR = ROOT / "xkeen-ui"
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
+from services.cores import CoreRuntime
 from routes.mihomo import create_mihomo_blueprint
 import routes.mihomo as mihomo_routes
 from services.mihomo_clash_migration import (
@@ -197,7 +198,7 @@ def test_migration_apply_validates_then_saves_with_backup_contract(
         "discover_mihomo_clash_target",
         lambda *_args, **_kwargs: type("Discovery", (), {"target": object()})(),
     )
-    monkeypatch.setattr(mihomo_routes, "detect_running_core", lambda: "mihomo")
+    monkeypatch.setattr(mihomo_routes, "core_runtime", lambda: CoreRuntime(("mihomo",)))
     client = app.test_client()
     preview = client.post(
         "/api/mihomo/security/migration-preview", json={"transport": "unix"}

@@ -29,7 +29,7 @@ import time
 from typing import Any, Callable, Dict, List, Optional
 
 from services import dns_over_vless, mihomo_dns
-from services.cores import detect_running_core
+from services.cores import core_runtime
 
 _GUARD_LOCK = threading.Lock()
 _GUARD_STARTED = False
@@ -273,7 +273,11 @@ def guard_tick(
             result["reconcile_error"] = "; ".join(problems)
         return result
 
-    running = str(detect_running_core() or "")
+    # While both engines run the owner is unknown, and that is a failed check
+    # like any other: no "core-switched" release on a guess.  Skipping the
+    # tick instead would never fire for a Mihomo started outside XKeen and
+    # left running next to Xray.
+    running = str(core_runtime().owner or "")
     expected_cores = {item.expected_core for item in active}
 
     # A core that is up but different from the one the protection was built for

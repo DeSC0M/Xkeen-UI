@@ -31,7 +31,12 @@ import re
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, Optional
 
-from services.cores import detect_available_cores, detect_running_core
+from services.cores import (
+    core_runtime,
+    detect_available_cores,
+    resolve_running_core_for_status,
+    settled_core_owner,
+)
 from services.xray_observatory import KIND_BURST, KIND_PLAIN, LEAST_LOAD_EXPECTED, LEAST_LOAD_TOLERANCE
 from services.io.atomic import _atomic_write_json, _atomic_write_text
 from services.xray_config_files import jsonc_path_for
@@ -2624,10 +2629,10 @@ def _restore_snapshot(manifest: Dict[str, Any]) -> None:
 def _wait_for_xray(timeout: float = 12.0) -> bool:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
-        if detect_running_core() == "xray":
+        if core_runtime().has("xray"):
             return True
         time.sleep(0.35)
-    return detect_running_core() == "xray"
+    return core_runtime().has("xray")
 
 
 def _dns_query_packet(domain: str, qtype: int, txid: int) -> bytes:
@@ -3476,7 +3481,8 @@ def get_status(*, configs_dir: str, routing_file: str, ui_state_dir: str) -> Dic
     runtime = _collect_runtime(configs_dir, routing)
     presence = _managed_presence(configs_dir, routing)
     override, override_detail = _dns_override_status()
-    core = detect_running_core() or ""
+    running_cores = core_runtime().running
+    core = resolve_running_core_for_status(running_cores) or ""
     available_cores = detect_available_cores()
     state = _load_state(ui_state_dir)
     hosts_list, hosts_on = _status_hosts(configs_dir, state)
@@ -3507,7 +3513,9 @@ def get_status(*, configs_dir: str, routing_file: str, ui_state_dir: str) -> Dic
             target = _select_target(runtime, selected_tags or default_tag, routing)
         except DnsOverVlessError as exc:
             blockers.append(str(exc))
-        if not core:
+        if not core and len(running_cores) > 1:
+            blockers.append("Сейчас запущены оба ядра — идёт смена ядра. Повторите проверку через несколько секунд.")
+        elif not core:
             # Installation and runtime are different facts: available cores
             # come from binaries on disk, while ``core`` comes from pidof.
             # Telling this user to "switch to Xray" suggests that another core
@@ -3681,7 +3689,14 @@ def apply_action(
                 code="dns_override_unknown",
                 details=detail,
             )
-        running = detect_running_core()
+        runtime, running = settled_core_owner(core_runtime)
+        if runtime.switching and not running:
+            # Both engines still up and XKeen did not say which one it runs:
+            # whether Xray is the active core is anybody's guess.
+            raise DnsOverVlessError(
+                "Сейчас запущены оба ядра — идёт смена ядра. Повторите через несколько секунд.",
+                code="core_switching",
+            )
         if running != "xray":
             # Switching off is allowed with no core running at all.  Any bad
             # config brings Xray down, and clearing this setting is the one
@@ -4141,7 +4156,7 @@ def apply_action(
             except Exception as rollback_exc:  # noqa: BLE001
                 rollback_error = str(rollback_exc)
             try:
-                rollback["active_core"] = detect_running_core() or "unknown"
+                rollback["active_core"] = resolve_running_core_for_status(core_runtime().running) or "unknown"
             except Exception:
                 pass
             rollback["restored"] = bool(

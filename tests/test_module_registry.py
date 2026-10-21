@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 from flask import Flask
 
+from services.cores import CoreRuntime
 from routes.modules import create_modules_blueprint
 from services.module_registry import (
     API_VERSION,
@@ -468,7 +469,7 @@ def test_environment_safe_mode_forces_legacy_full_runtime_activation(tmp_path):
 
 
 def test_startup_blocks_deferred_disable_of_running_core(tmp_path, monkeypatch):
-    monkeypatch.setattr("services.cores.detect_running_core", lambda: "xray")
+    monkeypatch.setattr("services.cores.core_runtime", lambda: CoreRuntime(("xray",)))
     state = {
         "schema_version": STATE_SCHEMA_VERSION,
         "profile": "custom",
@@ -494,7 +495,7 @@ def test_startup_blocks_deferred_disable_of_running_core(tmp_path, monkeypatch):
     assert "engine.xray" in activation["active_module_ids"]
     assert persisted["modules"]["engine.xray"] == {"enabled": False}
 
-    monkeypatch.setattr("services.cores.detect_running_core", lambda: None)
+    monkeypatch.setattr("services.cores.core_runtime", lambda: CoreRuntime())
     restarted = _registry(tmp_path)
     snapshot = restarted.initialize_for_startup()
     xray = _module(snapshot, "engine.xray")
@@ -505,7 +506,7 @@ def test_startup_blocks_deferred_disable_of_running_core(tmp_path, monkeypatch):
 
 
 def test_startup_drops_block_persisted_by_older_builds(tmp_path, monkeypatch):
-    monkeypatch.setattr("services.cores.detect_running_core", lambda: None)
+    monkeypatch.setattr("services.cores.core_runtime", lambda: CoreRuntime())
     state = {
         "schema_version": STATE_SCHEMA_VERSION,
         "profile": "custom",
@@ -540,7 +541,7 @@ def test_registry_failure_fallback_activates_only_installed_modules(tmp_path, mo
 
 
 def test_initialization_failure_does_not_disable_module_after_restart(tmp_path, monkeypatch):
-    monkeypatch.setattr("services.cores.detect_running_core", lambda: None)
+    monkeypatch.setattr("services.cores.core_runtime", lambda: CoreRuntime())
     registry = _registry(tmp_path)
     registry.initialize_for_startup()
     registry.set_enabled("tool.files", False)

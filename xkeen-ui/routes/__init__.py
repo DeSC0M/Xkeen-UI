@@ -42,16 +42,14 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
         if enabled or module_id not in {"engine.xray", "engine.mihomo"}:
             return None
         try:
-            from services.cores import detect_running_core
+            from services.cores import core_runtime
 
-            running_core = detect_running_core()
+            runtime = core_runtime()
         except Exception:
-            running_core = None
-        running_module = {
-            "xray": "engine.xray",
-            "mihomo": "engine.mihomo",
-        }.get(running_core or "")
-        if running_module != module_id:
+            runtime = None
+        # Both engines up -- a hand-off, or a Mihomo started outside XKeen:
+        # neither one may be switched off from under its process.
+        if runtime is None or not runtime.has(module_id.removeprefix("engine.")):
             return None
         try:
             from services.dns_service_lifecycle import get_stop_protection
@@ -165,13 +163,10 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
     from services.notification_center import NotificationCenter
 
     def lifecycle_active_engines() -> frozenset[str]:
-        from services.cores import detect_running_core
+        from services.cores import core_runtime
 
-        module_id = {
-            "xray": "engine.xray",
-            "mihomo": "engine.mihomo",
-        }.get(detect_running_core() or "")
-        return frozenset({module_id}) if module_id else frozenset()
+        # Every engine with a live process: during a hand-off both are.
+        return frozenset(f"engine.{core}" for core in core_runtime().running)
 
     lifecycle_root = Path(ctx.ui_state_dir)
     lifecycle_service = ModuleLifecycleService(
@@ -235,7 +230,7 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
             from .xray_subscriptions import create_xray_subscriptions_blueprint
             from services.core_installer import CoreInstaller
             from services.core_profile_state import CoreProfileStateStore
-            from services.cores import detect_running_core
+            from services.cores import core_runtime
 
             core_installer = app.extensions.get("xkeen.core_installer")
             if core_installer is None:
@@ -245,7 +240,7 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
                     xray_configs_dir=ctx.xray_configs_dir,
                     mihomo_config_file=ctx.mihomo_config_file,
                     restart=ctx.restart_xkeen,
-                    running_core=detect_running_core,
+                    running_core=lambda: core_runtime().owner,
                 )
                 app.extensions["xkeen.core_installer"] = core_installer
 
@@ -298,7 +293,7 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
             from .mihomo_clash import create_mihomo_clash_blueprint
             from services.core_installer import CoreInstaller
             from services.core_profile_state import CoreProfileStateStore
-            from services.cores import detect_running_core
+            from services.cores import core_runtime
             from services.mihomo_clash_cache import get_shared_mihomo_clash_cache
 
             core_installer = app.extensions.get("xkeen.core_installer")
@@ -309,7 +304,7 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
                     xray_configs_dir=ctx.xray_configs_dir,
                     mihomo_config_file=ctx.mihomo_config_file,
                     restart=ctx.restart_xkeen,
-                    running_core=detect_running_core,
+                    running_core=lambda: core_runtime().owner,
                 )
                 app.extensions["xkeen.core_installer"] = core_installer
 
@@ -338,7 +333,7 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
     # management facade so the core modal can explain the missing module
     # instead of showing an empty source area.
     try:
-        from services.cores import detect_available_cores, detect_running_core
+        from services.cores import core_runtime, detect_available_cores
         from services.core_installer import CoreInstaller
         from services.core_profile_state import CoreProfileStateStore
         from .core_profiles import create_core_profiles_blueprint
@@ -356,7 +351,7 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
                     xray_configs_dir=ctx.xray_configs_dir,
                     mihomo_config_file=ctx.mihomo_config_file,
                     restart=ctx.restart_xkeen,
-                    running_core=detect_running_core,
+                    running_core=lambda: core_runtime().owner,
                 )
                 app.extensions["xkeen.core_installer"] = core_installer
             for core_id in ("xray", "mihomo"):

@@ -38,10 +38,9 @@ def _core_log(level: str, msg: str, **extra) -> None:
 
 from services.cores import (
     CoreSwitchError,
-    detect_running_cores,
+    core_runtime,
     get_cores_status,
     read_last_core,
-    remember_running_core,
     switch_core,
 )
 
@@ -376,14 +375,16 @@ def create_service_blueprint(
         о запущенном ядре (xray / mihomo), если оно обнаружено.
         """
         try:
-            _cores, running_core = get_cores_status()
-            running_cores = detect_running_cores()
-            running = bool(running_cores)
+            # One snapshot for both fields: two separate pidof rounds could
+            # report "stopped" next to a core name.  The header polls this, and
+            # get_cores_status records the engine seen running -- what the core
+            # window names once the service stops or the core crashes.
+            runtime = core_runtime()
+            _cores, running_core = get_cores_status(runtime)
+            running_cores = runtime.running
+            running = not runtime.idle
 
             status = "running" if running else "stopped"
-            # The header polls this: the engine seen running is what the core
-            # window names once the service stops or the core crashes.
-            remember_running_core(running_core)
 
             return jsonify(
                 {

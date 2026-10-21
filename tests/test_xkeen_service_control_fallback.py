@@ -155,7 +155,11 @@ def test_core_switch_start_does_not_wait_for_foreground_start_command(monkeypatc
 
     monkeypatch.setenv('XKEEN_CORE_START_GRACE_AFTER_RUNNING_MS', '0')
     monkeypatch.setattr(cores, 'build_xkeen_cmd', lambda flag: ['xkeen', flag])
-    monkeypatch.setattr(cores, 'detect_running_core', lambda: 'mihomo' if start_seen['value'] else 'xray')
+    monkeypatch.setattr(
+        cores,
+        'core_runtime',
+        lambda: cores.CoreRuntime(('mihomo',) if start_seen['value'] else ('xray',)),
+    )
     monkeypatch.setattr(
         cores.subprocess,
         'run',
@@ -208,11 +212,11 @@ def test_core_switch_waits_for_target_core_after_start_command_exits_zero(monkey
     monkeypatch.setenv('XKEEN_CORE_START_GRACE_AFTER_RUNNING_MS', '0')
     monkeypatch.setattr(cores, 'build_xkeen_cmd', lambda flag: ['xkeen', flag])
 
-    def fake_detect_running_core():
+    def fake_core_runtime():
         detect_calls['count'] += 1
-        return 'mihomo' if detect_calls['count'] >= 3 else 'xray'
+        return cores.CoreRuntime(('mihomo',) if detect_calls['count'] >= 3 else ('xray',))
 
-    monkeypatch.setattr(cores, 'detect_running_core', fake_detect_running_core)
+    monkeypatch.setattr(cores, 'core_runtime', fake_core_runtime)
     monkeypatch.setattr(cores.subprocess, 'run', lambda *_args, **_kwargs: SimpleNamespace(stdout=''))
 
     class FakeStartProcess:

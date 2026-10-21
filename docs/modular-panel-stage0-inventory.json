@@ -39,7 +39,7 @@
       ],
       "removable": false,
       "unit_count": 582,
-      "size_bytes": 7855010,
+      "size_bytes": 7861993,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -88,7 +88,7 @@
       ],
       "removable": true,
       "unit_count": 138,
-      "size_bytes": 3813837,
+      "size_bytes": 3816750,
       "kind_counts": {
         "backend_route": 13,
         "backend_service": 20,
@@ -132,7 +132,7 @@
       ],
       "removable": true,
       "unit_count": 133,
-      "size_bytes": 3113873,
+      "size_bytes": 3115538,
       "kind_counts": {
         "app_runtime": 4,
         "backend_route": 2,
@@ -537,7 +537,7 @@
       "module_id": "core",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/__init__.py",
-      "size_bytes": 23336,
+      "size_bytes": 23303,
       "depends_on": [
         "tool.files",
         "engine.xray",
@@ -1121,7 +1121,7 @@
       "module_id": "core",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/service.py",
-      "size_bytes": 23104,
+      "size_bytes": 23213,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -1748,7 +1748,7 @@
       "module_id": "core",
       "kind": "backend_service",
       "path": "xkeen-ui/services/cores.py",
-      "size_bytes": 25352,
+      "size_bytes": 27286,
       "depends_on": [
         "engine.xray"
       ],
@@ -1764,6 +1764,7 @@
         "gevent-websocket (optional)"
       ],
       "environment_variables": [
+        "XKEEN_CORE_SETTLE_TIMEOUT_MS",
         "XKEEN_CORE_START_GRACE_AFTER_RUNNING_MS",
         "XKEEN_CORE_START_TIMEOUT",
         "XKEEN_CORE_SWITCH_TIMEOUT",
@@ -1817,7 +1818,7 @@
       "module_id": "core",
       "kind": "backend_service",
       "path": "xkeen-ui/services/dns_guard.py",
-      "size_bytes": 16238,
+      "size_bytes": 16491,
       "depends_on": [],
       "starts_background_task": true,
       "background_markers": [
@@ -2360,7 +2361,7 @@
       "module_id": "core",
       "kind": "backend_service",
       "path": "xkeen-ui/services/module_registry.py",
-      "size_bytes": 69250,
+      "size_bytes": 69286,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -3684,7 +3685,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_cores_status.py",
-      "size_bytes": 5736,
+      "size_bytes": 8755,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -3697,7 +3698,9 @@
         "gevent (optional)",
         "gevent-websocket (optional)"
       ],
-      "environment_variables": [],
+      "environment_variables": [
+        "XKEEN_CORE_SETTLE_TIMEOUT_MS"
+      ],
       "removable": false
     },
     {
@@ -3940,7 +3943,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_dns_guard.py",
-      "size_bytes": 21862,
+      "size_bytes": 22728,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -5743,7 +5746,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_module_backend_gates.py",
-      "size_bytes": 13309,
+      "size_bytes": 13953,
       "depends_on": [
         "tool.terminal",
         "integration.happ",
@@ -5976,7 +5979,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_module_registry.py",
-      "size_bytes": 38063,
+      "size_bytes": 38117,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -8044,7 +8047,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_subscription_pause_dns.py",
-      "size_bytes": 19278,
+      "size_bytes": 19326,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -8831,7 +8834,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_xkeen_service_control_fallback.py",
-      "size_bytes": 14378,
+      "size_bytes": 14431,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -14114,7 +14117,7 @@
       "module_id": "engine.mihomo",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/mihomo.py",
-      "size_bytes": 161816,
+      "size_bytes": 161939,
       "depends_on": [
         "core",
         "tool.editor",
@@ -14907,7 +14910,7 @@
       "module_id": "engine.mihomo",
       "kind": "backend_service",
       "path": "xkeen-ui/services/mihomo_dns.py",
-      "size_bytes": 198944,
+      "size_bytes": 199280,
       "depends_on": [
         "core",
         "tool.editor"
@@ -15486,7 +15489,7 @@
       "module_id": "engine.mihomo",
       "kind": "backend_test",
       "path": "tests/test_mihomo_clash_migration.py",
-      "size_bytes": 14336,
+      "size_bytes": 14384,
       "depends_on": [
         "core",
         "tool.editor"
@@ -15695,7 +15698,7 @@
       "module_id": "engine.mihomo",
       "kind": "backend_test",
       "path": "tests/test_mihomo_dns.py",
-      "size_bytes": 82612,
+      "size_bytes": 83770,
       "depends_on": [
         "core",
         "tool.editor"
@@ -18171,7 +18174,7 @@
       "module_id": "engine.xray",
       "kind": "backend_service",
       "path": "xkeen-ui/services/dns_over_vless.py",
-      "size_bytes": 193357,
+      "size_bytes": 194218,
       "depends_on": [
         "core",
         "tool.editor"
@@ -18646,7 +18649,7 @@
       "module_id": "engine.xray",
       "kind": "backend_test",
       "path": "tests/test_dns_over_vless.py",
-      "size_bytes": 209200,
+      "size_bytes": 211071,
       "depends_on": [
         "core",
         "tool.editor"
@@ -18663,6 +18666,7 @@
         "xray"
       ],
       "environment_variables": [
+        "XKEEN_CORE_SETTLE_TIMEOUT_MS",
         "XKEEN_DNS_OVER_VLESS_MAX_RTT",
         "XKEEN_DNS_OVER_VLESS_PREFER",
         "XKEEN_DNS_OVER_VLESS_WATCHDOG",
@@ -18784,7 +18788,7 @@
       "module_id": "engine.xray",
       "kind": "backend_test",
       "path": "tests/test_dns_over_vless_firmware_toggle.py",
-      "size_bytes": 22474,
+      "size_bytes": 22545,
       "depends_on": [
         "core",
         "tool.editor"
@@ -18931,7 +18935,7 @@
       "module_id": "engine.xray",
       "kind": "backend_test",
       "path": "tests/test_dns_over_vless_resolver_resync.py",
-      "size_bytes": 17754,
+      "size_bytes": 17816,
       "depends_on": [
         "core",
         "tool.editor"
@@ -18952,7 +18956,7 @@
       "module_id": "engine.xray",
       "kind": "backend_test",
       "path": "tests/test_dns_over_vless_transactions_prune.py",
-      "size_bytes": 4953,
+      "size_bytes": 5001,
       "depends_on": [
         "core",
         "tool.editor"
