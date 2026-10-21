@@ -331,12 +331,14 @@ test('structured logs use a full workspace tab, one on-demand socket, ring buffe
   await expect.poll(() => page.locator('#mihomo-clash-logs-list').evaluate((list) => list.scrollTop)).toBe(0);
 
   await page.locator('#mihomo-clash-logs-pause').click();
+  await expect(page.locator('#mihomo-clash-logs-pause')).toHaveAttribute('aria-pressed', 'true');
   await page.evaluate(() => window.__pr9LogSockets[0].emit({
     type: 'mihomo-clash-logs', schema_version: 1, state: 'live', sequence: 507,
     payload: { sequence: 507, time: 'paused', level: 'error', message: 'while-paused', fields: {} },
   }));
   await expect(page.locator('#mihomo-clash-logs-list')).not.toContainText('while-paused');
   await page.locator('#mihomo-clash-logs-pause').click();
+  await expect(page.locator('#mihomo-clash-logs-pause')).toHaveAttribute('aria-pressed', 'false');
   await expect(page.locator('#mihomo-clash-logs-list')).toContainText('while-paused');
 
   await page.locator('#mihomo-clash-tab-control').click();

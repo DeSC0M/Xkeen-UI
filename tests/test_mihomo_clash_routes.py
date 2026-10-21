@@ -582,6 +582,30 @@ def test_diagnostics_traffic_rejects_unknown_range():
     assert response.get_json()["code"] == "mihomo_traffic_range_invalid"
 
 
+def test_diagnostics_traffic_accepts_fourteen_days():
+    class Analytics:
+        def __init__(self):
+            self.calls = []
+
+        def summary(self, *, range_seconds):
+            self.calls.append(range_seconds)
+            return {
+                "schema_version": 1,
+                "range_seconds": range_seconds,
+                "summary": {},
+            }
+
+    analytics = Analytics()
+    response = make_app(
+        ready_discovery(),
+        StubClient(),
+        traffic_analytics=analytics,
+    ).test_client().get("/api/mihomo/clash/diagnostics/traffic?range=14d")
+
+    assert response.status_code == 200
+    assert analytics.calls == [14 * 24 * 3600]
+
+
 def test_diagnostics_traffic_demo_mode_needs_no_router_or_database(monkeypatch):
     monkeypatch.setenv("XKEEN_MIHOMO_TRAFFIC_DEMO", "1")
     client = StubClient()

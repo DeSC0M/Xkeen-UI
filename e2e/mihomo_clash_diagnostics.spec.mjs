@@ -347,6 +347,24 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
 }
 
 
+test('traffic analytics offers week and fourteen-day ranges with seven quality cards on desktop', async ({ page }) => {
+  await openDiagnostics(page, { width: 1440, height: 900 });
+  const range = page.locator('#mihomo-clash-traffic-range');
+  await expect(range.locator('option[value="7d"]')).toHaveText('Неделя');
+  await expect(range.locator('option[value="14d"]')).toHaveText('14 дней');
+  const request = page.waitForRequest((candidate) => (
+    candidate.url().includes('/api/mihomo/clash/diagnostics/traffic?range=14d')
+  ));
+  await range.selectOption('14d');
+  await request;
+  await expect(page.locator('#mihomo-clash-traffic-quality .xk-mihomo-traffic-quality-item')).toHaveCount(7);
+  const columns = await page.locator('#mihomo-clash-traffic-quality').evaluate((element) => (
+    getComputedStyle(element).gridTemplateColumns.split(' ').length
+  ));
+  expect(columns).toBe(7);
+});
+
+
 test('empty analytics keeps six desktop metrics compact and separates filters from quality', async ({ page }) => {
   await openDiagnostics(page, { width: 1440, height: 900 }, emptyTrafficPayload());
   await expect(page.locator('#mihomo-clash-traffic-summary .xk-mihomo-diagnostic-stat')).toHaveCount(6);

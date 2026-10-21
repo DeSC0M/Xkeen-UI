@@ -1663,10 +1663,11 @@ def create_mihomo_clash_blueprint(
             "6h": 6 * 3600,
             "24h": 24 * 3600,
             "7d": 7 * 24 * 3600,
+            "14d": 14 * 24 * 3600,
         }.get(raw_range)
         if range_seconds is None:
             return error_response(
-                "Допустимые диапазоны: 1h, 6h, 24h или 7d.",
+                "Допустимые диапазоны: 1h, 6h, 24h, 7d или 14d.",
                 400,
                 ok=False,
                 code="mihomo_traffic_range_invalid",
