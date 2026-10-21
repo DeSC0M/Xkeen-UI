@@ -332,6 +332,14 @@ test('structured logs use a full workspace tab, one on-demand socket, ring buffe
 
   await page.locator('#mihomo-clash-logs-pause').click();
   await expect(page.locator('#mihomo-clash-logs-pause')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#mihomo-clash-logs-pause')).toHaveClass(/is-paused/);
+  await expect.poll(() => page.locator('#mihomo-clash-logs-pause').evaluate((button) => ({
+    background: getComputedStyle(button).backgroundColor,
+    shadow: getComputedStyle(button).boxShadow,
+  }))).toMatchObject({
+    background: /rgba?\(/,
+    shadow: /.+/,
+  });
   await page.evaluate(() => window.__pr9LogSockets[0].emit({
     type: 'mihomo-clash-logs', schema_version: 1, state: 'live', sequence: 507,
     payload: { sequence: 507, time: 'paused', level: 'error', message: 'while-paused', fields: {} },
@@ -339,6 +347,7 @@ test('structured logs use a full workspace tab, one on-demand socket, ring buffe
   await expect(page.locator('#mihomo-clash-logs-list')).not.toContainText('while-paused');
   await page.locator('#mihomo-clash-logs-pause').click();
   await expect(page.locator('#mihomo-clash-logs-pause')).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('#mihomo-clash-logs-pause')).not.toHaveClass(/is-paused/);
   await expect(page.locator('#mihomo-clash-logs-list')).toContainText('while-paused');
 
   await page.locator('#mihomo-clash-tab-control').click();

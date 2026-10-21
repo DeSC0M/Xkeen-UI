@@ -264,6 +264,7 @@ function render() {
   const pause = byId('mihomo-clash-logs-pause');
   if (pause) {
     pause.setAttribute('aria-pressed', paused ? 'true' : 'false');
+    pause.classList.toggle('is-paused', paused);
     pause.setAttribute('aria-label', paused ? 'Продолжить вывод логов' : 'Пауза логов');
   }
   const orderSelect = byId('mihomo-clash-logs-order');

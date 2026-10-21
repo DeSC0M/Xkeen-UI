@@ -20665,28 +20665,39 @@ body.panel-page .xk-mihomo-logs-filters > :is(button, select) {
 }
 body.panel-page .xk-mihomo-logs-actions > button:hover:not(:disabled),
 body.panel-page .xk-mihomo-logs-filters > :is(button, select):hover:not(:disabled) {
-  border-color: var(--op-accent-border);
-  background: color-mix(in srgb, var(--op-accent-soft) 72%, var(--op-surface-2));
-  color: var(--op-text-strong);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--op-accent-soft) 58%, transparent);
-  transform: translateY(-1px);
+  border-color: var(--op-accent-border) !important;
+  background: color-mix(in srgb, var(--op-accent-soft) 72%, var(--op-surface-2)) !important;
+  color: var(--op-text-strong) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--op-accent-soft) 58%, transparent) !important;
+  transform: translateY(-1px) !important;
 }
 body.panel-page .xk-mihomo-logs-actions > button:focus-visible,
 body.panel-page .xk-mihomo-logs-filters > :is(button, select):focus-visible {
   outline: 2px solid var(--op-accent);
   outline-offset: 1px;
 }
-body.panel-page #mihomo-clash-logs-pause[aria-pressed="true"] {
-  border-color: color-mix(in srgb, var(--op-warning) 56%, var(--op-border));
-  background: var(--op-warning-soft);
-  color: var(--op-warning);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--op-warning) 35%, transparent), 0 0 0 3px color-mix(in srgb, var(--op-warning-soft) 68%, transparent);
+body.panel-page #mihomo-clash-logs-pause {
+  position: relative;
 }
-body.panel-page #mihomo-clash-logs-pause[aria-pressed="true"]::after {
-  content: "Пауза";
-  margin-left: 5px;
-  font-size: calc(9px * var(--xk-font-scale, 1));
-  font-weight: 750;
+body.panel-page #mihomo-clash-logs-pause.is-paused,
+body.panel-page #mihomo-clash-logs-pause[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--op-warning) 72%, var(--op-border)) !important;
+  background: var(--op-warning-soft) !important;
+  color: var(--op-warning) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--op-warning) 48%, transparent), 0 0 0 3px color-mix(in srgb, var(--op-warning-soft) 82%, transparent) !important;
+  transform: none !important;
+}
+body.panel-page #mihomo-clash-logs-pause.is-paused::after {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--op-surface-2);
+  border-radius: 50%;
+  background: var(--op-warning);
+  box-shadow: 0 0 0 2px var(--op-warning-soft);
+  content: "";
 }
 body.panel-page .xk-mihomo-logs-list { display: grid; align-content: start; gap: 7px; min-height: 0; margin: 0; padding: 8px; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; background: var(--op-editor); list-style: none; }
 body.panel-page .xk-mihomo-logs-list[hidden] { display: none; }
