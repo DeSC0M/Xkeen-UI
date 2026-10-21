@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import tempfile
 import time
@@ -144,8 +145,14 @@ def detect_available_cores() -> List[str]:
     return cores
 
 
-def detect_running_core() -> Optional[str]:
-    """Try to detect currently running core via `pidof`."""
+def detect_running_cores() -> Tuple[str, ...]:
+    """Return all core processes currently reported by ``pidof``.
+
+    During a restart both engines can briefly coexist. That state must not be
+    collapsed to the first name in a fixed ``xray, mihomo`` order: doing so
+    makes the UI announce Xray while Mihomo is the engine XKeen is bringing up.
+    """
+    detected: list[str] = []
     try:
         for core_name in ("xray", "mihomo"):
             try:
@@ -155,11 +162,65 @@ def detect_running_core() -> Optional[str]:
                     stderr=subprocess.DEVNULL,
                 )
                 if res.returncode == 0:
-                    return core_name
+                    detected.append(core_name)
             except FileNotFoundError:
                 continue
     except Exception:
+        return ()
+    return tuple(detected)
+
+
+def detect_running_core() -> Optional[str]:
+    """Return a core only when process detection is unambiguous."""
+    detected = detect_running_cores()
+    return detected[0] if len(detected) == 1 else None
+
+
+_XKEEN_STATUS_CORE_RE = re.compile(
+    r"(?:прокси[-\s]*клиент|proxy(?:\s+client)?)\s+"
+    r"(?P<core>xray|mihomo)\s+"
+    r"(?:запущен|running)",
+    re.IGNORECASE,
+)
+_ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
+
+
+def _xkeen_status_running_core() -> Optional[str]:
+    """Ask XKeen which engine owns the currently running proxy service.
+
+    This is intentionally a narrow tie-breaker, used only when ``pidof``
+    reports *both* engines.  A lingering process during a core hand-off must
+    not make the UI choose Xray merely because it appears first in a fixed
+    probe order.
+    """
+
+    try:
+        result = subprocess.run(
+            build_xkeen_cmd("-status"),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            timeout=3.0,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+    except (FileNotFoundError, OSError, subprocess.SubprocessError):
         return None
+    output = _ANSI_ESCAPE_RE.sub("", str(result.stdout or ""))
+    match = _XKEEN_STATUS_CORE_RE.search(output)
+    return match.group("core").lower() if match else None
+
+
+def resolve_running_core_for_status(running_cores: Tuple[str, ...] | None = None) -> Optional[str]:
+    """Resolve a status-facing core name without guessing during a hand-off."""
+
+    detected = tuple(running_cores) if running_cores is not None else detect_running_cores()
+    if len(detected) == 1:
+        return detected[0]
+    if len(detected) > 1:
+        reported = _xkeen_status_running_core()
+        if reported in detected:
+            return reported
     return None
 
 
@@ -206,7 +267,7 @@ def get_cores_status() -> Tuple[List[str], Optional[str]]:
     the confirmation action in the core switch modal.
     """
     cores = detect_available_cores()
-    running_core = detect_running_core()
+    running_core = resolve_running_core_for_status()
     remember_running_core(running_core)
     return cores, running_core
 

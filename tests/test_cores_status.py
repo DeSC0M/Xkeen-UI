@@ -18,12 +18,47 @@ def test_core_status_does_not_guess_xray_when_process_detection_is_inconclusive(
     assert current is None
 
 
+def test_core_status_is_inconclusive_when_both_engines_are_running(monkeypatch, tmp_path):
+    monkeypatch.setattr(cores, "_last_core_path", lambda: str(tmp_path / cores.LAST_CORE_FILENAME))
+    monkeypatch.setattr(cores, "detect_available_cores", lambda: ["xray", "mihomo"])
+    monkeypatch.setattr(cores, "detect_running_cores", lambda: ("xray", "mihomo"))
+    monkeypatch.setattr(cores, "_xkeen_status_running_core", lambda: None)
+
+    available, current = cores.get_cores_status()
+
+    assert available == ["xray", "mihomo"]
+    assert current is None
+
+
+def test_core_status_uses_xkeen_status_to_resolve_overlapping_engine_processes(monkeypatch, tmp_path):
+    monkeypatch.setattr(cores, "_last_core_path", lambda: str(tmp_path / cores.LAST_CORE_FILENAME))
+    monkeypatch.setattr(cores, "detect_available_cores", lambda: ["xray", "mihomo"])
+    monkeypatch.setattr(cores, "detect_running_cores", lambda: ("xray", "mihomo"))
+    monkeypatch.setattr(cores, "_xkeen_status_running_core", lambda: "mihomo")
+
+    assert cores.get_cores_status() == (["xray", "mihomo"], "mihomo")
+    assert cores.read_last_core() == "mihomo"
+
+
+def test_xkeen_status_parser_ignores_ansi_sequences(monkeypatch):
+    class Result:
+        stdout = "  Прокси-клиент \x1b[93mmihomo\x1b[0m \x1b[92mзапущен\x1b[0m в режиме Hybrid\n"
+
+    monkeypatch.setattr(cores.subprocess, "run", lambda *_args, **_kwargs: Result())
+
+    assert cores._xkeen_status_running_core() == "mihomo"
+
+
 def test_the_engine_seen_running_is_remembered_for_a_stopped_service(monkeypatch, tmp_path):
     path = tmp_path / cores.LAST_CORE_FILENAME
     monkeypatch.setattr(cores, "_last_core_path", lambda: str(path))
     monkeypatch.setattr(cores, "detect_available_cores", lambda: ["xray", "mihomo"])
     running = ["mihomo"]
-    monkeypatch.setattr(cores, "detect_running_core", lambda: running[0])
+    monkeypatch.setattr(
+        cores,
+        "detect_running_cores",
+        lambda: (running[0],) if running[0] else (),
+    )
 
     assert cores.read_last_core() is None
     cores.get_cores_status()

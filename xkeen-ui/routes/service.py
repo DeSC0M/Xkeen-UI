@@ -1,6 +1,5 @@
 """Service-control API routes for xkeen as a Flask Blueprint."""
 from __future__ import annotations
-import subprocess
 import time
 
 from flask import Blueprint, request, jsonify
@@ -37,7 +36,14 @@ def _core_log(level: str, msg: str, **extra) -> None:
     except Exception:
         pass
 
-from services.cores import CoreSwitchError, get_cores_status, read_last_core, remember_running_core, switch_core
+from services.cores import (
+    CoreSwitchError,
+    detect_running_cores,
+    get_cores_status,
+    read_last_core,
+    remember_running_core,
+    switch_core,
+)
 
 
 def create_service_blueprint(
@@ -370,24 +376,9 @@ def create_service_blueprint(
         о запущенном ядре (xray / mihomo), если оно обнаружено.
         """
         try:
-            running = False
-            running_core = None
-
-            # Проверяем, запущено ли одно из известных ядер
-            for core_name in ("xray", "mihomo"):
-                try:
-                    res = subprocess.run(
-                        ["pidof", core_name],
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.DEVNULL,
-                    )
-                    if res.returncode == 0:
-                        running = True
-                        running_core = core_name
-                        break
-                except FileNotFoundError:
-                    # pidof или бинарник могут отсутствовать — просто пропускаем
-                    continue
+            _cores, running_core = get_cores_status()
+            running_cores = detect_running_cores()
+            running = bool(running_cores)
 
             status = "running" if running else "stopped"
             # The header polls this: the engine seen running is what the core
@@ -400,6 +391,7 @@ def create_service_blueprint(
                     "running": running,
                     "status": status,
                     "core": running_core,
+                    "running_cores": list(running_cores),
                 }
             ), 200
         except Exception as e:

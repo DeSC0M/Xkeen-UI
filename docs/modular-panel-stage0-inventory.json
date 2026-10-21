@@ -39,7 +39,7 @@
       ],
       "removable": false,
       "unit_count": 582,
-      "size_bytes": 7851900,
+      "size_bytes": 7855064,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -1121,7 +1121,7 @@
       "module_id": "core",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/service.py",
-      "size_bytes": 23665,
+      "size_bytes": 23122,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -1748,7 +1748,7 @@
       "module_id": "core",
       "kind": "backend_service",
       "path": "xkeen-ui/services/cores.py",
-      "size_bytes": 23184,
+      "size_bytes": 25352,
       "depends_on": [
         "engine.xray"
       ],
@@ -3684,7 +3684,7 @@
       "module_id": "core",
       "kind": "backend_test",
       "path": "tests/test_cores_status.py",
-      "size_bytes": 4233,
+      "size_bytes": 5772,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
