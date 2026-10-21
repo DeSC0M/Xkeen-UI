@@ -352,6 +352,27 @@ def test_prepare_rejects_inactive_core(tmp_path):
     assert exc_info.value.code == "inactive_core"
 
 
+def test_prepare_during_a_core_hand_off_waits_for_the_owner(tmp_path):
+    """Both engines up: the settled owner decides, and no owner is its own refusal."""
+    from services.cores import CoreRuntime
+
+    install, _store, _target = _installer(tmp_path, running=None)
+    both = CoreRuntime(("xray", "mihomo"))
+
+    install.settled_core = lambda: (both, None)
+    with pytest.raises(installer_module.CoreInstallError) as exc_info:
+        install.prepare("xray")
+    assert exc_info.value.code == "core_switching"
+
+    install.settled_core = lambda: (both, "mihomo")
+    with pytest.raises(installer_module.CoreInstallError) as exc_info:
+        install.prepare("xray")
+    assert exc_info.value.code == "inactive_core"
+
+    install.settled_core = lambda: (CoreRuntime(("xray",)), "xray")
+    assert install.prepare("xray")["engine_id"] == "xray"
+
+
 def _age_release_cache(tmp_path, seconds: float) -> None:
     cache_path = tmp_path / "state" / "core-profiles" / "release-cache.json"
     cache = json.loads(cache_path.read_text(encoding="utf-8"))

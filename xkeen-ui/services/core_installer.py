@@ -98,6 +98,7 @@ class CoreInstaller:
         mihomo_config_file: str,
         restart: Callable[..., Any],
         running_core: Callable[[], str | None],
+        settled_core: Callable[[], tuple[Any, str | None]] | None = None,
         platform: RouterPlatform | None = None,
         release_resolver: Callable[..., dict[str, Any]] = resolve_release,
         downloader: Callable[..., bytes] | None = None,
@@ -113,6 +114,10 @@ class CoreInstaller:
         self.mihomo_config_file = str(mihomo_config_file)
         self.restart = restart
         self.running_core = running_core
+        # ``services.cores.settled_core_owner``: the engine owning the service
+        # once a hand-off is over.  ``running_core`` stays the plain snapshot
+        # the health check samples in a tight loop.
+        self.settled_core = settled_core
         self.platform = platform or detect_router_platform()
         self.release_resolver = release_resolver
         self.downloader = downloader or self._download
@@ -324,10 +329,20 @@ class CoreInstaller:
     def _require_active(self, engine_id: str) -> None:
         if engine_id not in {"xray", "mihomo"}:
             raise CoreInstallError("invalid_engine", "Неизвестное ядро.")
+        switching = False
         try:
-            active = self.running_core()
+            if self.settled_core is not None:
+                runtime, active = self.settled_core()
+                switching = bool(getattr(runtime, "switching", False))
+            else:
+                active = self.running_core()
         except Exception:
             active = None
+        if switching and active is None:
+            raise CoreInstallError(
+                "core_switching",
+                "Сейчас запущены оба ядра — идёт смена ядра. Повторите через несколько секунд.",
+            )
         if active != engine_id:
             raise CoreInstallError("inactive_core", "Устанавливать можно только активное ядро.")
 

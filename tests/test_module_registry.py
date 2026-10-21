@@ -505,6 +505,31 @@ def test_startup_blocks_deferred_disable_of_running_core(tmp_path, monkeypatch):
     assert "engine.xray" not in restarted.runtime_activation()["active_module_ids"]
 
 
+def test_startup_keeps_both_engines_while_both_processes_run(tmp_path, monkeypatch):
+    """A hand-off at startup: each live engine keeps its module this process."""
+    monkeypatch.setattr("services.cores.core_runtime", lambda: CoreRuntime(("xray", "mihomo")))
+    state = {
+        "schema_version": STATE_SCHEMA_VERSION,
+        "profile": "custom",
+        "restart_required": True,
+        "modules": {
+            module_id: {"enabled": module_id not in {"engine.xray", "engine.mihomo"}}
+            for module_id in MODULE_IDS
+        },
+    }
+    (tmp_path / "modules.json").write_text(json.dumps(state), encoding="utf-8")
+    registry = _registry(tmp_path)
+
+    snapshot = registry.initialize_for_startup()
+    active = registry.runtime_activation()["active_module_ids"]
+
+    for module_id in ("engine.xray", "engine.mihomo"):
+        engine = _module(snapshot, module_id)
+        assert engine["enabled"] is False
+        assert engine["blocked_reason"] == "deferred_disable_blocked"
+        assert module_id in active
+
+
 def test_startup_drops_block_persisted_by_older_builds(tmp_path, monkeypatch):
     monkeypatch.setattr("services.cores.core_runtime", lambda: CoreRuntime())
     state = {

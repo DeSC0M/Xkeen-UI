@@ -219,6 +219,23 @@ def test_neither_engine_module_is_switched_off_while_both_processes_run(tmp_path
         assert response.get_json()["code"] == "active_core_module"
 
 
+def test_module_operations_count_every_engine_with_a_live_process(tmp_path, monkeypatch):
+    app = _register(
+        tmp_path,
+        ["core", "tool.editor", "engine.xray", "engine.mihomo"],
+    )
+    active_engines = app.extensions["xkeen.module_lifecycle"]._active_engines
+
+    monkeypatch.setattr("services.cores.core_runtime", lambda: CoreRuntime(("xray", "mihomo")))
+    assert active_engines() == frozenset({"engine.xray", "engine.mihomo"})
+
+    monkeypatch.setattr("services.cores.core_runtime", lambda: CoreRuntime(("mihomo",)))
+    assert active_engines() == frozenset({"engine.mihomo"})
+
+    monkeypatch.setattr("services.cores.core_runtime", lambda: CoreRuntime())
+    assert active_engines() == frozenset()
+
+
 def test_advanced_diagnostics_routes_are_not_exposed_when_optional_module_is_off(tmp_path):
     app = _register(tmp_path, ["core", "tool.editor", "engine.xray"])
     client = app.test_client()

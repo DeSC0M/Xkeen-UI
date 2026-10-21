@@ -53,6 +53,21 @@ def test_xkeen_status_parser_ignores_ansi_sequences(monkeypatch):
     assert cores._xkeen_status_running_core() == "mihomo"
 
 
+@pytest.mark.parametrize(
+    ("stdout", "core"),
+    [
+        # Byte for byte from 45.1 (XKeen behind panel 3.0.1), 21.10.2026.
+        ("  Прокси-клиент \x1b[93mxray\x1b[0m \x1b[92mзапущен\x1b[0m в режиме \x1b[96mHybrid\x1b[0m\n", "xray"),
+        # A stopped service names no engine: no tie-breaker, no guess.
+        ("Прокси-клиент остановлен\n", None),
+    ],
+)
+def test_xkeen_status_parser_reads_what_the_router_prints(monkeypatch, stdout, core):
+    monkeypatch.setattr(cores.subprocess, "run", lambda *_args, **_kwargs: type("R", (), {"stdout": stdout})())
+
+    assert cores._xkeen_status_running_core() == core
+
+
 def test_the_engine_seen_running_is_remembered_for_a_stopped_service(monkeypatch, tmp_path):
     path = tmp_path / cores.LAST_CORE_FILENAME
     monkeypatch.setattr(cores, "_last_core_path", lambda: str(path))

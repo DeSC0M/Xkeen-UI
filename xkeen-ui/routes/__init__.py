@@ -230,7 +230,7 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
             from .xray_subscriptions import create_xray_subscriptions_blueprint
             from services.core_installer import CoreInstaller
             from services.core_profile_state import CoreProfileStateStore
-            from services.cores import core_runtime
+            from services.cores import core_runtime, settled_core_owner
 
             core_installer = app.extensions.get("xkeen.core_installer")
             if core_installer is None:
@@ -241,6 +241,7 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
                     mihomo_config_file=ctx.mihomo_config_file,
                     restart=ctx.restart_xkeen,
                     running_core=lambda: core_runtime().owner,
+                    settled_core=settled_core_owner,
                 )
                 app.extensions["xkeen.core_installer"] = core_installer
 
@@ -293,7 +294,7 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
             from .mihomo_clash import create_mihomo_clash_blueprint
             from services.core_installer import CoreInstaller
             from services.core_profile_state import CoreProfileStateStore
-            from services.cores import core_runtime
+            from services.cores import core_runtime, settled_core_owner
             from services.mihomo_clash_cache import get_shared_mihomo_clash_cache
 
             core_installer = app.extensions.get("xkeen.core_installer")
@@ -305,6 +306,7 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
                     mihomo_config_file=ctx.mihomo_config_file,
                     restart=ctx.restart_xkeen,
                     running_core=lambda: core_runtime().owner,
+                    settled_core=settled_core_owner,
                 )
                 app.extensions["xkeen.core_installer"] = core_installer
 
@@ -333,7 +335,7 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
     # management facade so the core modal can explain the missing module
     # instead of showing an empty source area.
     try:
-        from services.cores import core_runtime, detect_available_cores
+        from services.cores import core_runtime, detect_available_cores, settled_core_owner
         from services.core_installer import CoreInstaller
         from services.core_profile_state import CoreProfileStateStore
         from .core_profiles import create_core_profiles_blueprint
@@ -352,6 +354,7 @@ def register_blueprints(app, ctx: Optional[AppContext] = None):
                     mihomo_config_file=ctx.mihomo_config_file,
                     restart=ctx.restart_xkeen,
                     running_core=lambda: core_runtime().owner,
+                    settled_core=settled_core_owner,
                 )
                 app.extensions["xkeen.core_installer"] = core_installer
             for core_id in ("xray", "mihomo"):
