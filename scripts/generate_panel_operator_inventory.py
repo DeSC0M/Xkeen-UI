@@ -95,7 +95,7 @@ MODAL_FAMILIES = {
     "fm-chmod-modal": "confirm-compact-form",
     "fm-chown-modal": "confirm-compact-form",
     "fm-dropop-modal": "confirm-compact-form",
-    "fm-conflicts-modal": "master-detail",
+    "fm-conflicts-modal": "confirm-compact-form",
     "fm-bookmarks-modal": "master-detail",
     "fm-download-multi-modal": "confirm-compact-form",
     "fm-progress-modal": "confirm-compact-form",

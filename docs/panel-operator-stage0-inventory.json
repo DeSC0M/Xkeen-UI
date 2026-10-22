@@ -368,10 +368,10 @@
   "modal_inventory": {
     "count": 53,
     "family_counts": {
-      "confirm-compact-form": 24,
+      "confirm-compact-form": 25,
       "drawer-help": 3,
       "editor-workbench": 7,
-      "master-detail": 19
+      "master-detail": 18
     },
     "missing_family_ids": [],
     "stale_family_ids": [],
@@ -3439,19 +3439,16 @@
       },
       {
         "id": "fm-conflicts-modal",
-        "family": "master-detail",
+        "family": "confirm-compact-form",
         "initial_visibility": "hidden",
         "aria_modal": "true",
-        "aria_label": "Conflicts",
+        "aria_label": "Конфликты файлов",
         "data_modal_key": null,
-        "operator_family": "master-detail",
+        "operator_family": "confirm-compact-form",
         "states": [
           "closed",
           "open",
-          "loading",
-          "loaded",
-          "empty",
-          "error",
+          "validation-error",
           "narrow"
         ],
         "icon_inventory": {
@@ -3615,7 +3612,7 @@
         "family": "confirm-compact-form",
         "initial_visibility": "hidden",
         "aria_modal": "true",
-        "aria_label": "Progress",
+        "aria_label": "Ход операции",
         "data_modal_key": null,
         "operator_family": "confirm-compact-form",
         "states": [
@@ -3919,24 +3916,24 @@
     ]
   },
   "inline_styles": {
-    "attribute_count": 209,
+    "attribute_count": 207,
     "attribute_kind_counts": {
       "mixed-state-and-presentation": 3,
-      "presentation-geometry": 140,
+      "presentation-geometry": 138,
       "state-visibility-hook": 66
     },
-    "declaration_count": 312,
+    "declaration_count": 309,
     "declaration_kind_counts": {
-      "presentation-geometry": 243,
+      "presentation-geometry": 240,
       "state-visibility": 69
     },
     "property_counts": {
-      "align-items": 34,
+      "align-items": 33,
       "background": 2,
       "border": 3,
       "border-top": 1,
       "color": 2,
-      "display": 118,
+      "display": 117,
       "flex": 6,
       "flex-direction": 7,
       "flex-wrap": 14,
@@ -3948,7 +3945,7 @@
       "max-height": 6,
       "min-height": 1,
       "min-width": 5,
-      "opacity": 31,
+      "opacity": 30,
       "overflow": 3,
       "padding": 21,
       "white-space": 1,
@@ -6503,38 +6500,8 @@
       },
       {
         "index": 174,
-        "locator": "label.xk-modal-gap-8@L5431",
-        "line": 5431,
-        "kind": "presentation-geometry",
-        "source": "display:flex; align-items:center;",
-        "declarations": [
-          {
-            "property": "display",
-            "value": "flex"
-          },
-          {
-            "property": "align-items",
-            "value": "center"
-          }
-        ]
-      },
-      {
-        "index": 175,
-        "locator": "span@L5432",
-        "line": 5432,
-        "kind": "presentation-geometry",
-        "source": "opacity:.85;",
-        "declarations": [
-          {
-            "property": "opacity",
-            "value": ".85"
-          }
-        ]
-      },
-      {
-        "index": 176,
-        "locator": "div.modal-actions@L5441",
-        "line": 5441,
+        "locator": "div.modal-actions@L5446",
+        "line": 5446,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -6545,9 +6512,9 @@
         ]
       },
       {
-        "index": 177,
+        "index": 175,
         "locator": "#fm-bookmarks-error",
-        "line": 5460,
+        "line": 5465,
         "kind": "state-visibility-hook",
         "source": "display:none;",
         "declarations": [
@@ -6558,9 +6525,9 @@
         ]
       },
       {
-        "index": 178,
+        "index": 176,
         "locator": "#fm-download-multi-desc",
-        "line": 5484,
+        "line": 5489,
         "kind": "presentation-geometry",
         "source": "opacity:.9;",
         "declarations": [
@@ -6571,9 +6538,9 @@
         ]
       },
       {
-        "index": 179,
-        "locator": "div.xk-modal-gap-10@L5486",
-        "line": 5486,
+        "index": 177,
+        "locator": "div.xk-modal-gap-10@L5491",
+        "line": 5491,
         "kind": "presentation-geometry",
         "source": "display:flex; flex-direction:column;",
         "declarations": [
@@ -6588,9 +6555,9 @@
         ]
       },
       {
-        "index": 180,
-        "locator": "label.xk-modal-gap-10@L5487",
-        "line": 5487,
+        "index": 178,
+        "locator": "label.xk-modal-gap-10@L5492",
+        "line": 5492,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:flex-start;",
         "declarations": [
@@ -6601,43 +6568,43 @@
           {
             "property": "align-items",
             "value": "flex-start"
+          }
+        ]
+      },
+      {
+        "index": 179,
+        "locator": "div@L5495",
+        "line": 5495,
+        "kind": "presentation-geometry",
+        "source": "font-weight:600;",
+        "declarations": [
+          {
+            "property": "font-weight",
+            "value": "600"
+          }
+        ]
+      },
+      {
+        "index": 180,
+        "locator": "div@L5496",
+        "line": 5496,
+        "kind": "presentation-geometry",
+        "source": "font-size:12px; opacity:.8;",
+        "declarations": [
+          {
+            "property": "font-size",
+            "value": "12px"
+          },
+          {
+            "property": "opacity",
+            "value": ".8"
           }
         ]
       },
       {
         "index": 181,
-        "locator": "div@L5490",
-        "line": 5490,
-        "kind": "presentation-geometry",
-        "source": "font-weight:600;",
-        "declarations": [
-          {
-            "property": "font-weight",
-            "value": "600"
-          }
-        ]
-      },
-      {
-        "index": 182,
-        "locator": "div@L5491",
-        "line": 5491,
-        "kind": "presentation-geometry",
-        "source": "font-size:12px; opacity:.8;",
-        "declarations": [
-          {
-            "property": "font-size",
-            "value": "12px"
-          },
-          {
-            "property": "opacity",
-            "value": ".8"
-          }
-        ]
-      },
-      {
-        "index": 183,
-        "locator": "label.xk-modal-gap-10@L5495",
-        "line": 5495,
+        "locator": "label.xk-modal-gap-10@L5500",
+        "line": 5500,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:flex-start;",
         "declarations": [
@@ -6652,9 +6619,9 @@
         ]
       },
       {
-        "index": 184,
-        "locator": "div@L5498",
-        "line": 5498,
+        "index": 182,
+        "locator": "div@L5503",
+        "line": 5503,
         "kind": "presentation-geometry",
         "source": "font-weight:600;",
         "declarations": [
@@ -6665,9 +6632,9 @@
         ]
       },
       {
-        "index": 185,
+        "index": 183,
         "locator": "#fm-download-multi-queue-hint",
-        "line": 5499,
+        "line": 5504,
         "kind": "presentation-geometry",
         "source": "font-size:12px; opacity:.8;",
         "declarations": [
@@ -6682,9 +6649,9 @@
         ]
       },
       {
-        "index": 186,
-        "locator": "label.xk-modal-gap-8.xk-modal-mt-12@L5504",
-        "line": 5504,
+        "index": 184,
+        "locator": "label.xk-modal-gap-8.xk-modal-mt-12@L5509",
+        "line": 5509,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -6699,9 +6666,9 @@
         ]
       },
       {
-        "index": 187,
-        "locator": "span@L5506",
-        "line": 5506,
+        "index": 185,
+        "locator": "span@L5511",
+        "line": 5511,
         "kind": "presentation-geometry",
         "source": "font-size:12px; opacity:.9;",
         "declarations": [
@@ -6716,35 +6683,35 @@
         ]
       },
       {
+        "index": 186,
+        "locator": "div.modal-actions.xk-modal-gap-10@L5514",
+        "line": 5514,
+        "kind": "presentation-geometry",
+        "source": "justify-content:flex-end;",
+        "declarations": [
+          {
+            "property": "justify-content",
+            "value": "flex-end"
+          }
+        ]
+      },
+      {
+        "index": 187,
+        "locator": "div.modal-actions@L5535",
+        "line": 5535,
+        "kind": "presentation-geometry",
+        "source": "justify-content:flex-end;",
+        "declarations": [
+          {
+            "property": "justify-content",
+            "value": "flex-end"
+          }
+        ]
+      },
+      {
         "index": 188,
-        "locator": "div.modal-actions.xk-modal-gap-10@L5509",
-        "line": 5509,
-        "kind": "presentation-geometry",
-        "source": "justify-content:flex-end;",
-        "declarations": [
-          {
-            "property": "justify-content",
-            "value": "flex-end"
-          }
-        ]
-      },
-      {
-        "index": 189,
-        "locator": "div.modal-actions@L5530",
-        "line": 5530,
-        "kind": "presentation-geometry",
-        "source": "justify-content:flex-end;",
-        "declarations": [
-          {
-            "property": "justify-content",
-            "value": "flex-end"
-          }
-        ]
-      },
-      {
-        "index": 190,
-        "locator": "div.xk-modal-gap-8.xk-modal-mb-8@L5545",
-        "line": 5545,
+        "locator": "div.xk-modal-gap-8.xk-modal-mb-8@L5550",
+        "line": 5550,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;",
         "declarations": [
@@ -6767,9 +6734,9 @@
         ]
       },
       {
-        "index": 191,
-        "locator": "div.xk-modal-gap-8@L5546",
-        "line": 5546,
+        "index": 189,
+        "locator": "div.xk-modal-gap-8@L5551",
+        "line": 5551,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center; flex-wrap:wrap;",
         "declarations": [
@@ -6788,9 +6755,9 @@
         ]
       },
       {
-        "index": 192,
-        "locator": "label.xk-modal-gap-6@L5547",
-        "line": 5547,
+        "index": 190,
+        "locator": "label.xk-modal-gap-6@L5552",
+        "line": 5552,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center; opacity:.9;",
         "declarations": [
@@ -6809,9 +6776,9 @@
         ]
       },
       {
-        "index": 193,
-        "locator": "span@L5548",
-        "line": 5548,
+        "index": 191,
+        "locator": "span@L5553",
+        "line": 5553,
         "kind": "presentation-geometry",
         "source": "font-size:12px;",
         "declarations": [
@@ -6822,9 +6789,9 @@
         ]
       },
       {
-        "index": 194,
+        "index": 192,
         "locator": "#fm-ops-filter",
-        "line": 5549,
+        "line": 5554,
         "kind": "presentation-geometry",
         "source": "height:32px;",
         "declarations": [
@@ -6835,9 +6802,9 @@
         ]
       },
       {
-        "index": 195,
-        "locator": "div.xk-modal-gap-8@L5557",
-        "line": 5557,
+        "index": 193,
+        "locator": "div.xk-modal-gap-8@L5562",
+        "line": 5562,
         "kind": "presentation-geometry",
         "source": "display:flex; justify-content:flex-end; flex-wrap:wrap;",
         "declarations": [
@@ -6856,9 +6823,9 @@
         ]
       },
       {
-        "index": 196,
+        "index": 194,
         "locator": "#fm-ops-summary",
-        "line": 5562,
+        "line": 5567,
         "kind": "presentation-geometry",
         "source": "font-size:12px; opacity:.85;",
         "declarations": [
@@ -6873,9 +6840,9 @@
         ]
       },
       {
-        "index": 197,
-        "locator": "div.xk-modal-gap-10.xk-modal-mb-10@L5576",
-        "line": 5576,
+        "index": 195,
+        "locator": "div.xk-modal-gap-10.xk-modal-mb-10@L5581",
+        "line": 5581,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;",
         "declarations": [
@@ -6898,9 +6865,9 @@
         ]
       },
       {
-        "index": 198,
-        "locator": "div.xk-modal-gap-8@L5577",
-        "line": 5577,
+        "index": 196,
+        "locator": "div.xk-modal-gap-8@L5582",
+        "line": 5582,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center; flex-wrap:wrap;",
         "declarations": [
@@ -6919,9 +6886,9 @@
         ]
       },
       {
-        "index": 199,
+        "index": 197,
         "locator": "#fm-volumes-spinner",
-        "line": 5579,
+        "line": 5584,
         "kind": "presentation-geometry",
         "source": "opacity:.85;",
         "declarations": [
@@ -6932,9 +6899,9 @@
         ]
       },
       {
-        "index": 200,
+        "index": 198,
         "locator": "#fm-volumes-summary",
-        "line": 5581,
+        "line": 5586,
         "kind": "presentation-geometry",
         "source": "font-size:12px; opacity:.85;",
         "declarations": [
@@ -6949,9 +6916,9 @@
         ]
       },
       {
-        "index": 201,
-        "locator": "div.status.xk-modal-mt-10@L5585",
-        "line": 5585,
+        "index": 199,
+        "locator": "div.status.xk-modal-mt-10@L5590",
+        "line": 5590,
         "kind": "presentation-geometry",
         "source": "opacity:.75;",
         "declarations": [
@@ -6962,9 +6929,9 @@
         ]
       },
       {
-        "index": 202,
-        "locator": "div.modal-actions@L5650",
-        "line": 5650,
+        "index": 200,
+        "locator": "div.modal-actions@L5655",
+        "line": 5655,
         "kind": "presentation-geometry",
         "source": "justify-content:flex-end;",
         "declarations": [
@@ -6975,9 +6942,9 @@
         ]
       },
       {
-        "index": 203,
-        "locator": "div.xk-editor-workbench-title.xk-modal-gap-2@L5660",
-        "line": 5660,
+        "index": 201,
+        "locator": "div.xk-editor-workbench-title.xk-modal-gap-2@L5665",
+        "line": 5665,
         "kind": "presentation-geometry",
         "source": "display:flex; flex-direction:column;",
         "declarations": [
@@ -6992,9 +6959,9 @@
         ]
       },
       {
-        "index": 204,
+        "index": 202,
         "locator": "#fm-editor-subtitle",
-        "line": 5662,
+        "line": 5667,
         "kind": "presentation-geometry",
         "source": "font-size: 0.82rem; opacity:0.75;",
         "declarations": [
@@ -7009,9 +6976,9 @@
         ]
       },
       {
-        "index": 205,
-        "locator": "div.xk-editor-workbench-header-tools.xk-modal-gap-10@L5664",
-        "line": 5664,
+        "index": 203,
+        "locator": "div.xk-editor-workbench-header-tools.xk-modal-gap-10@L5669",
+        "line": 5669,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -7022,39 +6989,39 @@
           {
             "property": "align-items",
             "value": "center"
+          }
+        ]
+      },
+      {
+        "index": 204,
+        "locator": "#fm-editor-warning",
+        "line": 5681,
+        "kind": "state-visibility-hook",
+        "source": "display:none;",
+        "declarations": [
+          {
+            "property": "display",
+            "value": "none"
+          }
+        ]
+      },
+      {
+        "index": 205,
+        "locator": "#fm-editor-error",
+        "line": 5682,
+        "kind": "state-visibility-hook",
+        "source": "display:none;",
+        "declarations": [
+          {
+            "property": "display",
+            "value": "none"
           }
         ]
       },
       {
         "index": 206,
-        "locator": "#fm-editor-warning",
-        "line": 5676,
-        "kind": "state-visibility-hook",
-        "source": "display:none;",
-        "declarations": [
-          {
-            "property": "display",
-            "value": "none"
-          }
-        ]
-      },
-      {
-        "index": 207,
-        "locator": "#fm-editor-error",
-        "line": 5677,
-        "kind": "state-visibility-hook",
-        "source": "display:none;",
-        "declarations": [
-          {
-            "property": "display",
-            "value": "none"
-          }
-        ]
-      },
-      {
-        "index": 208,
-        "locator": "div.xk-editor-workbench-action-group.xk-modal-gap-8@L5682",
-        "line": 5682,
+        "locator": "div.xk-editor-workbench-action-group.xk-modal-gap-8@L5687",
+        "line": 5687,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -7069,9 +7036,9 @@
         ]
       },
       {
-        "index": 209,
-        "locator": "div.xk-editor-workbench-action-group.xk-modal-gap-8@L5685",
-        "line": 5685,
+        "index": 207,
+        "locator": "div.xk-editor-workbench-action-group.xk-modal-gap-8@L5690",
+        "line": 5690,
         "kind": "presentation-geometry",
         "source": "display:flex; align-items:center;",
         "declarations": [
@@ -7088,8 +7055,8 @@
     ]
   },
   "dom_contract": {
-    "id_count": 1375,
-    "unique_id_count": 1375,
+    "id_count": 1376,
+    "unique_id_count": 1376,
     "duplicate_ids": [],
     "ids": [
       "backups-clear-snapshots-btn",
@@ -7200,6 +7167,7 @@
       "fm-conflicts-list",
       "fm-conflicts-modal",
       "fm-conflicts-ok-btn",
+      "fm-conflicts-summary",
       "fm-conn-profile",
       "fm-conn-profile-del-btn",
       "fm-connect-cancel-btn",
@@ -8468,7 +8436,7 @@
       "xray-snapshot-status",
       "xray-snapshot-title"
     ],
-    "data_attribute_count": 657,
+    "data_attribute_count": 661,
     "data_attributes": [
       {
         "locator": "header.panel-header.panel-header-shell@L96",
@@ -11617,8 +11585,18 @@
       },
       {
         "locator": "#fm-conflicts-modal",
+        "name": "data-modal-noresize",
+        "value": "1"
+      },
+      {
+        "locator": "#fm-conflicts-modal",
+        "name": "data-modal-remember",
+        "value": "0"
+      },
+      {
+        "locator": "#fm-conflicts-modal",
         "name": "data-operator-modal-family",
-        "value": "master-detail"
+        "value": "confirm-compact-form"
       },
       {
         "locator": "#fm-conflicts-cancel-btn",
@@ -11647,6 +11625,16 @@
       },
       {
         "locator": "#fm-progress-modal",
+        "name": "data-modal-noresize",
+        "value": "1"
+      },
+      {
+        "locator": "#fm-progress-modal",
+        "name": "data-modal-remember",
+        "value": "0"
+      },
+      {
+        "locator": "#fm-progress-modal",
         "name": "data-operator-modal-family",
         "value": "confirm-compact-form"
       },
@@ -11666,42 +11654,42 @@
         "value": "drawer-help"
       },
       {
-        "locator": "li@L5622",
-        "name": "data-fm-lite-hide",
-        "value": "1"
-      },
-      {
-        "locator": "li@L5623",
-        "name": "data-fm-lite-hide",
-        "value": "1"
-      },
-      {
-        "locator": "li@L5625",
-        "name": "data-fm-lite-hide",
-        "value": "1"
-      },
-      {
-        "locator": "li@L5626",
-        "name": "data-fm-lite-hide",
-        "value": "1"
-      },
-      {
         "locator": "li@L5627",
         "name": "data-fm-lite-hide",
         "value": "1"
       },
       {
-        "locator": "li@L5642",
+        "locator": "li@L5628",
         "name": "data-fm-lite-hide",
         "value": "1"
       },
       {
-        "locator": "li@L5643",
+        "locator": "li@L5630",
         "name": "data-fm-lite-hide",
         "value": "1"
       },
       {
-        "locator": "li@L5644",
+        "locator": "li@L5631",
+        "name": "data-fm-lite-hide",
+        "value": "1"
+      },
+      {
+        "locator": "li@L5632",
+        "name": "data-fm-lite-hide",
+        "value": "1"
+      },
+      {
+        "locator": "li@L5647",
+        "name": "data-fm-lite-hide",
+        "value": "1"
+      },
+      {
+        "locator": "li@L5648",
+        "name": "data-fm-lite-hide",
+        "value": "1"
+      },
+      {
+        "locator": "li@L5649",
         "name": "data-fm-lite-hide",
         "value": "1"
       },
@@ -11935,7 +11923,7 @@
       "#outbounds-file-code",
       ".xk-mihomo-topbar .xk-routing-active-inline"
     ],
-    "js_referenced_template_id_count": 1281,
+    "js_referenced_template_id_count": 1282,
     "js_referenced_template_ids": {
       "backups-clear-snapshots-btn": [
         "xkeen-ui/static/js/features/backups.js"
@@ -12241,6 +12229,9 @@
       ],
       "fm-conflicts-ok-btn": [
         "xkeen-ui/static/js/features/file_manager/actions_modals.js"
+      ],
+      "fm-conflicts-summary": [
+        "xkeen-ui/static/js/features/file_manager/ops.js"
       ],
       "fm-conn-profile": [
         "xkeen-ui/static/js/features/file_manager/remote.js"
@@ -15387,7 +15378,6 @@
         "xkeen-ui/static/js/terminal/history.js"
       ],
       "terminal-input": [
-        "xkeen-ui/static/js/features/file_manager/ops.js",
         "xkeen-ui/static/js/terminal/core/input_controller.js",
         "xkeen-ui/static/js/terminal/core/ui.js",
         "xkeen-ui/static/js/terminal/history.js",

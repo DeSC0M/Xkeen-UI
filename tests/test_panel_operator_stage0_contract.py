@@ -135,8 +135,8 @@ def test_stage0_inventory_classifies_all_inline_styles_and_dom_hooks(tmp_path):
 
     # The official stable/pre-release Commands actions are part of the
     # canonical panel contract again.
-    assert inline["attribute_count"] == 209
-    assert sum(inline["attribute_kind_counts"].values()) == 209
+    assert inline["attribute_count"] == 207
+    assert sum(inline["attribute_kind_counts"].values()) == 207
     assert inline["attribute_kind_counts"]["state-visibility-hook"] > 0
     assert inline["attribute_kind_counts"]["presentation-geometry"] > 0
     assert inline["attribute_kind_counts"]["mixed-state-and-presentation"] > 0

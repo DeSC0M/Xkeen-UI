@@ -88,9 +88,9 @@ def test_stage5_all_static_modals_are_bound_to_one_of_the_four_family_frames():
     css = CSS.read_text(encoding="utf-8")
 
     expected_counts = {
-        "confirm-compact-form": 24,
+        "confirm-compact-form": 25,
         "editor-workbench": 7,
-        "master-detail": 19,
+        "master-detail": 18,
         "drawer-help": 3,
     }
     modal_pairs = __import__("re").findall(
