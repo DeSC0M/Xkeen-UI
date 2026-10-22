@@ -38,8 +38,8 @@
         "gevent-websocket (optional)"
       ],
       "removable": false,
-      "unit_count": 583,
-      "size_bytes": 7897255,
+      "unit_count": 585,
+      "size_bytes": 7903812,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -51,7 +51,7 @@
         "frontend_feature": 34,
         "frontend_javascript": 37,
         "frontend_runtime": 2,
-        "frontend_test": 68,
+        "frontend_test": 70,
         "frontend_ui": 17,
         "stylesheet": 9,
         "template": 31
@@ -9713,7 +9713,7 @@
       "module_id": "core",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/core_source.js",
-      "size_bytes": 32931,
+      "size_bytes": 33472,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -11435,7 +11435,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/core_source_selection.spec.mjs",
-      "size_bytes": 25705,
+      "size_bytes": 27794,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -12381,8 +12381,48 @@
     {
       "module_id": "core",
       "kind": "frontend_test",
+      "path": "e2e/router_core_install.spec.mjs",
+      "size_bytes": 2188,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_test",
       "path": "e2e/router_modem_controls.spec.mjs",
       "size_bytes": 4746,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_test",
+      "path": "e2e/router_panel_smoke.spec.mjs",
+      "size_bytes": 1739,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
