@@ -456,7 +456,10 @@ export function initCoreSource(root) {
     if (installDetails) installDetails.hidden = false;
     if (applyButton) {
       applyButton.disabled = false;
-      applyButton.textContent = 'Установить';
+      applyButton.removeAttribute('aria-busy');
+      applyButton.classList.remove('is-working');
+      applyButton.dataset.tooltip = 'Начать загрузку, проверку и установку ядра';
+      text(buttonLabelNode(applyButton), 'Установить');
     }
   };
 
@@ -563,7 +566,10 @@ export function initCoreSource(root) {
         text(installModal?.querySelector('[data-core-install-message]'), message);
         if (applyButton) {
           applyButton.disabled = false;
-          applyButton.textContent = 'Закрыть';
+          applyButton.removeAttribute('aria-busy');
+          applyButton.classList.remove('is-working');
+          applyButton.dataset.tooltip = 'Закрыть окно установки';
+          text(buttonLabelNode(applyButton), 'Закрыть');
         }
         pollStartedAt = 0;
         await refresh();
@@ -659,6 +665,7 @@ export function initCoreSource(root) {
       button.disabled = false;
       button.removeAttribute('aria-busy');
       button.classList.remove('is-working');
+      button.dataset.tooltip = 'Начать загрузку, проверку и установку ядра';
       text(buttonLabelNode(button), 'Установить');
     }
   });

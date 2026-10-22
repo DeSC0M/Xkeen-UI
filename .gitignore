@@ -49,7 +49,9 @@ e2e/.auth/
 .claude/
 
 # Local release signing keys. Never commit private key material.
-/.secrets/
+/.secrets/*
+!/.secrets/
+!/.secrets/router-e2e.env.example
 
 # Local audit working notes
 /README_AUDIT_CHECKLIST_CURRENT.md
