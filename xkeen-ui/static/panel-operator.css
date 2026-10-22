@@ -15177,6 +15177,183 @@ body.panel-page .modal[data-operator-modal-family="confirm-compact-form"] .modal
   max-height: min(56dvh, 540px);
 }
 
+/* File operations are short-lived status dialogs, not persistent workspaces.
+ * Old resizable geometry could turn a one-line download into a large empty
+ * canvas. Keep the progress window content-sized and let the details control
+ * be the only place that can increase its height. */
+body.panel-page #fm-progress-modal .modal-content {
+  width: min(620px, calc(100vw - 36px));
+}
+
+body.panel-page #fm-progress-modal .modal-body {
+  display: grid;
+  gap: 10px;
+}
+
+body.panel-page #fm-progress-title {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+
+body.panel-page #fm-progress-meta {
+  min-height: 1.25em;
+  margin: 0;
+  color: var(--op-muted);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+  opacity: 1;
+}
+
+body.panel-page #fm-progress-details {
+  margin: 0;
+}
+
+body.panel-page #fm-progress-details:empty {
+  display: none;
+}
+
+/* A conflict review has many rows, but it is still a compact decision form:
+ * the body grows only with its real contents and scrolls after the viewport
+ * limit. Long router paths wrap in their own columns instead of forcing the
+ * whole dialog into an untidy horizontal scrollbar. */
+body.panel-page #fm-conflicts-modal .modal-content {
+  width: min(920px, calc(100vw - 36px));
+}
+
+body.panel-page #fm-conflicts-modal .fm-conflicts-body {
+  display: grid;
+  gap: 12px;
+}
+
+body.panel-page #fm-conflicts-modal .fm-conflicts-intro {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  color: var(--op-muted);
+  font-size: calc(12px * var(--xk-font-scale, 1));
+  line-height: 1.4;
+}
+
+body.panel-page #fm-conflicts-modal .fm-conflicts-intro strong {
+  color: var(--op-text);
+  font-size: calc(13px * var(--xk-font-scale, 1));
+  font-weight: 650;
+}
+
+body.panel-page #fm-conflicts-modal .fm-conflicts-table {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+body.panel-page #fm-conflicts-modal .fm-conflicts-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(132px, 156px);
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 12px;
+  align-items: start;
+}
+
+body.panel-page #fm-conflicts-modal .fm-conflicts-head {
+  min-height: 0;
+  padding-block: 7px;
+  border-color: transparent !important;
+  background: transparent !important;
+  color: var(--op-muted);
+  font-size: calc(11px * var(--xk-font-scale, 1));
+  font-weight: 650;
+}
+
+body.panel-page #fm-conflicts-modal .fm-conflict-path,
+body.panel-page #fm-conflicts-modal .fm-conflict-choice {
+  min-width: 0;
+}
+
+body.panel-page #fm-conflicts-modal .fm-conflict-path {
+  overflow-wrap: anywhere;
+  color: var(--op-text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: calc(12px * var(--xk-font-scale, 1));
+  line-height: 1.45;
+}
+
+body.panel-page #fm-conflicts-modal .fm-conflict-action {
+  width: 100%;
+  min-width: 0;
+}
+
+body.panel-page #fm-conflicts-modal .fm-conflicts-footer {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 10px 16px;
+  min-width: 0;
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--op-border);
+}
+
+body.panel-page #fm-conflicts-modal .fm-conflicts-default-control {
+  display: grid;
+  gap: 5px;
+  min-width: min(100%, 220px);
+  color: var(--op-muted);
+  font-size: calc(11px * var(--xk-font-scale, 1));
+  font-weight: 620;
+}
+
+body.panel-page #fm-conflicts-modal .fm-conflicts-default-control select {
+  min-width: 180px;
+}
+
+body.panel-page #fm-conflicts-modal .fm-conflicts-footer-note {
+  min-width: 0;
+  color: var(--op-muted);
+  font-size: calc(11px * var(--xk-font-scale, 1));
+  line-height: 1.35;
+  text-align: right;
+}
+
+@media (max-width: 620px) {
+  body.panel-page #fm-conflicts-modal .fm-conflicts-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  body.panel-page #fm-conflicts-modal .fm-conflicts-head {
+    display: none;
+  }
+
+  body.panel-page #fm-conflicts-modal .fm-conflict-path::before,
+  body.panel-page #fm-conflicts-modal .fm-conflict-choice::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 3px;
+    color: var(--op-muted);
+    font-family: inherit;
+    font-size: calc(10.5px * var(--xk-font-scale, 1));
+    font-weight: 650;
+    line-height: 1.2;
+  }
+
+  body.panel-page #fm-conflicts-modal .fm-conflicts-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  body.panel-page #fm-conflicts-modal .fm-conflicts-default-control,
+  body.panel-page #fm-conflicts-modal .fm-conflicts-default-control select {
+    width: 100%;
+  }
+
+  body.panel-page #fm-conflicts-modal .fm-conflicts-footer-note {
+    text-align: left;
+  }
+}
+
 /* DNS-over-VLESS is a compact guarded action, not a resizable workbench.
  * Older builds remembered a dragged height for this dialog; that left a
  * large empty header/footer around a handful of status rows and also exposed

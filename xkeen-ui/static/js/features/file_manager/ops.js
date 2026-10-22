@@ -407,6 +407,14 @@ import { getFileManagerNamespace } from '../file_manager_namespace.js';
   function renderConflicts(conflicts) {
     const box = el('fm-conflicts-list');
     if (!box) return;
+    const rows = Array.isArray(conflicts) ? conflicts : [];
+    const summary = el('fm-conflicts-summary');
+    if (summary) {
+      const count = rows.length;
+      summary.textContent = count === 1
+        ? 'Найден 1 конфликт'
+        : `Найдено конфликтов: ${count}`;
+    }
 
     box.innerHTML = '';
     const list = document.createElement('div');
@@ -417,22 +425,40 @@ import { getFileManagerNamespace } from '../file_manager_namespace.js';
     head.innerHTML = '<div>Источник</div><div>Назначение</div><div>Действие</div>';
     list.appendChild(head);
 
-    (conflicts || []).forEach((c, idx) => {
+    rows.forEach((c, idx) => {
       const row = document.createElement('div');
       row.className = 'fm-conflicts-row';
       const src = safeName(c && (c.src_path || c.src_name) || '');
       const dst = safeName(c && c.dst_path || '');
 
       const sel = document.createElement('select');
-      sel.className = 'terminal-input';
-      sel.style.maxWidth = '120px';
-      sel.innerHTML = '<option value="replace">replace</option><option value="skip">skip</option>';
+      sel.className = 'terminal-input fm-conflict-action';
+      sel.setAttribute('aria-label', `Действие для конфликта ${idx + 1}`);
+      sel.innerHTML = '<option value="replace">Заменить</option><option value="skip">Пропустить</option>';
       sel.value = 'replace';
       sel.dataset.idx = String(idx);
 
-      row.appendChild((() => { const d = document.createElement('div'); d.textContent = src; return d; })());
-      row.appendChild((() => { const d = document.createElement('div'); d.textContent = dst; return d; })());
-      row.appendChild((() => { const d = document.createElement('div'); d.appendChild(sel); return d; })());
+      row.appendChild((() => {
+        const d = document.createElement('div');
+        d.className = 'fm-conflict-path';
+        d.dataset.label = 'Источник';
+        d.textContent = src;
+        return d;
+      })());
+      row.appendChild((() => {
+        const d = document.createElement('div');
+        d.className = 'fm-conflict-path';
+        d.dataset.label = 'Назначение';
+        d.textContent = dst;
+        return d;
+      })());
+      row.appendChild((() => {
+        const d = document.createElement('div');
+        d.className = 'fm-conflict-choice';
+        d.dataset.label = 'Действие';
+        d.appendChild(sel);
+        return d;
+      })());
       list.appendChild(row);
     });
 

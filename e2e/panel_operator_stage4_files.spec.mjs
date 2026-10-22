@@ -163,6 +163,90 @@ test.describe('Operator Console Stage 4 files', () => {
     expect(layout.iconRight).toBeLessThan(layout.labelLeft);
   });
 
+  test('progress modal stays content-sized after stale geometry is present', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.addInitScript(() => {
+      localStorage.setItem('xk.modal.state.v1.fm-progress-modal', JSON.stringify({
+        v: 1, x: 210, y: 170, w: 860, h: 640,
+      }));
+    });
+    await openFiles(page, 'dark', { width: 1440, height: 900 });
+
+    await page.evaluate(() => {
+      const modal = document.querySelector('#fm-progress-modal');
+      const title = document.querySelector('#fm-progress-title');
+      const meta = document.querySelector('#fm-progress-meta');
+      const bar = document.querySelector('#fm-progress-bar-inner');
+      modal.classList.remove('hidden');
+      title.textContent = 'Download — archive.tar.gz';
+      meta.textContent = '5.53 MB / 204.7 MB (3%) · 380.5 KB/s · ETA 8m 56s';
+      bar.style.width = '3%';
+      window.XKeen?.ui?.modal?.syncBodyScrollLock?.();
+    });
+
+    const modal = page.locator('#fm-progress-modal');
+    const content = modal.locator('.modal-content');
+    await expect(modal).toBeVisible();
+    await expect(content.locator('.modal-resizer')).toHaveCount(0);
+
+    const geometry = await content.evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      return {
+        height: rect.height,
+        inlineHeight: node.style.height,
+        position: node.style.position,
+      };
+    });
+    expect(geometry.height).toBeLessThan(260);
+    expect(geometry.inlineHeight).toBe('');
+    expect(geometry.position).toBe('');
+  });
+
+  test('conflict review wraps router paths and keeps decisions readable', async ({ page }) => {
+    await openFiles(page, 'dark', { width: 1440, height: 900 });
+    await page.route('**/api/fileops/jobs', async (route) => {
+      const payload = route.request().postDataJSON();
+      expect(payload.op).toBe('copy');
+      expect(payload.options.overwrite).toBe('ask');
+      expect(payload.options.dry_run).toBe(true);
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          dry_run: true,
+          conflicts: [{
+            src_path: '/tmp/mnt/very-long-volume-id/mihomo/profiles/default.yaml',
+            dst_path: '/tmp/mnt/another-long-volume-id/etc/mihomo/profiles/default.yaml',
+          }],
+        }),
+      });
+    });
+
+    const row = page.locator('.fm-panel[data-side="left"] .fm-row[data-name="routing.json"]');
+    await row.click();
+    await page.keyboard.press('F5');
+
+    const modal = page.locator('#fm-conflicts-modal');
+    const content = modal.locator('.modal-content');
+    await expect(modal).toBeVisible();
+    await expect(content.locator('.modal-resizer')).toHaveCount(0);
+    await expect(modal.locator('#fm-conflicts-summary')).toHaveText('Найден 1 конфликт');
+    await expect(modal.locator('.fm-conflict-action')).toHaveValue('replace');
+    await expect(modal.locator('.fm-conflict-action option')).toHaveText(['Заменить', 'Пропустить']);
+
+    const geometry = await content.evaluate((node) => {
+      const body = node.querySelector('.modal-body');
+      const rect = node.getBoundingClientRect();
+      return {
+        height: rect.height,
+        scrollWidth: body?.scrollWidth || 0,
+        clientWidth: body?.clientWidth || 0,
+      };
+    });
+    expect(geometry.height).toBeLessThan(440);
+    expect(geometry.scrollWidth - geometry.clientWidth).toBeLessThanOrEqual(1);
+  });
+
   test('legacy horizontal geometry is ignored and footer actions stay in view', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.addInitScript(() => {

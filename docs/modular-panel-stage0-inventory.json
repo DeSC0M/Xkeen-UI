@@ -39,7 +39,7 @@
       ],
       "removable": false,
       "unit_count": 585,
-      "size_bytes": 7903812,
+      "size_bytes": 7912418,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -252,7 +252,7 @@
       ],
       "removable": true,
       "unit_count": 85,
-      "size_bytes": 1007574,
+      "size_bytes": 1008333,
       "kind_counts": {
         "backend_route": 22,
         "backend_service": 32,
@@ -12240,7 +12240,7 @@
       "module_id": "core",
       "kind": "frontend_test",
       "path": "e2e/panel_operator_stage4_files.spec.mjs",
-      "size_bytes": 11705,
+      "size_bytes": 15209,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -13429,7 +13429,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/panel-operator.css",
-      "size_bytes": 778648,
+      "size_bytes": 783227,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -13769,7 +13769,7 @@
       "module_id": "core",
       "kind": "template",
       "path": "xkeen-ui/templates/panel/modals/files.html",
-      "size_bytes": 49196,
+      "size_bytes": 49719,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -25399,7 +25399,7 @@
       "module_id": "tool.files",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/file_manager/ops.js",
-      "size_bytes": 50321,
+      "size_bytes": 51080,
       "depends_on": [
         "core"
       ],
@@ -32768,7 +32768,7 @@
         },
         "tool.files": {
           "unit_count": 85,
-          "size_bytes": 1007574
+          "size_bytes": 1008333
         },
         "tool.advanced-diagnostics": {
           "unit_count": 26,

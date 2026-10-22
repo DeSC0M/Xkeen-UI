@@ -549,22 +549,27 @@
 </div>
 
 <!-- File Manager: conflicts modal (overwrite=ask) -->
-<div id="fm-conflicts-modal" class="modal hidden" data-operator-modal-family="master-detail" role="dialog" aria-modal="true" aria-label="Conflicts">
-    <div class="modal-content xk-modal-width xk-modal-width-760">
+<div id="fm-conflicts-modal" class="modal hidden" data-operator-modal-family="confirm-compact-form" data-modal-remember="0" data-modal-noresize="1" role="dialog" aria-modal="true" aria-label="Конфликты файлов">
+    <div class="modal-content xk-modal-width xk-modal-width-920">
     <div class="modal-header">
-      <span class="modal-title">Конфликты при копировании</span>
-      <button type="button" class="modal-close" id="fm-conflicts-close-btn" aria-label="Close" title="Закрыть">{{ op_icon('close') }}</button>
+      <span class="modal-title">Конфликты файлов</span>
+      <button type="button" class="modal-close" id="fm-conflicts-close-btn" aria-label="Закрыть" title="Закрыть">{{ op_icon('close') }}</button>
     </div>
-    <div class="modal-body">
+    <div class="modal-body fm-conflicts-body">
+      <div class="fm-conflicts-intro">
+        <strong id="fm-conflicts-summary">Проверьте совпадающие файлы</strong>
+        <span>Выберите действие для каждого файла или сразу для всех конфликтов.</span>
+      </div>
       <div id="fm-conflicts-list" class="fm-conflicts-list"></div>
       <div class="fm-conflicts-footer">
-        <label class="xk-modal-gap-8" style="display:flex; align-items:center;">
-          <span style="opacity:.85;">Действие по умолчанию:</span>
-          <select id="fm-conflicts-default" class="terminal-input xk-modal-max-width-220">
+        <label class="fm-conflicts-default-control">
+          <span>Для всех конфликтов</span>
+          <select id="fm-conflicts-default" class="terminal-input">
             <option value="replace">Заменить все</option>
             <option value="skip">Пропустить все</option>
           </select>
         </label>
+        <span class="fm-conflicts-footer-note">Индивидуальный выбор в строке имеет приоритет.</span>
       </div>
       <div id="fm-conflicts-error" class="error"></div>
     </div>
@@ -644,11 +649,11 @@
 </div>
 
 <!-- File Manager: progress modal -->
-<div id="fm-progress-modal" class="modal hidden" data-operator-modal-family="confirm-compact-form" role="dialog" aria-modal="true" aria-label="Progress">
+<div id="fm-progress-modal" class="modal hidden" data-operator-modal-family="confirm-compact-form" data-modal-remember="0" data-modal-noresize="1" role="dialog" aria-modal="true" aria-label="Ход операции">
     <div class="modal-content xk-modal-width xk-modal-width-620">
     <div class="modal-header">
       <span class="modal-title">Операция</span>
-      <button type="button" class="modal-close" id="fm-progress-close-btn" aria-label="Close" title="Закрыть">{{ op_icon('close') }}</button>
+      <button type="button" class="modal-close" id="fm-progress-close-btn" aria-label="Закрыть" title="Закрыть">{{ op_icon('close') }}</button>
     </div>
     <div class="modal-body">
       <div class="fm-progress-line" id="fm-progress-title"></div>
