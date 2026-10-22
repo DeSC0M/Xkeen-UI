@@ -50,7 +50,7 @@ for (const width of [1600, 1024, 390]) {
       expect(overview.height).toBeLessThan(160);
     }
     await expect(page.locator('#xk-resource-dashboard-swap')).toHaveText('Нет');
-    expect(await page.locator('.xk-dashboard-gauge .xk-resource-stat-meter').first().evaluate(element => getComputedStyle(element, '::after').backgroundImage)).toContain('repeating-linear-gradient');
+    expect(await page.locator('.xk-dashboard-gauge .xk-resource-stat-meter').first().evaluate(element => getComputedStyle(element, '::after').maskImage)).toContain('data:image/svg+xml');
     await expect(page.locator('#xk-resource-health-title')).toHaveText('Система в норме');
     const api = () => page.evaluate(async () => {
       const { resourceMonitorApi } = await import('/static/js/features/resource_monitor.js');
