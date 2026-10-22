@@ -8,6 +8,7 @@ from scripts.panel_template_source import compose_panel_template
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE = compose_panel_template(ROOT)
 SCRIPT = ROOT / "xkeen-ui/static/js/features/resource_monitor.js"
+MODEL = ROOT / "xkeen-ui/static/js/features/resource_monitor_model.js"
 CSS = ROOT / "xkeen-ui/static/panel-operator.css"
 
 
@@ -25,6 +26,10 @@ def test_resource_monitor_opens_diagnostic_dashboard_from_header():
         "xk-resource-chart-cpu",
         "xk-resource-chart-memory",
         "xk-resource-chart-network",
+        "xk-resource-chart-load",
+        "xk-resource-poll",
+        "xk-resource-export",
+        "xk-clients-show-all",
         "xk-resource-dashboard-refresh",
         "xk-internet-health",
         "xk-internet-check-dns-row",
@@ -87,7 +92,6 @@ def test_resource_monitor_opens_diagnostic_dashboard_from_header():
         "toggleDnsGuidance",
         "loadDnsDiagnostics",
         "dnsDiagnosticsLoaded",
-        "Проблема с зашифрованным DNS",
         "formatOptionalBitRate",
         'value === true ? "Нет перехвата"',
         "loadProcesses",
@@ -106,7 +110,7 @@ def test_resource_monitor_opens_diagnostic_dashboard_from_header():
         'data-chart-toggle',
         'pointermove',
         'percentile(values, 95)',
-        'load_1m) || 0) / cores',
+        'load1: metricNumber(payload?.cpu?.load_1m)',
         'setPressedGroup',
         'setRefreshBusy',
         'syncCollapsiblePanelState',
@@ -124,8 +128,14 @@ def test_resource_monitor_opens_diagnostic_dashboard_from_header():
         'toggleInterfaceErrorDetails',
         'appendInterfaceErrorCell',
         'xk-resource-interface-chip',
+        "drawChartGapAnnotations",
+        "clientsShowAll",
+        "latestClientsPayload",
+        "historyGaps",
+        "selectClients",
     ):
         assert fragment in script
+    assert "Проблема с зашифрованным DNS" in MODEL.read_text(encoding="utf-8")
     for fragment in (
         ".xk-resource-dashboard-content",
         ".xk-resource-overview",
@@ -155,6 +165,9 @@ def test_resource_monitor_opens_diagnostic_dashboard_from_header():
         ".xk-interface-error-detail",
         ".xk-resource-detail-wide",
         ".xk-resource-interface-chip",
+        ".xk-history-guide",
+        ".xk-load-explanation",
+        ".xk-clients-actions",
     ):
         assert fragment in css
 
