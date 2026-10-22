@@ -1,3 +1,5 @@
+import { metricNumber, selectHistory, nearestPointIndex, resourceHealth, buildResourceSnapshot, collectionGap, historyGaps, gapAtTime, selectClients } from "./resource_monitor_model.js";
+
 const ENDPOINT = "/api/system/resources";
 const PROCESS_ENDPOINT = "/api/system/processes";
 const CLIENTS_ENDPOINT = "/api/system/router/clients";
@@ -17,10 +19,16 @@ let request = null;
 let initialized = false;
 let history = [];
 let rangeMinutes = 5;
+let pollMs = POLL_MS;
+let expectedPollSeconds = POLL_MS / 1000;
+let telemetryStale = false;
+let requestTimeout = 0;
 let processRequest = null;
 let processesLoaded = false;
 let clientsRequest = null;
 let clientsLoaded = false;
+let clientsShowAll = false;
+let latestClientsPayload = null;
 let lteRequest = null;
 const lteControls = new Map();
 let channelRequest = null;
@@ -73,6 +81,17 @@ function bindCollapsiblePanelState() {
 // useful workbench ideas from fan92rus/xkeen-ui: series controls, hover
 // inspection, smoothed lines and min/P95/max/current summaries.
 const CHARTS = Object.freeze({
+  load: {
+    id: "xk-resource-chart-load",
+    minMax: .25,
+    axisFormat: (value) => value.toFixed(value < 1 ? 2 : value < 10 ? 1 : 0),
+    valueFormat: (value) => Number(value).toFixed(2),
+    series: [
+      { key: "load1", label: "1 мин", color: "#4db68b" },
+      { key: "load5", label: "5 мин", color: "#d7a650" },
+      { key: "load15", label: "15 мин", color: "#5bb8d5" },
+    ],
+  },
   cpu: {
     id: "xk-resource-chart-cpu",
     fixedMax: 100,
@@ -81,7 +100,6 @@ const CHARTS = Object.freeze({
     bands: true,
     series: [
       { key: "cpu", label: "CPU", color: "#7477e8" },
-      { key: "load", label: "Load", color: "#4db68b" },
     ],
   },
   memory: {
@@ -161,6 +179,7 @@ function tone(percent) {
   return "normal";
 }
 function formatPercent(value) {
+  if (metricNumber(value) === null) return "—";
   const number = clampPercent(value);
   return `${number.toFixed(number % 1 ? 1 : 0)}%`;
 }
@@ -215,15 +234,15 @@ function render(payload) {
   const memoryMeter = byId("xk-resource-memory-meter");
   const stale = byId("xk-resource-monitor-stale");
   if (!root || !cpu || !memory) return;
-  const cpuPercent = clampPercent(payload?.cpu?.percent);
-  const memoryPercent = clampPercent(payload?.memory?.percent);
+  const cpuPercent = metricNumber(payload?.cpu?.percent);
+  const memoryPercent = metricNumber(payload?.memory?.percent);
   cpu.textContent = formatPercent(cpuPercent);
   memory.textContent = formatPercent(memoryPercent);
-  if (cpuMeter) cpuMeter.style.width = `${cpuPercent}%`;
-  if (memoryMeter) memoryMeter.style.width = `${memoryPercent}%`;
+  if (cpuMeter) cpuMeter.style.width = `${clampPercent(cpuPercent)}%`;
+  if (memoryMeter) memoryMeter.style.width = `${clampPercent(memoryPercent)}%`;
   root.dataset.state = "ready";
-  root.dataset.cpuTone = tone(cpuPercent);
-  root.dataset.memoryTone = tone(memoryPercent);
+  root.dataset.cpuTone = cpuPercent === null ? "unknown" : tone(cpuPercent);
+  root.dataset.memoryTone = memoryPercent === null ? "unknown" : tone(memoryPercent);
   if (stale) stale.hidden = true;
   const cores = Math.max(1, Number(payload?.cpu?.cores) || 1);
   const load = Number(payload?.cpu?.load_1m) || 0;
@@ -236,64 +255,44 @@ function render(payload) {
 
 function record(payload) {
   const network = payload?.network || {};
-  const cores = Math.max(1, Number(payload?.cpu?.cores) || 1);
-  history.push({
+  const point = {
     at: Number(payload?.sampled_at) || Math.round(Date.now() / 1000),
-    cpu: clampPercent(payload?.cpu?.percent),
-    load: clampPercent(((Number(payload?.cpu?.load_1m) || 0) / cores) * 100),
-    memory: clampPercent(payload?.memory?.percent),
-    swap: Number(payload?.memory?.swap_total_bytes)
+    period: expectedPollSeconds,
+    cpu: metricNumber(payload?.cpu?.percent),
+    load1: metricNumber(payload?.cpu?.load_1m),
+    load5: metricNumber(payload?.cpu?.load_5m),
+    load15: metricNumber(payload?.cpu?.load_15m),
+    memory: metricNumber(payload?.memory?.percent),
+    swap: metricNumber(payload?.memory?.swap_total_bytes) === null ? null : Number(payload?.memory?.swap_total_bytes)
       ? clampPercent(
           ((payload.memory.swap_used_bytes || 0) * 100) /
             payload.memory.swap_total_bytes,
         )
       : 0,
-    receive: Number(network.receive_bytes_per_second) || 0,
-    send: Number(network.send_bytes_per_second) || 0,
-  });
+    receive: metricNumber(network.receive_bytes_per_second),
+    send: metricNumber(network.send_bytes_per_second),
+  };
+  if (point.at < history.at(-1)?.at) history = [];
+  if (point.at === history.at(-1)?.at) history[history.length - 1] = point;
+  else history.push(point);
+  history = selectHistory(history, 1440);
   if (history.length > MAX_HISTORY) history = history.slice(-MAX_HISTORY);
 }
 
 function renderDashboard(payload) {
-  const cpu = Number(payload?.cpu?.percent) || 0;
-  const memory = Number(payload?.memory?.percent) || 0;
+  const cpu = metricNumber(payload?.cpu?.percent);
+  const memory = metricNumber(payload?.memory?.percent);
   const storage = payload?.storage || {};
-  const temperature = Number(payload?.temperature_celsius);
+  const temperature = metricNumber(payload?.temperature_celsius);
   const network = payload?.network || {};
   const swapTotal = Number(payload?.memory?.swap_total_bytes) || 0;
-  const values = [cpu, memory, Number(storage.percent) || 0];
-  const routerInternet = payload?.router?.internet || {};
-  const routerDnsDiagnostics = dnsDiagnostics || routerInternet?.dns_diagnostics || {};
-  const routerDnsError = routerDnsDiagnostics.state === "error";
-  const routerProblem = [
-    routerInternet.internet,
-    routerInternet.gateway,
-    routerInternet.dns,
-    routerInternet.captive,
-  ].some((value) => value === false) || routerDnsError;
-  const healthTone = values.some((v) => v >= 90) || routerProblem
-    ? "danger"
-    : values.some((v) => v >= 75)
-      ? "warning"
-      : "normal";
+  const healthState = resourceHealth(payload, dnsDiagnostics);
   const health = byId("xk-resource-health");
-  if (health) health.dataset.tone = healthTone;
+  if (health) health.dataset.tone = healthState.tone;
   const healthTitle = byId("xk-resource-health-title");
   const healthNote = byId("xk-resource-health-note");
-  let healthTitleText = "Система в норме";
-  let healthNoteText = "Критических сигналов не обнаружено";
-  if (routerDnsError) {
-    healthTitleText = "Проблема с зашифрованным DNS";
-    healthNoteText = "";
-  } else if (healthTone === "danger") {
-    healthTitleText = "Требуется проверка ресурсов";
-    healthNoteText = "Проверьте CPU, память, диск и температуру — один из показателей критический";
-  } else if (healthTone === "warning") {
-    healthTitleText = "Есть нагрузка выше обычной";
-    healthNoteText = "Сравните CPU/load и сетевую активность за выбранный интервал";
-  }
-  if (healthTitle) healthTitle.textContent = healthTitleText;
-  if (healthNote) healthNote.textContent = healthNoteText;
+  if (healthTitle) healthTitle.textContent = healthState.title;
+  if (healthNote) healthNote.textContent = healthState.note;
   const set = (id, value) => {
     const el = byId(id);
     if (el) el.textContent = value;
@@ -305,9 +304,29 @@ function renderDashboard(payload) {
   set("xk-resource-dashboard-cpu", formatPercent(cpu));
   set(
     "xk-resource-dashboard-load",
-    `Load ${Number(payload?.cpu?.load_1m || 0).toFixed(2)} · ${payload?.cpu?.cores || 1} ядер`,
+    `${payload?.cpu?.cores || 1} ядер · ориентир полной загрузки: ${payload?.cpu?.cores || 1}`,
   );
   meter("xk-resource-dashboard-cpu-meter", cpu);
+  const cores = Math.max(1, Number(payload?.cpu?.cores) || 1);
+  for (const interval of [1, 5, 15]) {
+    const load = metricNumber(payload?.cpu?.[`load_${interval}m`]);
+    set(`xk-resource-load-${interval}`, load === null ? "—" : load.toFixed(2));
+    meter(`xk-resource-load-${interval}-meter`, (load / cores) * 100);
+  }
+  const loadValue = metricNumber(payload?.cpu?.load_1m);
+  const loadGuide = byId("xk-resource-load-explanation");
+  if (loadGuide) loadGuide.textContent = loadValue === null
+    ? `Load недоступен. Ориентир полной загрузки для этого роутера: ${cores}.`
+    : `Сейчас ${loadValue.toFixed(2)} при ${cores} ядрах — ${loadValue < cores * .7 ? "запас производительности есть" : loadValue < cores ? "нагрузка повышена" : "задачи могут ждать CPU или диск"}. Низкие линии — это нормально; постоянный load выше ${cores} — повод проверить процессы.`;
+  const swapPercent = swapTotal ? (Number(payload?.memory?.swap_used_bytes) || 0) * 100 / swapTotal : 0;
+  set("xk-resource-dashboard-swap", metricNumber(payload?.memory?.swap_total_bytes) === null ? "—" : swapTotal ? formatPercent(swapPercent) : "Нет");
+  meter("xk-resource-dashboard-swap-meter", swapPercent);
+  set("xk-resource-network-receive", metricNumber(network.receive_bytes_per_second) === null ? "—" : formatRate(network.receive_bytes_per_second));
+  set("xk-resource-network-send", metricNumber(network.send_bytes_per_second) === null ? "—" : formatRate(network.send_bytes_per_second));
+  document.querySelectorAll("[data-resource-stat]").forEach((element) => {
+    const value = { cpu, memory, storage: metricNumber(storage.percent), swap: swapPercent }[element.dataset.resourceStat];
+    element.dataset.tone = value == null ? "unknown" : tone(value);
+  });
   set("xk-resource-dashboard-memory", formatPercent(memory));
   set(
     "xk-resource-dashboard-memory-note",
@@ -327,7 +346,7 @@ function renderDashboard(payload) {
   meter("xk-resource-dashboard-storage-meter", storage.percent || 0);
   set(
     "xk-resource-dashboard-temperature",
-    Number.isFinite(temperature) ? `${temperature.toFixed(1)} °C` : "—",
+    temperature !== null ? `${temperature.toFixed(1)} °C` : "—",
   );
   set(
     "xk-resource-dashboard-uptime",
@@ -335,7 +354,7 @@ function renderDashboard(payload) {
   );
   meter(
     "xk-resource-dashboard-temperature-meter",
-    Number.isFinite(temperature) ? Math.max(0, temperature * 2) : 0,
+    temperature !== null ? Math.min(100, temperature) : 0,
   );
   set("xk-resource-detail-cores", `${payload?.cpu?.cores || 1}`);
   set(
@@ -354,7 +373,7 @@ function renderDashboard(payload) {
     "xk-resource-detail-swap",
     swapTotal
       ? `${formatBytes(payload.memory.swap_used_bytes)} из ${formatBytes(swapTotal)}`
-      : "Не используется",
+      : metricNumber(payload?.memory?.swap_total_bytes) === null ? "—" : "Не используется",
   );
   set(
     "xk-resource-detail-network",
@@ -371,8 +390,8 @@ function renderDashboard(payload) {
         const chip = document.createElement("span");
         chip.className = "xk-resource-interface-chip";
         chip.textContent = item?.name || "—";
-        const receive = formatOptionalBitRate(item?.receive_bytes_per_second);
-        const send = formatOptionalBitRate(item?.send_bytes_per_second);
+        const receive = formatOptionalBitRate(item?.receive_bytes_per_second == null ? null : item.receive_bytes_per_second * 8);
+        const send = formatOptionalBitRate(item?.send_bytes_per_second == null ? null : item.send_bytes_per_second * 8);
         chip.title = `${item?.name || "Интерфейс"} · ↓ ${receive} · ↑ ${send}`;
         interfacesDetail.appendChild(chip);
       });
@@ -382,6 +401,7 @@ function renderDashboard(payload) {
   if (freshness)
     freshness.textContent = `Обновлено ${new Date((Number(payload?.sampled_at) || Date.now() / 1000) * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
   renderRouterDiagnostics(payload?.router);
+  syncTelemetryState();
   drawCharts();
 }
 
@@ -813,8 +833,17 @@ function renderClients(payload) {
   const body = byId("xk-client-rows");
   const status = byId("xk-clients-status");
   if (!body) return;
+  latestClientsPayload = payload;
   body.replaceChildren();
-  const items = (Array.isArray(payload?.top) ? payload.top : payload?.items || []).slice(0, 5);
+  const allItems = Array.isArray(payload?.items) ? payload.items : [];
+  const items = selectClients(payload, clientsShowAll);
+  const showAll = byId("xk-clients-show-all");
+  if (showAll) {
+    const canShowAll = allItems.length > 5;
+    showAll.hidden = !canShowAll;
+    showAll.textContent = clientsShowAll ? "Показать Top‑5" : `Показать всех (${Number(payload?.count || allItems.length)})`;
+    showAll.setAttribute("aria-pressed", clientsShowAll ? "true" : "false");
+  }
   if (!payload?.available || !items.length) {
     const row = document.createElement("tr");
     textCell(row, payload?.available ? "Активные клиенты не найдены" : "Клиенты RCI недоступны", "xk-resource-table-empty");
@@ -841,7 +870,7 @@ function renderClients(payload) {
   if (status) {
     const sampled = new Date((Number(payload?.sampled_at) || Date.now() / 1000) * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
     status.textContent = payload?.available
-      ? `Показано ${items.length} из ${payload?.count || items.length} · ${sampled}`
+      ? `Показано ${items.length} из ${payload?.count ?? allItems.length} · ${clientsShowAll ? "все доступные" : "Top‑5 по объёму трафика"}${payload?.truncated ? " · лимит RCI: 100 записей" : ""} · ${sampled}`
       : "KeeneticOS не вернул список клиентов.";
     status.dataset.state = payload?.available ? "ready" : "error";
   }
@@ -1310,7 +1339,7 @@ async function loadProcesses() {
 }
 
 function chartPoints() {
-  return history.slice(-Math.max(1, Math.round((rangeMinutes * 60) / 5)));
+  return selectHistory(history, rangeMinutes);
 }
 
 function percentile(values, value) {
@@ -1321,7 +1350,7 @@ function percentile(values, value) {
 }
 
 function niceChartMax(value) {
-  const maximum = Math.max(1, Number(value) || 0);
+  const maximum = Math.max(0.01, Number(value) || 0);
   const power = 10 ** Math.floor(Math.log10(maximum));
   const normalized = maximum / power;
   const step = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
@@ -1330,7 +1359,7 @@ function niceChartMax(value) {
 
 function chartRuntime(name) {
   if (!chartState.has(name)) {
-    chartState.set(name, { disabled: new Set(), hoverIndex: null, frame: 0 });
+    chartState.set(name, { disabled: new Set(), hoverIndex: null, hoverAt: null, frame: 0 });
   }
   return chartState.get(name);
 }
@@ -1352,7 +1381,7 @@ function renderChartStats(name, config, points) {
   root.replaceChildren();
   const heading = document.createElement("div");
   heading.className = "xk-resource-chart-stats-row xk-resource-chart-stats-head";
-  ["", "мин", "P95", "макс", "сейчас"].forEach((label) => {
+  ["", "мин", "макс", "сред", "P95", "сейчас"].forEach((label) => {
     const cell = document.createElement("span");
     cell.textContent = label;
     heading.appendChild(cell);
@@ -1360,7 +1389,7 @@ function renderChartStats(name, config, points) {
   root.appendChild(heading);
   const runtime = chartRuntime(name);
   config.series.forEach((series) => {
-    const values = points.map((point) => Math.max(0, Number(point[series.key]) || 0));
+    const values = points.map((point) => metricNumber(point[series.key])).filter((value) => value !== null);
     const row = document.createElement("div");
     row.className = "xk-resource-chart-stats-row";
     row.classList.toggle("is-disabled", runtime.disabled.has(series.key));
@@ -1370,11 +1399,11 @@ function renderChartStats(name, config, points) {
     label.textContent = series.label;
     row.appendChild(label);
     const stats = values.length
-      ? [Math.min(...values), percentile(values, 95), Math.max(...values), values.at(-1)]
-      : [0, 0, 0, 0];
+      ? [Math.min(...values), Math.max(...values), values.reduce((sum, value) => sum + value, 0) / values.length, percentile(values, 95), metricNumber(points.at(-1)?.[series.key])]
+      : [null, null, null, null, null];
     stats.forEach((value) => {
       const cell = document.createElement("span");
-      cell.textContent = config.valueFormat(value);
+      cell.textContent = value === null ? "—" : config.valueFormat(value);
       row.appendChild(cell);
     });
     root.appendChild(row);
@@ -1391,6 +1420,18 @@ function renderChartTooltip(name, config, points, coordinates, width) {
     return;
   }
   tooltip.replaceChildren();
+  const gap = gapAtTime(points, runtime.hoverAt);
+  if (gap) {
+    const title = document.createElement("strong");
+    const note = document.createElement("div");
+    title.textContent = `Нет данных · ${Math.round(gap.seconds)} с`;
+    note.textContent = "Опрос был пропущен или приостановлен. Это не нулевой трафик.";
+    tooltip.append(title, note);
+    tooltip.style.left = `${Math.max(8, Math.min(width - 176, coordinates[index].x))}px`;
+    tooltip.style.top = "12px";
+    tooltip.hidden = false;
+    return;
+  }
   const time = document.createElement("strong");
   time.textContent = new Date(points[index].at * 1000).toLocaleTimeString([], {
     hour: "2-digit",
@@ -1402,7 +1443,8 @@ function renderChartTooltip(name, config, points, coordinates, width) {
     if (runtime.disabled.has(series.key)) return;
     const row = document.createElement("span");
     row.style.setProperty("--chart-series-color", series.color);
-    row.textContent = `${series.label}: ${config.valueFormat(points[index][series.key])}`;
+    const value = metricNumber(points[index][series.key]);
+    row.textContent = `${series.label}: ${value === null ? "—" : config.valueFormat(value)}`;
     tooltip.appendChild(row);
   });
   const desiredLeft = coordinates[index].x + 12;
@@ -1411,9 +1453,35 @@ function renderChartTooltip(name, config, points, coordinates, width) {
   tooltip.hidden = false;
 }
 
+function drawChartGapAnnotations(ctx, points, pad, chartW, chartH, width, height) {
+  if (points.length < 2) return;
+  const startAt = points[0].at;
+  const span = Math.max(1, points.at(-1).at - startAt);
+  historyGaps(points).forEach((gap) => {
+    const left = pad.left + chartW * ((gap.from - startAt) / span);
+    const right = pad.left + chartW * ((gap.to - startAt) / span);
+    ctx.save();
+    ctx.fillStyle = "rgba(215,166,80,.05)";
+    ctx.strokeStyle = "rgba(215,166,80,.28)";
+    ctx.setLineDash([3, 4]);
+    ctx.fillRect(left, pad.top, Math.max(3, right - left), chartH);
+    ctx.beginPath();
+    ctx.moveTo(left, pad.top);
+    ctx.lineTo(left, pad.top + chartH);
+    ctx.moveTo(right, pad.top);
+    ctx.lineTo(right, pad.top + chartH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "rgba(215,166,80,.75)";
+    ctx.font = "8px ui-monospace, SFMono-Regular, monospace";
+    if (right - left > 68) ctx.fillText(`нет данных ${Math.round(gap.seconds)}с`, Math.max(pad.left, Math.min(width - 88, left + 4)), Math.min(height - 7, pad.top + 12));
+    ctx.restore();
+  });
+}
+
 function drawChart(name, config) {
   const canvas = byId(config.id);
-  if (!canvas) return;
+  if (!canvas || !canvas.getClientRects().length) return;
   const wrap = canvas.parentElement;
   const empty = wrap?.querySelector(".xk-resource-chart-empty");
   const points = chartPoints();
@@ -1436,13 +1504,13 @@ function drawChart(name, config) {
   const pad = { top: 12, right: 14, bottom: 25, left: 54 };
   const chartW = width - pad.left - pad.right;
   const chartH = height - pad.top - pad.bottom;
-  const css = getComputedStyle(document.documentElement);
+  const css = getComputedStyle(canvas);
   const textColor = css.getPropertyValue("--op-muted").trim() || "rgba(150,157,169,.8)";
   const gridColor = css.getPropertyValue("--op-border").trim() || "rgba(150,157,169,.14)";
   const runtime = chartRuntime(name);
   const activeSeries = config.series.filter((series) => !runtime.disabled.has(series.key));
   const dataMax = Math.max(
-    1,
+    .01,
     ...activeSeries.flatMap((series) => points.map((point) => Number(point[series.key]) || 0)),
   );
   const valuesMax = config.fixedMax || niceChartMax(Math.max(config.minMax || 1, dataMax * 1.08));
@@ -1472,15 +1540,18 @@ function drawChart(name, config) {
     ctx.fillText(config.axisFormat(valuesMax * (1 - index / 4)), 2, y + 3);
     ctx.globalAlpha = 0.68;
   }
+  const startAt = points[0]?.at || 0;
+  const span = Math.max(1, (points.at(-1)?.at || startAt) - startAt);
+  const pointX = (point) => pad.left + chartW * (points.length === 1 ? .5 : (point.at - startAt) / span);
   if (points.length > 1) {
     const tickIndexes = [...new Set([0, .25, .5, .75, 1].map((ratio) => Math.round((points.length - 1) * ratio)))];
     tickIndexes.forEach((pointIndex) => {
-      const x = pad.left + chartW * pointIndex / (points.length - 1);
+      const x = pointX(points[pointIndex]);
       ctx.beginPath();
       ctx.moveTo(x, pad.top);
       ctx.lineTo(x, pad.top + chartH);
       ctx.stroke();
-      const label = new Date(points[pointIndex].at * 1000).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
+      const label = new Date(points[pointIndex].at * 1000).toLocaleTimeString("ru-RU", {hour: "2-digit", minute: "2-digit", ...(span <= 600 ? {second: "2-digit"} : {})});
       ctx.globalAlpha = 1;
       ctx.textAlign = pointIndex === 0 ? "left" : pointIndex === points.length - 1 ? "right" : "center";
       ctx.fillText(label, x, height - 5);
@@ -1488,44 +1559,51 @@ function drawChart(name, config) {
     });
     ctx.textAlign = "start";
   }
+  drawChartGapAnnotations(ctx, points, pad, chartW, chartH, width, height);
   ctx.globalAlpha = 1;
-  const allCoordinates = points.map((point, index) => ({
-    x: pad.left + chartW * (points.length === 1 ? 0.5 : index / (points.length - 1)),
+  const allCoordinates = points.map((point) => ({
+    x: pointX(point),
   }));
   if (hasHistory) activeSeries.forEach((series) => {
-    const values = points.map((point) => Number(point[series.key]) || 0);
-    if (!values.length) return;
-    const coordinates = values.map((value, index) => ({
-      x: allCoordinates[index].x,
-      y: pad.top + chartH * (1 - Math.min(valuesMax, value) / valuesMax),
-    }));
-    ctx.beginPath();
-    traceSmoothLine(ctx, coordinates);
-    ctx.lineTo(coordinates.at(-1).x, pad.top + chartH);
-    ctx.lineTo(pad.left, pad.top + chartH);
-    ctx.closePath();
-    const fill = ctx.createLinearGradient(0, pad.top, 0, pad.top + chartH);
-    fill.addColorStop(0, `${series.color}2e`);
-    fill.addColorStop(1, `${series.color}03`);
-    ctx.fillStyle = fill;
-    ctx.fill();
-    ctx.beginPath();
-    traceSmoothLine(ctx, coordinates);
-    ctx.strokeStyle = series.color;
-    ctx.lineWidth = 2;
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
-    ctx.stroke();
-    const last = coordinates.at(-1);
-    ctx.beginPath();
-    ctx.arc(last.x, last.y, 3, 0, Math.PI * 2);
-    ctx.fillStyle = series.color;
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = css.getPropertyValue("--op-surface-2").trim() || "#1a1e25";
-    ctx.stroke();
+    // Missing samples and pauses must not look like continuous telemetry.
+    const segments = [];
+    let segment = [];
+    points.forEach((point, index) => {
+      const value = metricNumber(point[series.key]);
+      const gap = index && collectionGap(points[index - 1], point);
+      if ((value === null || gap) && segment.length) { segments.push(segment); segment = []; }
+      if (value !== null) segment.push({
+        x: allCoordinates[index].x,
+        y: pad.top + chartH * (1 - Math.min(valuesMax, value) / valuesMax),
+      });
+    });
+    if (segment.length) segments.push(segment);
+    segments.forEach((coordinates) => {
+      ctx.beginPath();
+      traceSmoothLine(ctx, coordinates);
+      ctx.lineTo(coordinates.at(-1).x, pad.top + chartH);
+      ctx.lineTo(coordinates[0].x, pad.top + chartH);
+      ctx.closePath();
+      const fill = ctx.createLinearGradient(0, pad.top, 0, pad.top + chartH);
+      fill.addColorStop(0, `${series.color}2e`);
+      fill.addColorStop(1, `${series.color}03`);
+      ctx.fillStyle = fill;
+      ctx.fill();
+      ctx.beginPath();
+      traceSmoothLine(ctx, coordinates);
+      ctx.strokeStyle = series.color;
+      ctx.lineWidth = 1.5;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.stroke();
+      const last = coordinates.at(-1);
+      ctx.beginPath();
+      ctx.arc(last.x, last.y, 2, 0, Math.PI * 2);
+      ctx.fillStyle = series.color;
+      ctx.fill();
+    });
   });
-  if (hasHistory && runtime.hoverIndex !== null && allCoordinates[runtime.hoverIndex]) {
+  if (hasHistory && runtime.hoverIndex !== null && allCoordinates[runtime.hoverIndex] && !gapAtTime(points, runtime.hoverAt)) {
     const index = runtime.hoverIndex;
     const x = allCoordinates[index].x;
     ctx.save();
@@ -1538,7 +1616,8 @@ function drawChart(name, config) {
     ctx.stroke();
     ctx.restore();
     activeSeries.forEach((series) => {
-      const value = Math.max(0, Number(points[index]?.[series.key]) || 0);
+      const value = metricNumber(points[index]?.[series.key]);
+      if (value === null) return;
       const y = pad.top + chartH * (1 - Math.min(valuesMax, value) / valuesMax);
       ctx.beginPath();
       ctx.arc(x, y, 4, 0, Math.PI * 2);
@@ -1555,6 +1634,14 @@ function drawChart(name, config) {
 }
 
 function drawCharts() {
+  if (byId("xk-resource-dashboard-modal")?.classList.contains("hidden")) return;
+  const note = byId("xk-resource-history-note");
+  if (note) {
+    const points = chartPoints();
+    const seconds = points.length > 1 ? points.at(-1).at - points[0].at : 0;
+    const gaps = historyGaps(points).length;
+    note.textContent = `CPU, память и сеть · ${points.length} точек / ${seconds >= 60 ? `${Math.floor(seconds / 60)} мин` : `${seconds} с`} · ${gaps ? `${gaps} пропусков опроса` : "без пропусков"} · только эта вкладка`;
+  }
   Object.entries(CHARTS).forEach(([name, config]) => drawChart(name, config));
 }
 
@@ -1579,11 +1666,15 @@ function bindChartInteractions() {
       const rect = canvas.getBoundingClientRect();
       const relativeX = (event.clientX - rect.left) * (Math.max(220, rect.width) / Math.max(1, rect.width));
       const ratio = Math.max(0, Math.min(1, (relativeX - geometry.pad.left) / geometry.chartW));
-      runtime.hoverIndex = Math.round(ratio * (geometry.points.length - 1));
+      const points = geometry.points;
+      const at = points[0].at + ratio * (points.at(-1).at - points[0].at);
+      runtime.hoverAt = at;
+      runtime.hoverIndex = nearestPointIndex(points, at);
       scheduleChartDraw(name);
     });
     canvas.addEventListener("pointerleave", () => {
       chartRuntime(name).hoverIndex = null;
+      chartRuntime(name).hoverAt = null;
       scheduleChartDraw(name);
     });
   });
@@ -1594,7 +1685,7 @@ function bindChartInteractions() {
       const name = button.dataset.chartToggle;
       const key = button.dataset.series;
       const config = CHARTS[name];
-      if (!config || !key) return;
+      if (!config || !config.series.some((series) => series.key === key)) return;
       const runtime = chartRuntime(name);
       const enabledCount = config.series.filter((series) => !runtime.disabled.has(series.key)).length;
       if (runtime.disabled.has(key)) runtime.disabled.delete(key);
@@ -1614,18 +1705,63 @@ function renderUnavailable() {
   root.dataset.state = "stale";
   root.title = "Не удалось обновить ресурсы роутера. Нажмите, чтобы повторить.";
   if (stale) stale.hidden = false;
+  telemetryStale = true;
+  syncTelemetryState();
 }
+
+function syncTelemetryState() {
+  const live = byId("xk-resource-live");
+  const body = byId("xk-resource-dashboard-modal")?.querySelector(".xk-resource-dashboard-body");
+  if (body) body.dataset.freshness = telemetryStale ? "stale" : "fresh";
+  if (live) {
+    live.dataset.state = telemetryStale ? "stale" : !pollMs ? "paused" : "live";
+    live.textContent = telemetryStale ? "Нет свежих данных" : !pollMs ? "На паузе" : `Обновление ${pollMs / 1000} с`;
+  }
+  const exportButton = byId("xk-resource-export");
+  if (exportButton) exportButton.disabled = !latestResourcePayload;
+  const monitor = byId("xk-resource-monitor");
+  if (monitor && !telemetryStale && latestResourcePayload) {
+    monitor.title = `CPU ${formatPercent(latestResourcePayload.cpu?.percent)} · RAM ${formatPercent(latestResourcePayload.memory?.percent)}\n${pollMs ? `Обновление каждые ${pollMs / 1000} секунд` : "Автообновление на паузе"} · нажмите для диагностики`;
+  }
+  if (telemetryStale) {
+    const health = byId("xk-resource-health");
+    if (health) health.dataset.tone = "unknown";
+    const title = byId("xk-resource-health-title");
+    const note = byId("xk-resource-health-note");
+    if (title) title.textContent = "Телеметрия недоступна";
+    if (note) note.textContent = latestResourcePayload ? "Показан последний успешный снимок. Повторите обновление." : "Не удалось получить состояние роутера.";
+  }
+}
+
+function exportSnapshot() {
+  if (!latestResourcePayload) return;
+  const snapshot = buildResourceSnapshot(latestResourcePayload, history, rangeMinutes, pollMs, telemetryStale);
+  const url = URL.createObjectURL(new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `xkeen-resources-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+  link.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function schedule() {
   window.clearTimeout(timer);
+  if (!pollMs) return;
+  const interval = document.hidden ? Math.max(HIDDEN_POLL_MS, pollMs) : pollMs;
+  expectedPollSeconds = interval / 1000;
   timer = window.setTimeout(
     refresh,
-    document.hidden ? HIDDEN_POLL_MS : POLL_MS,
+    interval,
   );
 }
 async function refresh() {
   if (request) return;
   const controller = new AbortController();
   request = controller;
+  requestTimeout = window.setTimeout(() => {
+    controller.abort();
+    renderUnavailable();
+  }, 12000);
   setRefreshBusy(true);
   try {
     const response = await fetch(ENDPOINT, {
@@ -1636,12 +1772,15 @@ async function refresh() {
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
+    if (controller.signal.aborted || payload?.ok === false || !payload?.cpu || !payload?.memory) throw new Error("Invalid telemetry");
+    telemetryStale = false;
     render(payload);
     record(payload);
     renderDashboard(payload);
   } catch (error) {
     if (!controller.signal.aborted) renderUnavailable();
   } finally {
+    window.clearTimeout(requestTimeout);
     if (request === controller) request = null;
     setRefreshBusy(false);
     schedule();
@@ -1654,6 +1793,18 @@ export function initResourceMonitor() {
   initialized = true;
   bindChartInteractions();
   bindCollapsiblePanelState();
+  document.querySelectorAll(".xk-dashboard-section").forEach((section) => {
+    section.addEventListener("toggle", () => {
+      if (section.open) requestAnimationFrame(drawCharts);
+    });
+  });
+  byId("xk-resource-export")?.addEventListener("click", exportSnapshot);
+  byId("xk-resource-poll")?.addEventListener("change", (event) => {
+    const value = Number(event.target.value);
+    pollMs = [0, 5000, 15000, 30000].includes(value) ? value : POLL_MS;
+    syncTelemetryState();
+    schedule();
+  });
   const dnsToggle = byId("xk-internet-check-dns-row");
   dnsToggle?.addEventListener("click", toggleDnsGuidance);
   dnsToggle?.addEventListener("keydown", (event) => {
@@ -1729,6 +1880,12 @@ export function initResourceMonitor() {
   clientsAction?.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.key === " ") activateClientsAction(event);
   });
+  byId("xk-clients-show-all")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    clientsShowAll = !clientsShowAll;
+    renderClients(latestClientsPayload);
+  });
   byId("xk-lte-action")?.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
@@ -1787,7 +1944,7 @@ export function initResourceMonitor() {
   });
   document.addEventListener("visibilitychange", () => {
     window.clearTimeout(timer);
-    if (!document.hidden) void refresh();
+    if (!document.hidden && pollMs) void refresh();
     else schedule();
   });
   void refresh();
