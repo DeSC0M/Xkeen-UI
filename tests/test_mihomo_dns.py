@@ -310,6 +310,35 @@ interface Bridge0
     assert result["provider_ignored"] is True
 
 
+def test_running_config_ignores_disconnected_wireless_isp_profiles():
+    running = """interface GigabitEthernet1
+    security-level public
+    ip no name-servers
+    ipv6 no name-servers
+!
+interface WifiMaster0/WifiStation0
+    security-level public
+    ip dhcp client dns-routes
+    down
+!
+interface WifiMaster1/WifiStation0
+    security-level public
+    ip dhcp client dns-routes
+    down
+!
+"""
+
+    result = dns._dns_policy_from_running_config(running)
+
+    assert result["provider_interfaces"] == [{
+        "name": "GigabitEthernet1",
+        "ignored": True,
+        "ipv4_ignored": True,
+        "ipv6_ignored": True,
+    }]
+    assert result["provider_ignored"] is True
+
+
 def test_running_config_without_wan_interfaces_reports_unknown_provider_policy():
     result = dns._dns_policy_from_running_config("dns-proxy\n    intercept enable\n!\n")
 

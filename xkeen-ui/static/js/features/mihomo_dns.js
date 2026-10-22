@@ -430,9 +430,9 @@ import { awaitDnsOperation, createDnsOperationNotice, newDnsOperationId } from '
     if (routerBypassState) {
       const state = String(bypass.router_state || bypass.state || 'unknown');
       const clientState = String(bypass.client_state || 'unknown');
-      const clientNote = clientState === 'unknown'
+      const clientNote = (clientState === 'unknown'
         ? (bypass.client_reason || 'Клиентские DNS нельзя подтвердить из панели.')
-        : 'Клиентский путь DNS проверен.';
+        : 'Клиентский путь DNS проверен.').replace(/[.!?。]+$/, '');
       setBadge(
         routerBypassState,
         state,

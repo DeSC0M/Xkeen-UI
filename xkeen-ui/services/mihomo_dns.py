@@ -2676,6 +2676,12 @@ def _dns_policy_from_running_config(output: str) -> dict[str, Any]:
 
     def is_wan(name: str, body: list[str]) -> bool:
         lowered = name.lower()
+        # A disconnected Wireless ISP profile keeps its public security level
+        # and DHCP DNS defaults in running-config. It is not a live provider
+        # path, so including it makes the wizard report a false DNS-bypass
+        # warning after the active WAN has already been secured.
+        if any(item == "down" for item in body):
+            return False
         # LAN/guest objects can contain DHCP-related lines too.  Exclude those
         # before using Keenetic's public security level as the authoritative
         # signal; WifiStation is intentionally not excluded because it is the
