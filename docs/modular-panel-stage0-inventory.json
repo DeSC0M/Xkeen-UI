@@ -39,7 +39,7 @@
       ],
       "removable": false,
       "unit_count": 582,
-      "size_bytes": 7866318,
+      "size_bytes": 7868347,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
@@ -88,7 +88,7 @@
       ],
       "removable": true,
       "unit_count": 138,
-      "size_bytes": 3816750,
+      "size_bytes": 3841875,
       "kind_counts": {
         "backend_route": 13,
         "backend_service": 20,
@@ -13369,7 +13369,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/panel-operator.css",
-      "size_bytes": 766053,
+      "size_bytes": 767491,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -13389,7 +13389,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/styles.css",
-      "size_bytes": 893302,
+      "size_bytes": 893342,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -13769,7 +13769,7 @@
       "module_id": "core",
       "kind": "template",
       "path": "xkeen-ui/templates/panel/modals/routing.html",
-      "size_bytes": 102164,
+      "size_bytes": 102715,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -17732,7 +17732,7 @@
       "module_id": "engine.xray",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/routing/dns_over_vless.py",
-      "size_bytes": 10666,
+      "size_bytes": 11262,
       "depends_on": [
         "core",
         "tool.editor"
@@ -18174,7 +18174,7 @@
       "module_id": "engine.xray",
       "kind": "backend_service",
       "path": "xkeen-ui/services/dns_over_vless.py",
-      "size_bytes": 194218,
+      "size_bytes": 206257,
       "depends_on": [
         "core",
         "tool.editor"
@@ -18649,7 +18649,7 @@
       "module_id": "engine.xray",
       "kind": "backend_test",
       "path": "tests/test_dns_over_vless.py",
-      "size_bytes": 211071,
+      "size_bytes": 211307,
       "depends_on": [
         "core",
         "tool.editor"
@@ -18872,7 +18872,7 @@
       "module_id": "engine.xray",
       "kind": "backend_test",
       "path": "tests/test_dns_over_vless_modal_width.py",
-      "size_bytes": 2624,
+      "size_bytes": 3290,
       "depends_on": [
         "core",
         "tool.editor"
@@ -20424,7 +20424,7 @@
       "module_id": "engine.xray",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/routing_cards/rules/dns_over_vless.js",
-      "size_bytes": 113531,
+      "size_bytes": 125069,
       "depends_on": [
         "core",
         "tool.editor"
@@ -20858,7 +20858,7 @@
       "module_id": "engine.xray",
       "kind": "frontend_test",
       "path": "e2e/dns_over_vless_core_down.spec.mjs",
-      "size_bytes": 2887,
+      "size_bytes": 2922,
       "depends_on": [
         "core",
         "tool.editor"
@@ -20900,7 +20900,7 @@
       "module_id": "engine.xray",
       "kind": "frontend_test",
       "path": "e2e/dns_over_vless_local_hint.spec.mjs",
-      "size_bytes": 6973,
+      "size_bytes": 6984,
       "depends_on": [
         "core",
         "tool.editor"
@@ -20986,7 +20986,7 @@
       "module_id": "engine.xray",
       "kind": "frontend_test",
       "path": "e2e/dns_over_vless_zones.spec.mjs",
-      "size_bytes": 24325,
+      "size_bytes": 24329,
       "depends_on": [
         "core",
         "tool.editor"

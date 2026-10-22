@@ -15546,9 +15546,13 @@ body.panel-page :is(#routing-dns-over-vless-modal, #mihomo-dns-modal) .routing-d
  * data-dns-layout на .modal-content. Разметка одна и та же в обеих: зоны
  * собраны в две рельсы, и меняется только то, где эти рельсы стоят --
  * рядом или друг под другом. Ни один узел никуда не переносится. */
+/* Зазор между колонками равен боковому отступу тела окна: правая рельса
+ * отстоит от левой ровно так же, как от края окна. Задан здесь, а не в
+ * правиле раскладки split: то правило слабее по специфичности, и его gap
+ * сюда не доходил. В одну колонку column-gap ни на что не влияет. */
 body.panel-page #routing-dns-over-vless-modal .routing-dns-over-vless-body {
   display: grid;
-  gap: 10px;
+  gap: 10px 12px;
   align-items: start;
 }
 
@@ -15592,10 +15596,8 @@ body.panel-page [data-dns-layout="single"] .routing-dns-over-vless-body {
  * строкой общего грида, и высокий блок устройств растягивал строки напротив. */
 body.panel-page [data-dns-layout="split"] .routing-dns-over-vless-body {
   /* Колонки равны: при 1.25:1 левая читалась заметно шире, потому что её
-   * зоны обведены рамками, а правая -- сплошной текст. Зазор больше шага
-   * сетки: на выросшей ширине рельсы в 10 px выглядели слипшимися. */
+   * зоны обведены рамками, а правая -- сплошной текст. */
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 10px 18px;
   grid-template-rows: auto auto 1fr;
   grid-template-areas:
     "lead lead"
@@ -15926,8 +15928,10 @@ body.panel-page .xk-dns-zone-body {
   border-radius: 0 0 var(--op-radius) var(--op-radius);
 }
 
+/* Шаг между плитками равен боковому отступу тела окна и зазору между
+ * колонками: все вертикальные просветы в правой части одинаковы. */
 body.panel-page :is(#routing-dns-over-vless-modal, #mihomo-dns-modal) .routing-dns-over-vless-safety {
-  gap: 6px;
+  gap: 12px;
 }
 
 body.panel-page :is(#routing-dns-over-vless-modal, #mihomo-dns-modal) .routing-dns-over-vless-safety > div {
@@ -15960,6 +15964,17 @@ body.panel-page :is(#routing-dns-over-vless-modal, #mihomo-dns-modal) .routing-d
 body.panel-page :is(#routing-dns-over-vless-modal, #mihomo-dns-modal) .routing-dns-over-vless-actions {
   min-height: 50px;
   height: auto;
+}
+
+/* Кнопки окон панели нейтральны и при наведении: общее правило выше держит
+ * их цвет через !important. Здесь btn-danger носит только действие, после
+ * которого что-то пропадает безвозвратно, -- оно и краснеет под курсором,
+ * как опасные кнопки DevTools и «Модулей» (page-shell.css). Обычное
+ * отключение -- штатная btn-secondary и остаётся нейтральной. */
+body.panel-page #routing-dns-over-vless-modal .modal-actions .btn-danger:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--op-danger) 52%, var(--op-border)) !important;
+  background: var(--op-danger-soft) !important;
+  color: var(--op-danger) !important;
 }
 
 body.panel-page :is(#routing-dns-over-vless-modal, #mihomo-dns-modal) .modal-resizer {

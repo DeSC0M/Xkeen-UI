@@ -51,6 +51,19 @@ def test_split_columns_are_equal():
     assert "1.25fr" not in rule
 
 
-def test_split_columns_are_separated_by_a_visible_gutter():
-    # На прежних 10 px рельсы выглядели слипшимися, когда стали шире.
-    assert "gap: 10px 18px" in split_rule()
+def rule_body(selector: str) -> str:
+    start = CSS.index(selector + " {")
+    return CSS[start : CSS.index("}", start)]
+
+
+def test_gutters_equal_the_side_padding_of_the_body():
+    # Зазор между колонками, шаг плиток защиты и правое поле тела окна (12 px)
+    # одинаковы. Прежние 18 px стояли в правиле split, которое слабее правила
+    # с #id и на деле не действовало: колонки разделяли 10 px.
+    assert "gap:" not in split_rule()
+    body = rule_body("body.panel-page #routing-dns-over-vless-modal .routing-dns-over-vless-body")
+    assert "gap: 10px 12px;" in body
+    safety = rule_body(
+        "body.panel-page :is(#routing-dns-over-vless-modal, #mihomo-dns-modal) .routing-dns-over-vless-safety"
+    )
+    assert "gap: 12px;" in safety

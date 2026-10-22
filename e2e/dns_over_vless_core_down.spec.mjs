@@ -25,7 +25,7 @@ test('при незапущенном Xray окно позволяет снят�
   await expect(apply).toBeVisible();
   await expect(apply).toBeEnabled();
   // Кнопка снимает настройку, а не включает её.
-  await expect(apply).toHaveClass(/btn-danger/);
+  await expect(apply).toHaveText('Отключить и восстановить');
 
   // Объяснение должно называть выход, иначе кнопку рядом читают как опасную.
   const status = page.locator('#routing-dns-over-vless-status');

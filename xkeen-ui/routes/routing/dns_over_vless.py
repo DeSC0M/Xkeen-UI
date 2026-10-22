@@ -129,6 +129,9 @@ def register_dns_over_vless_routes(
         # with a rule of our own, and which of them.
         capture_clients = payload.get("capture_clients", None)
         capture_macs = payload.get("capture_macs", None)
+        # Выключить, удалив ручные правки служебных объектов: только явное
+        # true, которое окно шлёт после подтверждения.
+        discard_edits = payload.get("discard_edits") is True
         # Отметить устройство -- это правка firewall, а не самой защиты:
         # цепочка уже стоит, меняются только правила в ней. Выключать и
         # включать DNS-over-VLESS ради одного телефона значило бы отдать имена
@@ -194,8 +197,15 @@ def register_dns_over_vless_routes(
                 capture_macs=capture_macs,
                 hosts=hosts,
                 hosts_enabled=hosts_enabled,
+                discard_edits=discard_edits,
             )
-            audit(True, action=action, summary=("DNS-over-VLESS включён" if action == "enable" else "DNS-over-VLESS отключён"))
+            if action == "enable":
+                summary = "DNS-over-VLESS включён"
+            elif result.get("discarded_edits"):
+                summary = "DNS-over-VLESS отключён, ручные правки служебной настройки удалены"
+            else:
+                summary = "DNS-over-VLESS отключён"
+            audit(True, action=action, summary=summary)
             return jsonify(result)
         except DnsOverVlessError as exc:
             audit(False, action=action, phase=exc.code, summary=str(exc))

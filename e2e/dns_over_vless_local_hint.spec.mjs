@@ -96,7 +96,7 @@ test('прошивка не найдена — об этом говорят пр
 
   const hint = page.locator('#routing-dns-over-vless-local-hint');
   await expect(hint).toBeVisible();
-  await expect(hint).toContainText('не найден');
+  await expect(hint).toContainText('Панель не нашла');
 });
 
 

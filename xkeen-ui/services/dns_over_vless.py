@@ -168,8 +168,13 @@ ZONE_PRESETS = {
 }
 # These caps are not Xray limits — it handles far longer lists.  They only
 # stop an accidental paste from bloating the config into something nobody can
-# read back, so they sit well above any realistic home setup.
-MAX_UPSTREAMS = 8
+# read back, so they sit well above any realistic home setup.  They bound what
+# the panel writes, never what it reads back: eight servers turned out to be
+# too few, and a fragment someone extended by hand past the cap must still be
+# recognised as the panel's own, or no button in the window works any more.
+# Not unlimited either: with the tunnel down Xray works through the list in
+# turn, and every extra server stretches the wait for an answer.
+MAX_UPSTREAMS = 16
 MAX_LOCAL_RESOLVERS = 16
 MAX_LOCAL_DOMAINS = 64
 # Same caps for the bypass group: different numbers here would only be a
@@ -1279,11 +1284,12 @@ def _safe_upstreams(value: Any, allow_remote: bool = True) -> Optional[list[str]
     Reading is permissive on purpose.  This is used to read back what is
     already written -- in the fragment or in this install's own notes -- and
     that was checked when it was written; refusing it now would report a
-    config the panel wrote itself as edited by somebody else.
+    config the panel wrote itself as edited by somebody else.  The length cap
+    is not checked here for the same reason: it limits writing only.
     """
     try:
         upstreams = normalize_upstreams(value)
-        if not upstreams or len(upstreams) > MAX_UPSTREAMS:
+        if not upstreams:
             return None
         if any(_upstream_problem(item, allow_remote) for item in upstreams):
             return None
@@ -2100,6 +2106,18 @@ def _conflicts(runtime: Dict[str, Any], routing: Dict[str, Any]) -> list[str]:
 
 
 def _managed_presence(configs_dir: str, routing: Dict[str, Any]) -> Dict[str, bool]:
+    return _presence_report(configs_dir, routing)[0]
+
+
+def _presence_report(
+    configs_dir: str, routing: Dict[str, Any]
+) -> tuple[Dict[str, bool], Dict[str, Any]]:
+    """Which managed objects are in place and intact, plus what was compared.
+
+    The second half is what the verdicts were reached from -- the objects as
+    found and as the panel would write them.  The window needs it to say what
+    exactly was edited by hand, rather than only that something was.
+    """
     managed_path = os.path.join(configs_dir, MANAGED_FRAGMENT)
     fragment = _read_json(managed_path, None)
     # The upstream list is user-configurable, so compare against a fragment
@@ -2211,18 +2229,23 @@ def _managed_presence(configs_dir: str, routing: Dict[str, Any]) -> Dict[str, bo
     # Static answers are the user's own and are written back as they stand;
     # only a form the panel could not write itself reads as drift.
     declared_hosts = _declared_hosts(fragment)
-    exact_fragment = bool(declared) and declared_hosts is not None and fragment == _managed_fragment(
-        declared,
-        local_declared,
-        _zones_of(local_declared),
-        direct_declared,
-        _zones_of(direct_declared),
-        declared_pass,
-        declared_mark,
-        declared_modern,
-        declared_legacy_route,
-        declared_hosts,
+    expected_fragment = (
+        _managed_fragment(
+            declared,
+            local_declared,
+            _zones_of(local_declared),
+            direct_declared,
+            _zones_of(direct_declared),
+            declared_pass,
+            declared_mark,
+            declared_modern,
+            declared_legacy_route,
+            declared_hosts,
+        )
+        if declared and declared_hosts is not None
+        else None
     )
+    exact_fragment = expected_fragment is not None and fragment == expected_fragment
     capture_rule_obj = next((item for item in rules if _clean_tag(item.get("ruleTag")) == CAPTURE_RULE_TAG), None)
     balancer_obj = next(
         (
@@ -2270,6 +2293,26 @@ def _managed_presence(configs_dir: str, routing: Dict[str, Any]) -> Dict[str, bo
         expected_direct is not None and direct_rule_obj == expected_direct
     )
     safe_capture_rule = capture_rule_obj == _capture_rule()
+    facts = {
+        "fragment": fragment,
+        "fragment_exists": os.path.isfile(managed_path),
+        "raw_servers": raw_servers,
+        "declared": declared,
+        "declared_hosts": declared_hosts,
+        "expected_fragment": expected_fragment,
+        "proxy_rule": proxy_rule_obj,
+        "capture_rule": capture_rule_obj,
+        "local_rule": local_rule_obj,
+        "expected_local": expected_local,
+        "direct_rule": direct_rule_obj,
+        "expected_direct": expected_direct,
+        "balancer": balancer_obj,
+        "selector": selector,
+        "proxy_tags": proxy_tags,
+        "managed_fallback": managed_fallback,
+        "safe_fallback": safe_fallback,
+        "safe_balancer": safe_balancer,
+    }
     return {
         "fragment": exact_fragment,
         "fragment_owned": os.path.isfile(managed_path),
@@ -2283,7 +2326,7 @@ def _managed_presence(configs_dir: str, routing: Dict[str, Any]) -> Dict[str, bo
         "direct_rule_owned": direct_rule_obj is not None,
         "balancer": safe_balancer,
         "balancer_owned": balancer_obj is not None,
-    }
+    }, facts
 
 
 def _managed_config_complete(presence: Dict[str, bool]) -> bool:
@@ -2324,6 +2367,160 @@ def _managed_config_tampered(presence: Dict[str, bool]) -> bool:
             ("balancer_owned", "balancer"),
         )
     )
+
+
+# The window lists what was edited by hand; past this many lines a list stops
+# being read, and the first few are enough to know where to look.
+MAX_TAMPER_DETAILS = 8
+# Which zone of the window a hand edit inside the fragment belongs to, by the
+# start of its path.  Anything else is reported without a zone.
+_FRAGMENT_ZONES = (("dns.servers", "servers"), ("dns.hosts", "hosts"), ("outbounds", "records"))
+
+
+def _shown(value: Any) -> str:
+    text = json.dumps(value, ensure_ascii=False)
+    return text if len(text) <= 60 else text[:57] + "…"
+
+
+def _json_diff(actual: Any, expected: Any, path: str = "") -> list[tuple[str, str, Any, Any]]:
+    """Where ``actual`` departs from ``expected``: (kind, path, found, wanted).
+
+    Objects are compared key by key so the report names the field that was
+    edited rather than the whole block; lists and plain values are compared
+    as a whole.  ``kind`` is ``changed``, ``missing`` or ``extra``.
+    """
+    if isinstance(actual, dict) and isinstance(expected, dict):
+        result: list[tuple[str, str, Any, Any]] = []
+        for key in expected:
+            sub = f"{path}.{key}" if path else str(key)
+            if key not in actual:
+                result.append(("missing", sub, None, expected[key]))
+            else:
+                result.extend(_json_diff(actual[key], expected[key], sub))
+        for key in actual:
+            if key not in expected:
+                result.append(("extra", f"{path}.{key}" if path else str(key), actual[key], None))
+        return result
+    if actual == expected:
+        return []
+    return [("changed", path, actual, expected)]
+
+
+def _diff_phrases(actual: Any, expected: Any, limit: int = 3) -> list[tuple[str, str]]:
+    phrases: list[tuple[str, str]] = []
+    for kind, path, found, wanted in _json_diff(actual, expected)[:limit]:
+        where = path or "объект целиком"
+        if kind == "missing":
+            phrases.append((path, f"нет поля {where} (панель пишет {_shown(wanted)})"))
+        elif kind == "extra":
+            phrases.append((path, f"лишнее поле {where} = {_shown(found)}"))
+        else:
+            phrases.append((path, f"{where}: {_shown(found)} вместо {_shown(wanted)}"))
+    return phrases
+
+
+def _fragment_zone(path: str) -> str:
+    for prefix, zone in _FRAGMENT_ZONES:
+        if path == prefix or path.startswith(prefix + ".") or path.startswith(prefix + "["):
+            return zone
+    return ""
+
+
+def _tamper_details(
+    presence: Dict[str, bool], facts: Dict[str, Any], routing_file: str
+) -> list[Dict[str, str]]:
+    """What exactly was edited by hand in the panel's own objects.
+
+    Only objects that are the panel's and fail the check are reported -- the
+    same pairs ``_managed_config_tampered`` looks at -- each as one line saying
+    where the object lives, what is there and what the panel expected.  The
+    ``zone`` names the part of the window the line belongs to, so the window
+    can mark it.
+    """
+    routing_name = os.path.basename(routing_file)
+    lines: list[Dict[str, str]] = []
+
+    def add(zone: str, text: str) -> None:
+        lines.append({"zone": zone, "text": text})
+
+    if presence.get("fragment_owned") and not presence.get("fragment"):
+        fragment = facts.get("fragment")
+        where = f"Файл {MANAGED_FRAGMENT}"
+        if not isinstance(fragment, dict):
+            add("", f"{where} не читается как JSON — Xray с ним не запустится.")
+        elif facts.get("declared") is None:
+            servers = [
+                _upstream_text(item)
+                for item in facts.get("raw_servers") or []
+                if not (isinstance(item, dict) and item.get("domains"))
+            ]
+            problems = [p for p in (_upstream_problem(s, True) for s in normalize_upstreams(servers)) if p]
+            if not servers:
+                add("servers", f"{where}: в dns.servers нет ни одного DNS-сервера туннеля.")
+            for problem in problems:
+                add("servers", f"{where}, dns.servers: {problem}.")
+        elif facts.get("declared_hosts") is None:
+            add("hosts", f"{where}, dns.hosts: записано в виде, которого панель не пишет — ожидаются пары «имя: адрес».")
+        else:
+            for path, phrase in _diff_phrases(fragment, facts.get("expected_fragment")):
+                add(_fragment_zone(path), f"{where}: {phrase}.")
+
+    if presence.get("proxy_rule_owned") and not presence.get("proxy_rule"):
+        rule = facts.get("proxy_rule") or {}
+        reasons: list[str] = []
+        if rule.get("type") != "field":
+            reasons.append(f"type: {_shown(rule.get('type'))} вместо \"field\"")
+        if rule.get("inboundTag") != [DNS_IN_TAG]:
+            reasons.append(f"inboundTag: {_shown(rule.get('inboundTag'))} вместо {_shown([DNS_IN_TAG])}")
+        balancer_tag = _clean_tag(rule.get("balancerTag"))
+        outbound_tag = _clean_tag(rule.get("outboundTag"))
+        if balancer_tag and outbound_tag:
+            reasons.append("указаны и balancerTag, и outboundTag — должно быть что-то одно")
+        elif balancer_tag and balancer_tag != BALANCER_TAG:
+            reasons.append(f"balancerTag «{balancer_tag}» вместо «{BALANCER_TAG}»")
+        elif balancer_tag and not facts.get("safe_balancer"):
+            reasons.append(f"ведёт на балансировщик {BALANCER_TAG}, а он изменён вручную")
+        elif outbound_tag and outbound_tag not in (facts.get("proxy_tags") or set()):
+            reasons.append(f"outboundTag «{outbound_tag}» — не прокси-подключение, DNS-запросы ушли бы мимо туннеля")
+        elif not balancer_tag and not outbound_tag:
+            reasons.append("не указано, куда отправлять DNS-запросы: нет ни balancerTag, ни outboundTag")
+        add("route", f"Правило {PROXY_RULE_TAG} в {routing_name}: " + "; ".join(reasons or ["изменено вручную"]) + ".")
+
+    def rule_lines(key: str, tag: str, wanted: Any, zone: str, missing: str) -> None:
+        if not presence.get(key + "_owned") or presence.get(key):
+            return
+        if wanted is None:
+            add(zone, f"Правило {tag} в {routing_name}: {missing}.")
+            return
+        phrases = [phrase for _path, phrase in _diff_phrases(facts.get(key), wanted)]
+        add(zone, f"Правило {tag} в {routing_name}: " + "; ".join(phrases or ["изменено вручную"]) + ".")
+
+    rule_lines("capture_rule", CAPTURE_RULE_TAG, _capture_rule(), "route", "")
+    rule_lines(
+        "local_rule", LOCAL_RULE_TAG, facts.get("expected_local"), "home",
+        f"правило есть, а своих локальных DNS в файле {MANAGED_FRAGMENT} нет",
+    )
+    rule_lines(
+        "direct_rule", DIRECT_RULE_TAG, facts.get("expected_direct"), "direct",
+        f"правило есть, а DNS для доменов мимо туннеля в файле {MANAGED_FRAGMENT} нет",
+    )
+
+    if presence.get("balancer_owned") and not presence.get("balancer"):
+        selector = facts.get("selector") or []
+        proxy_tags = facts.get("proxy_tags") or set()
+        reasons = []
+        if not selector:
+            reasons.append("selector пуст")
+        for prefix in selector:
+            if prefix.lower() in {"direct", "block", DNS_OUT_TAG, "dns"}:
+                reasons.append(f"«{prefix}» в selector уводит запросы мимо туннеля")
+            elif not any(tag.startswith(prefix) for tag in proxy_tags):
+                reasons.append(f"«{prefix}» в selector не совпадает ни с одним прокси")
+        if not facts.get("safe_fallback"):
+            reasons.append(f"fallbackTag «{facts.get('managed_fallback')}» ведёт мимо туннеля")
+        add("route", f"Балансировщик {BALANCER_TAG} в {routing_name}: " + "; ".join(reasons or ["изменён вручную"]) + ".")
+
+    return lines[:MAX_TAMPER_DETAILS]
 
 
 def _ndmc_path() -> str:
@@ -3479,7 +3676,7 @@ def follow_source_route(*, configs_dir: str, routing_file: str, ui_state_dir: st
 def get_status(*, configs_dir: str, routing_file: str, ui_state_dir: str) -> Dict[str, Any]:
     routing, _raw = _read_routing_with_raw(routing_file)
     runtime = _collect_runtime(configs_dir, routing)
-    presence = _managed_presence(configs_dir, routing)
+    presence, facts = _presence_report(configs_dir, routing)
     override, override_detail = _dns_override_status()
     running_cores = core_runtime().running
     core = resolve_running_core_for_status(running_cores) or ""
@@ -3497,6 +3694,10 @@ def get_status(*, configs_dir: str, routing_file: str, ui_state_dir: str) -> Dic
     # A choice made earlier survives in the state file, so an install that
     # predates the picker keeps its route instead of being re-guessed.
     upstreams = _safe_upstreams(state.get("upstreams")) or list(DEFAULT_UPSTREAMS)
+    # While the feature is on, the window shows the servers in force: the ones
+    # the fragment declares, even when they were added there by hand.
+    if enabled and facts.get("declared"):
+        upstreams = list(facts["declared"])
     state_tags = _stored_selection(state)
     # The picker may only preselect routes that are still usable; drift
     # detection deliberately works off the raw stored tags, because a source
@@ -3544,7 +3745,10 @@ def get_status(*, configs_dir: str, routing_file: str, ui_state_dir: str) -> Dic
             if len(state_tags) == 1
             else _combined_drift(runtime, routing, state_tags)
         )
-    if partial:
+    # A hand edit also leaves the config incomplete in the panel's eyes, but
+    # "an interrupted operation" would then be the wrong story: the window
+    # lists what was edited instead.
+    if partial and not tampered:
         blockers.append("Обнаружена неполная предыдущая настройка DNS-over-VLESS; сначала выполните восстановление/отключение.")
     if tampered:
         blockers.append("Служебные объекты DNS-over-VLESS изменены вручную; автоматическое удаление отключено.")
@@ -3561,6 +3765,15 @@ def get_status(*, configs_dir: str, routing_file: str, ui_state_dir: str) -> Dic
         "available_cores": available_cores,
         "can_enable": not blockers,
         "can_disable": not tampered and (_managed_config_present(presence) or bool(state.get("enabled"))),
+        # The way out of a hand edit the panel will not touch on its own:
+        # switching off with the edits thrown away, after the owner confirms.
+        "can_discard_edits": tampered,
+        # Whether the shared guard watches this protection.  It goes by the
+        # state file, not by the objects being intact: after a hand edit the
+        # window no longer calls the feature enabled, yet the guard still
+        # probes DNS and would hand it back to the router on failure.
+        "guard_watching": bool(state.get("enabled")),
+        "tamper_details": _tamper_details(presence, facts, routing_file) if tampered else [],
         "blockers": blockers,
         "target": ({k: v for k, v in target.items() if k != "managed_balancer"} if target else None),
         "candidates": candidates,
@@ -3644,6 +3857,8 @@ def get_status(*, configs_dir: str, routing_file: str, ui_state_dir: str) -> Dic
         "default_target": default_tag,
         "choice_required": bool(len(_usable_candidates(candidates)) > 1 and not selected_tags),
         "managed_fragment": MANAGED_FRAGMENT,
+        # The confirmation before throwing hand edits away names the files.
+        "routing_file_name": os.path.basename(routing_file),
         "articles": ["https://jameszero.net/4773.htm", "https://jameszero.net/3398.htm"],
         "safety": {
             "preflight": True,
@@ -3676,10 +3891,14 @@ def apply_action(
     capture_macs: Any = None,
     hosts: Any = None,
     hosts_enabled: Any = None,
+    discard_edits: Any = False,
 ) -> Dict[str, Any]:
     normalized = str(action or "").strip().lower()
     if normalized not in {"enable", "disable"}:
         raise DnsOverVlessError("Неизвестное действие DNS-over-VLESS.", code="invalid_action")
+    # Only switching off may throw hand edits away, and only when asked to:
+    # the window sends it after the owner confirmed exactly that.
+    discard = normalized == "disable" and discard_edits is True
 
     with _LOCK:
         before_override, detail = _dns_override_status()
@@ -3947,7 +4166,7 @@ def apply_action(
                     next_fragment = expected_fragment
                 desired_override = True
             else:
-                presence = _managed_presence(configs_dir, routing)
+                presence, facts = _presence_report(configs_dir, routing)
                 if not _managed_config_present(presence) and not previous_state.get("enabled"):
                     _drop_snapshot(snapshot_dir)
                     return {
@@ -3958,13 +4177,19 @@ def apply_action(
                         "probe": {"ok": True, "skipped": True},
                         "target": None,
                     }
-                if _managed_config_tampered(presence) or (
-                    _managed_config_present(presence) and not _managed_config_recognized(presence)
+                if not discard and (
+                    _managed_config_tampered(presence)
+                    or (_managed_config_present(presence) and not _managed_config_recognized(presence))
                 ):
                     raise DnsOverVlessError(
                         "Служебные объекты DNS-over-VLESS были изменены вручную; автоматическое удаление остановлено.",
                         code="managed_config_modified",
                     )
+                # Servers someone added to the fragment by hand were in force:
+                # keep them for the next enable instead of quietly going back
+                # to the list the panel last wrote.  The cap is checked then,
+                # when the window sends the list again.
+                declared_upstreams = facts.get("declared")
                 target = None
                 next_routing = _build_disabled_routing(routing)
                 next_fragment = None
@@ -4121,6 +4346,8 @@ def apply_action(
                         "disabled_at": int(time.time()),
                     }
                 )
+                if declared_upstreams:
+                    kept["upstreams"] = list(declared_upstreams)
                 _save_state(ui_state_dir, kept)
 
             _drop_snapshot(snapshot_dir)
@@ -4128,6 +4355,7 @@ def apply_action(
                 "ok": True,
                 "action": normalized,
                 "enabled": normalized == "enable",
+                "discarded_edits": discard,
                 "capture": capture_result,
                 "restarted": True,
                 "probe": probe,

@@ -24,6 +24,8 @@ import {
     close: 'routing-dns-over-vless-close',
     cancel: 'routing-dns-over-vless-cancel',
     apply: 'routing-dns-over-vless-apply',
+    discard: 'routing-dns-over-vless-discard',
+    upstreamsOver: 'routing-dns-over-vless-upstreams-over',
     badge: 'routing-dns-over-vless-badge',
     leadTitle: 'routing-dns-over-vless-lead-title',
     leadText: 'routing-dns-over-vless-lead-text',
@@ -75,6 +77,9 @@ import {
 
   let status = null;
   let busy = false;
+  // Итог «Выключить и удалить правки» — строка в списке окна. Нужна она в ту
+  // минуту, когда это случилось; при следующем открытии окна её уже нет.
+  let discardNote = '';
   // Функция включена: поля показываем, но правку запрещаем — применяются
   // они всё равно только при включении.
   let fieldsLocked = false;
@@ -219,9 +224,11 @@ import {
     );
   }
 
-  async function postAction(action, targets) {
+  async function postAction(action, targets, extra) {
     const list = Array.isArray(targets) ? targets.filter(Boolean) : [];
     const payload = list.length ? { action, targets: list } : { action };
+    if (extra) Object.assign(payload, extra);
+    const button = (extra && extra.discard_edits) ? DOM.discard : DOM.apply;
     if (action === 'enable') Object.assign(payload, dnsSettings());
     // Выбор устройств едет один, без остальных настроек окна: они применяются
     // только при включении, и слать их отсюда значило бы применить незаметно
@@ -235,7 +242,7 @@ import {
       // Ответ может потеряться вместе с соединением, которое рвёт перезапуск
       // ядра: тогда итог достаётся из статуса по номеру операции.
       payload.operation_id = newDnsOperationId();
-      return trackOperation(DOM.apply, (onWaiting) => awaitDnsOperation({
+      return trackOperation(button, (onWaiting) => awaitDnsOperation({
         operationId: payload.operation_id,
         send: () => client.postJSON('/api/routing/dns-over-vless', payload, { timeoutMs: 90000, retry: 0 }),
         readStatus: (timeoutMs) => client.fetchJSON('/api/routing/dns-over-vless', {
@@ -693,7 +700,7 @@ import {
     let warn = false;
     if (!found.length) {
       warn = true;
-      text.textContent = 'Резолвер прошивки не найден: домашние имена разрешать некому.';
+      text.textContent = 'Панель не нашла, на каком адресе прошивка отвечает на домашние имена — имя роутера и имена устройств из DHCP. Пока адреса нет, по имени они не откроются. Обычно это временно: откройте окно ещё раз через минуту. Если в сети есть свой DNS (Pi-hole, контроллер домена), укажите его ниже в «Свои локальные DNS».';
     } else if (data && data.enabled && !applied.length) {
       // Найден, но в конфигурацию не попал: его адрес занят группой «мимо
       // туннеля» — панель уступает явной настройке, и молчать об этом нельзя.
@@ -955,6 +962,18 @@ import {
     // ``unknown`` means that pidof found no running core.  It is not the name
     // of another core and must never reach the "Нужно ядро Xray" branch.
     const otherCore = !unavailable && core !== 'xray' ? coreName(core) || core : '';
+    // Ручная правка оставляет настройку и «неполной», но говорить о прерванной
+    // операции тут неправда: что именно изменено, перечислено в списке ниже.
+    // Ветка первая: правка бывает и во включённой защите (например, в правиле
+    // своих резолверов), и тогда обычное «Отключить» сервер всё равно отклонит.
+    if (data && data.tampered) {
+      return {
+        badge: 'Изменено вручную',
+        state: 'blocked',
+        summary: 'служебную настройку правили вне панели',
+        text: 'Панель нашла свои объекты, но в них есть то, чего она сама не пишет. Чужие правки панель не трогает, поэтому включить или отключить защиту обычным способом сейчас нельзя. Исправьте то, что перечислено ниже, и нажмите «Проверить снова». Если разбираться не хочется — «Выключить и удалить правки» уберёт служебную настройку целиком и вернёт DNS роутеру.',
+      };
+    }
     if (flags.enabled && unavailable) {
       return {
         badge: installed ? 'Xray не запущен' : 'Нужно ядро Xray',
@@ -1070,7 +1089,10 @@ import {
     if (zone === 'servers') {
       const list = parseZones((($(DOM.upstreams) || {}).value) || '');
       if (!list.length) return { text: 'не указаны', tone: 'warn' };
-      return { text: `${list.length} ${plural(list.length, 'сервер', 'сервера', 'серверов')}` };
+      const count = `${list.length} ${plural(list.length, 'сервер', 'сервера', 'серверов')}`;
+      const over = serversOverLimit(data);
+      if (over) return { text: `${count}, панель пишет до ${over.max}`, tone: 'warn' };
+      return { text: count };
     }
     if (zone === 'home') {
       const firmware = $(DOM.firmware);
@@ -1084,8 +1106,10 @@ import {
       // отвечать на домашние имена в этом случае некому.
       const firmwareLive = firmwareOn && !!((data && data.firmware_resolvers) || []).length;
       if (!firmwareLive && !own.length) {
+        // Сводка говорит о последствии, а не о внутренностях: что такое
+        // «резолвер прошивки», человеку знать не обязательно.
         return {
-          text: firmwareOn ? 'резолвер прошивки не найден' : 'домашние имена в туннеле',
+          text: firmwareOn ? 'домашние имена не разрешаются' : 'домашние имена уходят в туннель',
           tone: 'warn',
         };
       }
@@ -1190,6 +1214,8 @@ import {
     const applied = !!(data && data.enabled);
     // Служебный фрагмент записан не целиком -- например, включение оборвалось.
     const half = !!(data && data.partial);
+    // Правку вручную метка показывает у той зоны, к которой она относится.
+    if (handEdited(data, zone)) return { text: 'изменено вручную', state: 'warn' };
     if (zone === 'route') {
       if (!applied) return { text: 'обязательно', state: 'todo' };
       // Состав исходного балансировщика разошёлся с применённым: маршрут
@@ -1201,6 +1227,10 @@ import {
     if (zone === 'servers') {
       if (!applied) return { text: 'обязательно', state: 'todo' };
       if (half) return { text: 'применено не целиком', state: 'warn' };
+      // Работает как есть, но при следующем включении столько не запишется:
+      // метка сразу говорит, сколько убрать.
+      const over = serversOverLimit(data);
+      if (over) return { text: `${over.extra} ${plural(over.extra, 'лишний', 'лишних', 'лишних')}`, state: 'warn' };
       return { text: 'серверы применены', state: 'done' };
     }
     if (zone === 'devices') {
@@ -1222,6 +1252,36 @@ import {
       return { text: 'все пользуются', state: 'done' };
     }
     return null;
+  }
+
+  // Лишние серверы: строка в списке справа и пояснение под полем. Поле
+  // заполняет renderDnsFields, поэтому зовётся после него.
+  function renderOverLimit(data) {
+    const hint = $(DOM.upstreamsOver);
+    const over = (data && data.enabled) ? serversOverLimit(data) : null;
+    if (hint) {
+      hint.classList.toggle('hidden', !over);
+      hint.textContent = over
+        ? `В служебном файле ${over.count} ${plural(over.count, 'сервер', 'сервера', 'серверов')} — это вписано вручную. Xray работает с ними как есть, панель ничего не трогает. Панель сама записывает не больше ${over.max}: при следующем включении сократите список, иначе включение не пройдёт.`
+        : '';
+    }
+    if (over) {
+      addDetail(`В списке DNS-серверов ${over.count} ${plural(over.count, 'адрес', 'адреса', 'адресов')}, панель записывает до ${over.max}. Сейчас всё работает; лишние понадобится убрать перед следующим включением.`, 'warn');
+    }
+  }
+
+  function handEdited(data, zone) {
+    if (!data || !data.tampered) return false;
+    return (data.tamper_details || []).some((item) => item && item.zone === zone);
+  }
+
+  // Серверов в поле больше, чем панель запишет. Бывает, только когда их
+  // дописали в служебный файл руками: окно читает такой файл своим.
+  function serversOverLimit(data) {
+    const max = Number(data && data.max_upstreams) || 0;
+    if (!max) return null;
+    const count = parseZones((($(DOM.upstreams) || {}).value) || '').length;
+    return count > max ? { count, max, extra: count - max } : null;
   }
 
   function renderZoneMarks(data) {
@@ -1329,7 +1389,10 @@ import {
             : 'Перехват DNS на роутере: определить не удалось.'),
         data.dns_override == null ? 'warn' : 'ok',
       );
-      const guard = guardNotice(data, enabled);
+      // Сторож следит по файлу состояния, а не по целости объектов: после
+      // ручной правки окно уже не зовёт защиту включённой, а он всё ещё
+      // проверяет DNS. Сказать тут «сторожить нечего» было бы неправдой.
+      const guard = guardNotice(data, enabled || data.guard_watching === true);
       addDetail(guard.text, guard.kind);
       if (data.route_drift) {
         const drift = data.route_drift;
@@ -1342,7 +1405,14 @@ import {
         }
         addDetail(`Балансировщик ${drift.source} изменился после включения (${parts.join('; ')}). Переключите DNS-over-VLESS, чтобы обновить маршрут.`, 'warn');
       }
-      if (!rollbackStatus) (data.blockers || []).forEach((item) => addDetail(item, 'warn'));
+      if (!rollbackStatus && data.tampered) {
+        // Вместо общего «изменены вручную» — что именно и где. Остальные
+        // препятствия подождут: пока правка на месте, включать всё равно
+        // нечего.
+        (data.tamper_details || []).forEach((item) => addDetail(item && item.text, 'warn'));
+      } else if (!rollbackStatus) {
+        (data.blockers || []).forEach((item) => addDetail(item, 'warn'));
+      }
     }
 
     renderRoute(data);
@@ -1351,6 +1421,8 @@ import {
     // перечитывать с сервера и отмеченные устройства, и все прочие поля,
     // показывая вместо них то, что осталось в DOM.
     renderDnsFields(data);
+    renderOverLimit(data);
+    if (discardNote) addDetail(discardNote, 'warn');
     renderZoneSummaries(data);
 
     if (apply) {
@@ -1358,7 +1430,10 @@ import {
       // With nothing ticked there is no route to build: block the action and let
       // the line under the list say what is missing.
       const needsTarget = routeVisible && !chosenTargets.length;
-      apply.disabled = waitingForRollback || busy || (!enabled && !canDisable && (blocked || needsTarget));
+      // При ручной правке основная кнопка перечитывает состояние: человек
+      // исправил файл и хочет увидеть, приняла ли его панель.
+      const recheck = !!(data && data.tampered) && !canDisable;
+      apply.disabled = waitingForRollback || busy || (!recheck && !enabled && !canDisable && (blocked || needsTarget));
       // «Включить безопасно» на неподходящем ядре обещало бы невозможное.
       const applyCore = coreOf(data);
       const unavailableCore = coreUnavailable(applyCore) && !enabled && !canDisable;
@@ -1367,13 +1442,23 @@ import {
         ? 'Проверяем Xray…'
         : (busy
           ? 'Выполняется…'
-        : ((enabled || canDisable)
-          ? 'Отключить и восстановить'
-          : (unavailableCore
-            ? (xrayInstalled(data) ? 'Xray не запущен' : 'Нужно ядро Xray')
-            : (wrongCore ? 'Нужно ядро Xray' : 'Включить безопасно'))));
-      apply.classList.toggle('btn-danger', enabled || canDisable);
-      apply.classList.toggle('btn-primary', !enabled && !canDisable);
+        : (recheck
+          ? 'Проверить снова'
+          : ((enabled || canDisable)
+            ? 'Отключить и восстановить'
+            : (unavailableCore
+              ? (xrayInstalled(data) ? 'Xray не запущен' : 'Нужно ядро Xray')
+              : (wrongCore ? 'Нужно ядро Xray' : 'Включить безопасно')))));
+      // Обычное отключение — штатное действие: ничего не теряется, включается
+      // обратно той же кнопкой. Красный цвет оставлен действию с потерей.
+      const switchesOff = (enabled || canDisable) && !recheck;
+      apply.classList.toggle('btn-secondary', switchesOff);
+      apply.classList.toggle('btn-primary', !switchesOff);
+    }
+    const discardButton = $(DOM.discard);
+    if (discardButton) {
+      discardButton.classList.toggle('hidden', !(data && data.can_discard_edits));
+      discardButton.disabled = busy || !!(rollbackStatus && rollbackStatus.phase === 'waiting');
     }
     const resetButton = $(DOM.reset);
     if (resetButton) resetButton.disabled = busy || !!(rollbackStatus && rollbackStatus.phase === 'waiting');
@@ -1634,6 +1719,7 @@ import {
 
   async function open() {
     if (!busy) dropOperationNotice();
+    discardNote = '';
     rollbackPollGeneration += 1;
     rollbackStatus = null;
     showModal(true);
@@ -1907,6 +1993,10 @@ import {
 
   async function apply() {
     if (busy || !status) return;
+    if (status.tampered && !status.can_disable) {
+      await refresh();
+      return;
+    }
     const action = (status.enabled || status.can_disable) ? 'disable' : 'enable';
     const labels = (status.candidates || [])
       .filter((item) => item && chosenTargets.indexOf(item.tag) !== -1)
@@ -1963,6 +2053,75 @@ import {
     }
   }
 
+  // Что именно удалит «Выключить и удалить правки» — по тем объектам, что
+  // панель нашла на месте: обещать удалить отсутствующее незачем.
+  function discardQuestion(data) {
+    const presence = (data && data.presence) || {};
+    const fragment = (data && data.managed_fragment) || '02_dns_over_vless.json';
+    const routingName = (data && data.routing_file_name) || 'файле маршрутизации';
+    const rules = [
+      ['proxy_rule_owned', 'xk_dns_over_vless_proxy'],
+      ['capture_rule_owned', 'xk_dns_over_vless_capture'],
+      ['local_rule_owned', 'xk_dns_over_vless_local'],
+      ['direct_rule_owned', 'xk_dns_over_vless_direct'],
+    ].filter(([key]) => presence[key]).map(([, tag]) => tag);
+    const lines = ['Панель удалит свою служебную настройку целиком, вместе с ручными правками в ней:'];
+    if (presence.fragment_owned) lines.push(`• файл ${fragment};`);
+    if (rules.length) {
+      lines.push(`• ${rules.length > 1 ? 'правила' : 'правило'} ${rules.join(' и ')} в ${routingName};`);
+    }
+    if (presence.balancer_owned) lines.push('• балансировщик xk-dns-over-vless.');
+    lines.push(
+      '',
+      'Остальные правила, балансировщики и прокси останутся как есть. Перехват DNS на роутере выключится, имена снова будет разрешать штатный резолвер.',
+      '',
+      'Перед удалением сохраняется снимок: если Xray не стартует, всё вернётся как было. Ваши правки служебной настройки пропадут — при необходимости скопируйте их заранее.',
+    );
+    return lines.join('\n');
+  }
+
+  async function discardEdits() {
+    if (busy || !status || !status.can_discard_edits) return;
+    let confirmed = true;
+    if (C && typeof C.confirmModal === 'function') {
+      confirmed = await C.confirmModal({
+        title: 'Выключить DNS-over-VLESS и удалить правки',
+        message: discardQuestion(status),
+        okText: 'Выключить и удалить правки',
+        cancelText: 'Отменить',
+        danger: true,
+      });
+    }
+    if (!confirmed) return;
+
+    rollbackPollGeneration += 1;
+    rollbackStatus = null;
+    busy = true;
+    render(status);
+    try {
+      await postAction('disable', [], { discard_edits: true });
+      // Окно могли закрыть, пока шла операция: тогда итог скажет уведомление.
+      toast('DNS-over-VLESS выключен, ручные правки удалены');
+      discardNote = 'DNS-over-VLESS выключен, ручные правки служебной настройки удалены. Включить защиту заново можно обычной кнопкой.';
+      await refresh();
+      loadClients();
+      try { document.dispatchEvent(new CustomEvent('xkeen-routing-fragment-saved', { detail: { reason: 'dns-over-vless' } })); } catch (e) {}
+    } catch (error) {
+      const data = error && error.data ? error.data : null;
+      const message = String((data && data.error) || error.message || 'Операция не выполнена.');
+      if (data && data.rolled_back) {
+        toast(`${message} Предыдущая конфигурация восстановлена; проверяем запуск Xray.`, true);
+        await followRollback(data.rollback || {}, message);
+      } else {
+        if (!(error && error.unknown)) toast(message, true);
+        await refresh();
+      }
+    } finally {
+      busy = false;
+      render(status || {});
+    }
+  }
+
   function init() {
     const buttons = [];
     [IDS.dnsOverVless || 'routing-dns-over-vless-btn', DOM.toolbarButton].forEach((id) => {
@@ -1986,6 +2145,8 @@ import {
     });
     const applyButton = $(DOM.apply);
     if (applyButton) applyButton.addEventListener('click', (event) => { event.preventDefault(); apply(); });
+    const discardButton = $(DOM.discard);
+    if (discardButton) discardButton.addEventListener('click', (event) => { event.preventDefault(); discardEdits(); });
     const resetButton = $(DOM.reset);
     if (resetButton) {
       resetButton.addEventListener('click', (event) => { event.preventDefault(); if (!busy) resetFields(); });

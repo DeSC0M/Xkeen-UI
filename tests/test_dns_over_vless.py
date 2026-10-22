@@ -383,7 +383,9 @@ def test_frontend_has_dns_button_modal_and_guard_copy():
     mihomo = (root / "xkeen-ui/static/js/features/mihomo_dns.js").read_text(encoding="utf-8")
     assert "dns_guard_text.js" in script
     assert "dns_guard_text.js" in mihomo
-    assert "guardNotice(data, enabled)" in script
+    # Окно Xray судит о стороже по guard_watching: после ручной правки защита
+    # уже не «включена», а сторож всё ещё следит.
+    assert "guardNotice(data, enabled || data.guard_watching === true)" in script
     assert "guardNotice(data, enabled)" in mihomo
     assert "Сторож вернул DNS роутеру" in guard_copy
     assert "Сторож следит: проверяет разрешение имён каждые" in guard_copy
