@@ -304,6 +304,61 @@ test.describe('Curated core source selection', () => {
     await page.locator('#xray-core-install-modal').getByRole('button', { name: 'Установить' }).click();
     await expect(card).toContainText('Откат: Конфигурация не прошла проверку');
   });
+
+  test('a completed core install turns the busy install button into a close button', async ({ page }) => {
+    await page.route('**/api/xray/core-profiles', async (route) => route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(xrayProfiles),
+    }));
+    await page.route('**/api/xray/core-install/prepare', async (route) => route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        confirmation: {
+          confirmation_id: 'complete-confirm',
+          profile: xrayProfiles.data.profiles[0],
+          release: xrayProfiles.data.profiles[0].release,
+        },
+      }),
+    }));
+    await page.route('**/api/xray/core-install/apply', async (route) => route.fulfill({
+      status: 202,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, operation: { operation_id: 'complete-op' } }),
+    }));
+    await page.route('**/api/xray/core-install/status*', async (route) => route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        operation: {
+          operation_id: 'complete-op',
+          status: 'succeeded',
+          phase: 'complete',
+          phase_label: 'Установка завершена',
+          progress: 100,
+        },
+      }),
+    }));
+
+    await openView(page, 'routing');
+    await openCoreManagement(page);
+    await page.locator('[data-core-source][data-core-engine="xray"]')
+      .getByRole('button', { name: 'Переустановить' }).click();
+
+    const modal = page.locator('#xray-core-install-modal');
+    const action = modal.locator('[data-core-source-action="apply"]');
+    await action.click();
+
+    await expect(action).toHaveText('Закрыть');
+    await expect(action).toBeEnabled();
+    await expect(action).not.toHaveClass(/is-working/);
+    await expect(action).not.toHaveAttribute('aria-busy');
+    await expect(action).toHaveAttribute('data-tooltip', 'Закрыть окно установки');
+
+    await action.click();
+    await expect(modal).toBeHidden();
+  });
+
   test('the core card names the release state and what its button will do', async ({ page }) => {
     let payload = clone(xrayProfiles);
     await page.route('**/api/xray/core-profiles', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(payload) }));
