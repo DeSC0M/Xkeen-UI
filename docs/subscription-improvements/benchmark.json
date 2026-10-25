@@ -1,0 +1,32 @@
+{
+  "method": "Flask test client, synthetic data; 1 warmup + 7 measured requests per mode; no network",
+  "results": [
+    {
+      "subscriptions": 1,
+      "total_nodes": 100,
+      "full_bytes": 38618,
+      "compact_bytes": 11409,
+      "reduction_percent": 70.5,
+      "full_median_ms": 5.526,
+      "compact_median_ms": 3.142
+    },
+    {
+      "subscriptions": 10,
+      "total_nodes": 1000,
+      "full_bytes": 381941,
+      "compact_bytes": 109851,
+      "reduction_percent": 71.2,
+      "full_median_ms": 33.158,
+      "compact_median_ms": 11.656
+    },
+    {
+      "subscriptions": 50,
+      "total_nodes": 5000,
+      "full_bytes": 1919861,
+      "compact_bytes": 551411,
+      "reduction_percent": 71.3,
+      "full_median_ms": 88.862,
+      "compact_median_ms": 20.497
+    }
+  ]
+}

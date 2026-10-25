@@ -38,20 +38,20 @@
         "gevent-websocket (optional)"
       ],
       "removable": false,
-      "unit_count": 585,
-      "size_bytes": 7912418,
+      "unit_count": 588,
+      "size_bytes": 7936071,
       "kind_counts": {
         "app_runtime": 3,
         "backend_route": 19,
-        "backend_service": 80,
-        "backend_test": 261,
+        "backend_service": 81,
+        "backend_test": 262,
         "configuration": 10,
         "frontend_bundle": 9,
         "frontend_entrypoint": 3,
         "frontend_feature": 34,
         "frontend_javascript": 37,
         "frontend_runtime": 2,
-        "frontend_test": 70,
+        "frontend_test": 71,
         "frontend_ui": 17,
         "stylesheet": 9,
         "template": 31
@@ -88,7 +88,7 @@
       ],
       "removable": true,
       "unit_count": 140,
-      "size_bytes": 3863856,
+      "size_bytes": 3879756,
       "kind_counts": {
         "backend_route": 13,
         "backend_service": 20,
@@ -100,7 +100,7 @@
         "frontend_ui": 1,
         "template": 5
       },
-      "route_count": 61,
+      "route_count": 63,
       "background_task_count": 3,
       "ui_surface_count": 14,
       "representative_paths": [
@@ -2881,6 +2881,26 @@
     {
       "module_id": "core",
       "kind": "backend_service",
+      "path": "xkeen-ui/services/subscription_cron.py",
+      "size_bytes": 4030,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "backend_service",
       "path": "xkeen-ui/services/subscription_pause.py",
       "size_bytes": 26908,
       "depends_on": [],
@@ -2924,7 +2944,7 @@
       "module_id": "core",
       "kind": "backend_service",
       "path": "xkeen-ui/services/subscription_schedule.py",
-      "size_bytes": 6699,
+      "size_bytes": 6738,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -8046,6 +8066,28 @@
     {
       "module_id": "core",
       "kind": "backend_test",
+      "path": "tests/test_subscription_improvements.py",
+      "size_bytes": 11518,
+      "depends_on": [
+        "engine.xray"
+      ],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "backend_test",
       "path": "tests/test_subscription_pause_dns.py",
       "size_bytes": 19326,
       "depends_on": [],
@@ -12623,6 +12665,28 @@
     {
       "module_id": "core",
       "kind": "frontend_test",
+      "path": "e2e/subscription_improvements.spec.mjs",
+      "size_bytes": 7140,
+      "depends_on": [],
+      "starts_background_task": false,
+      "background_markers": [],
+      "registers_routes": false,
+      "routes": [],
+      "frontend_bundle": [],
+      "system_requirements": [
+        "python3",
+        "flask",
+        "gevent (optional)",
+        "gevent-websocket (optional)"
+      ],
+      "environment_variables": [
+        "XKEEN_SCREENSHOT_LABEL"
+      ],
+      "removable": false
+    },
+    {
+      "module_id": "core",
+      "kind": "frontend_test",
       "path": "e2e/subscriptions_modal_form.spec.mjs",
       "size_bytes": 44620,
       "depends_on": [],
@@ -13429,7 +13493,7 @@
       "module_id": "core",
       "kind": "stylesheet",
       "path": "xkeen-ui/static/panel-operator.css",
-      "size_bytes": 783227,
+      "size_bytes": 784153,
       "depends_on": [],
       "starts_background_task": false,
       "background_markers": [],
@@ -18158,7 +18222,7 @@
       "module_id": "engine.xray",
       "kind": "backend_route",
       "path": "xkeen-ui/routes/xray_subscriptions.py",
-      "size_bytes": 18913,
+      "size_bytes": 21886,
       "depends_on": [
         "core",
         "tool.editor"
@@ -18240,6 +18304,16 @@
         {
           "method": "POST",
           "path": "/api/xray/subscriptions/resume",
+          "decorator": "bp.post"
+        },
+        {
+          "method": "POST",
+          "path": "/api/xray/subscriptions/schedule-preview",
+          "decorator": "bp.post"
+        },
+        {
+          "method": "POST",
+          "path": "/api/xray/subscriptions/validate-filters",
           "decorator": "bp.post"
         }
       ],
@@ -18660,7 +18734,7 @@
       "module_id": "engine.xray",
       "kind": "backend_service",
       "path": "xkeen-ui/services/xray_subscriptions.py",
-      "size_bytes": 332002,
+      "size_bytes": 336060,
       "depends_on": [
         "core",
         "tool.editor",
@@ -19534,7 +19608,7 @@
       "module_id": "engine.xray",
       "kind": "backend_test",
       "path": "tests/test_xray_subscription_filters_contract.py",
-      "size_bytes": 47838,
+      "size_bytes": 47855,
       "depends_on": [
         "core",
         "tool.editor"
@@ -19974,7 +20048,7 @@
       "module_id": "engine.xray",
       "kind": "frontend_feature",
       "path": "xkeen-ui/static/js/features/outbounds.js",
-      "size_bytes": 466347,
+      "size_bytes": 475199,
       "depends_on": [
         "core",
         "tool.editor",
@@ -27037,7 +27111,7 @@
     }
   ],
   "routes": {
-    "endpoint_count": 326,
+    "endpoint_count": 328,
     "files_with_routes": 51,
     "endpoint_files": [
       {
@@ -28492,6 +28566,16 @@
           {
             "method": "POST",
             "path": "/api/xray/subscriptions/resume",
+            "decorator": "bp.post"
+          },
+          {
+            "method": "POST",
+            "path": "/api/xray/subscriptions/schedule-preview",
+            "decorator": "bp.post"
+          },
+          {
+            "method": "POST",
+            "path": "/api/xray/subscriptions/validate-filters",
             "decorator": "bp.post"
           }
         ]
@@ -31483,7 +31567,7 @@
       {
         "from": "core",
         "to": "engine.xray",
-        "unit_count": 34,
+        "unit_count": 35,
         "examples": [
           "xkeen-ui/app.py",
           "xkeen-ui/app_factory.py",
@@ -32480,7 +32564,7 @@
       {
         "from": "core",
         "to": "engine.xray",
-        "unit_count": 34,
+        "unit_count": 35,
         "examples": [
           "xkeen-ui/app.py",
           "xkeen-ui/app_factory.py",

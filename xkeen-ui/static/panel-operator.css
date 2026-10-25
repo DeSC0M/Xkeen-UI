@@ -24088,3 +24088,24 @@ body.panel-page #xk-mihomo-service-menu .xk-autorestart-hint {
   font-size: calc(11.5px * var(--xk-font-scale, 1));
   font-weight: 400;
 }
+
+/* Keep navigation and router load available while the page scrolls. */
+html body.panel-page header.panel-header.panel-header-shell {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--op-surface, #14171c);
+}
+.xk-sub-schedule { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 12px; }
+.xk-sub-schedule > label { min-width: 0; }
+body.panel-page .xk-sub-form > .xk-sub-span-6 { grid-column: span 6; }
+@media (max-width: 680px) {
+  body.panel-page .xk-sub-form > .xk-sub-span-6 { grid-column: 1 / -1; }
+}
+.xk-sub-schedule [hidden] { display: none !important; }
+.xk-sub-node-title-text:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+/* Offscreen cards keep their scroll space without laying out all their descendants. */
+@supports (content-visibility: auto) {
+  .xk-sub-node-item { content-visibility: auto; contain-intrinsic-size: auto 80px; }
+}

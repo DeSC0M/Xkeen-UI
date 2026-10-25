@@ -36,8 +36,8 @@ python .\scripts\generate_modular_panel_inventory.py --root .
 
 | Module ID | Единиц | Размер | Routes | Background | UI surfaces | Removable |
 |---|---:|---:|---:|---:|---:|---|
-| `core` | 585 | 7.55 МБ | 104 | 4 | 36 | нет |
-| `engine.xray` | 140 | 3.68 МБ | 61 | 3 | 14 | да |
+| `core` | 588 | 7.57 МБ | 104 | 4 | 36 | нет |
+| `engine.xray` | 140 | 3.70 МБ | 63 | 3 | 14 | да |
 | `engine.mihomo` | 134 | 2.97 МБ | 89 | 4 | 6 | да |
 | `tool.editor` | 25 | 811.5 КБ | 0 | 0 | 2 | да |
 | `tool.terminal` | 47 | 472.0 КБ | 2 | 2 | 2 | да |
@@ -48,7 +48,7 @@ python .\scripts\generate_modular_panel_inventory.py --root .
 
 ## Backend routes и регистрация
 
-- Endpoint declarations: **326**.
+- Endpoint declarations: **328**.
 - Файлов с route decorators/WS dispatch: **51**.
 - Точек регистрации: **30**.
 
@@ -97,7 +97,7 @@ python .\scripts\generate_modular_panel_inventory.py --root .
 | From | To | Units | Примеры |
 |---|---|---:|---|
 | `core` | `engine.mihomo` | 18 | `xkeen-ui/app_factory.py`<br>`xkeen-ui/run_server.py`<br>`xkeen-ui/routes/__init__.py` |
-| `core` | `engine.xray` | 34 | `xkeen-ui/app.py`<br>`xkeen-ui/app_factory.py`<br>`xkeen-ui/routes/__init__.py` |
+| `core` | `engine.xray` | 35 | `xkeen-ui/app.py`<br>`xkeen-ui/app_factory.py`<br>`xkeen-ui/routes/__init__.py` |
 | `core` | `integration.happ` | 7 | `xkeen-ui/routes/__init__.py`<br>`xkeen-ui/services/subscription_request_profile.py`<br>`tests/test_addons_refresh_on_update.py` |
 | `core` | `tool.advanced-diagnostics` | 10 | `xkeen-ui/routes/__init__.py`<br>`xkeen-ui/routes/devtools.py`<br>`xkeen-ui/services/router_modem_control.py` |
 | `core` | `tool.backups` | 8 | `xkeen-ui/app_factory.py`<br>`xkeen-ui/routes/__init__.py`<br>`tests/test_backup_path_hardening.py` |
